@@ -1,129 +1,131 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Отчет по сезонности потребительских кредитов</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        h1 { text-align: center; margin-top: 3em; color: #333; }
-        p.intro { text-align: center; width: 80%; margin: auto; padding-bottom: 2em;}
-        .container { display: flex; justify-content: space-between; gap: 30px; }
-        section { background-color: #fafafa; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,.1); border-radius: 5px; }
-        .row { display: flex; align-items: center; gap: 12px; margin: 6px 0; }
-        span.lab { min-width: 150px; text-align: right; }
-        span.val { white-space: nowrap; }
-        .track { display: inline-block; width: 320px; height: 14px; background: #eef2f5; border-radius: 7px; vertical-align: middle; }
-        .bar { display: block; height: 14px; background: #20BA72; border-radius: 7px; }
-        footer { text-align: center; margin-top: 3em; font-size: 14px; color: #777; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Отчет по сезонности потребительских кредитов</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    h1 { color: #333; margin-bottom: 12px; }
+    p { line-height: 1.4; margin-top: 0; }
+    .track {
+      display: inline-block;
+      width: 320px;
+      height: 14px;
+      background: #eef2f5;
+      border-radius: 7px;
+      vertical-align: middle;
+    }
+    .bar {
+      display: block;
+      height: 14px;
+      background: #20BA72;
+      border-radius: 7px;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 6px 0;
+    }
+    .val {
+      white-space: nowrap;
+    }
+  </style>
 </head>
 <body>
 <h1>Сезонность: рост, которого нет</h1>
-<p class="intro">Проверяем динамику выдач потребительских кредитов за последние три года.</p>
-<div id="error" style="color: red; text-align: center;"></div>
-<div class="container">
-    <section>
-        <h2>Годовые итоги:</h2>
-        <div class="yearly_results"></div>
-    </section>
-    <section>
-        <h2>Квартальные итоги 2024–2025 гг.:</h2>
-        <div class="quarterly_results"></div>
-    </section>
-</div>
+<p>Проверяются темпы роста выдач потребительских кредитов по кварталам и годам.</p>
+<div id="output"></div>
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    const url = '../data/issues_daily_3y.csv';
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const response = await fetch('../data/issues_daily_3y.csv');
+    if (!response.ok) throw new Error(`Ошибка HTTP ${response.status}`);
     
+    const csvText = await response.text();
+    const rows = csvText.trim().split("\n").slice(1); // Пропускаем заголовки
+
     let data = [];
-    fetch(url)
-        .then(response => response.text())
-        .then(text => {
-            // Парсим CSV вручную
-            const rows = text.split('\n');
-            for(let i=1; i<rows.length; i++) {
-                if(rows[i].trim()) {
-                    const cols = rows[i].split(',');
-                    const [dateStr, amountMlnRub] = cols.map(s => s.trim());
-                    const amount = parseFloat(amountMlnRub);
-                    if (!isNaN(amount)) {
-                        const year = +dateStr.slice(0,4);
-                        const month = +dateStr.slice(5,7)-1;
-                        const day = +dateStr.slice(8,10);
-                        const d = new Date(year,month,day);
-                        data.push({d,amount});
-                    }
-                }
-            }
-            
-            // Разбиваем на годы и кварталы
-            const byYear = {};
-            const byQuarter = {};
-            
-            data.forEach(d => {
-                const quarter = Math.floor(d.d.getMonth()/3)+1;
-                const keyQ = `${d.d.getFullYear()} Q${quarter}`;
-                
-                byYear[d.d.getFullYear()] = (byYear[d.d.getFullYear()] || []).concat([d.amount]);
-                byQuarter[keyQ] = (byQuarter[keyQ] || []).concat([d.amount]);
-            });
+    for (const row of rows) {
+      const [dateStr, amountStr] = row.split(',').map(s => s.trim());
+      const amount = parseFloat(amountStr);
+      
+      if (!isNaN(amount)) {
+        const year = +dateStr.slice(0, 4);
+        const month = +dateStr.slice(5, 7)-1;
+        const day = +dateStr.slice(8, 10);
         
-            // Функция суммирования массива чисел
-            const sumArray = arr => arr.reduce((a,b)=>a+b,0);
+        const d = new Date(year, month, day);
+        const quarter = Math.floor(month / 3) + 1;
         
-            // Годовые суммы
-            const yearlySums = Object.keys(byYear).map(k => ({year:k,sum:sumArray(byYear[k])}));
-            yearlySums.sort((a,b)=>+a.year-b.year);
-        
-            // Квартальные суммы
-            const quarterlySums = Object.keys(byQuarter).map(k => ({qtr:k,sum:sumArray(byQuarter[k])}))
-                                .sort((a,b)=>{
-                                    const aParts = a.qtr.match(/(\d+) Q(\d)/),
-                                          bParts = b.qtr.match(/(\d+) Q(\d)/);
-                                    return (+aParts[1]-bParts[1])*10+(+aParts[2]-bParts[2]);
-                                });
-        
-            // Подготовка блоков результатов
-            const renderBarChart = (values, title) => {
-                const maxVal = Math.max(...values.map(v=>v.sum));
-                values.forEach(({qtr,year,sum})=>{
-                    document.querySelector(`.${title}_results`).innerHTML += `
-                        <div class="row">
-                            <span class="lab">${qtr||year}</span>
-                            <span class="track"><span class="bar" style="width:${(100*sum/maxVal).toFixed(1)}%"></span></span>
-                            <span class="val">${sum.toLocaleString('ru', {minimumFractionDigits:0,maximumFractionDigits:0})} млн руб.</span>
-                        </div>
-                    `;
-                });
-            };
-        
-            // Отрисовка годовых итогов
-            renderBarChart(yearlySums,'yearly');
-        
-            // Показываем квартальные итоги 2024 и 2025 годов отдельно
-            const quarters20242025 = quarterlySums.filter(q=>q.qtr.startsWith('2024')||q.qtr.startsWith('2025'));
-            renderBarChart(quarters20242025,'quarterly');
-        
-            // Расчеты процентов изменения
-            const prevYear = yearlySums.find(yr=>yr.year==='2024').sum;
-            const currentYear = yearlySums.find(yr=>yr.year==='2025').sum;
-            const q32025 = quarterlySums.find(q=>q.qtr==='2025 Q3').sum;
-            const q42024 = quarterlySums.find(q=>q.qtr==='2024 Q4').sum;
-            const q42025 = quarterlySums.find(q=>q.qtr==='2025 Q4').sum;
-        
-            const changeYearToYear = ((currentYear/prevYear-1)*100).toFixed(1)+' %';
-            const changeQ42025vsQ32025 = ((q42025/q32025-1)*100).toFixed(1)+' %';
-            const changeQ42025vsQ42024 = ((q42025/q42024-1)*100).toFixed(1)+' %';
-        
-            // Блок вывода ключевых показателей
-            document.body.innerHTML += `<footer><strong>Изменение:</strong> ${changeYearToYear}<br/>
-                                       <strong>IV кв. 2025 vs III кв. 2025:</strong> ${changeQ42025vsQ32025}<br/>
-                                       <strong>IV кв. 2025 vs IV кв. 2024:</strong> ${changeQ42025vsQ42024}<br/><br/>
-                                       <strong>Вывод:</strong> Рост объемов кредитования остается незначительным, сезонная динамика устойчиво повторяется.<br/>Ожидаемый прирост не произошел, и прогнозы требуют пересмотра.</footer>`;
-        })
-        .catch(error => {
-            document.getElementById('error').textContent = 'Ошибка загрузки данных: '+ error.message;
-        });
+        data.push({ date: d, amount });
+      }
+    }
+
+    const quartersSums = {};
+    const yearsSums = {};
+
+    for (let i=0; i<data.length; ++i) {
+      const { date, amount } = data[i];
+      const qYear = date.getFullYear()+'q'+Math.floor(date.getMonth()/3+1);
+      const yYear = date.getFullYear();
+  
+      quartersSums[qYear] = (quartersSums[qYear] || 0) + amount;
+      yearsSums[yYear] = (yearsSums[yYear] || 0) + amount;
+    }
+
+    const outputDiv = document.querySelector('#output');
+
+    function formatNumber(n) {
+      return n.toLocaleString('ru-RU', { maximumFractionDigits: 1 });
+    }
+
+    function changeInPercent(newVal, oldVal) {
+      return ((newVal / oldVal - 1)*100).toFixed(1)+' %';
+    }
+
+    const totalOutput = [
+      `Годовые итоги (${'2023–2025'}):`,
+      `<div class="row"><span class="lab">2023:</span><span class="track"><span class="bar"></span></span><span class="val">${formatNumber(yearsSums['2023'])} млн руб.</span></div>`,
+      `<div class="row"><span class="lab">2024:</span><span class="track"><span class="bar"></span></span><span class="val">${formatNumber(yearsSums['2024'])} млн руб., ${changeInPercent(yearsSums['2024'], yearsSums['2023'])}</span></div>`,
+      `<div class="row"><span class="lab">2025:</span><span class="track"><span class="bar"></span></span><span class="val">${formatNumber(yearsSums['2025'])} млн руб., ${changeInPercent(yearsSums['2025'], yearsSums['2024'])}</span></div>`
+    ];
+
+    const quarters = ['2024q1','2024q2','2024q3','2024q4','2025q1','2025q2','2025q3','2025q4'];
+    const quartersOutput = [
+      'Квартальные итоги (2024–2025 гг.):'
+    ];
+
+    let quartersMax = Math.max(...Object.values(quartersSums));
+
+    for (const q of quarters) {
+      const sumQ = quartersSums[q];
+      quartersOutput.push(
+        `<div class="row"><span class="lab">${q}:</span><span class="track"><span class="bar" style="width:${(sumQ/quartersMax*100).toFixed(1)}%"></span></span><span class="val">${formatNumber(sumQ)} млн руб.</span></div>`
+      );
+    }
+
+    quartersOutput.push(
+      `<div class="row"><span class="lab">IV кв. 2025 к III кв. 2025:</span><span class="val">${changeInPercent(quartersSums['2025q4'], quartersSums['2025q3'])}</span></div>`,
+      `<div class="row"><span class="lab">IV кв. 2025 к IV кв. 2024:</span><span class="val">${changeInPercent(quartersSums['2025q4'], quartersSums['2024q4'])}</span></div>`
+    );
+
+    outputDiv.innerHTML += `
+      <section>
+        ${totalOutput.join('<br/>')}
+      </section>
+      <section>
+        ${quartersOutput.join('<br/>')}
+      </section>
+      <section>
+        <h2>Вывод</h2>
+        Сопоставимые кварталы демонстрируют отсутствие значимых колебаний в объемах выдач кредита. Годовые показатели также подтверждают стабильность тренда без выраженного прироста или падения объема кредитования.
+      </section>
+    `;
+
+  } catch(err) {
+    document.body.innerHTML = '<pre>' + err.message + '</pre>';
+  }
 });
 </script>
 </body>
