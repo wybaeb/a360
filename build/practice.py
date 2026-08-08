@@ -1,0 +1,213 @@
+# -*- coding: utf-8 -*-
+"""Страница самостоятельной практики: пять разборов кикоффа, повторяемых в GigaChat.
+
+Тексты промптов берутся из prompts.py — из того же модуля, который прогонялся
+через API. Ничего не переписывается вручную, поэтому участник копирует ровно
+проверенный текст.
+
+Примеры ответов подставляются из build/runs/best.json — это настоящие ответы
+GigaChat с прогонов, а не написанные нами «идеальные» образцы.
+"""
+import json
+import pathlib
+
+from prompts import PRACTICES, rendered
+from theme import esc, prompt_block
+
+RUNS = pathlib.Path(__file__).resolve().parent / "runs"
+
+
+def _best():
+    f = RUNS / "best.json"
+    return json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
+
+
+def _stability():
+    """Таблица воспроизводимости из report.json — публикуем как есть."""
+    f = RUNS / "report.json"
+    if not f.exists():
+        return ""
+    res = json.loads(f.read_text(encoding="utf-8"))
+    models = sorted({r["model"] for r in res})
+    kinds = [("check", "1 · выбор проверки"), ("code", "2 · код"), ("read", "3 · вывод")]
+    rows = []
+    for kind, label in kinds:
+        cells = []
+        for m in models:
+            s = [r for r in res if r["model"] == m and r["kind"] == kind]
+            good = sum(r["ok"] for r in s)
+            cells.append(f'<td class="num">{good} из {len(s)}</td>' if s else '<td class="num">—</td>')
+        rows.append(f"<tr><td>{label}</td>{''.join(cells)}</tr>")
+    head = "".join(f'<th class="num">{m}</th>' for m in models)
+    return (f'<div class="scroll"><table><tr><th>Промпт</th>{head}</tr>'
+            f'{"".join(rows)}</table></div>')
+
+
+def _one(p, best):
+    ex = best.get(p["key"], {})
+    img = f'''<figure><img src="assets/demo_{p["slug"][3:]}.jpg" alt="Разбор с занятия: {esc(p["title"])}">
+      <figcaption>Так этот разбор выглядел на занятии. Ниже — как повторить его самому.</figcaption>
+    </figure>''' if p.get("slug") else ""
+    # slug вида «01_vybrosy» -> файл «demo_vybrosy.jpg» не совпадает с реальными
+    # именами скриншотов, поэтому имя собирается из полного slug.
+    img = img.replace(f'demo_{p["slug"][3:]}.jpg', f'demo_{p["slug"]}.jpg')
+
+    answer = ""
+    if ex.get("answer"):
+        answer = (f'<h4>Что ответил GigaChat у нас</h4>'
+                  f'<p class="sub">Ответ модели {esc(ex.get("model", ""))} на прогоне '
+                  f'{ex.get("n", "")} — приведён без правок, сокращён по длине.</p>'
+                  f'<div class="card">{ex["answer"]}</div>')
+
+    return f"""
+<section id="p{p['num']}"><div class="wrap">
+<h2><span class="num">{p['num']}</span>{esc(p['title'])}</h2>
+<p class="sub">Проверка: {esc(p['method'])}</p>
+{img}
+<div class="card warn">
+<h4>Ситуация</h4>
+<p>{esc(p['story'][0].upper() + p['story'][1:])}.</p>
+</div>
+
+<h3>Промпт 1. Какую проверку надо сделать</h3>
+<p>Модель не считает — она называет метод и критерий. Это первое, чего не хватает
+руководителю: не помнить формулу, а знать, что вообще нужно проверить.</p>
+{prompt_block(rendered(p, 'check'))}
+
+<h3>Промпт 2. Код, который посчитает</h3>
+<p>Скрипт можно запустить самому или отдать аналитику. Считает Python — значит,
+арифметика верная.</p>
+{prompt_block(rendered(p, 'code'))}
+
+<h3>Промпт 3. Вывод из посчитанных чисел</h3>
+<p>Числа уже посчитаны — модель собирает из них управленческую формулировку.
+Это главный промпт практики: именно он повторяет разбор с занятия.</p>
+{prompt_block(rendered(p, 'read'))}
+
+<div class="card acc">
+<h4>Что должно получиться</h4>
+<p>{esc(p['expect'])}</p>
+</div>
+{answer}
+
+<h3>Необязательно: посмотрите на ловушку</h3>
+<p>Тот же вопрос, заданный так, как его обычно задают, — без требования проверки.
+Ответ будет разным от запуска к запуску, и часто модель просто подтвердит неверную
+гипотезу. Это и есть причина, по которой промпт 3 устроен иначе.</p>
+{prompt_block(rendered(p, 'naive'))}
+</div></section>
+"""
+
+
+def body():
+    best = _best()
+    parts = [f"""
+<header><div class="wrap">
+  <div class="eyebrow">Аналитика 360 · самостоятельная практика</div>
+  <h1>Повторите пять разборов в GigaChat сами</h1>
+  <p class="lead">Те же пять разборов, что были на вводной встрече: те же данные, те же
+     выводы. Всё, что нужно, — браузер и GigaChat. Программировать не требуется,
+     файлы загружать не требуется: данные встроены в промпты.</p>
+  <div class="meta">
+    <span class="chip">Время <b>40–60 минут</b></span>
+    <span class="chip">Разборов <b>5</b></span>
+    <span class="chip">Промптов <b>15</b></span>
+    <span class="chip">Проверено на <b>GigaChat 2 и 2 Max</b></span>
+  </div>
+</div></header>
+
+<section><div class="wrap">
+<h2>Как этим пользоваться в веб-версии GigaChat</h2>
+<ol class="steps">
+  <li><b>Откройте <a href="https://giga.chat" target="_blank" rel="noopener">giga.chat</a>
+      и войдите по Сбер ID.</b> Клиентом банка быть не нужно. Если вход не проходит —
+      проверьте, что выключен VPN.</li>
+  <li><b>Начните новый чат для каждого разбора.</b> Если продолжать в одном, модель
+      тянет контекст предыдущего кейса и подмешивает чужие числа в ответ.</li>
+  <li><b>Копируйте промпт целиком одной кнопкой и отправляйте одним сообщением.</b>
+      Данные уже внутри промпта — приложений не требуется. Не разбивайте промпт
+      на части: инструкция и данные должны прийти вместе.</li>
+  <li><b>Если в интерфейсе есть выбор модели — берите самую сильную из доступных.</b>
+      Мы проверяли на GigaChat 2 и GigaChat 2 Max; на Max ответы стабильнее.</li>
+  <li><b>Сравните ответ с блоком «что должно получиться».</b> Совпал вывод, а не
+      формулировка — разбор воспроизведён.</li>
+</ol>
+<div class="card warn">
+<h4>Одно правило, без которого практика вредна</h4>
+<p>В промпты идут только учебные и обезличенные данные. Реальные клиентские выгрузки
+во внешние сервисы не отправляем — ни в GigaChat, ни куда-либо ещё.</p>
+</div>
+<div class="card">
+<h4>Почему промптов три, а не один</h4>
+<p>Мы прогнали каждый разбор через API десятки раз. Когда модель просят посчитать
+самой, она ошибается в арифметике — и на этой ошибке переворачивает вывод
+(например, доля рынка 142 / 279,3 превращается в «54 %» вместо 50,8 %). Поэтому роли
+разведены: <b>метод выбирает модель, числа считает Python или BI, вывод снова
+собирает модель, решение принимает человек.</b></p>
+</div>
+</div></section>
+"""]
+    for p in PRACTICES:
+        parts.append(_one(p, best))
+
+    parts.append(f"""
+<section id="data"><div class="wrap">
+<h2>Данные, если хотите посчитать сами</h2>
+<p>Те же ряды, что стоят за разборами. CSV — для Python и Excel; TXT — если захотите
+приложить файл к чату (веб-версия GigaChat принимает DOCX, PDF и TXT, но не CSV).</p>
+<div class="scroll"><table>
+<tr><th>Разбор</th><th>Файл</th><th>Что внутри</th></tr>
+<tr><td>1 · выбросы</td><td><a href="data/loan_tat_90d.csv">loan_tat_90d.csv</a> ·
+    <a href="data/loan_tat_90d.txt">txt</a></td>
+    <td>90 дней, срок рассмотрения заявки, минуты</td></tr>
+<tr><td>2 · общая причина</td><td><a href="data/weekly_ops_26w.csv">weekly_ops_26w.csv</a> ·
+    <a href="data/weekly_ops_26w.txt">txt</a></td>
+    <td>26 недель: обращения, отток, ошибки в приложении</td></tr>
+<tr><td>3 · сезонность</td><td><a href="data/issues_daily_3y.csv">issues_daily_3y.csv</a> ·
+    <a href="data/issues_daily_3y.txt">txt</a></td>
+    <td>1095 дней выдач потребкредитов, млн ₽</td></tr>
+<tr><td>4 · низкая база</td><td><a href="data/mortgage_market.csv">mortgage_market.csv</a> ·
+    <a href="data/mortgage_market.txt">txt</a></td>
+    <td>пять игроков, выдачи ипотеки год назад и сейчас</td></tr>
+<tr><td>5 · среднее</td><td><a href="data/msb_applications_q.csv">msb_applications_q.csv</a> ·
+    <a href="data/msb_applications_q.txt">txt</a></td>
+    <td>18 400 заявок МСБ: срок рассмотрения и факт выдачи</td></tr>
+</table></div>
+<p class="sub">Все данные синтетические, сгенерированы для обучения. Совпадения
+с реальными клиентами и сделками случайны.</p>
+</div></section>
+
+<section id="stability"><div class="wrap">
+<h2>Насколько это воспроизводится</h2>
+<p>Мы не утверждаем «работает» на глаз. Каждый промпт прогнан через GigaChat API
+несколько раз с температурой по умолчанию, и ответ засчитывался, только если главный
+вывод совпал с эталонным. Ниже — результат последнего прогона.</p>
+{_stability()}
+<p class="sub">Промпт-ловушка в таблицу не входит: у него нет правильного ответа,
+он и должен отвечать по-разному.</p>
+</div></section>
+
+<section id="own"><div class="wrap">
+<h2>Как перенести это на свои данные</h2>
+<ol class="steps">
+  <li><b>Возьмите показатель, по которому у вас недавно принималось решение.</b>
+      Лучше всего — тот, где вывод был спорным.</li>
+  <li><b>Найдите свою ловушку из пяти.</b> Сравнение периодов, «одно тянет другое»,
+      рост квартала, темпы конкурентов, средний срок — что-то из этого почти
+      наверняка есть.</li>
+  <li><b>Задайте промпт 1</b>, подставив свою ситуацию и структуру своей выгрузки.</li>
+  <li><b>Попросите код промптом 2</b> и отдайте его аналитику — либо запустите сами.</li>
+  <li><b>Соберите вывод промптом 3</b> из полученных чисел и принесите его на Шаг 1.</li>
+</ol>
+<div class="card acc">
+<p>На Шаге 1 это и будет первым артефактом: одна проверка, доведённая до
+управленческого вывода, на ваших собственных данных.</p>
+</div>
+</div></section>
+
+<footer><div class="wrap">
+  Аналитика 360 · практическая часть, Шаги 1–4 · Карпов Курсы для Сбера.<br>
+  Данные синтетические. Промпты проверены на GigaChat API 08.08.2026.
+</div></footer>
+""")
+    return "".join(parts)

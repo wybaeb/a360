@@ -1,0 +1,105 @@
+прогонов: 120
+  GigaChat-2       vybrosy    check  #1  ok | нет: критерий назван
+  GigaChat-2       vybrosy    check  #2  вывод не совпал | нет: <нет ответа>
+  GigaChat-2       vybrosy    check  #3  ok
+  GigaChat-2       vybrosy    read   #1  ok | нет: замедление не подтверждено, решение
+  GigaChat-2       vybrosy    read   #2  ok | нет: замедление не подтверждено
+  GigaChat-2       vybrosy    read   #3  ok | нет: замедление не подтверждено
+  GigaChat-2       vybrosy    code   #1  вывод не совпал | нет: код в блоке
+  GigaChat-2       vybrosy    code   #2  вывод не совпал | нет: код в блоке
+  GigaChat-2       vybrosy    code   #3  вывод не совпал | нет: код в блоке
+  GigaChat-2       vybrosy    naive  #1  ok
+  GigaChat-2     GigaChat-2       prichina   check  #1  вывод не совпал | нет: <нет ответа>
+  GigaChat-2       prichina   check  #2  вывод не совпал | нет: <нет ответа>
+  GigaChat-2       prichina   check  #3  вывод не совпал | нет: <нет ответа>
+  GigaChat-2       prichina   read   #1  ok | нет: против расширения
+  GigaChat-2       prichina   read   #2  ok | нет: против расширения
+  GigaChat-2       prichina   read   #3  ok | нет: против расширения
+  GigaChat-2       prichina   code   #1  ok
+  GigaChat-2       prichina   code   #2  ok
+  GigaChat-2       prichina   code   #3  ok
+  GigaChat-2       prichina   naive  #1  ok
+  GigaChat-2       prichina   naive  #2  ok
+  GigaChat-2       prichina   naive  #3  вывод не совпал | нет: <нет ответа>
+  GigaChat-2       sezonnost  check  #1  вывод не совпал | нет: выбрано снятие сезонности, ошибка названа
+  GigaChat-2       sezonnost  check  #2  вывод не совпал | нет: выбрано снятие сезонности, ошибка названа
+  GigaChat-2       sezonnost  check  #3  вывод не совпал | нет: выбрано снятие сезонности, ошибка названа
+  GigaChat-2       sezonnost  read   #1  ok
+Traceback (most recent call last):
+  File "/root/work/sessions/max--76387277381017/a360/build/check_prompts.py", line 150, in <module>
+    main()
+    ~~~~^^
+  File "/root/work/sessions/max--76387277381017/a360/build/check_prompts.py", line 126, in main
+    for r in ex.map(lambda j: one(*j), jobs):
+             ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 639, in result_iterator
+    yield _result_or_cancel(fs.pop())
+          ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 311, in _result_or_cancel
+    return fut.result(timeout)
+           ~~~~~~~~~~^^^^^^^^^
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 450, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 395, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.14/concurrent/futures/thread.py", line 86, in run
+    result = ctx.run(self.task)
+  File "/usr/lib/python3.14/concurrent/futures/thread.py", line 73, in run
+    return fn(*args, **kwargs)
+  File "/root/work/sessions/max--76387277381017/a360/build/check_prompts.py", line 126, in <lambda>
+    for r in ex.map(lambda j: one(*j), jobs):
+                              ~~~^^^^
+  File "/root/work/sessions/max--76387277381017/a360/build/check_prompts.py", line 90, in one
+    ok = judge(JUDGE, p["expect"], answer)
+  File "/root/work/sessions/max--76387277381017/a360/build/check_prompts.py", line 74, in judge
+    v = gigachat.ask(template.format(expect=expect, answer=answer),
+                     model=JUDGE_MODEL, temperature=0.1)
+  File "/root/work/sessions/max--76387277381017/a360/build/gigachat.py", line 69, in ask
+    raise RuntimeError(last)
+RuntimeError: HTTP 429: {"status":429,"message":"Too Many Requests"}
+
+
+  GigaChat-2       srednee    code   #3  ok
+  GigaChat-2       srednee    naive  #1  ok
+  GigaChat-2       srednee    naive  #2  ok
+  GigaChat-2       srednee    naive  #3  ok
+  GigaChat-2-Max   vybrosy    check  #1  ok
+  GigaChat-2-Max   vybrosy    check  #2  ok | нет: критерий назван
+  GigaChat-2-Max   vybrosy    check  #3  ok
+  GigaChat-2-Max   vybrosy    read   #1  ok | нет: замедление не подтверждено
+  GigaChat-2-Max   vybrosy    read   #2  ok | нет: замедление не подтверждено
+Traceback (most recent call last):
+  File "/root/work/sessions/max--76387277381017/a360/build/check_prompts.py", line 150, in <module>
+    main()
+    ~~~~^^
+  File "/root/work/sessions/max--76387277381017/a360/build/check_prompts.py", line 126, in main
+    for r in ex.map(lambda j: one(*j), jobs):
+             ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 639, in result_iterator
+    yield _result_or_cancel(fs.pop())
+          ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 311, in _result_or_cancel
+    return fut.result(timeout)
+           ~~~~~~~~~~^^^^^^^^^
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 450, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 395, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.14/concurrent/futures/thread.py", line 86, in run
+    result = ctx.run(self.task)
+  File "/usr/lib/python3.14/concurrent/futures/thread.py", line 73, in run
+    return fn(*args, **kwargs)
+  File "/root/work/sessions/max--76387277381017/a360/build/check_prompts.py", line 126, in <lambda>
+    for r in ex.map(lambda j: one(*j), jobs):
+                              ~~~^^^^
+  File "/root/work/sessions/max--76387277381017/a360/build/check_prompts.py", line 90, in one
+    ok = judge(JUDGE, p["expect"], answer)
+  File "/root/work/sessions/max--76387277381017/a360/build/check_prompts.py", line 74, in judge
+    v = gigachat.ask(template.format(expect=expect, answer=answer),
+                     model=JUDGE_MODEL, temperature=0.1)
+  File "/root/work/sessions/max--76387277381017/a360/build/gigachat.py", line 69, in ask
+    raise RuntimeError(last)
+RuntimeError: HTTP 429: {"status":429,"message":"Too Many Requests"}
+

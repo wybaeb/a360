@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Пять ошибок вывода · Аналитика 360</title>
+<style>
+:root{
+  --acc:#20BA72; --acc-soft:rgba(32,186,114,.10); --acc-line:rgba(32,186,114,.30);
+  --bg:#ffffff; --surf:#f4f8f6; --elev:#e9f3ee; --line:rgba(46,54,65,.13);
+  --ink:#2E3641; --ink2:rgba(46,54,65,.74); --ink3:rgba(46,54,65,.48);
+  --warn:#E4572E; --warn-soft:rgba(228,87,46,.09);
+  --font:'SB Sans Text','Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'SFMono-Regular',Consolas,'Liberation Mono',monospace;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth}
+body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 22px}
+a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line)}
+a:hover{border-bottom-color:var(--acc)}
+
+header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
+  border-bottom:1px solid var(--line)}
+.eyebrow{color:var(--acc);font-weight:800;font-size:12.5px;letter-spacing:.14em;
+  text-transform:uppercase;margin-bottom:14px}
+h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 16px}
+.lead{font-size:clamp(16.5px,2vw,19px);color:var(--ink2);margin:0 0 22px}
+.meta{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;
+  font-size:13.5px;color:var(--ink2)}
+.chip b{color:var(--ink)}
+
+section{padding:44px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-size:clamp(22px,3vw,30px);font-weight:800;margin:0 0 8px;line-height:1.18}
+h2 .num{color:var(--acc);margin-right:.4em;font-variant-numeric:tabular-nums}
+h3{font-size:19px;font-weight:800;margin:30px 0 10px}
+h4{font-size:16px;font-weight:800;margin:22px 0 8px;color:var(--ink2)}
+p{margin:0 0 15px}
+ul,ol{margin:0 0 15px;padding-left:22px}
+li{margin-bottom:7px}
+.sub{color:var(--ink3);margin:0 0 22px;font-size:15.5px}
+
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:20px 22px;margin:0 0 18px}
+.card.acc{background:var(--acc-soft);border-color:var(--acc-line)}
+.card.warn{background:var(--warn-soft);border-color:rgba(228,87,46,.28)}
+.card h4{margin-top:0}
+.card p:last-child,.card ul:last-child,.card ol:last-child{margin-bottom:0}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0 0 15px;font-size:15.5px}
+.kv dt{color:var(--ink3)}
+.kv dd{margin:0;font-weight:600}
+
+table{border-collapse:collapse;width:100%;font-size:15px;margin:0 0 15px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{font-weight:800;color:var(--ink2);font-size:13.5px;text-transform:uppercase;
+  letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 15px}
+.scroll table{margin:0}
+
+pre{background:#20262e;color:#e7edf3;border-radius:12px;padding:16px 18px;overflow-x:auto;
+  font-family:var(--mono);font-size:13.5px;line-height:1.55;margin:0 0 15px}
+code{font-family:var(--mono);font-size:.9em;background:var(--elev);padding:2px 6px;
+  border-radius:5px}
+pre code{background:none;padding:0;font-size:1em}
+
+.prompt{position:relative;background:#20262e;color:#e7edf3;border-radius:12px;
+  padding:16px 18px;margin:0 0 14px}
+/* Промпт должен быть виден целиком: участник его читает, а не только копирует.
+   pre-wrap переносит длинные строки, но сохраняет переводы строк — innerText
+   в кнопке копирования отдаёт ровно исходный текст. */
+.prompt pre{margin:0;padding:0;background:none;max-height:none;
+  white-space:pre-wrap;overflow-wrap:anywhere}
+.prompt{padding-top:46px}
+.copy{position:absolute;top:10px;right:10px;background:var(--acc);color:#fff;border:0;
+  border-radius:8px;padding:7px 13px;font:600 13px var(--font);cursor:pointer}
+.copy:hover{filter:brightness(1.08)}
+.copy.done{background:#0f7a46}
+
+figure{margin:0 0 18px}
+figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;
+  border-radius:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;
+  display:flex;align-items:center;justify-content:center}
+
+.toc{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+  margin:0 0 8px}
+.toc ol{margin:0;padding-left:20px}
+.toc a{border:0}
+.toc a:hover{border-bottom:1px solid var(--acc)}
+
+footer{padding:36px 0 60px;color:var(--ink3);font-size:14.5px}
+.tag{display:inline-block;background:var(--elev);border-radius:6px;padding:1px 8px;
+  font-size:13px;color:var(--ink2);font-weight:600}
+@media(max-width:600px){
+  body{font-size:16px}
+  .kv{grid-template-columns:1fr}
+}
+</style>
+</head><body>
+
+<header><div class="wrap">
+  <div class="eyebrow">Аналитика 360 · предчтение к практической части</div>
+  <h1>Пять ошибок вывода, из-за которых решение стоит дороже</h1>
+  <p class="lead">Это текст к первой встрече. Теорию на встрече мы не читаем — она здесь.
+     На встрече будут разборы: те же пять ошибок на банковских данных, с GigaChat
+     и с готовым выводом за три минуты. Прочитайте заранее, тогда встреча даст
+     в разы больше.</p>
+  <div class="meta">
+    <span class="chip">Чтение <b>12 минут</b></span>
+    <span class="chip">Шаги <b>1–4</b></span>
+    <span class="chip">Формул для запоминания <b>ноль</b></span>
+  </div>
+</div></header>
+
+<section><div class="wrap">
+<h2>Зачем это читать</h2>
+<p>Руководитель редко ошибается в арифметике. Он ошибается в выводе: цифра посчитана
+верно, а решение из неё сделано неверное. Такие ошибки дорогие — они не видны в отчёте
+и проходят все согласования, потому что формально всё сходится.</p>
+<p>Ниже — пять самых частых. Все пять взяты не из учебника, а из того, что реально
+происходит в управленческой отчётности банка: сравнение периодов, «одно тянет другое»,
+рост квартала, темпы конкурентов, средний срок. Для каждой — как она выглядит,
+почему обманывает, какой проверкой ловится и <b>что спросить у аналитика</b>, чтобы
+поймать её за минуту.</p>
+<div class="card acc">
+<h4>Рамка, к которой всё привязано</h4>
+<p>Любой разбор в программе идёт по одной цепочке: <b>данные → инструмент → метод →
+решение</b>. Ошибка вывода — это когда цепочка формально пройдена, а последнее звено
+неверное. Значит, проверять надо не арифметику, а <b>переход от числа к решению</b>.</p>
+</div>
+<div class="toc">
+<b>Что внутри</b>
+<ol>
+  <li><a href="#e1">Выброс: несколько дней решают за весь квартал</a></li>
+  <li><a href="#e2">Общая причина: два показателя, которые не двигают друг друга</a></li>
+  <li><a href="#e3">Сезонность: рост, которого нет</a></li>
+  <li><a href="#e4">Низкая база: проценты без базы ничего не значат</a></li>
+  <li><a href="#e5">Среднее: норматив выполнен, клиент ждёт неделю</a></li>
+  <li><a href="#check">Пять вопросов, которые ловят все пять ошибок</a></li>
+  <li><a href="#giga">Что здесь делает GigaChat и чего от него ждать нельзя</a></li>
+  <li><a href="#src">Источники</a></li>
+</ol>
+</div>
+</div></section>
+
+<section id="e1"><div class="wrap">
+<h2><span class="num">1</span>Выброс: несколько дней решают за весь квартал</h2>
+<p class="sub">Кейс: срок рассмотрения заявки по потребкредиту</p>
+
+<h3>Как это выглядит</h3>
+<p>В отчёте сравнение периодов: первые 30 дней квартала — 41 минута, последние 30 дней —
+72 минуты. Рост <b>+74 %</b>. Вывод напрашивается сам: конвейер стал работать медленнее,
+надо разбираться в операционке.</p>
+
+<h3>Почему обманывает</h3>
+<p>Среднее считается по всем дням подряд, включая те, где процесс не работал. В нашем ряду
+таких дней четыре: 296, 388, 441 и 512 минут при обычных сорока. Это не «медленный
+конвейер» — это остановки интеграции с внешним сервисом. Четыре дня из девяноста дают
+весь рост.</p>
+<p>Ловушка в том, что среднее и стандартное отклонение сами сдвигаются этими же днями.
+Если искать аномалии по правилу «дальше двух сигм», сигма уже раздута выбросами, и
+аномалии в неё прячутся. Нужен метод, который выбросы не видят изнутри.</p>
+
+<h3>Чем проверяется</h3>
+<p>Берут <b>медиану</b> вместо среднего и <b>медианное абсолютное отклонение (MAD)</b>
+вместо стандартного. Медиана и MAD не двигаются от нескольких экстремальных значений:
+чтобы сместить медиану, надо испортить половину ряда.</p>
+<p>Стандартная формула — модифицированная z-оценка<a href="#src-mad" class="fn">[1]</a>:</p>
+<pre><code>M = 0,6745 · (x − медиана) / MAD,   выброс, если |M| &gt; 3,5</code></pre>
+<p>Константа 0,6745 не магическая: это обратная величина к множителю 1,4826, который
+приводит MAD к масштабу обычного стандартного отклонения для нормального
+распределения<a href="#src-mad-const" class="fn">[2]</a>. Порог 3,5 — рекомендация Иглевича и Хоглина, на которую
+ссылается справочник NIST<a href="#src-mad" class="fn">[1]</a>.</p>
+<p>На наших данных: медиана 41,3 мин, MAD 2,5 мин, порог — 54,3 мин. Выше порога ровно
+четыре дня. Без них сравнение периодов даёт <b>+4 %</b> вместо +74 %.</p>
+
+<div class="card">
+<h4>Что спросить</h4>
+<p>«Ряд чистили от аномальных дней? Сколько их и что в эти дни происходило?»</p>
+<p class="sub" style="margin:8px 0 0">Разница в цене решения: «ускорять конвейер» — это
+программа на квартал и команда. «Починить интеграцию с бюро» — это задача на неделю.</p>
+</div>
+</div></section>
+
+<section id="e2"><div class="wrap">
+<h2><span class="num">2</span>Общая причина: два показателя, которые не двигают друг друга</h2>
+<p class="sub">Кейс: обращения в контакт-центр и отток по дебетовым картам</p>
+
+<h3>Как это выглядит</h3>
+<p>26 недель. Обращения в контакт-центр растут, отток по картам растёт, корреляция
+<b>0,84</b> — на графике две кривые идут рука об руку. На комитете звучит: клиенты
+жалуются и уходят, надо расширять контакт-центр. Цена вопроса — порядка 300 млн ₽ в год.</p>
+
+<h3>Почему обманывает</h3>
+<p>Корреляция говорит только о том, что показатели меняются согласованно. Она одинаково
+хорошо объясняется тремя разными картинами мира: A влияет на B, B влияет на A, либо
+на A и B одновременно влияет что-то третье. Третий вариант в бизнес-данных встречается
+чаще двух первых, и именно он даёт самые дорогие ошибки.</p>
+<p>В статистике общая причина называется <b>конфаундером</b>, а порождённая ею связь —
+ложной<a href="#src-confounding" class="fn">[5]</a>. Термин пришёл из эпидемиологии, но механика в отчётности
+банка ровно та же.</p>
+
+<h3>Чем проверяется</h3>
+<p>Ищут в выгрузке показатель, способный двигать оба ряда, и считают <b>частную
+корреляцию</b> — связь двух показателей при зафиксированном третьем<a href="#src-partial" class="fn">[6]</a>:</p>
+<pre><code>r(xy·z) = (r_xy − r_xz · r_yz) / √((1 − r_xz²)(1 − r_yz²))</code></pre>
+<p>В нашей выгрузке третий ряд есть: доля сессий с ошибкой в мобильном приложении.
+Он коррелирует с обращениями на 0,93 и с оттоком на 0,89 — сильнее, чем они друг
+с другом. Подставляем:</p>
+<pre><code>r = (0,84 − 0,93 · 0,89) / √((1 − 0,93²)(1 − 0,89²)) = 0,07</code></pre>
+<p>Прямая связь обращений и оттока практически исчезает. Обе кривые повторяют форму
+третьей: пик ошибок 18.05–08.06 — сразу после релиза приложения.</p>
+
+<div class="card">
+<h4>Что спросить</h4>
+<p>«Что ещё в эти же недели вело себя так же? Связь сохранится, если это зафиксировать?»</p>
+<p class="sub" style="margin:8px 0 0">Расширение контакт-центра сняло бы симптом
+и не тронуло причину: те же деньги в исправление релиза дают эффект на обоих показателях.</p>
+</div>
+</div></section>
+
+<section id="e3"><div class="wrap">
+<h2><span class="num">3</span>Сезонность: рост, которого нет</h2>
+<p class="sub">Кейс: дневные выдачи потребкредитов за три года</p>
+
+<h3>Как это выглядит</h3>
+<p>IV квартал выше III на <b>36 %</b>. Канал «разогнался», команда просит бюджет
+на масштабирование.</p>
+
+<h3>Почему обманывает</h3>
+<p>В дневном ряду выдач одновременно живут три цикла: годовой (декабрь против июня),
+внутримесячный (всплески 5–7 и 20–22 числа — дни выплат) и недельный (воскресенье вдвое
+ниже вторника). Пока они не сняты, сравнение соседних периодов измеряет не работу
+канала, а календарь. IV квартал выше III <i>всегда</i> — и в год роста, и в год падения.</p>
+
+<h3>Чем проверяется</h3>
+<p>Первый и самый дешёвый способ — <b>сравнивать сопоставимые периоды</b>: IV квартал
+к IV кварталу прошлого года, год к году. У нас: IV кв. 2025 к IV кв. 2024 — <b>−7 %</b>,
+годовые итоги падают три года подряд (−5,9 %, затем −6,8 %).</p>
+<p>Второй способ, когда нужен именно тренд, — разложить ряд на составляющие. Классическая
+схема: находят скользящее среднее, делят на него ряд и по остатку оценивают сезонный
+профиль<a href="#src-decomposition" class="fn">[7]</a>. Для рабочих задач берут <b>STL</b> — он устойчив к выбросам
+и позволяет сезонности меняться со временем<a href="#src-stl" class="fn">[8]</a>; авторы стандартного учебника
+по прогнозированию прямо не рекомендуют классическую декомпозицию как рабочий
+инструмент<a href="#src-decomposition" class="fn">[7]</a>.</p>
+<p>После снятия всех трёх профилей тренд за три года — <b>−17 %</b>. Рост IV квартала
+объясняется целиком годовой сезонностью.</p>
+
+<div class="card">
+<h4>Что спросить</h4>
+<p>«Это к прошлому кварталу или к тому же периоду прошлого года?»</p>
+<p class="sub" style="margin:8px 0 0">Один вопрос переворачивает решение:
+масштабировать падающий канал — худшее, что можно сделать с бюджетом.</p>
+</div>
+</div></section>
+
+<section id="e4"><div class="wrap">
+<h2><span class="num">4</span>Низкая база: проценты без базы ничего не значат</h2>
+<p class="sub">Кейс: темпы прироста выдач ипотеки у пяти игроков</p>
+
+<h3>Как это выглядит</h3>
+<p>На комитете: «конкуренты растут втрое быстрее». Мы +18 %, банк А +52 %, банк Б +60 %,
+банк В +9 %. Вывод: мы теряем рынок.</p>
+
+<h3>Почему обманывает</h3>
+<p>Процент прироста зависит от того, с чего считали. У банка Б база 6,8 млрд ₽ в месяц,
+у нас — 142 млрд ₽. Его «+60 %» — это +4,1 млрд ₽. Наши «+18 %» — это +26 млрд ₽,
+в шесть раз больше в деньгах. Официальная статистика называет это <b>эффектом базы</b>
+и отдельно предупреждает: большой процент при низкой базе не означает большого
+изменения по существу<a href="#src-base-effect" class="fn">[9]</a>.</p>
+
+<h3>Чем проверяется</h3>
+<p>Проценты пересчитывают в две сопоставимые величины:</p>
+<ul>
+  <li><b>абсолютный прирост</b> — сколько это в деньгах;</li>
+  <li><b>доля рынка</b> и её изменение в процентных пунктах — единственная метрика,
+      которая сравнивает игроков разного размера честно.</li>
+</ul>
+<div class="scroll"><table>
+<tr><th>Игрок</th><th class="num">Было</th><th class="num">Стало</th><th class="num">Темп</th>
+    <th class="num">Прирост, млрд ₽</th><th class="num">Доля</th></tr>
+<tr><td><b>Мы</b></td><td class="num">142,0</td><td class="num">168,0</td><td class="num">+18 %</td>
+    <td class="num"><b>+26,0</b></td><td class="num"><b>+2,1 п.п.</b></td></tr>
+<tr><td>Банк А</td><td class="num">11,5</td><td class="num">17,5</td><td class="num">+52 %</td>
+    <td class="num">+6,0</td><td class="num">+1,4 п.п.</td></tr>
+<tr><td>Банк Б</td><td class="num">6,8</td><td class="num">10,9</td><td class="num">+60 %</td>
+    <td class="num">+4,1</td><td class="num">+1,0 п.п.</td></tr>
+<tr><td>Банк В</td><td class="num">58,0</td><td class="num">63,2</td><td class="num">+9 %</td>
+    <td class="num">+5,2</td><td class="num">−0,9 п.п.</td></tr>
+<tr><td>Прочие</td><td class="num">61,0</td><td class="num">58,0</td><td class="num">−5 %</td>
+    <td class="num">−3,0</td><td class="num">−3,5 п.п.</td></tr>
+</table></div>
+<p>Доля рынка растёт у трёх игроков, и сильнее всех — у нас: +2,1 п.п. Правильный вывод
+противоположен озвученному.</p>
+
+<div class="card">
+<h4>Что спросить</h4>
+<p>«От какой базы этот процент и сколько это в деньгах?»</p>
+</div>
+</div></section>
+
+<section id="e5"><div class="wrap">
+<h2><span class="num">5</span>Среднее: норматив выполнен, клиент ждёт неделю</h2>
+<p class="sub">Кейс: срок рассмотрения заявки МСБ, 18 400 заявок за квартал</p>
+
+<h3>Как это выглядит</h3>
+<p>Средний срок рассмотрения — <b>2,08 дня</b> при нормативе 3 дня. Отчёт зелёный,
+вопрос закрыт.</p>
+
+<h3>Почему обманывает</h3>
+<p>Среднее осмысленно, когда процесс один. Здесь их два: 72 % заявок проходит
+автоскоринг за часы, остальные уходят на ручной андеррайтинг и ждут неделю и дольше.
+Распределение двугорбое, и среднее падает ровно между горбами — в точку, где не лежит
+почти ни одна заявка.</p>
+<p>Медиана здесь 0,20 дня (около пяти часов), 90-й перцентиль — 7,9 дня, а норматив
+нарушен для <b>25 % заявок</b>. Среднее оказалось единственным числом, при котором отчёт
+выглядит зелёным. Это общее свойство: среднее тянут хвосты и асимметрия, медиана
+к ним устойчива<a href="#src-median" class="fn">[3]</a>.</p>
+<div class="scroll"><table>
+<tr><th>Срок рассмотрения</th><th class="num">Заявок</th><th class="num">Доля</th>
+    <th class="num">Конверсия в выдачу</th></tr>
+<tr><td>до 1 дня</td><td class="num">13 257</td><td class="num">72 %</td><td class="num">71 %</td></tr>
+<tr><td>1–3 дня</td><td class="num">479</td><td class="num">3 %</td><td class="num">62 %</td></tr>
+<tr><td>3–7 дней</td><td class="num">2 272</td><td class="num">12 %</td><td class="num">44 %</td></tr>
+<tr><td>больше 7 дней</td><td class="num">2 392</td><td class="num">13 %</td><td class="num">31 %</td></tr>
+</table></div>
+
+<h3>Чем проверяется</h3>
+<p>Смотрят распределение, а не одно число: медиану, 90-й перцентиль и долю нарушений
+норматива. И задают норматив <b>по перцентилю</b>, а не по среднему — так делают
+в инженерии уровней сервиса, где среднее давно признано непригодным для описания
+пользовательского опыта<a href="#src-percentile" class="fn">[4]</a>. Формулировка «90 % заявок — не дольше
+3 дней» проверяема и не ломается от двух горбов; формулировка «в среднем 3 дня»
+не значит ничего.</p>
+<p>Деньги: если бы медленные корзины конвертировались как быстрая, выдач было бы
+примерно на 1 570 больше за квартал — порядка 6,6 млрд ₽ при среднем чеке 4,2 млн ₽.
+Это <b>верхняя</b> оценка: связь «дольше ждал → не взял» сама нуждается в проверке
+из раздела 2.</p>
+
+<div class="card">
+<h4>Что спросить</h4>
+<p>«Покажите распределение и 90-й перцентиль. Какой доле клиентов норматив нарушен?»</p>
+</div>
+</div></section>
+
+<section id="check"><div class="wrap">
+<h2>Пять вопросов, которые ловят все пять ошибок</h2>
+<p class="sub">Распечатать и держать под рукой на комитете</p>
+<ol class="steps">
+  <li><b>Ряд чистили от аномальных дней?</b> Сколько их и что в эти дни происходило.</li>
+  <li><b>Что ещё вело себя так же в этот период?</b> Связь сохранится, если это
+      зафиксировать.</li>
+  <li><b>Это к прошлому периоду или к тому же периоду прошлого года?</b></li>
+  <li><b>От какой базы процент и сколько это в деньгах?</b></li>
+  <li><b>Покажите распределение и перцентиль, а не среднее.</b></li>
+</ol>
+<div class="card acc">
+<p>Ни один из пяти вопросов не требует знания статистики. Все пять требуют одного:
+не принимать число за вывод.</p>
+</div>
+</div></section>
+
+<section id="giga"><div class="wrap">
+<h2>Что здесь делает GigaChat и чего от него ждать нельзя</h2>
+<p>На встрече все пять разборов идут с GigaChat, и на самостоятельной практике вы
+повторите их сами. Важно заранее понимать распределение ролей.</p>
+<h4>Что он делает надёжно</h4>
+<ul>
+  <li><b>Выбирает проверку.</b> По описанию ситуации называет метод и критерий —
+      это ровно то, чего не хватает руководителю, который не помнит терминов.</li>
+  <li><b>Пишет код проверки.</b> Готовый скрипт на pandas, который считает то же самое
+      на ваших данных, — его можно отдать аналитику или запустить самому.</li>
+  <li><b>Собирает вывод.</b> Из посчитанных чисел делает управленческую формулировку
+      с решением и действием.</li>
+</ul>
+<h4>Чего он не делает</h4>
+<div class="card warn">
+<p><b>Не считает за вас.</b> Мы прогнали все пять разборов через GigaChat-2
+и GigaChat-2-Max с полными выгрузками. Когда модель просят посчитать самой, она
+ошибается в арифметике: медиана ряда «41,3» превращается в «42,1», доля рынка
+142 / 279,3 — в «54 %» вместо 50,8 %, и на этой ошибке вывод переворачивается
+на противоположный.</p>
+<p>Отсюда рабочее правило: <b>числа считает Python или BI, вывод собирает модель,
+решение принимает человек.</b> На практике это ровно три промпта, и они разложены
+именно так.</p>
+</div>
+<h4>Про файлы</h4>
+<p>Веб-версия GigaChat принимает вложения только в форматах DOCX, PDF
+и TXT<a href="#src-giga-files" class="fn">[10]</a> — CSV и XLSX к ней приложить нельзя, хотя у API набор форматов
+шире<a href="#src-giga-api-files" class="fn">[11]</a>. Поэтому в практике данные вставляются прямо в промпт:
+так она работает в любом чате и не зависит от загрузки файлов.</p>
+<div class="card acc">
+<p><b>Правило работы с данными.</b> В кейсы и промпты берём только учебные
+и обезличенные данные. Реальные клиентские данные во внешние сервисы не выгружаем —
+даже в учебных целях.</p>
+</div>
+</div></section>
+
+<section id="src"><div class="wrap">
+<h2>Источники</h2>
+<p class="sub">Каждое методическое утверждение проверено по первоисточнику. Проверка
+и цитаты — в отчёте, который приложен к материалам.</p>
+<ol>
+<li id="src-mad"><b>NIST/SEMATECH e-Handbook of Statistical Methods, §1.3.5.17 «Detection of Outliers» (со ссылкой на Iglewicz B., Hoaglin D. «How to Detect and Handle Outliers», ASQC, 1993)</b><br><a href="https://www.itl.nist.gov/div898/handbook/eda/section3/eda35h.htm" target="_blank" rel="noopener">https://www.itl.nist.gov/div898/handbook/eda/section3/eda35h.htm</a></li><li id="src-mad-const"><b>Rousseeuw P. J., Croux C. «Alternatives to the Median Absolute Deviation», Journal of the American Statistical Association, 1993, 88(424), с. 1273–1283, DOI 10.1080/01621459.1993.10476408</b><br><a href="https://www.tandfonline.com/doi/abs/10.1080/01621459.1993.10476408" target="_blank" rel="noopener">https://www.tandfonline.com/doi/abs/10.1080/01621459.1993.10476408</a></li><li id="src-median"><b>NIST/SEMATECH e-Handbook of Statistical Methods, §1.3.5.1 «Measures of Location»</b><br><a href="https://www.itl.nist.gov/div898/handbook/eda/section3/eda351.htm" target="_blank" rel="noopener">https://www.itl.nist.gov/div898/handbook/eda/section3/eda351.htm</a></li><li id="src-percentile"><b>Beyer B., Jones C., Petoff J., Murphy N. R. «Site Reliability Engineering», O’Reilly / Google, 2016, гл. 4 «Service Level Objectives»</b><br><a href="https://sre.google/sre-book/service-level-objectives/" target="_blank" rel="noopener">https://sre.google/sre-book/service-level-objectives/</a></li><li id="src-confounding"><b>Statistical Methods in Cancer Research Volume V: Bias Assessment in Case–Control and Cohort Studies for Hazard Identification (IARC), гл. «Confounding: a routine concern in the interpretation of epidemiological studies», NCBI Bookshelf</b><br><a href="https://www.ncbi.nlm.nih.gov/books/NBK612871/" target="_blank" rel="noopener">https://www.ncbi.nlm.nih.gov/books/NBK612871/</a></li><li id="src-partial"><b>Wikipedia, «Partial correlation» (формула первого порядка); та же формула приводится в учебных курсах статистики, например VassarStats, гл. 3a</b><br><a href="https://en.wikipedia.org/wiki/Partial_correlation" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/Partial_correlation</a></li><li id="src-decomposition"><b>Hyndman R. J., Athanasopoulos G. «Forecasting: Principles and Practice» (3rd ed.), §3.4 «Classical decomposition»</b><br><a href="https://otexts.com/fpp3/classical-decomposition.html" target="_blank" rel="noopener">https://otexts.com/fpp3/classical-decomposition.html</a></li><li id="src-stl"><b>Hyndman R. J., Athanasopoulos G. «Forecasting: Principles and Practice» (3rd ed.), §3.6 «STL decomposition»</b><br><a href="https://otexts.com/fpp3/stl.html" target="_blank" rel="noopener">https://otexts.com/fpp3/stl.html</a></li><li id="src-base-effect"><b>Office for National Statistics (Великобритания), блог национальной статистики, «Beware base effects», 19.05.2021</b><br><a href="https://blog.ons.gov.uk/2021/05/19/beware-base-effects/" target="_blank" rel="noopener">https://blog.ons.gov.uk/2021/05/19/beware-base-effects/</a></li><li id="src-giga-files"><b>Справка GigaChat, «Работа с документами в GigaChat»</b><br><a href="https://giga.chat/help/articles/work-with-docs" target="_blank" rel="noopener">https://giga.chat/help/articles/work-with-docs</a></li><li id="src-giga-api-files"><b>Sber Developers, документация GigaChat API, «Обработка файлов»</b><br><a href="https://developers.sber.ru/docs/ru/gigachat/guides/working-with-files" target="_blank" rel="noopener">https://developers.sber.ru/docs/ru/gigachat/guides/working-with-files</a></li>
+</ol>
+</div></section>
+
+<footer><div class="wrap">
+  Аналитика 360 · практическая часть, Шаги 1–4 · Карпов Курсы для Сбера.<br>
+  Все данные в примерах синтетические, сгенерированы для обучения.
+</div></footer>
+
+<script>
+// Кнопка «скопировать промпт»: сначала пробуем Clipboard API, при отказе —
+// старый execCommand. В LMS страница часто открыта в iframe без разрешения
+// на буфер обмена, и без запасного пути кнопка молча ничего не делает.
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.copy'); if(!b) return;
+  var t=b.parentNode.querySelector('pre').innerText;
+  function done(){b.textContent='Скопировано';b.classList.add('done');
+    setTimeout(function(){b.textContent='Копировать';b.classList.remove('done')},1800);}
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(done,fallback);
+  } else { fallback(); }
+  function fallback(){
+    var a=document.createElement('textarea');a.value=t;a.style.position='fixed';
+    a.style.opacity=0;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');done();}catch(_e){b.textContent='Выделите вручную';}
+    document.body.removeChild(a);
+  }
+});
+</script>
+</body></html>
