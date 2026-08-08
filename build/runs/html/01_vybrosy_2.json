@@ -1,0 +1,21 @@
+{
+ "js_errors": [],
+ "bars": [
+  0,
+  0
+ ],
+ "bar_ratio": 1.0,
+ "bar_scale_ok": false,
+ "missing_numbers": [
+  "7[45][.,]?\\d*",
+  "\\b4\\b|четыр",
+  "41[.,]3",
+  "16\\.06|2026-06-16",
+  "[34][.,]?\\d*\\s*%",
+  "на странице есть undefined или NaN"
+ ],
+ "ok": false,
+ "text": "Ошибка загрузки данных: Cannot read properties of undefined (reading 'date')",
+ "attempt": 2,
+ "model": "GigaChat-2-Max"
+}

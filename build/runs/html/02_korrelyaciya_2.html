@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Отчет по данным еженедельных операций</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; }
+    h1 { margin-bottom: 1em; }
+    p.note { color: #666; margin-top: -.5em; }
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 6px 0;
+    }
+    .track {
+      display: inline-block;
+      width: 320px;
+      height: 14px;
+      background: #eef2f5;
+      border-radius: 7px;
+      vertical-align: middle;
+    }
+    .bar {
+      display: block;
+      height: 14px;
+      background: #20BA72;
+      border-radius: 7px;
+    }
+    .val { white-space: nowrap; }
+  </style>
+</head>
+<body>
+<h1>Общая причина: виноват релиз, а не контакт-центр</h1>
+<p class="note">(Проверяем наличие зависимости оттока и звонков от количества ошибок)</p>
+<div id="report"></div>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const response = await fetch('../data/weekly_ops_26w.csv');
+    if (!response.ok) throw new Error(`Ошибка HTTP ${response.status}`);
+    const csvText = await response.text();
+    
+    // Парсим CSV
+    let rows = csvText.trim().split("\n").slice(1); // пропускаем заголовки
+    let data = [];
+    for(let row of rows){
+      let [weekStart, callsTh, churnPct, appErrorRatePct] = row.split(',').map(s => s.trim());
+      let numRow = [
+        parseFloat(callsTh),
+        parseFloat(churnPct),
+        parseFloat(appErrorRatePct)
+      ];
+      if(numRow.every(n => !isNaN(n))) data.push(numRow);
+    }
+  
+    function mean(arr){ return arr.reduce((a,b)=>a+b,0)/arr.length; }
+    function median(arr){
+      let sorted = [...arr].sort((a,b)=>a-b);
+      let mid = Math.floor(sorted.length / 2);
+      return sorted.length%2 ? sorted[mid] : (sorted[mid-1]+sorted[mid])/2;
+    }
+    function mad(arr){
+      let m = median(arr);
+      return median(arr.map(x=>Math.abs(x-m)));
+    }
+    function percentile(arr,P){
+      let idx = (arr.length-1)*P/100;
+      let intPart = Math.floor(idx), fracPart = idx-intPart;
+      let sorted = [...arr].sort((a,b)=>a-b);
+      return sorted[intPart+1]*fracPart + sorted[intPart]*(1-fracPart);
+    }
+    function pearsonCorrelation(x,y){
+      let mx=mean(x), my=mean(y);
+      let numerator=x.map((xi,i)=>(xi-mx)*(y[i]-my)).reduce((s,v)=>s+v,0);
+      let denominator=Math.sqrt(
+        x.map(xi=>(xi-mx)**2).reduce((s,v)=>s+v,0) *
+        y.map(yi=>(yi-my)**2).reduce((s,v)=>s+v,0));
+      return numerator/denominator;
+    }
+
+    // Вычисляем корреляции
+    let callsChurnCorr = pearsonCorrelation(data.map(d=>d[0]), data.map(d=>d[1]));
+    let errorsCallsCorr = pearsonCorrelation(data.map(d=>d[2]), data.map(d=>d[0]));
+    let errorsChurnCorr = pearsonCorrelation(data.map(d=>d[2]), data.map(d=>d[1]));
+
+    // Частная корреляция обращений и оттока при фиксированных ошибках
+    let partialCorr = (
+      callsChurnCorr - errorsCallsCorr * errorsChurnCorr
+    ) / Math.sqrt((1 - errorsCallsCorr**2) * (1 - errorsChurnCorr**2));
+
+    // Отрисовка отчета
+    document.getElementById('report').innerHTML += `
+      <div class="row"><span class="lab">Корреляция обращений ↔ оттока:</span><span class="track"><span class="bar" style="width:${(100*Math.abs(callsChurnCorr)).toFixed(1)}%;"></span></span><span class="val">${callsChurnCorr.toFixed(2).replace('.', ',')}</span></div>
+      <div class="row"><span class="lab">Корреляция ошибок ↔ обращений:</span><span class="track"><span class="bar" style="width:${(100*Math.abs(errorsCallsCorr)).toFixed(1)}%;"></span></span><span class="val">${errorsCallsCorr.toFixed(2).replace('.', ',')}</span></div>
+      <div class="row"><span class="lab">Корреляция ошибок ↔ оттока:</span><span class="track"><span class="bar" style="width:${(100*Math.abs(errorsChurnCorr)).toFixed(1)}%;"></span></span><span class="val">${errorsChurnCorr.toFixed(2).replace('.', ',')}</span></div>
+      <div class="row"><span class="lab">Частная корреляция обращений ↔ оттока (с учетом ошибок):</span><span class="track"><span class="bar" style="width:${(100*Math.abs(partialCorr)).toFixed(1)}%;"></span></span><span class="val">${partialCorr.toFixed(2).replace('.', ',')}</span></div>
+      <h2>Вывод</h2>
+      <p>Проведенный анализ показывает слабую зависимость оттока клиентов от уровня обращений в контакт-центр (${(partialCorr*100).toFixed(1)}%). Более сильное влияние оказывают технические проблемы мобильного приложения.</p>
+    `;
+  } catch(err) {
+    document.body.innerHTML = `<pre>Ошибка: ${err.message}</pre>`;
+  }
+});
+</script>
+</body>
+</html>

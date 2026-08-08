@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Отчет по сезонности потребительских кредитов</title>
+<style>
+body { font-family: Arial, sans-serif; line-height: 1.4; }
+h1 { text-align: center; margin-top: 2em; color: #333; }
+p.intro { text-align: center; font-size: 1.1rem; color: #666; padding-bottom: 1em; }
+.track{display:inline-block;width:320px;height:14px;background:#eef2f5;
+       border-radius:7px;vertical-align:middle}
+.bar{display:block;height:14px;background:#20BA72;border-radius:7px}
+.row{display:flex;align-items:center;gap:12px;margin:6px 0}
+</style>
+</head>
+<body>
+<h1>Сезонность: рост, которого нет</h1>
+<p class="intro">Проверяем динамику выдач потребительских кредитов по кварталам и годам.</p>
+<div id="report"></div>
+<script>
+fetch('../data/issues_daily_3y.csv')
+.then(response => response.text())
+.then(data => {
+    const rows = data.trim().split('\n').slice(1); // пропускаем первую строку-заголовок
+
+    let issuesByDate = {};
+
+    for(let row of rows){
+        const [dateStr, amountStr] = row.split(',');
+        const amount = parseFloat(amountStr);
+        if (!isNaN(amount)){
+            issuesByDate[new Date(dateStr)] = amount;
+        }
+    }
+
+    function sumQuarter(year, quarter){
+        return Object.values(issuesByDate)
+                    .filter((amt, idx) => 
+                        new Date(Object.keys(issuesByDate)[idx]).getFullYear() === year &&
+                        ((new Date(Object.keys(issuesByDate)[idx]).getMonth()+1 >= (quarter * 3 - 2)) && 
+                         (new Date(Object.keys(issuesByDate)[idx]).getMonth()+1 <= (quarter * 3)))
+                     )
+                    .reduce((acc, val) => acc + val, 0);
+    }
+    
+    function sumYear(year){
+        return Object.values(issuesByDate)
+                    .filter((amt, idx) => 
+                        new Date(Object.keys(issuesByDate)[idx]).getFullYear() === year
+                     )
+                    .reduce((acc, val) => acc + val, 0);
+    }
+
+    const QIV2025_QIII2025_perc = ((sumQuarter(2025, 4) / sumQuarter(2025, 3) - 1)*100).toFixed(1);
+    const QIV2025_QIV2024_perc = ((sumQuarter(2025, 4) / sumQuarter(2024, 4) - 1)*100).toFixed(1);
+
+    const Y2023_total = sumYear(2023);
+    const Y2024_total = sumYear(2024);
+    const Y2025_total = sumYear(2025);
+
+    const Y2024_Y2023_perc = ((Y2024_total/Y2023_total - 1)*100).toFixed(1);
+    const Y2025_Y2024_perc = ((Y2025_total/Y2024_total - 1)*100).toFixed(1);
+
+    document.getElementById('report').innerHTML += `
+        <h2>Динамика потребительского кредитования:</h2>
+        <div class="row"><span class="lab">IV кв. 2025 к III кв. 2025:</span><span class="val">${QIV2025_QIII2025_perc}%</span></div>
+        <div class="row"><span class="lab">IV кв. 2025 к IV кв. 2024:</span><span class="val">${QIV2025_QIV2024_perc}%</span></div>
+        
+        <br />
+        <h2>Годовая динамика:</h2>
+        <div class="row"><span class="lab">2023 г.:</span><span class="track"><span class="bar"></span></span><span class="val">${Y2023_total.toLocaleString("ru-RU", { style:"decimal", minimumFractionDigits: 1 })} млн руб.</span></div>
+        <div class="row"><span class="lab">2024 г.:</span><span class="track"><span class="bar"></span></span><span class="val">${Y2024_total.toLocaleString("ru-RU", { style:"decimal", minimumFractionDigits: 1 })} млн руб., ${Y2024_Y2023_perc}%</span></div>
+        <div class="row"><span class="lab">2025 г.:</span><span class="track"><span class="bar"></span></span><span class="val">${Y2025_total.toLocaleString("ru-RU", { style:"decimal", minimumFractionDigits: 1 })} млн руб., ${Y2025_Y2024_perc}%</span></div>
+        
+        <br />
+        <h2>Квартальная динамика 2024–2025 гг.:</h2>
+        <div class="row"><span class="lab">I кв. 2024:</span><span class="track"><span class="bar"></span></span><span class="val">${sumQuarter(2024, 1).toLocaleString("ru-RU", { style:"decimal", minimumFractionDigits: 1 })} млн руб.</span></div>
+        <div class="row"><span class="lab">II кв. 2024:</span><span class="track"><span class="bar"></span></span><span class="val">${sumQuarter(2024, 2).toLocaleString("ru-RU", { style:"decimal", minimumFractionDigits: 1 })} млн руб.</span></div>
+        <div class="row"><span class="lab">III кв. 2024:</span><span class="track"><span class="bar"></span></span><span class="val">${sumQuarter(2024, 3).toLocaleString("ru-RU", { style:"decimal", minimumFractionDigits: 1 })} млн руб.</span></div>
+        <div class="row"><span class="lab">IV кв. 2024:</span><span class="track"><span class="bar"></span></span><span class="val">${sumQuarter(2024, 4).toLocaleString("ru-RU", { style:"decimal", minimumFractionDigits: 1 })} млн руб.</span></div>
+        <div class="row"><span class="lab">I кв. 2025:</span><span class="track"><span class="bar"></span></span><span class="val">${sumQuarter(2025, 1).toLocaleString("ru-RU", { style:"decimal", minimumFractionDigits: 1 })} млн руб.</span></div>
+        <div class="row"><span class="lab">II кв. 2025:</span><span class="track"><span class="bar"></span></span><span class="val">${sumQuarter(2025, 2).toLocaleString("ru-RU", { style:"decimal", minimumFractionDigits: 1 })} млн руб.</span></div>
+        <div class="row"><span class="lab">III кв. 2025:</span><span class="track"><span class="bar"></span></span><span class="val">${sumQuarter(2025, 3).toLocaleString("ru-RU", { style:"decimal", minimumFractionDigits: 1 })} млн руб.</span></div>
+        <div class="row"><span class="lab">IV кв. 2025:</span><span class="track"><span class="bar"></span></span><span class="val">${sumQuarter(2025, 4).toLocaleString("ru-RU", { style:"decimal", minimumFractionDigits: 1 })} млн руб.</span></div>
+        
+        <br />
+        <h2>Вывод:</h2>
+        <p>Несмотря на прогнозируемый сезонный всплеск спроса осенью, результаты показывают замедление роста потребительского кредитования. За последние годы объем выданных кредитов увеличивается незначительно, указывая на стабильность рынка и отсутствие существенного прироста объемов.</p>
+    `;
+
+    const bars = document.querySelectorAll('.bar');
+    const values = Array.from(bars, (_, i) => Number(document.querySelectorAll('.val')[i].textContent.replace(/[^,\d]/g,'').replace(',', '.')));
+    const maxValue = Math.max(...values.map(Math.abs));
+
+    bars.forEach(bar => {
+        const parentValText = bar.parentNode.nextSibling.textContent;
+        const value = Number(parentValText.replace(/[^,\d]/g,'').replace(',', '.'));  
+        bar.style.width = `${(100*Math.abs(value)/maxValue).toFixed(1)}%`;
+    });
+})
+.catch(error => {
+    document.body.innerHTML = `<p>Ошибка загрузки данных: ${error.message}</p>`
+});
+</script>
+</body>
+</html>

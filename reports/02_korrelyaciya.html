@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Корреляционный отчет</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.5; }
+    h1 { margin-top: 2rem; color: #333; }
+    p { margin-bottom: 1rem; }
+    .track{display:inline-block;width:320px;height:14px;background:#eef2f5;
+          border-radius:7px;vertical-align:middle}
+    .bar{display:block;height:14px;background:#20BA72;border-radius:7px}
+    .row{display:flex;align-items:center;gap:12px;margin:6px 0}
+  </style>
+</head>
+<body>
+<h1>Общая причина: виноват релиз, а не контакт-центр</h1>
+<p>Отчет проверяет влияние количества звонков в контакт-центр и частоты ошибок мобильного приложения на показатель оттока клиентов.</p>
+<div id="report-container"></div>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const response = await fetch('../data/weekly_ops_26w.csv');
+    if (!response.ok) throw new Error(`Ошибка HTTP ${response.status}`);
+    
+    const csvText = await response.text();
+    const rows = csvText.trim().split("\n").slice(1); // пропустить заголовки
+
+    let data = [];
+    for(const row of rows){
+      const cols = row.split(',').map(col => col.trim());
+      const numCols = cols.map(col => parseFloat(col));
+      
+      if(numCols.some(isNaN)) continue; // пропускаем некорректные строки
+      data.push({
+        weekStart: cols[0],
+        callsTh: numCols[1], 
+        churnPct: numCols[2], 
+        errorRatePct: numCols[3]
+      });
+    }
+
+    function mean(arr) {
+      return arr.reduce((a,b)=>a+b,0)/arr.length;
+    }
+
+    function median(arr) {
+      const sortedArr = [...arr].sort((a,b)=>a-b);
+      const mid = Math.floor(sortedArr.length / 2);
+      return sortedArr.length % 2 !== 0 ? sortedArr[mid] : (sortedArr[mid-1]+sortedArr[mid])/2;
+    }
+
+    function pearsonCorrelation(x,y) {
+      const n = x.length;
+      const mX = mean(x), mY = mean(y);
+      const numerator = x.reduce((sum,i,idx)=>sum+(i-mX)*(y[idx]-mY),0);
+      const denominator = Math.sqrt(
+        x.reduce((sum,v)=>sum+Math.pow(v-mX,2),0)*y.reduce((sum,v)=>sum+Math.pow(v-mY,2),0)
+      );
+      return numerator / denominator;
+    }
+
+    const calls = data.map(d=>d.callsTh),
+          churns = data.map(d=>d.churnPct),
+          errors = data.map(d=>d.errorRatePct);
+
+    const corrCallsChurn = pearsonCorrelation(calls,churns),
+          corrErrorsCalls = pearsonCorrelation(errors,calls),
+          corrErrorsChurn = pearsonCorrelation(errors,churns);
+
+    // Частная корреляция
+    const partialCorr = (corrCallsChurn - corrErrorsCalls * corrErrorsChurn) /
+                        Math.sqrt((1-Math.pow(corrErrorsCalls,2))*(1-Math.pow(corrErrorsChurn,2)));
+
+    document.getElementById('report-container').innerHTML += `
+      <div class="row"><span class="lab">Обращения ↔ Отток:</span><span class="track"><span class="bar" style="width:${(100*Math.abs(corrCallsChurn)).toFixed(1)}%"></span></span><span class="val">${corrCallsChurn.toFixed(2).replace('.', ',')}</span></div>
+      <div class="row"><span class="lab">Ошибки ↔ Обращения:</span><span class="track"><span class="bar" style="width:${(100*Math.abs(corrErrorsCalls)).toFixed(1)}%"></span></span><span class="val">${corrErrorsCalls.toFixed(2).replace('.', ',')}</span></div>
+      <div class="row"><span class="lab">Ошибки ↔ Отток:</span><span class="track"><span class="bar" style="width:${(100*Math.abs(corrErrorsChurn)).toFixed(1)}%"></span></span><span class="val">${corrErrorsChurn.toFixed(2).replace('.', ',')}</span></div>
+      <div class="row"><span class="lab">Частная корреляция (с учетом ошибок):</span><span class="track"><span class="bar" style="width:${(100*Math.abs(partialCorr)).toFixed(1)}%"></span></span><span class="val">${partialCorr.toFixed(2).replace('.', ',')}</span></div>
+    `;
+
+    document.body.innerHTML += `<hr/><h2>Вывод</h2>`;
+    document.body.innerHTML += '<p>';
+    if(Math.abs(partialCorr)<0.1) document.body.innerHTML += 'Связь обращений с оттоком незначительна.';
+    else if(partialCorr > 0) document.body.innerHTML += 'Увеличение обращений связано с ростом оттока.';
+    else document.body.innerHTML += 'Рост обращений сопровождается снижением оттока.';
+    document.body.innerHTML += '</p>';
+
+  } catch(e) {
+    document.body.innerHTML = `<pre>Ошибка обработки данных: ${e.message}</pre>`;
+  }
+});
+</script>
+</body>
+</html>

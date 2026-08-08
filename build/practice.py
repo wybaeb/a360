@@ -59,11 +59,24 @@ def _one(p, best):
                   f'{ex.get("n", "")} — приведён без правок, сокращён по длине.</p>'
                   f'<div class="card">{ex["answer"]}</div>')
 
+    # Ссылки рядом со скриншотом: выгрузка и готовый HTML-отчёт, который
+    # GigaChat собрал по этой же выгрузке. Отчёт открывается по ссылке
+    # и пересчитывает всё в браузере — смотреть можно с телефона.
+    links = f'''<div class="card acc" style="margin-bottom:18px">
+<h4 style="margin-bottom:6px">Открыть прямо сейчас</h4>
+<p style="margin:0"><a href="reports/{p['slug']}.html" target="_blank">Готовый HTML-отчёт
+по этой выгрузке</a> — его собрал GigaChat промптом 4, страница сама грузит файл
+и считает всё заново. Рядом лежит и сама выгрузка:
+<a href="data/{p['csv']}">{p['csv']}</a> ·
+<a href="data/{p['csv'].replace('.csv', '.txt')}">та же в TXT</a>.</p>
+</div>'''
+
     return f"""
 <section id="p{p['num']}"><div class="wrap">
 <h2><span class="num">{p['num']}</span>{esc(p['title'])}</h2>
 <p class="sub">Проверка: {esc(p['method'])}</p>
 {img}
+{links}
 <div class="card warn">
 <h4>Ситуация</h4>
 <p>{esc(p['story'][0].upper() + p['story'][1:])}.</p>
@@ -88,6 +101,14 @@ def _one(p, best):
 <h4>Что должно получиться</h4>
 <p>{esc(p['expect'])}</p>
 </div>
+
+<h3>Промпт 4. HTML-отчёт по выгрузке</h3>
+<p>Просим GigaChat собрать страницу, которая сама грузит файл с данными, считает
+проверку и рисует результат. Готовый файл кладётся рядом с выгрузкой и открывается
+ссылкой — это ровно то, что вы видели на занятии.
+<a href="reports/{p['slug']}.html" target="_blank">Наш результат по этому промпту</a>
+собран и проверен в браузере: считает те же числа, что и разбор выше.</p>
+{prompt_block(rendered(p, 'html'))}
 {answer}
 
 <h3>Необязательно: посмотрите на ловушку</h3>
@@ -111,7 +132,7 @@ def body():
   <div class="meta">
     <span class="chip">Время <b>40–60 минут</b></span>
     <span class="chip">Разборов <b>5</b></span>
-    <span class="chip">Промптов <b>15</b> + 5 ловушек</span>
+    <span class="chip">Промптов <b>20</b> + 5 ловушек</span>
     <span class="chip">Проверено на <b>GigaChat 2 и 2 Max</b></span>
   </div>
 </div></header>
@@ -138,12 +159,16 @@ def body():
 во внешние сервисы не отправляем — ни в GigaChat, ни куда-либо ещё.</p>
 </div>
 <div class="card">
-<h4>Почему промптов три, а не один</h4>
+<h4>Почему промптов четыре, а не один</h4>
 <p>Мы прогнали каждый разбор через API десятки раз. Когда модель просят посчитать
 самой, она ошибается в арифметике — и на этой ошибке переворачивает вывод
 (например, доля рынка 142 / 279,3 превращается в «54 %» вместо 50,8 %). Поэтому роли
 разведены: <b>метод выбирает модель, числа считает Python или BI, вывод снова
 собирает модель, решение принимает человек.</b></p>
+<p>Четвёртый промпт — сборка HTML-отчёта поверх выгрузки. Там считает уже не модель,
+а написанная ею страница: файл лежит рядом с данными, открывается ссылкой
+и пересчитывает всё в браузере. Наши готовые отчёты по всем пяти разборам
+проверены в настоящем браузере — ссылки стоят в каждом разборе.</p>
 </div>
 </div></section>
 """]
@@ -156,21 +181,26 @@ def body():
 <p>Те же ряды, что стоят за разборами. CSV — для Python и Excel; TXT — если захотите
 приложить файл к чату (веб-версия GigaChat принимает DOCX, PDF и TXT, но не CSV).</p>
 <div class="scroll"><table>
-<tr><th>Разбор</th><th>Файл</th><th>Что внутри</th></tr>
+<tr><th>Разбор</th><th>Выгрузка</th><th>Готовый отчёт</th><th>Что внутри</th></tr>
 <tr><td>1 · выбросы</td><td><a href="data/loan_tat_90d.csv">loan_tat_90d.csv</a> ·
     <a href="data/loan_tat_90d.txt">txt</a></td>
+    <td><a href="reports/01_vybrosy.html" target="_blank">01_vybrosy.html</a></td>
     <td>90 дней, срок рассмотрения заявки, минуты</td></tr>
 <tr><td>2 · общая причина</td><td><a href="data/weekly_ops_26w.csv">weekly_ops_26w.csv</a> ·
     <a href="data/weekly_ops_26w.txt">txt</a></td>
+    <td><a href="reports/02_korrelyaciya.html" target="_blank">02_korrelyaciya.html</a></td>
     <td>26 недель: обращения, отток, ошибки в приложении</td></tr>
 <tr><td>3 · сезонность</td><td><a href="data/issues_daily_3y.csv">issues_daily_3y.csv</a> ·
     <a href="data/issues_daily_3y.txt">txt</a></td>
+    <td><a href="reports/03_sezonnost.html" target="_blank">03_sezonnost.html</a></td>
     <td>1095 дней выдач потребкредитов, млн ₽</td></tr>
 <tr><td>4 · низкая база</td><td><a href="data/mortgage_market.csv">mortgage_market.csv</a> ·
     <a href="data/mortgage_market.txt">txt</a></td>
+    <td><a href="reports/04_nizkaya_baza.html" target="_blank">04_nizkaya_baza.html</a></td>
     <td>пять игроков, выдачи ипотеки год назад и сейчас</td></tr>
 <tr><td>5 · среднее</td><td><a href="data/msb_applications_q.csv">msb_applications_q.csv</a> ·
     <a href="data/msb_applications_q.txt">txt</a></td>
+    <td><a href="reports/05_srednee.html" target="_blank">05_srednee.html</a></td>
     <td>18 400 заявок МСБ: срок рассмотрения и факт выдачи</td></tr>
 </table></div>
 <p class="sub">Все данные синтетические, сгенерированы для обучения. Совпадения

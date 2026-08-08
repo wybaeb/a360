@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Анализ срока рассмотрения заявок</title>
+<style>
+body { font-family: Arial, sans-serif; line-height: 1.4; }
+h1,h2 { color: #333; margin-bottom: 1em; }
+.row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 6px 0;
+}
+.track {
+    display: inline-block;
+    width: 320px;
+    height: 14px;
+    background: #eef2f5;
+    border-radius: 7px;
+    vertical-align: middle;
+}
+.bar {
+    display: block;
+    height: 14px;
+    background: #20BA72;
+    border-radius: 7px;
+}
+.val {
+    min-width: 60px;
+    text-align: right;
+}
+table {
+    border-collapse: collapse;
+    margin-top: 1em;
+}
+th, td {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+}
+th { background-color: #f2f2f2; }
+</style>
+</head>
+<body>
+<h1>Выброс: четыре дня сбоя вместо «конвейер замедлился»</h1>
+<p>Проверяем срок рассмотрения потребительских кредитов в Тинькофф Банке.</p>
+<div id="result"></div>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const response = await fetch('../data/loan_tat_90d.csv');
+    if (!response.ok) throw new Error(`Ошибка загрузки данных (${response.status})`);
+    const csvText = await response.text();
+    
+    // Чтение и обработка данных
+    let rows = csvText.trim().split("\n").slice(1); // пропускаем заголовки
+    let data = [];
+    for(let row of rows){
+        let [dateStr, valueStr] = row.split(',').map(s => s.trim());
+        let value = parseFloat(valueStr);
+        if(!isNaN(value)){
+            data.push({date: dateStr, value});
+        }
+    }
+
+    function median(arr) {
+        arr.sort((a,b)=>a-b);
+        let mid = Math.floor(arr.length / 2);
+        return arr.length % 2 !== 0 ? arr[mid] : (arr[mid-1]+arr[mid])/2;
+    }
+
+    function mad(arr, med) {
+        return median(arr.map(x=>Math.abs(x-med)));
+    }
+
+    function mean(arr) {
+        return arr.reduce((acc,x)=>acc+x,0)/arr.length;
+    }
+
+    function robustZScore(arr, med, m) {
+        return arr.map(x => 0.6745 * ((x - med) / m));
+    }
+
+    function percentChange(newVal, oldVal) {
+        return ((newVal / oldVal)-1)*100;
+    }
+
+    let values = data.map(d => d.value);
+    let firstMean = mean(values.slice(0,30)).toFixed(1);
+    let lastMean = mean(values.slice(-30)).toFixed(1);
+    let changeBeforeOutliers = percentChange(lastMean,firstMean).toFixed(1)+'%';
+
+    let med = median(values);
+    let MAD = mad(values,med);
+    let threshold = 3.5*MAD;
+    let outliers = [];
+    let robzScores = robustZScore(values,med,MAD);
+    for(let i=0;i<robzScores.length;i++){
+        if(Math.abs(robzScores[i]) > 3.5){
+            outliers.push(data[i]);
+        }
+    }
+
+    let cleanValues = values.filter((_,i)=>!outliers.some(o=>o.date===data[i].date));
+    let cleanFirstMean = mean(cleanValues.slice(0,30)).toFixed(1);
+    let cleanLastMean = mean(cleanValues.slice(-30)).toFixed(1);
+    let changeAfterOutliers = percentChange(cleanLastMean,cleanFirstMean).toFixed(1)+'%';
+
+    document.getElementById('result').innerHTML += `
+    <h2>Наивные выводы:</h2>
+    <div class="row"><span class="lab">Среднее первые 30 дней:</span><span class="track"><span class="bar"></span></span><span class="val">${firstMean.replace('.',',')} мин</span></div>
+    <div class="row"><span class="lab">Среднее последние 30 дней:</span><span class="track"><span class="bar"></span></span><span class="val">${lastMean.replace('.',',')} мин</span></div>
+    <div class="row"><span class="lab">Изменение:</span><span class="track"><span class="bar"></span></span><span class="val">${changeBeforeOutliers}</span></div>
+    <br/>
+    <h2>Робастная оценка:</h2>
+    <div class="row"><span class="lab">Медиана:</span><span class="track"><span class="bar"></span></span><span class="val">${med.toFixed(1).replace('.',',')} мин</span></div>
+    <div class="row"><span class="lab">MAD:</span><span class="track"><span class="bar"></span></span><span class="val">${MAD.toFixed(1).replace('.',',')} мин</span></div>
+    <div class="row"><span class="lab">Порог выбросов:</span><span class="track"><span class="bar"></span></span><span class="val">± ${threshold.toFixed(1).replace('.',',')} мин</span></div>
+    <br/>
+    <h2>Даты-взрывные события:</h2>
+    <table>
+      <tr><th>Дата</th><th>Значение</th></tr>
+      ${outliers.map(outlier => `<tr><td>${outlier.date}</td><td>${outlier.value.toFixed(1).replace('.',',')} мин</td></tr>`).join('')}
+    </table>
+    <br/>
+    <h2>Корректированные результаты:</h2>
+    <div class="row"><span class="lab">Среднее первые 30 дней без выбросов:</span><span class="track"><span class="bar"></span></span><span class="val">${cleanFirstMean.replace('.',',')} мин</span></div>
+    <div class="row"><span class="lab">Среднее последние 30 дней без выбросов:</span><span class="track"><span class="bar"></span></span><span class="val">${cleanLastMean.replace('.',',')} мин</span></div>
+    <div class="row"><span class="lab">Изменение:</span><span class="track"><span class="bar"></span></span><span class="val">${changeAfterOutliers}</span></div>
+    `;
+
+    // Установка ширины баров
+    let bars = document.querySelectorAll('.bar');
+    let maxAbsValue = Math.max(
+        Math.abs(firstMean),
+        Math.abs(lastMean),
+        Math.abs(med),
+        Math.abs(MAD),
+        Math.abs(threshold),
+        Math.abs(cleanFirstMean),
+        Math.abs(cleanLastMean)
+    );
+    bars.forEach(bar=>{
+        let parentRow = bar.closest('.row');
+        let numStr = parentRow.querySelector('.val').textContent.match(/[\d.,]+/)[0];
+        let val = Number(numStr.replace(',','.'));
+        bar.style.width = `${(100*Math.abs(val)/maxAbsValue).toFixed(1)}%`;
+    });
+
+    // Итоговый вывод
+    document.body.innerHTML += '<hr/><h2>Вывод:</h2>';
+    if(changeAfterOutliers.includes('-')){
+        document.body.innerHTML += `<p>После исключения выбросов время обработки снизилось на ${Math.abs(Number(changeAfterOutliers.slice(0,-1))).toFixed(1)}%. Снижение незначительно и находится в пределах статистической погрешности.</p>`;
+    } else {
+        document.body.innerHTML += `<p>После исключения выбросов время обработки увеличилось на ${Number(changeAfterOutliers.slice(0,-1)).toFixed(1)}%, однако данное увеличение также невелико и находится в рамках допустимых колебаний.</p>`;
+    }
+}, error => {
+    document.body.innerHTML = 'Ошибка загрузки данных: '+error.message;
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Отчет по ипотечному рынку</title>
+<style>
+body { font-family: Arial, sans-serif; }
+h1 { margin-top: 0; color: #333; }
+p { line-height: 1.5; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+th { background-color: #f2f2f2; }
+.track{display:inline-block;width:320px;height:14px;background:#eef2f5;border-radius:7px;vertical-align:middle;}
+.bar{display:block;height:14px;background:#20BA72;border-radius:7px;}
+.row{display:flex;align-items:center;gap:12px;margin:6px 0;}
+.red { color: red; }
+.green { color: green; }
+</style>
+</head>
+<body>
+<h1>Низкая база: проценты без базы ничего не значат</h1>
+<p>Проверяем динамику выдачи ипотеки банками и влияние низкой базы.</p>
+<div id="result"></div>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch('../data/mortgage_market.csv');
+        if (!response.ok) throw new Error(`Ошибка HTTP ${response.status}`);
+        
+        const csvText = await response.text();
+        const rows = csvText.trim().split("\n").slice(1); // пропускаем заголовки
+
+        let totalWas = 0, totalNow = 0;
+        const data = [];
+
+        for (const row of rows) {
+            const cols = row.split(",").map(col => col.trim());
+            const [bank, wasBillionRubles, nowBillionRubles] = cols.map(parseFloat);
+            
+            if (isNaN(wasBillionRubles) || isNaN(nowBillionRubles)) continue;
+            
+            totalWas += wasBillionRubles;
+            totalNow += nowBillionRubles;
+            data.push({ bank, wasBillionRubles, nowBillionRubles });
+        }
+
+        const resultRows = data.map(d => ({
+            bank: d.bank,
+            wasBillionRubles: d.wasBillionRubles.toFixed(1),
+            nowBillionRubles: d.nowBillionRubles.toFixed(1),
+            growthRatePercent: ((d.nowBillionRubles / d.wasBillionRubles - 1) * 100).toFixed(1),
+            absoluteGrowthBillions: (d.nowBillionRubles - d.wasBillionRubles).toFixed(1),
+            marketShareBefore: ((d.wasBillionRubles / totalWas) * 100).toFixed(1),
+            marketShareAfter: ((d.nowBillionRubles / totalNow) * 100).toFixed(1),
+            changeInMarketSharePP: (((d.nowBillionRubles / totalNow) * 100 - (d.wasBillionRubles / totalWas) * 100)).toFixed(1)
+        }));
+
+        const growthRates = resultRows.map(r => +r.growthRatePercent);
+        const absGrowths = resultRows.map(r => +r.absoluteGrowthBillions);
+        const maxGrowthRate = Math.max(...growthRates.map(Math.abs));
+        const maxAbsGrowth = Math.max(...absGrowths.map(Math.abs));
+
+        const resultDiv = document.getElementById('result');
+
+        resultDiv.innerHTML = `
+            <h2>Темпы роста банков:</h2>
+            ${resultRows.map(row => `<div class="row"><span class="lab">${row.bank}</span><span class="track"><span class="bar" style="width:${(100*Math.abs(+row.growthRatePercent)/maxGrowthRate).toFixed(1)}%"></span></span><span class="val">${+row.growthRatePercent >= 0 ? '+' : ''}${row.growthRatePercent}%</span></div>`).join('')}
+            <br/>
+            <h2>Абсолютный рост банков:</h2>
+            ${resultRows.map(row => `<div class="row"><span class="lab">${row.bank}</span><span class="track"><span class="bar" style="width:${(100*Math.abs(+row.absoluteGrowthBillions)/maxAbsGrowth).toFixed(1)}%"></span></span><span class="val">${+row.absoluteGrowthBillions >= 0 ? '+' : ''}${row.absoluteGrowthBillions},0 млрд руб.</span></div>`).join('')}
+            <br/><hr/>
+            <h2>Полная таблица динамики:</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Банк</th>
+                        <th>Было (млрд руб.)</th>
+                        <th>Стало (млрд руб.)</th>
+                        <th>Темп роста (%)</th>
+                        <th>Прирост (млрд руб.)</th>
+                        <th>Доля раньше (%)</th>
+                        <th>Доля теперь (%)</th>
+                        <th>Изменение доли (пп)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${resultRows.map(row => `<tr>
+                        <td>${row.bank}</td>
+                        <td>${row.wasBillionRubles}</td>
+                        <td>${row.nowBillionRubles}</td>
+                        <td>${row.growthRatePercent}</td>
+                        <td>${row.absoluteGrowthBillions}</td>
+                        <td>${row.marketShareBefore}</td>
+                        <td>${row.marketShareAfter}</td>
+                        <td>${row.changeInMarketSharePP}</td>
+                     </tr>`).join('')}
+                </tbody>
+            </table>
+            <h2>Вывод:</h2>
+            <p>На рынке произошли значительные изменения долей игроков. Прирост объемов кредитования демонстрирует резкий скачок у некоторых участников рынка, однако низкая исходная база искажает картину динамики. Банки с изначально небольшими объемами демонстрируют высокие темпы роста, тогда как крупные игроки сохраняют стабильное положение на рынке.</p>
+        `;
+    } catch(error) {
+        document.body.innerHTML = '<p>' + error.message + '</p>';
+    }
+});
+</script>
+</body>
+</html>

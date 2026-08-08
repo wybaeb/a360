@@ -1,0 +1,17 @@
+{
+ "js_errors": [],
+ "bars": [
+  0,
+  0
+ ],
+ "missing_numbers": [
+  "2[.,]0[78]",
+  "0[.,]2",
+  "7[.,]9",
+  "2[45]\\s*%|0[.,]2[45]"
+ ],
+ "ok": false,
+ "text": "Среднее: норматив выполнен, клиент ждёт неделю\n\nПроверяем сроки рассмотрения заявок малого бизнеса.\n\nresponse.body.getReader(...) is not a function or its return value is not async iterable",
+ "attempt": 3,
+ "model": "GigaChat-2-Max"
+}

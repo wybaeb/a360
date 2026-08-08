@@ -1,0 +1,19 @@
+{
+ "js_errors": [],
+ "bars": [
+  0,
+  0
+ ],
+ "bar_ratio": 1.0,
+ "bar_scale_ok": false,
+ "missing_numbers": [
+  "\\+?26([.,]\\d)?",
+  "4[.,]1",
+  "2[.,]1",
+  "52[.,]9"
+ ],
+ "ok": false,
+ "text": "Ошибка загрузки данных: ReferenceError: totalShareBefore is not defined",
+ "attempt": 1,
+ "model": "GigaChat-2-Max"
+}

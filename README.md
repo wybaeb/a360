@@ -12,6 +12,11 @@
 | `longread.html` | лонгрид предчтения «Пять ошибок вывода» — теория, вынесенная из занятия |
 | `practice.html` | самостоятельная практика: пять разборов кикоффа, повторяемых в GigaChat |
 
+Выгрузки и готовые отчёты по ним лежат открыто — они нужны и странице практики,
+и ссылкам со слайдов, и их читает JavaScript отчётов, поэтому шифровать их нельзя.
+От поисковой выдачи весь домен закрыт `robots.txt` (`Disallow: /`), страницы
+дополнительно помечены `<meta name="robots" content="noindex,nofollow,noarchive">`.
+
 В репозитории лежит только шифротекст: страницы зашифрованы AES-256-GCM с ключом
 из PBKDF2-HMAC-SHA256 (200 000 итераций), расшифровка идёт в браузере через WebCrypto.
 Пароля здесь нет ни в каком виде. После первого верного ввода он сохраняется
@@ -21,6 +26,9 @@
 
 ```
 data/          пять синтетических выгрузок (CSV — для Python и Excel, TXT — для чата)
+reports/       HTML-отчёты по этим выгрузкам, собранные GigaChat: страница грузит
+               CSV, лежащий рядом, считает проверку и рисует результат
+robots.txt     закрывает материалы от индексации
 assets/        скриншоты разборов с занятия
 build/         сборка: генерация данных, промпты, прогон на GigaChat API, страницы, SCORM
 build/runs/    сырые ответы GigaChat со всех прогонов — доказательная база к таблице
@@ -38,6 +46,12 @@ python3 build/reference.py                    # эталонные числа (�
 GIGACHAT_AUTH_KEY=$(secret get GIGA1_GIGACHAT_TOKEN) \
   python3 build/check_prompts.py --runs 3     # прогон промптов, повторный запуск
                                               # доспрашивает только недостающее
+
+GIGACHAT_AUTH_KEY=$(secret get GIGA1_GIGACHAT_TOKEN) \
+  python3 build/check_reports.py --attempts 5   # HTML-отчёты: генерация + проверка
+                                                # в настоящем браузере, публикуется
+                                                # только прошедшая версия
+python3 build/check_reports_safety.py          # в отчётах нет обращений наружу
 
 A360_PASSWORD='...' python3 build/build_pages.py   # страницы + гейт + scorm/content
 python3 build/build_scorm.py                       # dist/a360_step0_scorm12.zip

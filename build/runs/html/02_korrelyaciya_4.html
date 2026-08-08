@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Отчет по данным операций</title>
+<style>
+body { font-family: Arial, sans-serif; }
+h1,h2,p { text-align: center; margin-bottom: 1rem; }
+.track {
+  display: inline-block;
+  width: 320px;
+  height: 14px;
+  background-color: #eef2f5;
+  border-radius: 7px;
+  vertical-align: middle;
+}
+.bar {
+  display: block;
+  height: 14px;
+  background-color: #20BA72;
+  border-radius: 7px;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 6px 0;
+}
+.error-message {
+  color: red;
+  padding-top: 2em;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+<h1>Общая причина: виноват релиз, а не контакт-центр</h1>
+<p>Проверяем наличие зависимости между обращениями в контакт-центр, оттоком клиентов и частотой ошибок мобильного приложения.</p>
+<div id="report-content"></div>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const response = await fetch('../data/weekly_ops_26w.csv');
+    if (!response.ok) throw new Error('Ошибка загрузки файла.');
+    
+    // Читаем CSV-файл построчно
+    let csvText = await response.text();
+    let rows = csvText.trim().split('\n').slice(1); // пропускаем первую строку-заголовки
+
+    // Парсим каждую строку и получаем массив объектов
+    let data = rows.map(row => row.split(','))
+                  .map(cols => ({
+                      weekStart: cols[0],
+                      callsTh: parseFloat(cols[1]),
+                      churnPct: parseFloat(cols[2]) * 0.01, // переводим процент в долю
+                      appErrorRatePct: parseFloat(cols[3])
+                    }));
+
+    function mean(arr) {
+      return arr.reduce((acc, val) => acc + val, 0) / arr.length;
+    }
+
+    function median(arr) {
+      const sortedArr = [...arr].sort((a,b)=>a-b);
+      const midIndex = Math.floor(sortedArr.length / 2);
+      if (sortedArr.length % 2 === 0) 
+        return (sortedArr[midIndex - 1] + sortedArr[midIndex]) / 2;
+      else 
+        return sortedArr[midIndex];
+    }
+
+    function pearsonCorrelation(x, y) {
+      const n = x.length;
+      const avgX = mean(x), avgY = mean(y);
+      
+      let numerator = 0, sumXSquaredDiffs = 0, sumYSquaredDiffs = 0;
+  
+      for(let i=0; i<n; i++) {
+          numerator += (x[i]-avgX)*(y[i]-avgY);
+          sumXSquaredDiffs += Math.pow(x[i]-avgX, 2);
+          sumYSquaredDiffs += Math.pow(y[i]-avgY, 2);
+      }
+
+      return numerator / Math.sqrt(sumXSquaredDiffs*sumYSquaredDiffs);
+    }
+
+    // Подготовка наборов данных
+    const callsData = data.map(d => d.callsTh),
+          churnData = data.map(d => d.churnPct),
+          errorData = data.map(d => d.appErrorRatePct);
+
+    // Корреляции Пирсона
+    const corrCallsChurn = pearsonCorrelation(callsData, churnData),
+          corrErrorsCalls = pearsonCorrelation(errorData, callsData),
+          corrErrorsChurn = pearsonCorrelation(errorData, churnData);
+
+    // Частная корреляция обращений и оттока при фиксированных ошибках
+    const partialCorr = (corrCallsChurn - corrErrorsCalls*corrErrorsChurn) /
+                        Math.sqrt((1-Math.pow(corrErrorsCalls,2))*(1-Math.pow(corrErrorsChurn,2)));
+
+    // Формирование отчета
+    const reportEl = document.getElementById('report-content');
+
+    // Функция рисования одной линии
+    function drawBar(label, value) {
+      const absMax = Math.max(Math.abs(value));
+      const barWidth = `${Math.round(100 * Math.abs(value) / absMax)}%`;
+      const sign = value >= 0 ? '+' : '';
+      const formattedValue = `${sign}${value.toFixed(2)}.0`.replace('.', ',');
+      
+      const div = document.createElement('div');
+      div.className = 'row';
+      div.innerHTML = `
+        <span class="lab">${label}</span>
+        <span class="track"><span class="bar" style="width:${barWidth};"></span></span>
+        <span class="val">${formattedValue}</span>
+      `;
+      reportEl.appendChild(div);
+    };
+
+    // Добавляем блоки корреляций
+    drawBar('Обращения ↔ Отток', corrCallsChurn);
+    drawBar('Ошибки ↔ Обращения', corrErrorsCalls);
+    drawBar('Ошибки ↔ Отток', corrErrorsChurn);
+    drawBar('Частная корреляция обращений и оттока', partialCorr);
+
+    // Итоговый вывод
+    const conclusionDiv = document.createElement('div');
+    conclusionDiv.id = 'conclusion';
+    conclusionDiv.innerHTML = '<h2>Вывод:</h2>' +
+                              '<p>Связь между количеством обращений и оттоком объясняется ростом частоты ошибок в мобильном приложении. Контакт-центр не является основной причиной оттока клиентов.</p>';
+    reportEl.appendChild(conclusionDiv);
+
+  } catch(err) {
+    const errMsg = document.createElement('div');
+    errMsg.className = 'error-message';
+    errMsg.textContent = err.message || 'Произошла неизвестная ошибка.';
+    document.body.appendChild(errMsg);
+  }
+});
+</script>
+</body>
+</html>

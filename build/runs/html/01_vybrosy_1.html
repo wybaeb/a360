@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Анализ TAT заявок</title>
+<style>
+body { font-family: sans-serif; }
+h1,h2,p { margin-bottom: 12px; }
+table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+th,td { padding: 6px 12px; border: 1px solid #ccc; text-align: left; }
+.track{display:inline-block;width:320px;height:14px;background:#eef2f5;border-radius:7px;vertical-align:middle;}
+.bar{display:block;height:14px;background:#20BA72;border-radius:7px;}
+.row{display:flex;align-items:center;gap:12px;margin:6px 0;}
+</style>
+</head>
+<body>
+<h1>Выброс: четыре дня сбоя вместо «конвейер замедлился»</h1>
+<p>Проверяем срок рассмотрения потребительских кредитов за последние 90 дней.</p>
+<div id="report"></div>
+<script>
+fetch('../data/loan_tat_90d.csv')
+.then(response => response.text())
+.then(text => {
+  const rows = text.trim().split("\n").slice(1); // пропускаем заголовки
+  let values = [];
+  
+  for(const row of rows){
+    const cols = row.split(',');
+    if(cols.length === 2 && !isNaN(parseFloat(cols[1].trim()))){
+      values.push({date:cols[0],tat:parseFloat(cols[1].trim())});
+    }
+  }
+
+  function median(arr){
+    arr.sort((a,b)=>a-b);
+    return arr.length%2 ? arr[(arr.length-1)/2] : (arr[arr.length/2]+arr[arr.length/2-1])/2;
+  }
+
+  function mad(arr,m){
+    return median(arr.map(x=>Math.abs(x-m)));
+  }
+
+  const medTat = median(values.map(x=>x.tat));
+  const mads = mad(values.map(x=>x.tat),medTat);
+  const threshold = 0.6745 * 3.5 * mads + medTat;
+
+  const outliers = values.filter(x => Math.abs(0.6745*(x.tat-medTat)/mads)>3.5);
+
+  const cleanValues = values.filter(x => !outliers.includes(x));
+
+  function mean(arr){
+    return arr.reduce((acc,x)=>acc+x,0)/arr.length;
+  }
+
+  const firstMean = mean(cleanValues.slice(0,30).map(x=>x.tat)).toFixed(1);
+  const lastMean = mean(cleanValues.slice(-30).map(x=>x.tat)).toFixed(1);
+  const changePct = ((lastMean-firstMean)*100/firstMean).toFixed(1);
+
+  document.getElementById('report').innerHTML = `
+    <h2>Наивные выводы:</h2>
+    <div class="row"><span class="lab">Среднее первые 30 дней:</span><span class="track"><span class="bar"></span></span><span class="val">${mean(values.slice(0,30).map(x=>x.tat)).toFixed(1)} мин.</span></div>
+    <div class="row"><span class="lab">Среднее последние 30 дней:</span><span class="track"><span class="bar"></span></span><span class="val">${mean(values.slice(-30).map(x=>x.tat)).toFixed(1)} мин.</span></div>
+    <p>Изменение: ${changePct}%</p>
+    
+    <h2>Робастная оценка:</h2>
+    <p>Медиана: ${medTat.toFixed(1)} минут</p>
+    <p>MAD: ${mads.toFixed(1)} минут</p>
+    <p>Порог для выбросов: свыше ${threshold.toFixed(1)} минут</p>
+    <table>
+      <tr><th>Дата</th><th>Значение</th></tr>
+      ${outliers.map(o=>'<tr><td>'+o.date+'</td><td>'+(o.tat)+' мин.</td></tr>').join('')}
+    </table>
+
+    <h2>Итоговые результаты без выбросов:</h2>
+    <div class="row"><span class="lab">Среднее первые 30 дней:</span><span class="track"><span class="bar"></span></span><span class="val">${firstMean} мин.</span></div>
+    <div class="row"><span class="lab">Среднее последние 30 дней:</span><span class="track"><span class="bar"></span></span><span class="val">${lastMean} мин.</span></div>
+    <p>Изменение: ${changePct}%</p>
+
+    <h2>Вывод:</h2>
+    <p>После исключения аномальных дней существенных изменений в скорости обработки заявок не обнаружено (${changePct}%). Тренд сохраняется стабильным, сбоев работы конвейера нет.</p>
+  `;
+
+  const bars = document.querySelectorAll('.bar');
+  const maxVal = Math.max(Math.abs(firstMean),Math.abs(lastMean));
+  bars.forEach(bar=>{
+    bar.style.width=(100*Math.abs(Number(bar.parentNode.nextSibling.innerText.replace(/[^.\d]/g,'')))/maxVal).toFixed(1)+"%";
+  });
+})
+.catch(err => document.body.innerHTML=`Ошибка загрузки данных: ${err}`);
+</script>
+</body>
+</html>

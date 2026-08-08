@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Отчет по ипотечному рынку</title>
+<style>
+body { font-family: Arial, sans-serif; }
+h1 { color: #333; margin-bottom: 2rem; }
+table { width: 100%; border-collapse: collapse; margin-top: 2rem; }
+th, td { padding: 0.5em; text-align: left; border-bottom: 1px solid #ddd; }
+th { background-color: #f2f2f2; }
+.track { display: inline-block; width: 320px; height: 14px; background: #eef2f5; border-radius: 7px; vertical-align: middle; }
+.bar { display: block; height: 14px; background: #20BA72; border-radius: 7px; }
+.row { display: flex; align-items: center; gap: 12px; margin: 6px 0; }
+</style>
+</head>
+<body>
+<h1>Низкая база: проценты без базы ничего не значат</h1>
+<p>Проверяем динамику выдачи ипотеки банками.</p>
+<div id="charts"></div>
+<table id="report-table"></table>
+<div id="output"></div>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch('../data/mortgage_market.csv');
+        if (!response.ok) throw new Error(`Ошибка сети: ${response.status}`);
+        
+        const csvText = await response.text();
+        const rows = csvText.trim().split("\n").slice(1); // пропускаем заголовки
+
+        let banksData = [];
+        for(let row of rows) {
+            const [bank, wasBnrubStr, nowBnrubStr] = row.split(',');
+            const wasBnrub = parseFloat(wasBnrubStr.trim());
+            const nowBnrub = parseFloat(nowBnrubStr.trim());
+            
+            if(!isNaN(wasBnrub) && !isNaN(nowBnrub)) {
+                banksData.push({
+                    bank,
+                    wasBnrub,
+                    nowBnrub,
+                    growthRate: ((nowBnrub/wasBnrub)-1)*100,
+                    absoluteGrowth: nowBnrub-wasBnrub
+                });
+            }
+        }
+    
+        // считаем общую выдачу до и после
+        const totalWas = banksData.reduce((acc, b) => acc + b.wasBnrub, 0);
+        const totalNow = banksData.reduce((acc, b) => acc + b.nowBnrub, 0);
+    
+        // рассчитываем доли рынка до и после
+        banksData.forEach(bank => {
+            bank.marketShareBefore = (bank.wasBnrub * 100 / totalWas).toFixed(1);
+            bank.marketShareAfter = (bank.nowBnrub * 100 / totalNow).toFixed(1);
+            bank.marketShareChangePP = (parseFloat(bank.marketShareAfter) - parseFloat(bank.marketShareBefore)).toFixed(1);
+        });
+    
+        // создаем таблицы и графики
+        const chartsDiv = document.getElementById('charts');
+        createBarChart(chartsDiv, 'Темпы прироста (%)', banksData.map(d => d.growthRate));
+        createBarChart(chartsDiv, 'Абсолютный прирост (млрд руб.)', banksData.map(d => d.absoluteGrowth));
+    
+        const table = document.createElement('table');
+        table.id = 'report-table';
+        const thead = table.createTHead();
+        const tr = thead.insertRow();
+        ['Банк', 'Было (млрд руб.)', 'Стало (млрд руб.)', 'Темп роста (%)', 
+         'Прирост (млрд руб.)', 'Доля рынка раньше (%)', 'Доля рынка сейчас (%)', 
+         'Изменение доли (пп)'].forEach(header => {
+             const th = document.createElement('th');
+             th.appendChild(document.createTextNode(header));
+             tr.appendChild(th);
+        });
+    
+        const tbody = table.createTBody();
+        banksData.forEach(data => {
+            const row = tbody.insertRow();
+            [
+                data.bank,
+                formatNumber(data.wasBnrub),
+                formatNumber(data.nowBnrub),
+                `${formatNumber(data.growthRate)}%`,
+                formatNumber(data.absoluteGrowth),
+                `${data.marketShareBefore}%`,
+                `${data.marketShareAfter}%`,
+                `${data.marketShareChangePP} п.п.`,
+            ].forEach(cellValue => {
+                const cell = row.insertCell();
+                cell.appendChild(document.createTextNode(cellValue));
+            });
+        });
+    
+        document.body.appendChild(table);
+    
+        // добавляем выводы
+        const outputDiv = document.getElementById('output');
+        outputDiv.innerHTML = `<strong>Вывод:</strong><br/>На рынке ипотек общий объем вырос на ${formatNumber(totalNow-totalWas)} млрд руб., или на ${formatNumber(((totalNow/totalWas)-1)*100)}%. Темпы роста отдельных банков варьируются значительно, однако важно учитывать размер базового показателя.`;
+    
+    } catch(error) {
+        document.body.innerHTML = `Ошибка: ${error.message}`;
+    }
+});
+
+function createBarChart(parentEl, title, values) {
+    const div = document.createElement('div');
+    div.className = 'row';
+    div.innerHTML = `
+        <span class="lab">${title}</span>
+        <span class="track"><span class="bar"></span></span>
+        <span class="val"></span>
+    `;
+    parentEl.appendChild(div);
+    
+    const absMax = Math.max(...values.map(Math.abs));
+    const bar = div.querySelector('.bar');
+    const valSpan = div.querySelector('.val');
+    bar.style.width = (100*Math.abs(values[0])/absMax).toFixed(1)+'%';
+    valSpan.textContent = formatNumber(values[0]);
+}
+
+// вспомогательная функция для форматирования чисел
+function formatNumber(num) {
+    return num.toLocaleString('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+}
+</script>
+</body>
+</html>

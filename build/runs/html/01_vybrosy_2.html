@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Анализ TAT заявок</title>
+<style>
+body { font-family: Arial, sans-serif; }
+h1 { color: #333; margin-bottom: 20px; }
+p { line-height: 1.6; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+.track{display:inline-block;width:320px;height:14px;background:#eef2f5;border-radius:7px;vertical-align:middle;}
+.bar{display:block;height:14px;background:#20BA72;border-radius:7px;}
+.row{display:flex;align-items:center;gap:12px;margin:6px 0;}
+</style>
+</head>
+<body>
+<h1>Выброс: четыре дня сбоя вместо «конвейер замедлился»</h1>
+<p>Проверяем срок рассмотрения потребительских кредитов в течение 90 дней.</p>
+<div id="output"></div>
+<script>
+fetch('../data/loan_tat_90d.csv')
+.then(response => response.text())
+.then(text => {
+    const rows = text.trim().split("\n").slice(1); // пропускаем заголовки
+    let values = [];
+    for(let row of rows){
+        if(row === '') continue;
+        const cols = row.split(',');
+        const value = parseFloat(cols[1].trim());
+        if(!isNaN(value)){
+            values.push({date:cols[0],value});
+        }
+    }
+    
+    function median(arr){
+        arr.sort((a,b)=>a-b);
+        let mid = Math.floor(arr.length / 2);
+        return arr.length % 2 !== 0 ? arr[mid] : (arr[mid-1]+arr[mid])/2;
+    }
+    
+    function mad(arr, med){
+        return median(arr.map(x=>Math.abs(x-med)));
+    }
+    
+    function mean(arr){
+        return arr.reduce((sum,x)=>sum+x,0)/arr.length;
+    }
+    
+    function pctChange(newVal, oldVal){
+        return ((newVal / oldVal)-1)*100;
+    }
+    
+    function formatNumber(num){
+        return num.toLocaleString('ru-RU', {minimumFractionDigits:1,maximumFractionDigits:1});
+    }
+    
+    const rawValues = values.map(x=>x.value);
+    const firstMean = mean(rawValues.slice(0,30));
+    const lastMean = mean(rawValues.slice(-30));
+    document.getElementById('output').innerHTML += `
+        <div class="row"><span class="lab">Среднее первые 30 дней:</span><span class="track"><span class="bar"></span></span><span class="val">${formatNumber(firstMean)} мин.</span></div>
+        <div class="row"><span class="lab">Среднее последние 30 дней:</span><span class="track"><span class="bar"></span></span><span class="val">${formatNumber(lastMean)} мин.</span></div>
+    `;
+    const change = pctChange(lastMean,firstMean);
+    document.getElementById('output').innerHTML += `<p>Изменение: ${change.toFixed(1)}%</p>`;
+    
+    const med = median(rawValues);
+    const mads = mad(rawValues,med);
+    const threshold = 0.6745 * 3.5 * mads;
+    const outliers = values.filter(x=>Math.abs(0.6745*(x.value-med)/mads)>3.5);
+    document.getElementById('output').innerHTML += `
+        <p>Медиана: ${med.toFixed(1)} мин., MAD: ${mads.toFixed(1)}, Порог: ${threshold.toFixed(1)} мин.</p>
+        <table>
+            <tr><th>Дата</th><th>Значение</th></tr>
+            ${outliers.map(out=>'<tr><td>'+out.date+'</td><td>'+formatNumber(out.value)+' мин.</td></tr>').join('')}
+        </table>
+    `;
+    
+    const cleanValues = values.filter(x=>!outliers.some(o=>o.date===x.date)).map(x=>x.value);
+    const cleanFirstMean = mean(cleanValues.slice(0,30-outliers.filter(x=>x.date<=values[29].date).length));
+    const cleanLastMean = mean(cleanValues.slice(-30+outliers.filter(x=>x.date>=values[-30].date).length));
+    document.getElementById('output').innerHTML += `
+        <div class="row"><span class="lab">Среднее первые 30 дней (после очистки):</span><span class="track"><span class="bar"></span></span><span class="val">${formatNumber(cleanFirstMean)} мин.</span></div>
+        <div class="row"><span class="lab">Среднее последние 30 дней (после очистки):</span><span class="track"><span class="bar"></span></span><span class="val">${formatNumber(cleanLastMean)} мин.</span></div>
+    `;
+    const cleanChange = pctChange(cleanLastMean,cleanFirstMean);
+    document.getElementById('output').innerHTML += `<p>Изменение после очистки: ${cleanChange.toFixed(1)}%</p>`;
+    
+    const bars = document.querySelectorAll('.bar');
+    const maxAbsValue = Math.max(Math.abs(firstMean),Math.abs(lastMean),
+                                Math.abs(cleanFirstMean),Math.abs(cleanLastMean));
+    bars.forEach(bar=>{
+        bar.style.width = `${(100*Math.abs(parseFloat(bar.parentNode.lastChild.innerText))/maxAbsValue).toFixed(1)}%`
+    });
+})
+.catch(error => {
+    document.body.innerHTML = '<pre style="color:red;">Ошибка загрузки данных: ' + error.message + '</pre>';
+});
+</script>
+</body>
+</html>

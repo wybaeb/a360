@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Отчет по срокам рассмотрения заявок МСБ</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.5; padding: 20px; }
+        h1 { color: #333; margin-bottom: 20px; }
+        p { color: #555; margin-top: 0; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; }
+        tr:nth-child(even) { background-color: #fafafa; }
+        strong { color: #20BA72; }
+        pre { white-space: pre-wrap; word-break: break-all; overflow-x: auto; }
+        .track{display:inline-block;width:320px;height:14px;background:#eef2f5;
+               border-radius:7px;vertical-align:middle}
+        .bar{display:block;height:14px;background:#20BA72;border-radius:7px}
+        .row{display:flex;align-items:center;gap:12px;margin:6px 0}
+    </style>
+</head>
+<body>
+<h1>Среднее: норматив выполнен, клиент ждёт неделю</h1>
+<p>Проверяем сроки рассмотрения заявок малого бизнеса.</p>
+<div id="report"></div>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+    try {
+        const response = await fetch('../data/msb_applications_q.csv');
+        if (!response.ok) throw new Error('Ошибка получения данных');
+        
+        let data = [];
+        for await (const chunk of response.body.getReader()) {
+            const decoder = new TextDecoder();
+            const lines = decoder.decode(chunk.value).split('\n').filter(Boolean);
+            lines.forEach(line => {
+                const [appId, tatDays, issued] = line.split(',');
+                data.push({ appId, tatDays: parseFloat(tatDays), issued });
+            });
+        }
+    
+        // Вычисляем основные показатели
+        const sortedTats = data.map(d => d.tatDays).sort((a,b)=>a-b);
+        const avgTat = sortedTats.reduce((sum,x)=>sum+x,0)/sortedTats.length;
+        const medianIndex = Math.floor(sortedTats.length / 2);
+        const medianTat = sortedTats.length % 2 ? sortedTats[medianIndex]
+                     : (sortedTats[medianIndex-1]+sortedTats[medianIndex])/2;
+        const percentile90th = getPercentile(sortedTats, 90);
+        const violationsRatio = sortedTats.filter(x=>x>3).length/sortedTats.length * 100;
+    
+        function getPercentile(arr, p) {
+            const index = ((arr.length - 1) * p / 100);
+            const lower = Math.floor(index);
+            const upper = Math.ceil(index);
+            return arr[lower] + (index - lower) * (arr[upper]-arr[lower]);
+        }
+    
+        // Корзины сроков рассмотрения
+        const bins = [
+            { label: 'До 1 дня', range: [0,1], count: 0 },
+            { label: '1-3 дня', range: [1,3], count: 0 },
+            { label: '3-7 дней', range: [3,7], count: 0 },
+            { label: '>7 дней', range: [7,Infinity], count: 0 }
+        ];
+    
+        bins.forEach(bin => bin.rows = []);
+        data.forEach(row => {
+            bins.find(b => row.tatDays >= b.range[0] && row.tatDays <= b.range[1]).count++;
+        });
+    
+        bins.forEach(bin => {
+            bin.percent = (bin.count/data.length)*100;
+            bin.rows = data.filter(r => r.tatDays>=bin.range[0]&&r.tatDays<=bin.range[1]);
+            bin.convRate = bin.rows.reduce((s,r)=>s+parseInt(r.issued),0)/bin.rows.length*100 || 0;
+        });
+    
+        // Недобор выдач
+        const bestConvBin = bins.sort((a,b)=>b.convRate-a.convRate)[0];
+        const potentialExtraIssues = bins.slice(1).reduce((acc,bin)=>{
+            acc += bin.rows.length*(bestConvBin.convRate-bin.convRate)/100;
+            return acc;
+        },0);
+    
+        // Генерация отчёта
+        document.querySelector('#report').innerHTML = `
+            <table>
+                <tr><td colspan=2>Основные показатели:</td></tr>
+                <tr><td>Средний срок рассмотрения, дней:</td><td>${avgTat.toFixed(1)}</td></tr>
+                <tr><td>Медианный срок рассмотрения, дней:</td><td>${medianTat.toFixed(1)}</td></tr>
+                <tr><td>90-й перцентиль срока рассмотрения, дней:</td><td>${percentile90th.toFixed(1)}</td></tr>
+                <tr><td>Доля нарушений (срок > 3 дней):</td><td>${violationsRatio.toFixed(1)}%</td></tr>
+            </table>
+            
+            <br/>
+            <strong>Корзины сроков рассмотрения заявок:</strong>
+            ${bins.map(bin => `<div class="row"><span class="lab">${bin.label}</span>
+                              <span class="track"><span class="bar"
+                                style="width:${bin.percent.toFixed(1)}%"></span></span>
+                              <span class="val">${bin.count} (${(bin.percent).toFixed(1)}%)</span></div>`).join('')}
+                              
+            <br/><strong>Конверсия в выдачу по корзинам:</strong>
+            ${bins.map(bin => `<div class="row"><span class="lab">${bin.label}</span>
+                              <span class="track"><span class="bar"
+                                style="width:${bin.convRate.toFixed(1)}%"></span></span>
+                              <span class="val">${bin.convRate.toFixed(1)}%</span></div>`).join('')}
+
+            <br/><strong>Потенциальное увеличение выдач:</strong>
+            <pre>Дополнительно было бы выдано примерно ${potentialExtraIssues.toFixed()} заявок.</pre>
+        `;
+    
+        // Добавим итоговый вывод
+        document.querySelector('#report').insertAdjacentHTML('beforeend',`
+            <hr />
+            <h2>Вывод</h2>
+            Средний срок рассмотрения заявок соответствует норме, однако значительное число клиентов ожидают решения дольше недели.<br>
+            Повышение скорости обработки замедленных заявок позволит увеличить объём выдачи почти на ${potentialExtraIssues.toFixed().replace('.',',')} штук.
+        `);
+    } catch(err) {
+        document.querySelector('#report').textContent = err.message;
+    }
+});
+</script>
+</body>
+</html>

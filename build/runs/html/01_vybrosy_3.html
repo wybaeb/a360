@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Анализ срока рассмотрения заявок</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.5; }
+    h1 { margin-bottom: 1rem; }
+    p { color: #666; margin-top: 0; }
+    table { width: 100%; border-collapse: collapse; margin: 1em 0; }
+    th, td { padding: 0.5em; text-align: left; border-bottom: 1px solid #ddd; }
+    .track{display:inline-block;width:320px;height:14px;background:#eef2f5;
+           border-radius:7px;vertical-align:middle}
+    .bar{display:block;height:14px;background:#20BA72;border-radius:7px}
+    .row{display:flex;align-items:center;gap:12px;margin:6px 0}
+  </style>
+</head>
+<body>
+<h1>Выброс: четыре дня сбоя вместо «конвейер замедлился»</h1>
+<p>Проверяем срок рассмотрения потребительских кредитов.</p>
+<div id="result"></div>
+<script>
+const path = '../data/loan_tat_90d.csv';
+fetch(path)
+  .then(response => response.text())
+  .then(text => {
+    const rows = text.trim().split("\n").slice(1); // пропустить заголовки
+    let data = [];
+    for(const row of rows){
+      if(row === '') continue;
+      const cols = row.split(',').map(s => s.trim());
+      const num = parseFloat(cols[1]);
+      if(!isNaN(num)){
+        data.push({date: cols[0], value: num});
+      }
+    }
+    
+    function median(arr){
+      arr.sort((a,b)=>a-b);
+      const mid = Math.floor(arr.length / 2);
+      return arr.length % 2 !== 0 ? arr[mid] : (arr[mid-1]+arr[mid])/2;
+    }
+    
+    function mad(arr, med){
+      return median(arr.map(x=>Math.abs(x-med)));
+    }
+    
+    function robustZScore(value, median, mad){
+      return 0.6745 * (value - median) / mad;
+    }
+    
+    const values = data.map(d => d.value);
+    const firstMean = values.slice(0,30).reduce((sum,x)=>sum+x,0)/30;
+    const lastMean = values.slice(-30).reduce((sum,x)=>sum+x,0)/30;
+    const changePercent = ((lastMean / firstMean - 1)*100).toFixed(1)+'%';
+  
+    const med = median(values);
+    const mads = mad(values,med);
+    const threshold = 3.5*mads;
+    const outliers = data.filter(d => Math.abs(robustZScore(d.value,med,mads))>3.5);
+  
+    const filteredValues = data.filter(d => !outliers.includes(d)).map(d => d.value);
+    const firstFilteredMean = filteredValues.slice(0,30-outliers.filter(o=>o.date<=data[29].date).length).reduce((sum,x)=>sum+x,0)/(30-outliers.filter(o=>o.date<=data[29].date).length);
+    const lastFilteredMean = filteredValues.slice(-30+outliers.filter(o=>o.date>=data[data.length-30].date).length).reduce((sum,x)=>sum+x,0)/(30-outliers.filter(o=>o.date>=data[data.length-30].date).length);
+    const filteredChangePercent = ((lastFilteredMean / firstFilteredMean - 1)*100).toFixed(1)+'%';
+
+    document.getElementById('result').innerHTML += `
+      <div class="row"><span class="lab">Среднее первые 30 дней:</span><span class="track"><span class="bar" style="width:${firstMean/data.reduce((m,v)=>v>m?v:m,0)*100}%"></span></span><span class="val">${firstMean.toFixed(1)} мин.</span></div>
+      <div class="row"><span class="lab">Среднее последние 30 дней:</span><span class="track"><span class="bar" style="width:${lastMean/data.reduce((m,v)=>v>m?v:m,0)*100}%"></span></span><span class="val">${lastMean.toFixed(1)} мин., изменение ${changePercent}</span></div>
+      <hr />
+      <table>
+        <tr><th>Дата</th><th>Значение</th></tr>
+        ${outliers.map(out => `<tr><td>${out.date}</td><td>${out.value.toFixed(1)} мин.</td></tr>`).join('')}
+      </table>
+      <hr />
+      <div class="row"><span class="lab">Среднее первые 30 дней без выбросов:</span><span class="track"><span class="bar" style="width:${firstFilteredMean/data.reduce((m,v)=>v>m?v:m,0)*100}%"></span></span><span class="val">${firstFilteredMean.toFixed(1)} мин.</span></div>
+      <div class="row"><span class="lab">Среднее последние 30 дней без выбросов:</span><span class="track"><span class="bar" style="width:${lastFilteredMean/data.reduce((m,v)=>v>m?v:m,0)*100}%"></span></span><span class="val">${lastFilteredMean.toFixed(1)} мин., изменение ${filteredChangePercent}</span></div>
+      <hr />
+      <b>Вывод:</b> После очистки данных от четырёх дней-сбоев реальные сроки рассмотрения практически не отличаются от исходных данных.<br/>
+    `;
+  })
+  .catch(err => document.body.innerText = 'Ошибка чтения файла: '+err.message);
+</script>
+</body>
+</html>
