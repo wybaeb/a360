@@ -1,0 +1,1201 @@
+[
+ {
+  "model": "GigaChat-2",
+  "key": "vybrosy",
+  "kind": "check",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 1321,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "vybrosy",
+  "kind": "check",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1195,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "vybrosy",
+  "kind": "check",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 1320,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "vybrosy",
+  "kind": "code",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 1414,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "vybrosy",
+  "kind": "code",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1451,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "vybrosy",
+  "kind": "code",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 1452,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "vybrosy",
+  "kind": "read",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 2024,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "vybrosy",
+  "kind": "read",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1976,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "vybrosy",
+  "kind": "read",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 2754,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "vybrosy",
+  "kind": "naive",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 2310,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "vybrosy",
+  "kind": "naive",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 2005,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "vybrosy",
+  "kind": "naive",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 2375,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "prichina",
+  "kind": "check",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 1237,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "prichina",
+  "kind": "check",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1489,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "prichina",
+  "kind": "check",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 1209,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "prichina",
+  "kind": "code",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 2203,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "prichina",
+  "kind": "code",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1558,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "prichina",
+  "kind": "code",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 3126,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "prichina",
+  "kind": "read",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 2473,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "prichina",
+  "kind": "read",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 3098,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "prichina",
+  "kind": "read",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 2362,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "prichina",
+  "kind": "naive",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 2701,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "prichina",
+  "kind": "naive",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 5204,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "prichina",
+  "kind": "naive",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 2837,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "sezonnost",
+  "kind": "check",
+  "n": 1,
+  "ok": false,
+  "missing": [],
+  "chars": 1111,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "sezonnost",
+  "kind": "check",
+  "n": 2,
+  "ok": false,
+  "missing": [],
+  "chars": 1143,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "sezonnost",
+  "kind": "check",
+  "n": 3,
+  "ok": false,
+  "missing": [],
+  "chars": 1168,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "sezonnost",
+  "kind": "code",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 3102,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "sezonnost",
+  "kind": "code",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1837,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "sezonnost",
+  "kind": "code",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 3518,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "sezonnost",
+  "kind": "read",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 2463,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "sezonnost",
+  "kind": "read",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 2226,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "sezonnost",
+  "kind": "read",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 2097,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "sezonnost",
+  "kind": "naive",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 2072,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "sezonnost",
+  "kind": "naive",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 2389,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "sezonnost",
+  "kind": "naive",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 2406,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "baza",
+  "kind": "check",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 1214,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "baza",
+  "kind": "check",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1344,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "baza",
+  "kind": "check",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 1181,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "baza",
+  "kind": "code",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 1046,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "baza",
+  "kind": "code",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 2949,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "baza",
+  "kind": "code",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 1450,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "baza",
+  "kind": "read",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 3313,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "baza",
+  "kind": "read",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 2902,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "baza",
+  "kind": "read",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 2832,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "baza",
+  "kind": "naive",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 2530
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "baza",
+  "kind": "naive",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 3462,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "baza",
+  "kind": "naive",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 2803,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "srednee",
+  "kind": "check",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 1583,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "srednee",
+  "kind": "check",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1341,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "srednee",
+  "kind": "check",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 1272,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "srednee",
+  "kind": "code",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 1450,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "srednee",
+  "kind": "code",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1448,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "srednee",
+  "kind": "code",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 1112,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "srednee",
+  "kind": "read",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 2835,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "srednee",
+  "kind": "read",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1896,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "srednee",
+  "kind": "read",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 2702,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "srednee",
+  "kind": "naive",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 2500,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "srednee",
+  "kind": "naive",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 2829,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2",
+  "key": "srednee",
+  "kind": "naive",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 1630,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "vybrosy",
+  "kind": "check",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 1054,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "vybrosy",
+  "kind": "check",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1235,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "vybrosy",
+  "kind": "check",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 838,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "vybrosy",
+  "kind": "code",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 1152,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "vybrosy",
+  "kind": "code",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1295,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "vybrosy",
+  "kind": "code",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 1077,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "vybrosy",
+  "kind": "read",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 1624,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "vybrosy",
+  "kind": "read",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1710,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "vybrosy",
+  "kind": "read",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 1100,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "vybrosy",
+  "kind": "naive",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 3331,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "vybrosy",
+  "kind": "naive",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 3104,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "vybrosy",
+  "kind": "naive",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 2941,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "prichina",
+  "kind": "check",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 962,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "prichina",
+  "kind": "check",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1197,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "prichina",
+  "kind": "check",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 964,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "prichina",
+  "kind": "code",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 2232,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "prichina",
+  "kind": "code",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1559,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "prichina",
+  "kind": "code",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 1788,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "prichina",
+  "kind": "read",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 1620,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "prichina",
+  "kind": "read",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1830,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "prichina",
+  "kind": "read",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 1845,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "prichina",
+  "kind": "naive",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 4015,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "prichina",
+  "kind": "naive",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 3407,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "prichina",
+  "kind": "naive",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 2966,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "sezonnost",
+  "kind": "check",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 1323,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "sezonnost",
+  "kind": "check",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1009,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "sezonnost",
+  "kind": "check",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 902,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "sezonnost",
+  "kind": "code",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 1714,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "sezonnost",
+  "kind": "code",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1720,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "sezonnost",
+  "kind": "code",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 1832,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "sezonnost",
+  "kind": "read",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 2127,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "sezonnost",
+  "kind": "read",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 2079,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "sezonnost",
+  "kind": "read",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 2272,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "sezonnost",
+  "kind": "naive",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 3007,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "sezonnost",
+  "kind": "naive",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 3032,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "sezonnost",
+  "kind": "naive",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 2535,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "baza",
+  "kind": "check",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 963,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "baza",
+  "kind": "check",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1017,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "baza",
+  "kind": "check",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 1092,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "baza",
+  "kind": "code",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 1649,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "baza",
+  "kind": "code",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1096,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "baza",
+  "kind": "code",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 1098,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "baza",
+  "kind": "read",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 1737,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "baza",
+  "kind": "read",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 2129,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "baza",
+  "kind": "read",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 2068,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "baza",
+  "kind": "naive",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 3156,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "baza",
+  "kind": "naive",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 3558,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "baza",
+  "kind": "naive",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 4230,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "srednee",
+  "kind": "check",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 1251,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "srednee",
+  "kind": "check",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1385,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "srednee",
+  "kind": "check",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 1285,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "srednee",
+  "kind": "code",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 1232,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "srednee",
+  "kind": "code",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1198,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "srednee",
+  "kind": "code",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 1047,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "srednee",
+  "kind": "read",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 1932,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "srednee",
+  "kind": "read",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 1935,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "srednee",
+  "kind": "read",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 1967,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "srednee",
+  "kind": "naive",
+  "n": 1,
+  "ok": true,
+  "missing": [],
+  "chars": 1552,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "srednee",
+  "kind": "naive",
+  "n": 2,
+  "ok": true,
+  "missing": [],
+  "chars": 2058,
+  "cached": true
+ },
+ {
+  "model": "GigaChat-2-Max",
+  "key": "srednee",
+  "kind": "naive",
+  "n": 3,
+  "ok": true,
+  "missing": [],
+  "chars": 1411,
+  "cached": true
+ }
+]

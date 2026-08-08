@@ -5,80 +5,68 @@
 
 ---
 
-Давайте последовательно реализуем решение поставленной задачи с использованием библиотеки `pandas` и `numpy`.
-
-### Пошаговое описание
-
-1. Загрузка CSV-файла.
-2. Проверка наличия всех необходимых столбцов.
-3. Расчёт частной корреляции между двумя переменными (`calls_th`, `churn_pct`) при фиксированной третьей переменной (`app_error_rate_pct`).
-4. Подготовка данных для анализа: группировка и вычисление средних значений.
-5. Вычисление частных коэффициентов корреляции с помощью матрицы корреляций Pearson.
-6. Формирование итогового вывода для отчета.
-
-### Код программы
-
 ```python
 import pandas as pd
 import numpy as np
 
-# Шаг 1: загрузка данных
-data = pd.read_csv('your_file.csv')
+# Загружаем файл CSV
+df = pd.read_csv('data.csv')
 
-# Шаг 2: проверка наличия всех обязательных колонок
-required_columns = ['week_start', 'calls_th', 'churn_pct', 'app_error_rate_pct']
-if not all(col in data.columns for col in required_columns):
-    raise ValueError("Некорректный набор колонок")
+# Проверяем структуру данных
+print("Первая десятка записей:")
+print(df.head(10))
 
-# Шаг 3: расчет частных корреляций
-# сначала вычислим средние значения каждого показателя отдельно от третьего фактора
-grouped_data = data.groupby('app_error_rate_pct').mean()
+# Переводим недели в даты (если в исходных данных даты представлены строками)
+df['week_start'] = pd.to_datetime(df['week_start'])
 
-# далее рассчитаем корреляцию между calls_th и churn_pct при каждом значении third_factor
-correlations = grouped_data['calls_th'].corr(grouped_data['churn_pct'])
+# Убедимся, что переменные числовые типы
+for col in ['calls_th', 'churn_pct', 'app_error_rate_pct']:
+    df[col] = pd.to_numeric(df[col], errors='coerce') # Замещаем некорректные значения NaN
 
-# выводим результаты расчетов
-print(f'Частичная корреляция между calls_th и churn_pct при фиксированном app_error_rate_pct: {correlations:.4f}')
+# Отбираем только нужные столбцы для анализа
+cols_to_analyze = ['calls_th', 'churn_pct', 'app_error_rate_pct']
+df_analyzed = df[cols_to_analyze]
 
-# создание удобного вывода для отчета
-report_output = f"""
-| Колонка | Среднее значение |
-|---------|------------------|
-| calls_th | {grouped_data['calls_th'].mean():.4f} |
-| churn_pct | {grouped_data['churn_pct'].mean():.4f} |
-| app_error_rate_pct | {grouped_data['app_error_rate_pct'].mean():.4f} |
-| Частичная корреляция между calls_th и churn_pct при fixed app_error_rate_pct | {correlations:.4f} |
-"""
+# Проверка наличия пропущенных значений
+print("\nПропущенные значения в анализируемых колонках:")
+print(df_analyzed.isnull().sum())
+
+# Вычисляем частные корреляции между парами признаков при контроле третьего признака
+# Используем коэффициент Спирмена (non-parametric correlation)
+from scipy.stats import spearmanr
+
+correlations = {}
+
+# Корреляция calls_th и churn_pct при фиксированной app_error_rate_pct
+cor_call_churn_app_fixed = spearmanr(df_analyzed['calls_th'], df_analyzed['churn_pct'],
+                                     nan_policy='omit',
+                                     method='spearman',
+                                     axis=0,
+                                     fixed factor=df_analyzed['app_error_rate_pct'].values)
+correlations['calls_th-churn_pct_fixed-app_error_rate_pct'] = cor_call_churn_app_fixed.correlation
+
+# Корреляция calls_th и app_error_rate_pct при фиксированной churn_pct
+cor_call_app_churn_fixed = spearmanr(df_analyzed['calls_th'], df_analyzed['app_error_rate_pct'],
+                                     nan_policy='omit',
+                                     method='spearman',
+                                     axis=0,
+                                     fixed factor=df_analyzed['churn_pct'].values)
+correlations['calls_th-app_error_rate_pct_fixed-churn_pct'] = cor_call_app_churn_fixed.correlation
+
+# Корреляция churn_pct и app_error_rate_pct при фиксированной calls_th
+cor_churn_app_calls_fixed = spearmanr(df_analyzed['churn_pct'], df_analyzed['app_error_rate_pct'],
+                                      nan_policy='omit',
+                                      method='spearman',
+                                      axis=0,
+                                      fixed factor=df_analyzed['calls_th'].values)
+correlations['churn_pct-app_error_rate_pct_fixed-calls_th'] = cor_churn_app_calls_fixed.correlation
+
+# Выводим результаты
+print("\nЧастичные коэффициенты корреляции (Спирмен):")
+for key, value in correlations.items():
+    print(f"{key}: {value:.4f}")
+
+# Итоговая строка для отчета
+report_line = f"Частичная корреляция calls_th и churn_pct при фиксированном app_error_rate_pct: {correlations['calls_th-churn_pct_fixed-app_error_rate_pct']:.4f}"
+print(report_line)
 ```
-
-### Разбор шагов решения
-
-1. **Загрузка данных:**  
-   Используем метод `pd.read_csv()` для загрузки таблицы в объект типа DataFrame.
-   
-2. **Проверка колонок:**  
-   Проверяем наличие всех необходимых колонок, указанных в структуре выгрузки.
-
-3. **Расчет средних значений:**  
-   Данные сгруппированы по третьему фактору (`app_error_rate_pct`), после чего вычисляется среднее значение каждой переменной в каждой группе.
-
-4. **Корреляция:**  
-   Корреляция рассчитывается между переменными `calls_th` и `churn_pct` уже внутри каждой группы значений третьей переменной.
-
-5. **Форматированный вывод:**  
-   Выводится результат корреляции, также формируется красивый отчет в формате Markdown, подходящий для вставки в документ.
-
-### Пример отчета
-
-Пример формата отчета:
-
-```
-| Колонка        | Среднее значение |
-|-----------------|------------------|
-| calls_th        | 27.98            |
-| churn_pct       | 0.53             |
-| app_error_rate_pct | 1.43         |
-| Частичная корреляция между calls_th и churn_pct при fixed app_error_rate_pct | 0.6534          |
-```
-
-Таким образом, будет получена необходимая информация о частичной корреляции между показателями при фиксированных условиях.

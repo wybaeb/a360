@@ -5,86 +5,56 @@
 
 ---
 
-Напишем решение проверки «сезонности и сравнения сопоставимых периодов года к году»
-на основе описания структуры вашего набора данных. Исходный файл представлен в виде CSV-файла с двумя столбцами: дата (`date`) и объём выданных кредитов (`amount_mln_rub`).
-
-## Алгоритм действий
-
-1. Загрузка данных.
-2. Преобразование даты в формат `datetime`.
-3. Проверка сезонности, добавление признака недели (годовая сезонность): январь-июнь и июль-декабрь.
-4. Сравнение показателей по месяцам за разные годы («год к году»).
-5. Фильтрация только сопоставимых периодов, используя метод сопоставления годовых интервалов (например, первые месяцы каждого года).
-6. Печать итогового результата.
-
-### Примерная структура итогового отчета:
-```
-Годовая сезонность:
-январь-июнь (сумма прошлого года): <число_рублей>
-январь-июнь (текущий год):       <число_рублей>
-февраль-декабрь (сумма прошлого года):   <число_рублей>
-февраль-декабрь (текущий год):           <число_рублей>
-Сравнение сопоставимых месяцев между годами:
-за июнь текущего года против июня прошлого года разница составляет: X рублей (+/-)
-за декабрь текущего года против декабря прошлого года разница составляет: Y рублей (+/-)
-и т.д.
-```
-
-Теперь перейдём непосредственно к написанию программы на Python с использованием библиотеки Pandas.
-
 ```python
 import pandas as pd
 import numpy as np
 
-# Загружаем данные из CSV
-data = pd.read_csv('data.csv', parse_dates=['date'], index_col='date')
+# Загрузка данных из CSV-файла
+df = pd.read_csv('data.csv')
 
-# Переименуем колонки для удобства восприятия (по умолчанию выводится 'Unnamed: 0' от pandas)
-data.columns = ['month_amount']
+# Преобразование столбца 'date' в тип datetime
+df['date'] = pd.to_datetime(df['date'])
 
-# Разделим датасет на два сезона: зимний (январь-июнь) и летний (июль-декабрь)
-winter_season = data['month_amount'].loc[data.index.month.isin([1, 2, 3, 4, 5, 6])]
-summer_season = data['month_amount'].loc[data.index.month.isin([7, 8, 9, 10, 11, 12])]
+# Выбираем только последние полные годы, чтобы избежать частичных месяцев в последнем периоде
+last_year_start = df['date'].dt.year.max() - 1
+df = df.query(f'date >= {last_year_start}-01-01 & date < {df["date"].dt.year.max()} -01-01')
 
-# Выводим общую сумму зимних и летних сезонов прошлого и текущего годов
-print(f'Зима прошлого года: {winter_season.iloc[-12:-1].mean():.2f}')
-print(f'Лето прошлого года: {summer_season.iloc[-12:-1].mean():.2f}')
-print(f'Зима текущего года: {winter_season.mean():.2f}')
-print(f'Лето текущего года: {summer_season.mean():.2f}')
+# Группируем данные по годам и месяцам, вычисляем месячные суммы и добавляем метки сезонов
+df['year_month'] = df['date'].dt.to_period('M') # преобразуем даты в периоды (год+месяц)
+df['season'] = df['date'].dt.quarter # определяем сезоны: 1-й квартал, 2-й квартал и т.д.
 
-# Выбираем первый квартал предыдущего года и сравниваем с первым кварталом текущего года
-first_quarter_last_year = data['month_amount'].loc[(data.index.year == data.index.year - 1) & 
-                                                   (data.index.month <= 3)]
-first_quarter_current_year = data['month_amount'].loc[(data.index.year == data.index.year) & 
-                                                       (data.index.month <= 3)]
+# Суммируем количество выдач кредитов по каждому месяцу года
+grouped_data = df.groupby(['year_month', 'season'])['amount_mln_rub'].sum().reset_index()
 
-# Подсчет разницы первого квартала текущего года по сравнению с аналогичным периодом прошлого года
-quarter_difference = first_quarter_current_year.mean() - first_quarter_last_year.mean()
+# Создаем колонку 'period' для сравнения сопоставимых периодов, исключая январь каждого года
+grouped_data['period'] = grouped_data['year_month'].astype(str).str.replace('-01', '')
 
-# Печатаем разницу по первому кварталу
-print(f'Разница первого квартала: {quarter_difference:.2f} млн руб.')
+# Проверка сезонной динамики: сравниваем между годами по одинаковым сезонам и месяцам
+comparable_years = [f'{y}' for y in range(grouped_data['year_month'].dt.year.min(), 
+                                           grouped_data['year_month'].dt.year.max())]
 
-# Добавляем строку в отчет, которую можно вставить в документ
-report_string = f'''
-Годовая сезонность:
-зима прошлого года: {winter_season.iloc[-12:-1].mean():.2f}
-зима текущего года: {winter_season.mean():.2f}
-лето прошлого года: {summer_season.iloc[-12:-1].mean():.2f}
-лето текущего года: {summer_season.mean():.2f}
-Сравнение сопоставимых месяцев между годами:
-разница первого квартала: {quarter_difference:.2f} млн руб.
-'''
+for year in comparable_years:
+    # Берём данные текущего года и предыдущего года для анализа сопоставимости
+    current_year = grouped_data.query(f'year_month.dt.year == {year}')
+    previous_year = grouped_data.query(f'year_month.dt.year == {year - 1}')
+    
+    # Сравниваем значения сопоставимых периодов
+    compare_result = current_year.merge(previous_year, on=['period'], suffixes=('_current', '_previous'))
+    compare_result['change_amount'] = compare_result['amount_mln_rub_current'] / compare_result['amount_mln_rub_previous']
+    
+    print(f'Сравнение сопоставимых периодов за {year} год:')
+    print(compare_result[['period', 'amount_mln_rub_current', 'amount_mln_rub_previous', 'change_amount']])
 
-# Печать отчета
-print(report_string)
+# Выводим результат сравнения годовых значений первого квартала и четвертого квартала последнего года
+final_year = grouped_data['year_month'].dt.year.max()
+first_quarter = grouped_data.query(f'season == 1 & year_month.dt.year == {final_year}')
+fourth_quarter = grouped_data.query(f'season == 4 & year_month.dt.year == {final_year}')
+
+print(f'\nСезонная динамика за последний год ({final_year}):')
+print(first_quarter[['year_month', 'amount_mln_rub']].rename(columns={'amount_mln_rub': '1 квартал'}))
+print(fourth_quarter[['year_month', 'amount_mln_rub']].rename(columns={'amount_mln_rub': '4 квартал'}))
+
+# Пример строки для отчета:
+report_line = f'Снижение объема выдачи потребительских кредитов в январе {final_year} г. составило {np.round(1 - first_quarter["amount_mln_rub"].values[0]/fourth_quarter["amount_mln_rub"].values[0], 2)*100:.2f}%'
+print(report_line)
 ```
-
-### Как работает программа:
-
-1. **Загрузка данных**: читаем CSV-файл, преобразуя столбец `date` в тип `datetime`, делая его индексом таблицы.
-2. **Группировка по сезону**: разделяем данные на зимние и летние периоды, основываясь на месяце.
-3. **Средние значения** зимних и летних сезонов за прошлый и текущий годы позволяют нам сравнивать эти показатели.
-4. **Первый квартал сравнения**: выбираем сопоставимые временные интервалы (первый квартал одного года и аналогичный квартал другого). Рассчитываем разницу между ними.
-5. **Печать отчёта**: выводит табличную сводку и расчётную строку, которую легко вставить в отчёт.
-
-После выполнения скрипта вы получите итоговый отчёт, включающий среднюю сумму выдаваемых кредитов зимой и летом прошлого и текущего года, а также разницу первого квартала года к году.

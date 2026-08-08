@@ -1,58 +1,51 @@
 # 1. Выброс: четыре дня сбоя вместо «конвейер замедлился» · GigaChat-2 · прогон 1 · code
 
-Вердикт судьи: НЕ совпадает
-Элементы разбора: {"pandas": true, "код в блоке": false, "комментарии по-русски": true, "печать результата": true}
+Вердикт судьи: совпадает с эталоном
+Элементы разбора: {"pandas": true, "код в блоке": true, "комментарии по-русски": true, "печать результата": true}
 
 ---
 
-# Импортируем необходимые библиотеки
-
+```python
 import pandas as pd
 import numpy as np
 
-# Загружаем файл CSV
-df = pd.read_csv('выгрузка.csv')
+# Загружаем файл
+df = pd.read_csv('data.csv')
 
-# Проверим структуру датасета
-print(df.info())
+# Проверяем структуру данных
+print(f'Загружено {len(df)} строк')
 
-# Убедимся, что дата представлена корректно
-df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d') # приведем даты к правильному типу
-df.set_index('date', inplace=True) # установим индексом колонку 'date'
+# Выбираем столбец 'tat_min'
+col_name = 'tat_min'
+data = df[col_name]
 
-# Отобразим первые несколько записей, чтобы убедиться, что структура данных соответствует ожидаемому формату
-print(df.head(5))
+# Вычисляем медиану
+median = data.median()
+print(f'Медиана значений: {median:.4f}')
 
-# Посчитаем медиану срока рассмотрения заявок
-median_tat_min = df['tat_min'].median()
+# Вычисляем медианный абсолютный отклонение (MAD)
+mad = np.median(np.abs(data - median))
+print(f'Median Absolute Deviation (MAD): {mad:.4f}')
 
-# Вычислим медианный абсолютный отклонение (MAD)
-mad_tat_min = np.median(np.abs(df['tat_min'] - median_tat_min))
+# Определяем робастную z-оценку (zscore)
+robust_z_score = (data - median) / (1.4826 * mad) # множитель 1.4826 корректирует распределение Гаусса
 
-# Найдём порог выброса на основе робастной z-оценки
-z_threshold = 3 * mad_tat_min / np.sqrt(2)
+# Фильтруем выбросы: z-оценка больше 3.5 считается выбросом
+threshold = 3.5
+outlier_mask = np.abs(robust_z_score) > threshold
 
-# Применим робастную z-оценку, выделяя значения вне порога
-robust_z_scores = ((df['tat_min'] - median_tat_min) / z_threshold).abs()
-outlier_indices = robust_z_scores > 1.0
+# Получаем индексы выбросов
+outliers_index = outlier_mask.index[outlier_mask]
 
-# Подсчитаем количество выбросов
-n_outliers = outlier_indices.sum()
+# Выводим количество обнаруженных выбросов
+num_outliers = len(outliers_index)
+print(f'Обнаружено выбросов: {num_outliers}')
 
-# Выведем результат проверки
-print(f'Медиана значений tat_min: {median_tat_min:.2f}')
-print(f'MAD (медианное абсолютное отклонение): {mad_tat_min:.4f}')
-print(f'Порог робастной z-оценки: {z_threshold:.4f}')
-print(f'Количество выбросов: {n_outliers}')
+# Создаем строку для отчета
+report_row = f'{col_name}, {median:.4f}, {mad:.4f}, {num_outliers}'
+print(report_row)
 
-# Сформируем строку для отчёта
-report_string = f'''
-Проверка выбросов по медиане и MAD (робастная z-оценка):
-Медианное значение тат_min: {median_tat_min:.2f}
-MAD (медианный абсолютный сдвиг): {mad_tat_min:.4f}
-Порог робастной z-оценки: {z_threshold:.4f}
-Обнаружено выбросов: {n_outliers}
-'''
-
-# Выводим отчет в консоль
-print(report_string)
+# Выводим заголовок таблицы для отчета
+header = f'{col_name}, Медиана, MAD, Количество выбросов'
+print(header)
+```
