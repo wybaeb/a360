@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<title>Сезонность · три цикла в выдачах потребкредитов</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#EEF1F4;font:14px/1.45 "SB Sans Text","Segoe UI",Arial,sans-serif;color:#2E3641;
+ -webkit-font-smoothing:antialiased}
+.wrap{width:1320px;margin:0 auto;padding:18px 22px 26px}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.logo{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#21A038,#0FBF62);
+ display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px}
+.top b{font-size:15px;font-weight:700}
+.top span{color:#8A94A0;font-size:12.5px}
+.badge{margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+ color:#8A94A0;border:1px solid #D6DCE3;border-radius:20px;padding:4px 11px}
+.prompt{background:#21A038;color:#fff;border-radius:14px 14px 4px 14px;padding:11px 16px;font-size:14.5px;
+ max-width:830px;margin-left:auto;margin-bottom:12px}
+.reply{background:#fff;border-radius:14px 14px 14px 4px;padding:13px 17px;margin-bottom:16px;
+ box-shadow:0 1px 2px rgba(46,54,65,.07);max-width:900px}
+.reply p{margin-bottom:6px}
+.reply ol{margin:6px 0 0 18px;color:#59636F}
+.reply li{margin-bottom:3px}
+.grid{display:grid;gap:14px}
+.g3{grid-template-columns:1fr 1fr 1fr}
+.g2{grid-template-columns:1fr 1fr}
+.g21{grid-template-columns:1.55fr 1fr}
+.card{background:#fff;border-radius:14px;padding:14px 16px 12px;box-shadow:0 1px 2px rgba(46,54,65,.07)}
+.card h3{font-size:13.5px;font-weight:700;margin-bottom:2px}
+.card .sub{font-size:11.5px;color:#8A94A0;margin-bottom:9px}
+.step{font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#21A038;margin-bottom:3px}
+.kpi{display:flex;gap:26px;margin-top:10px}
+.kpi div span{display:block;font-size:11px;color:#8A94A0}
+.kpi div b{font-size:19px;font-weight:700;letter-spacing:-.02em}
+.bad{color:#E4572E}.good{color:#21A038}.mute{color:#8A94A0}
+.verdict{margin-top:14px;background:#fff;border-radius:14px;padding:15px 18px 15px 20px;
+ border-left:4px solid #21A038;box-shadow:0 1px 2px rgba(46,54,65,.07)}
+.verdict h4{font-size:13.5px;margin-bottom:6px}
+.verdict p{font-size:13.5px;color:#3F4956;margin-bottom:4px}
+.verdict .warn{color:#E4572E;font-weight:600}
+code{font:12px/1.5 "JetBrains Mono",Consolas,monospace;background:#F4F6F8;border-radius:8px;
+ padding:10px 12px;display:block;white-space:pre;color:#4A5560;overflow:auto;margin-top:10px}
+.foot{margin-top:14px;font-size:11.5px;color:#98A1AC}
+</style></head>
+<body><div class="wrap">
+<div class="top"><div class="logo">G</div><b>GigaChat</b>
+<span>сессия анализа данных · режим «код + визуализация»</span>
+<div class="badge">Демо · Аналитика 360</div></div>
+<div class="prompt">Три года дневных выдач потребкредитов, млн ₽. На последнем квартале виден уверенный рост, команда хочет масштабировать канал. Проверь тренд с учётом сезонности.</div>
+<div class="reply"><p><b>Проверяю.</b> В дневном ряду выдач одновременно живут три цикла: годовой,
+внутримесячный (дни зарплат) и недельный. Пока они не сняты, любой тренд — иллюзия. План:</p>
+<ol>
+<li>Оценю недельный профиль по отношению ряда к скользящему среднему за 7 дней.</li>
+<li>Оценю годовой профиль по месяцам и внутримесячный — по дням месяца.</li>
+<li>Разделю ряд на все три профиля и посчитаю тренд по очищенному ряду.</li>
+</ol></div>
+
+<div class="grid g3">
+ <div class="card"><div class="step">Шаг 1 · как есть</div>
+  <h3>Выдачи потребкредитов, млн ₽/день</h3>
+  <div class="sub">3 года дневных данных, как в выгрузке</div>
+  <div id="c1"></div>
+  <div class="kpi"><div><span>IV кв. к III кв.</span><b class="bad" id="k1"></b></div>
+   <div><span>Наивный вывод</span><b class="bad">канал растёт,<br>надо масштабировать</b></div></div></div>
+
+ <div class="card"><div class="step">Шаг 2 · что делает алгоритм</div>
+  <h3>Три профиля сезонности, найденные в данных</h3>
+  <div class="sub">отклонение от среднего уровня, %</div>
+  <div class="sub" style="margin:2px 0 0">Годовая</div><div id="c2a"></div>
+  <div class="sub" style="margin:2px 0 0">Внутримесячная · дни зарплат</div><div id="c2b"></div>
+  <div class="sub" style="margin:2px 0 0">Недельная</div><div id="c2c"></div>
+  <div class="kpi"><div><span>Размах трёх циклов</span><b id="k2"></b></div></div></div>
+
+ <div class="card"><div class="step">Шаг 3 · результат</div>
+  <h3>Тот же ряд без сезонности</h3>
+  <div class="sub">пунктир — линейный тренд по очищенному ряду</div>
+  <div id="c3"></div>
+  <div class="kpi"><div><span>Тренд за 3 года</span><b class="bad" id="k3"></b></div>
+   <div><span>За последние 12 мес.</span><b class="bad" id="k4"></b></div></div></div>
+</div>
+<div class="verdict"><h4>Автоматический вывод</h4>
+ <p id="v1"></p><p id="v2"></p>
+ <p class="warn">Управленческий смысл: масштабировать нечего — канал теряет объём третий год подряд.
+ Рост IV квартала повторяется каждый год и к качеству канала отношения не имеет.</p></div>
+
+<code>import pandas as pd, statsmodels.api as sm
+
+s = pd.read_csv("loans_daily_3y.csv", parse_dates=["date"]).set_index("date").amount
+
+wk  = (s / s.rolling(7, center=True).mean()).groupby(s.index.dayofweek).median()
+s1  = s / s.index.dayofweek.map(wk)                       # снимаем неделю
+yr  = (s1 / s1.rolling(365, center=True).mean()).groupby(s1.index.month).median()
+s2  = s1 / s1.index.month.map(yr)                         # снимаем год
+mth = (s2 / s2.rolling(31, center=True).mean()).groupby(s2.index.day).median()
+adj = s2 / s2.index.day.map(mth)                          # снимаем дни зарплат
+
+print("Q4/Q3 сырой ряд :", (s['2025-10':].mean()/s['2025-07':'2025-09'].mean()-1))
+print("тренд adj, 3 года:", sm.OLS(adj.values, sm.add_constant(range(len(adj)))).fit().params[1]*len(adj))</code>
+<div class="foot">Демонстрационный расчёт на синтетическом датасете. Структура и порядок величин — типовые для розничного банка, конкретные цифры условные.</div>
+</div>
+<script>
+var NS='http://www.w3.org/2000/svg';
+function E(t,a,txt){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);
+ if(txt!==undefined)e.textContent=txt;return e}
+function SVG(w,h){var s=E('svg',{viewBox:'0 0 '+w+' '+h,width:'100%'});s.style.display='block';
+ s.style.fontFamily='inherit';return s}
+function sc(d0,d1,r0,r1){return function(v){return r0+(v-d0)/(d1-d0)*(r1-r0)}}
+function P(pts){return 'M'+pts.map(function(p){return p[0].toFixed(1)+' '+p[1].toFixed(1)}).join('L')}
+function rng(seed){var a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);
+ t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function nrm(r){return function(){var u=0,v=0;while(!u)u=r();while(!v)v=r();
+ return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}}
+function mean(a){return a.reduce(function(s,x){return s+x},0)/a.length}
+function corr(a,b){var ma=mean(a),mb=mean(b),n=0,da=0,db=0;
+ for(var i=0;i<a.length;i++){n+=(a[i]-ma)*(b[i]-mb);da+=(a[i]-ma)*(a[i]-ma);db+=(b[i]-mb)*(b[i]-mb)}
+ return n/Math.sqrt(da*db)}
+function pcorr(a,b,c){var rab=corr(a,b),rac=corr(a,c),rbc=corr(b,c);
+ return (rab-rac*rbc)/Math.sqrt((1-rac*rac)*(1-rbc*rbc))}
+function quant(a,q){var s=a.slice().sort(function(x,y){return x-y});var i=(s.length-1)*q;
+ var lo=Math.floor(i),hi=Math.ceil(i);return s[lo]+(s[hi]-s[lo])*(i-lo)}
+function slope(y){var n=y.length,sx=0,sy=0,sxx=0,sxy=0;
+ for(var i=0;i<n;i++){sx+=i;sy+=y[i];sxx+=i*i;sxy+=i*y[i]}
+ var b=(n*sxy-sx*sy)/(n*sxx-sx*sx);return {b:b,a:(sy-b*sx)/n}}
+/* оси: g — group, объект {x0,x1,y0,y1} в пикселях, sx/sy — шкалы, ticks */
+function grid(g,box,sy,ticks,fmt){
+ ticks.forEach(function(t){
+  var y=sy(t);
+  g.appendChild(E('line',{x1:box.x0,y1:y.toFixed(1),x2:box.x1,y2:y.toFixed(1),
+    stroke:'#E3E8ED','stroke-width':1}));
+  g.appendChild(E('text',{x:box.x0-7,y:(y+3.5).toFixed(1),'font-size':10,fill:'#98A1AC',
+    'text-anchor':'end'},fmt?fmt(t):String(t)));
+ });
+}
+function xlabels(g,box,items){
+ items.forEach(function(it,i){
+  var a='middle',x=it.x;
+  if(i===items.length-1&&x>box.x1-14){a='end';x=box.x1}
+  if(i===0&&x<box.x0+14){a='start';x=box.x0}
+  g.appendChild(E('text',{x:x.toFixed(1),y:box.y1+15,'font-size':10,fill:'#98A1AC',
+    'text-anchor':a},it.t));
+ });
+}
+function chart(id,w,h,pad){var s=SVG(w,h);document.getElementById(id).appendChild(s);
+ return {s:s,box:{x0:pad[3],y0:pad[0],x1:w-pad[1],y1:h-pad[2]}}}
+function txt(id,v){document.getElementById(id).innerHTML=v}
+function legend(g,x,y,items){
+ var dx=0;
+ items.forEach(function(it){
+  g.appendChild(E('rect',{x:x+dx,y:y-7,width:10,height:3,rx:1.5,fill:it.c}));
+  var t=E('text',{x:x+dx+15,y:y,'font-size':10.5,fill:'#59636F'},it.t);
+  g.appendChild(t);dx+=it.t.length*5.9+30;
+ });
+}
+
+
+(function(){
+var r=rng(5), g=nrm(r), N=1095, y=[], dt=[];
+for(var i=0;i<N;i++){
+  var d=new Date(2023,0,1+i); dt.push(d);
+  var doy=(d-new Date(d.getFullYear(),0,1))/86400000;
+  var trend=118*(1-0.000165*i);
+  var ann=1+0.30*Math.cos(2*Math.PI*(doy-344)/365);
+  var dom=d.getDate();
+  var mon=1+0.34*Math.exp(-Math.pow((dom-6)/1.7,2))+0.26*Math.exp(-Math.pow((dom-21)/1.7,2))-0.09;
+  var wf=[0.52,1.10,1.13,1.09,1.06,0.99,0.71][d.getDay()];
+  y.push(trend*ann*mon*wf*(1+g()*0.055));
+}
+/* ---- оценка профилей прямо из ряда ---- */
+function cma(a,w){var o=[],h=(w-1)/2;
+ for(var i=0;i<a.length;i++){if(i<h||i>=a.length-h){o.push(null);continue}
+  var s=0;for(var j=i-h;j<=i+h;j++)s+=a[j];o.push(s/w)}return o}
+function prof(a,w,key){var m7=cma(a,w),buckets={};
+ for(var i=0;i<a.length;i++){if(m7[i]===null)continue;var k=key(dt[i]);
+  (buckets[k]=buckets[k]||[]).push(a[i]/m7[i])}
+ var f={},vals=[];for(var k in buckets){f[k]=quant(buckets[k],0.5);vals.push(f[k])}
+ var mu=mean(vals);for(var k in f)f[k]/=mu;return f}
+var wkf=prof(y,7,function(d){return d.getDay()});
+var y1=y.map(function(v,i){return v/wkf[dt[i].getDay()]});
+var yrf=prof(y1,365,function(d){return d.getMonth()});
+var y2=y1.map(function(v,i){return v/yrf[dt[i].getMonth()]});
+var mnf=prof(y2,31,function(d){return d.getDate()});
+var adj=y2.map(function(v,i){return v/mnf[dt[i].getDate()]});
+
+/* ---- цифры ---- */
+function per(a,f,t){return mean(a.slice(f,t))}
+var q3s=N-183,q3e=N-92,q4s=N-92;
+var q3=per(y,q3s,q3e), q4=per(y,q4s,N);
+function pct(v){return (v>0?'+':'−')+Math.abs(v*100).toFixed(0)+' %'}
+var sl=slope(adj), tot=sl.b*(N-1)/(sl.a)*1;
+var t3=sl.b*(N-1)/sl.a;
+var sl12=slope(adj.slice(N-365)), t12=sl12.b*364/sl12.a;
+function rng2(o){var v=Object.keys(o).map(function(k){return o[k]});
+ return Math.max.apply(null,v)/Math.min.apply(null,v)}
+
+txt('k1',pct(q4/q3-1));
+txt('k2','×'+(rng2(yrf)*rng2(mnf)*rng2(wkf)).toFixed(1)+' между пиком и дном');
+txt('k3',pct(t3));txt('k4',pct(t12));
+
+/* ---- графики ---- */
+var W=384,PAD=[12,10,20,36];
+function xt(box){var it=[],sxx=sc(0,N-1,box.x0,box.x1);
+ [0,182,365,547,730,912,1094].forEach(function(i){
+  it.push({x:sxx(i),t:(dt[i].getMonth()+1)+'.'+String(dt[i].getFullYear()).slice(2)})});return it}
+
+var c=chart('c1',W,176,PAD), sx=sc(0,N-1,c.box.x0,c.box.x1), sy=sc(0,260,c.box.y1,c.box.y0);
+grid(c.s,c.box,sy,[0,65,130,195,260]);xlabels(c.s,c.box,xt(c.box));
+c.s.appendChild(E('path',{d:P(y.map(function(v,i){return [sx(i),sy(v)]})),
+ fill:'none',stroke:'#3E7BFA','stroke-width':0.7,'stroke-opacity':.55}));
+c.s.appendChild(E('path',{d:P(cma(y,29).map(function(v,i){return v===null?null:[sx(i),sy(v)]})
+ .filter(Boolean)),fill:'none',stroke:'#1B4FD8','stroke-width':1.8}));
+c.s.appendChild(E('rect',{x:sx(q4s),y:c.box.y0,width:(c.box.x1-sx(q4s)).toFixed(1),
+ height:c.box.y1-c.box.y0,fill:'#E4572E','fill-opacity':.08}));
+c.s.appendChild(E('text',{x:c.box.x1-2,y:c.box.y0+11,'font-size':10,fill:'#E4572E','text-anchor':'end'},'IV кв.'));
+
+function mini(id,vals,labs,color,h){
+ var cc=chart(id,W,h,[8,10,16,36]), n=vals.length;
+ var lo=Math.min.apply(null,vals),hi=Math.max.apply(null,vals);
+ var pad=(hi-lo)*0.18, sxx=sc(0,n-1,cc.box.x0,cc.box.x1), syy=sc(lo-pad,hi+pad,cc.box.y1,cc.box.y0);
+ cc.s.appendChild(E('line',{x1:cc.box.x0,y1:syy(1).toFixed(1),x2:cc.box.x1,y2:syy(1).toFixed(1),
+  stroke:'#E3E8ED','stroke-width':1}));
+ cc.s.appendChild(E('text',{x:cc.box.x0-7,y:syy(hi)+4,'font-size':9,fill:'#98A1AC','text-anchor':'end'},
+  '+'+((hi-1)*100).toFixed(0)+'%'));
+ cc.s.appendChild(E('text',{x:cc.box.x0-7,y:syy(lo)+4,'font-size':9,fill:'#98A1AC','text-anchor':'end'},
+  '−'+((1-lo)*100).toFixed(0)+'%'));
+ cc.s.appendChild(E('path',{d:P(vals.map(function(v,i){return [sxx(i),syy(v)]})),
+  fill:'none',stroke:color,'stroke-width':1.8}));
+ labs.forEach(function(l){cc.s.appendChild(E('text',{x:sxx(l[0]),y:cc.box.y1+13,'font-size':9,
+  fill:'#98A1AC','text-anchor':'middle'},l[1]))});
+ return cc;
+}
+var MN=['я','ф','м','а','м','и','и','а','с','о','н','д'];
+var yv=[];for(var i=0;i<12;i++)yv.push(yrf[i]);
+mini('c2a',yv,MN.map(function(m,i){return [i,m]}),'#21A038',54);
+var mv=[];for(var i=1;i<=31;i++)mv.push(mnf[i]);
+mini('c2b',mv,[[0,'1'],[4,'5'],[9,'10'],[14,'15'],[19,'20'],[24,'25'],[30,'31']],'#21A038',54);
+var DW=['вс','пн','вт','ср','чт','пт','сб'],wv=[];
+[1,2,3,4,5,6,0].forEach(function(d){wv.push(wkf[d])});
+mini('c2c',wv,['пн','вт','ср','чт','пт','сб','вс'].map(function(m,i){return [i,m]}),'#21A038',54);
+
+var c3=chart('c3',W,176,PAD), sx3=sc(0,N-1,c3.box.x0,c3.box.x1), sy3=sc(60,160,c3.box.y1,c3.box.y0);
+grid(c3.s,c3.box,sy3,[60,85,110,135,160]);xlabels(c3.s,c3.box,xt(c3.box));
+c3.s.appendChild(E('path',{d:P(adj.map(function(v,i){return [sx3(i),sy3(v)]})),
+ fill:'none',stroke:'#A8D8BC','stroke-width':0.6}));
+c3.s.appendChild(E('path',{d:P(cma(adj,29).map(function(v,i){return v===null?null:[sx3(i),sy3(v)]})
+ .filter(Boolean)),fill:'none',stroke:'#21A038','stroke-width':1.8}));
+c3.s.appendChild(E('line',{x1:sx3(0),y1:sy3(sl.a).toFixed(1),x2:sx3(N-1),
+ y2:sy3(sl.a+sl.b*(N-1)).toFixed(1),stroke:'#E4572E','stroke-width':1.6,'stroke-dasharray':'5 3'}));
+
+txt('v1','На сыром ряду IV квартал выше III на <b>'+pct(q4/q3-1)+
+ '</b>. Алгоритм нашёл в данных три цикла: годовой (пик в декабре, дно в июне), '+
+ 'внутримесячный (всплески 5–7 и 20–22 числа — дни выплат) и недельный (воскресенье вдвое ниже вторника).');
+txt('v2','После деления ряда на все три профиля картина переворачивается: тренд за три года — '+
+ '<b>'+pct(t3)+'</b>, за последние 12 месяцев — <b>'+pct(t12)+
+ '</b>. Рост IV квартала целиком объясняется годовой сезонностью.');
+})();
+
+</script></body></html>

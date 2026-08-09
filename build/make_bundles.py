@@ -17,20 +17,27 @@ from prompts import PRACTICES
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 REPORTS = ROOT / "reports"
+DEMOS = ROOT / "demos"
 DATA = ROOT / "data"
 OUT = ROOT / "downloads"
 
 README = """Аналитика 360 · разбор {num}: {title}
 
 Что здесь лежит
-  {html}   — отчёт, который написал GigaChat по промпту со страницы практики
-  {js}   — учебная выгрузка, которую этот отчёт читает
+  эталон_{html}   — разбор с занятия: та самая страница со слайда,
+                    со всеми графиками. Её показывают с экрана.
+  {html}   — пример генерации: что собрал GigaChat по промпту
+                    со страницы практики. Беднее эталона, зато честно.
+  {js}   — учебная выгрузка, которую читает пример генерации
+  {csv}   — та же выгрузка для Excel и Python
+  {txt}   — та же выгрузка для вложения в чат
 
 Как открыть
-  1. Распакуйте обе штуки в одну папку — они должны лежать рядом.
-  2. Откройте {html} двойным кликом. Откроется в браузере.
+  1. Распакуйте всё в одну папку — файлы должны лежать рядом.
+  2. Откройте нужный html двойным кликом. Откроется в браузере.
   3. Страница сама посчитает всё заново из выгрузки и нарисует графики.
      Интернет не нужен: ни одной внешней ссылки внутри нет.
+     Эталону выгрузка не нужна — он самодостаточный.
 
 Если открылся пустой лист — файлы оказались в разных папках либо
 {js} переименован. Имя менять нельзя: отчёт ищет его по имени.
@@ -44,18 +51,30 @@ README = """Аналитика 360 · разбор {num}: {title}
 
 
 def build(p):
+    """Архив разбора: эталон, пример генерации и выгрузка во всех трёх форматах.
+
+    Эталон кладём первым и с говорящим именем: именно его показывают со сцены,
+    а отчёт GigaChat лежит рядом как доказательство, что промпт отрабатывает.
+    """
     html = REPORTS / f"{p['slug']}.html"
+    demo = DEMOS / f"{p['slug']}.html"
     js = DATA / p["js"]
+    csv = DATA / p["csv"]
+    txt = DATA / p["csv"].replace(".csv", ".txt")
     if not html.exists():
         return None
     OUT.mkdir(exist_ok=True)
     z = OUT / f"{p['slug']}.zip"
     with zipfile.ZipFile(z, "w", zipfile.ZIP_DEFLATED) as f:
+        if demo.exists():
+            f.writestr("эталон_" + demo.name, demo.read_text(encoding="utf-8"))
         f.writestr(html.name, html.read_text(encoding="utf-8"))
-        f.writestr(js.name, js.read_text(encoding="utf-8"))
+        for d in (js, csv, txt):
+            if d.exists():
+                f.writestr(d.name, d.read_text(encoding="utf-8"))
         f.writestr("КАК-ОТКРЫТЬ.txt", README.format(
             num=p["num"], title=p["title"], html=html.name, js=js.name,
-            expect=p["expect"]))
+            csv=csv.name, txt=txt.name, expect=p["expect"]))
     return z
 
 

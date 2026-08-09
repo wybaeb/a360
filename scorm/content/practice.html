@@ -139,11 +139,12 @@ a.fn:hover{border:0;text-decoration:underline}
 <section><div class="wrap">
 <h2>Сначала убедитесь, что это вообще работает</h2>
 <p>Тридцать секунд, до всякого GigaChat. Скачайте архив любого разбора — внутри
-готовый отчёт и файл данных. Распакуйте в одну папку, откройте html двойным кликом:
-откроется страница с числами и графиками, посчитанная прямо у вас на компьютере.
+эталонный разбор с занятия, пример генерации по промпту и файл данных в трёх
+форматах. Распакуйте в одну папку, откройте html двойным кликом: откроется
+страница с числами и графиками, посчитанная прямо у вас на компьютере.
 Ни интернета, ни сервера, ни установки — ничего не нужно.</p>
 <div class="card acc">
-<h4 style="margin-bottom:6px">Архивы «отчёт + выгрузка»</h4>
+<h4 style="margin-bottom:6px">Архивы: эталон, пример генерации и данные</h4>
 <p style="margin:0"><a href="downloads/01_vybrosy.zip" download>1 · выброс</a> · <a href="downloads/02_korrelyaciya.zip" download>2 · общая причина</a> · <a href="downloads/03_sezonnost.zip" download>3 · сезонность</a> · <a href="downloads/04_nizkaya_baza.zip" download>4 · низкая база</a> · <a href="downloads/05_srednee.zip" download>5 · среднее</a></p>
 <p class="sub" style="margin:10px 0 0">Если открылся пустой лист — файлы оказались
 в разных папках или выгрузка переименована. Отчёт ищет её по имени, менять его нельзя.</p>
@@ -212,19 +213,46 @@ a.fn:hover{border:0;text-decoration:underline}
 </div>
 <div class="card acc">
 <h4 style="margin-bottom:6px">Файлы для этого разбора</h4>
-<p style="margin:0 0 12px"><b><a href="downloads/01_vybrosy.zip" download>Скачать
-архив: отчёт + выгрузка</a></b> — самый короткий путь. Внутри готовый отчёт,
-файл данных и инструкция на три строки. Распакуйте в одну папку и откройте
-<code>01_vybrosy.html</code> двойным кликом: страница посчитает всё заново
-у вас на компьютере, без интернета и без сервера.</p>
-<p style="margin:0 0 10px">По отдельности:
-<a href="data/loan_tat_90d.js" download>loan_tat_90d.js</a> — выгрузка, которую подключает отчёт
-(её же скачивают перед тем, как отдать промпт GigaChat) ·
-<a href="reports/01_vybrosy.html" download>01_vybrosy.html</a> — наш готовый отчёт файлом ·
-<a href="reports/01_vybrosy.html" target="_blank">открыть его онлайн</a>.</p>
-<p style="margin:0" class="sub">Та же выгрузка в других форматах:
-<a href="data/loan_tat_90d.csv" download>loan_tat_90d.csv</a> — для Excel и Python ·
-<a href="data/loan_tat_90d.txt" download>loan_tat_90d.txt</a> — для вложения в чат.</p>
+<p class="sub" style="margin:0 0 12px">Шесть файлов, у каждого своя роль.
+Скачивать все не обязательно: для показа хватит эталона, для практики — выгрузки
+<code>loan_tat_90d.js</code>.</p>
+<div class="scroll"><table>
+<tr><th style="width:38%">Файл</th><th>Что это</th></tr>
+<tr>
+  <td><a href="demos/01_vybrosy.html" target="_blank">эталон — открыть</a> ·
+      <a href="demos/01_vybrosy.html" download>скачать</a></td>
+  <td><b>Эталонный разбор.</b> Та самая страница, что была на занятии: все графики,
+      ключевые числа и код разбора. Ничего рядом с ней класть не нужно —
+      она самодостаточна. Это то, что показывают с экрана.</td>
+</tr>
+<tr>
+  <td><a href="downloads/01_vybrosy.zip" download>01_vybrosy.zip</a></td>
+  <td><b>Всё сразу одним архивом.</b> Эталон, пример генерации, выгрузка в трёх
+      форматах и инструкция на три строки. Распакуйте в одну папку и откройте
+      любой html двойным кликом — без интернета и без сервера.</td>
+</tr>
+<tr>
+  <td><a href="data/loan_tat_90d.js" download>loan_tat_90d.js</a></td>
+  <td><b>Выгрузка для отчёта.</b> Её скачивают перед тем, как отдать промпт
+      GigaChat, и кладут рядом с полученной страницей. 90 строк.</td>
+</tr>
+<tr>
+  <td><a href="data/loan_tat_90d.csv" download>loan_tat_90d.csv</a></td>
+  <td>Та же выгрузка для Excel и Python.</td>
+</tr>
+<tr>
+  <td><a href="data/loan_tat_90d.txt" download>loan_tat_90d.txt</a></td>
+  <td>Та же выгрузка для вложения в чат: веб-версия GigaChat принимает TXT,
+      но не CSV.</td>
+</tr>
+<tr>
+  <td><a href="reports/01_vybrosy.html" target="_blank">пример генерации — открыть</a> ·
+      <a href="reports/01_vybrosy.html" download>скачать</a></td>
+  <td><b>Пример генерации по промпту.</b> Что собрал GigaChat по промпту ниже —
+      без правок. Графиков в нём меньше, чем в эталоне: это реальный результат
+      модели, и он же ориентир, с чем сравнивать свой.</td>
+</tr>
+</table></div>
 </div>
 
 <h3>Промпт: отчёт с графиками по этой выгрузке</h3>
@@ -526,19 +554,46 @@ row.querySelector(".val"), а не через родительскую карт�
 </div>
 <div class="card acc">
 <h4 style="margin-bottom:6px">Файлы для этого разбора</h4>
-<p style="margin:0 0 12px"><b><a href="downloads/02_korrelyaciya.zip" download>Скачать
-архив: отчёт + выгрузка</a></b> — самый короткий путь. Внутри готовый отчёт,
-файл данных и инструкция на три строки. Распакуйте в одну папку и откройте
-<code>02_korrelyaciya.html</code> двойным кликом: страница посчитает всё заново
-у вас на компьютере, без интернета и без сервера.</p>
-<p style="margin:0 0 10px">По отдельности:
-<a href="data/weekly_ops_26w.js" download>weekly_ops_26w.js</a> — выгрузка, которую подключает отчёт
-(её же скачивают перед тем, как отдать промпт GigaChat) ·
-<a href="reports/02_korrelyaciya.html" download>02_korrelyaciya.html</a> — наш готовый отчёт файлом ·
-<a href="reports/02_korrelyaciya.html" target="_blank">открыть его онлайн</a>.</p>
-<p style="margin:0" class="sub">Та же выгрузка в других форматах:
-<a href="data/weekly_ops_26w.csv" download>weekly_ops_26w.csv</a> — для Excel и Python ·
-<a href="data/weekly_ops_26w.txt" download>weekly_ops_26w.txt</a> — для вложения в чат.</p>
+<p class="sub" style="margin:0 0 12px">Шесть файлов, у каждого своя роль.
+Скачивать все не обязательно: для показа хватит эталона, для практики — выгрузки
+<code>weekly_ops_26w.js</code>.</p>
+<div class="scroll"><table>
+<tr><th style="width:38%">Файл</th><th>Что это</th></tr>
+<tr>
+  <td><a href="demos/02_korrelyaciya.html" target="_blank">эталон — открыть</a> ·
+      <a href="demos/02_korrelyaciya.html" download>скачать</a></td>
+  <td><b>Эталонный разбор.</b> Та самая страница, что была на занятии: все графики,
+      ключевые числа и код разбора. Ничего рядом с ней класть не нужно —
+      она самодостаточна. Это то, что показывают с экрана.</td>
+</tr>
+<tr>
+  <td><a href="downloads/02_korrelyaciya.zip" download>02_korrelyaciya.zip</a></td>
+  <td><b>Всё сразу одним архивом.</b> Эталон, пример генерации, выгрузка в трёх
+      форматах и инструкция на три строки. Распакуйте в одну папку и откройте
+      любой html двойным кликом — без интернета и без сервера.</td>
+</tr>
+<tr>
+  <td><a href="data/weekly_ops_26w.js" download>weekly_ops_26w.js</a></td>
+  <td><b>Выгрузка для отчёта.</b> Её скачивают перед тем, как отдать промпт
+      GigaChat, и кладут рядом с полученной страницей. 26 строк.</td>
+</tr>
+<tr>
+  <td><a href="data/weekly_ops_26w.csv" download>weekly_ops_26w.csv</a></td>
+  <td>Та же выгрузка для Excel и Python.</td>
+</tr>
+<tr>
+  <td><a href="data/weekly_ops_26w.txt" download>weekly_ops_26w.txt</a></td>
+  <td>Та же выгрузка для вложения в чат: веб-версия GigaChat принимает TXT,
+      но не CSV.</td>
+</tr>
+<tr>
+  <td><a href="reports/02_korrelyaciya.html" target="_blank">пример генерации — открыть</a> ·
+      <a href="reports/02_korrelyaciya.html" download>скачать</a></td>
+  <td><b>Пример генерации по промпту.</b> Что собрал GigaChat по промпту ниже —
+      без правок. Графиков в нём меньше, чем в эталоне: это реальный результат
+      модели, и он же ориентир, с чем сравнивать свой.</td>
+</tr>
+</table></div>
 </div>
 
 <h3>Промпт: отчёт с графиками по этой выгрузке</h3>
@@ -847,19 +902,46 @@ row.querySelector(".val"), а не через родительскую карт�
 </div>
 <div class="card acc">
 <h4 style="margin-bottom:6px">Файлы для этого разбора</h4>
-<p style="margin:0 0 12px"><b><a href="downloads/03_sezonnost.zip" download>Скачать
-архив: отчёт + выгрузка</a></b> — самый короткий путь. Внутри готовый отчёт,
-файл данных и инструкция на три строки. Распакуйте в одну папку и откройте
-<code>03_sezonnost.html</code> двойным кликом: страница посчитает всё заново
-у вас на компьютере, без интернета и без сервера.</p>
-<p style="margin:0 0 10px">По отдельности:
-<a href="data/issues_daily_3y.js" download>issues_daily_3y.js</a> — выгрузка, которую подключает отчёт
-(её же скачивают перед тем, как отдать промпт GigaChat) ·
-<a href="reports/03_sezonnost.html" download>03_sezonnost.html</a> — наш готовый отчёт файлом ·
-<a href="reports/03_sezonnost.html" target="_blank">открыть его онлайн</a>.</p>
-<p style="margin:0" class="sub">Та же выгрузка в других форматах:
-<a href="data/issues_daily_3y.csv" download>issues_daily_3y.csv</a> — для Excel и Python ·
-<a href="data/issues_daily_3y.txt" download>issues_daily_3y.txt</a> — для вложения в чат.</p>
+<p class="sub" style="margin:0 0 12px">Шесть файлов, у каждого своя роль.
+Скачивать все не обязательно: для показа хватит эталона, для практики — выгрузки
+<code>issues_daily_3y.js</code>.</p>
+<div class="scroll"><table>
+<tr><th style="width:38%">Файл</th><th>Что это</th></tr>
+<tr>
+  <td><a href="demos/03_sezonnost.html" target="_blank">эталон — открыть</a> ·
+      <a href="demos/03_sezonnost.html" download>скачать</a></td>
+  <td><b>Эталонный разбор.</b> Та самая страница, что была на занятии: все графики,
+      ключевые числа и код разбора. Ничего рядом с ней класть не нужно —
+      она самодостаточна. Это то, что показывают с экрана.</td>
+</tr>
+<tr>
+  <td><a href="downloads/03_sezonnost.zip" download>03_sezonnost.zip</a></td>
+  <td><b>Всё сразу одним архивом.</b> Эталон, пример генерации, выгрузка в трёх
+      форматах и инструкция на три строки. Распакуйте в одну папку и откройте
+      любой html двойным кликом — без интернета и без сервера.</td>
+</tr>
+<tr>
+  <td><a href="data/issues_daily_3y.js" download>issues_daily_3y.js</a></td>
+  <td><b>Выгрузка для отчёта.</b> Её скачивают перед тем, как отдать промпт
+      GigaChat, и кладут рядом с полученной страницей. 1095 строк.</td>
+</tr>
+<tr>
+  <td><a href="data/issues_daily_3y.csv" download>issues_daily_3y.csv</a></td>
+  <td>Та же выгрузка для Excel и Python.</td>
+</tr>
+<tr>
+  <td><a href="data/issues_daily_3y.txt" download>issues_daily_3y.txt</a></td>
+  <td>Та же выгрузка для вложения в чат: веб-версия GigaChat принимает TXT,
+      но не CSV.</td>
+</tr>
+<tr>
+  <td><a href="reports/03_sezonnost.html" target="_blank">пример генерации — открыть</a> ·
+      <a href="reports/03_sezonnost.html" download>скачать</a></td>
+  <td><b>Пример генерации по промпту.</b> Что собрал GigaChat по промпту ниже —
+      без правок. Графиков в нём меньше, чем в эталоне: это реальный результат
+      модели, и он же ориентир, с чем сравнивать свой.</td>
+</tr>
+</table></div>
 </div>
 
 <h3>Промпт: отчёт с графиками по этой выгрузке</h3>
@@ -1151,19 +1233,46 @@ row.querySelector(".val"), а не через родительскую карт�
 </div>
 <div class="card acc">
 <h4 style="margin-bottom:6px">Файлы для этого разбора</h4>
-<p style="margin:0 0 12px"><b><a href="downloads/04_nizkaya_baza.zip" download>Скачать
-архив: отчёт + выгрузка</a></b> — самый короткий путь. Внутри готовый отчёт,
-файл данных и инструкция на три строки. Распакуйте в одну папку и откройте
-<code>04_nizkaya_baza.html</code> двойным кликом: страница посчитает всё заново
-у вас на компьютере, без интернета и без сервера.</p>
-<p style="margin:0 0 10px">По отдельности:
-<a href="data/mortgage_market.js" download>mortgage_market.js</a> — выгрузка, которую подключает отчёт
-(её же скачивают перед тем, как отдать промпт GigaChat) ·
-<a href="reports/04_nizkaya_baza.html" download>04_nizkaya_baza.html</a> — наш готовый отчёт файлом ·
-<a href="reports/04_nizkaya_baza.html" target="_blank">открыть его онлайн</a>.</p>
-<p style="margin:0" class="sub">Та же выгрузка в других форматах:
-<a href="data/mortgage_market.csv" download>mortgage_market.csv</a> — для Excel и Python ·
-<a href="data/mortgage_market.txt" download>mortgage_market.txt</a> — для вложения в чат.</p>
+<p class="sub" style="margin:0 0 12px">Шесть файлов, у каждого своя роль.
+Скачивать все не обязательно: для показа хватит эталона, для практики — выгрузки
+<code>mortgage_market.js</code>.</p>
+<div class="scroll"><table>
+<tr><th style="width:38%">Файл</th><th>Что это</th></tr>
+<tr>
+  <td><a href="demos/04_nizkaya_baza.html" target="_blank">эталон — открыть</a> ·
+      <a href="demos/04_nizkaya_baza.html" download>скачать</a></td>
+  <td><b>Эталонный разбор.</b> Та самая страница, что была на занятии: все графики,
+      ключевые числа и код разбора. Ничего рядом с ней класть не нужно —
+      она самодостаточна. Это то, что показывают с экрана.</td>
+</tr>
+<tr>
+  <td><a href="downloads/04_nizkaya_baza.zip" download>04_nizkaya_baza.zip</a></td>
+  <td><b>Всё сразу одним архивом.</b> Эталон, пример генерации, выгрузка в трёх
+      форматах и инструкция на три строки. Распакуйте в одну папку и откройте
+      любой html двойным кликом — без интернета и без сервера.</td>
+</tr>
+<tr>
+  <td><a href="data/mortgage_market.js" download>mortgage_market.js</a></td>
+  <td><b>Выгрузка для отчёта.</b> Её скачивают перед тем, как отдать промпт
+      GigaChat, и кладут рядом с полученной страницей. 5 строк.</td>
+</tr>
+<tr>
+  <td><a href="data/mortgage_market.csv" download>mortgage_market.csv</a></td>
+  <td>Та же выгрузка для Excel и Python.</td>
+</tr>
+<tr>
+  <td><a href="data/mortgage_market.txt" download>mortgage_market.txt</a></td>
+  <td>Та же выгрузка для вложения в чат: веб-версия GigaChat принимает TXT,
+      но не CSV.</td>
+</tr>
+<tr>
+  <td><a href="reports/04_nizkaya_baza.html" target="_blank">пример генерации — открыть</a> ·
+      <a href="reports/04_nizkaya_baza.html" download>скачать</a></td>
+  <td><b>Пример генерации по промпту.</b> Что собрал GigaChat по промпту ниже —
+      без правок. Графиков в нём меньше, чем в эталоне: это реальный результат
+      модели, и он же ориентир, с чем сравнивать свой.</td>
+</tr>
+</table></div>
 </div>
 
 <h3>Промпт: отчёт с графиками по этой выгрузке</h3>
@@ -1464,19 +1573,46 @@ row.querySelector(".val"), а не через родительскую карт�
 </div>
 <div class="card acc">
 <h4 style="margin-bottom:6px">Файлы для этого разбора</h4>
-<p style="margin:0 0 12px"><b><a href="downloads/05_srednee.zip" download>Скачать
-архив: отчёт + выгрузка</a></b> — самый короткий путь. Внутри готовый отчёт,
-файл данных и инструкция на три строки. Распакуйте в одну папку и откройте
-<code>05_srednee.html</code> двойным кликом: страница посчитает всё заново
-у вас на компьютере, без интернета и без сервера.</p>
-<p style="margin:0 0 10px">По отдельности:
-<a href="data/msb_applications_q.js" download>msb_applications_q.js</a> — выгрузка, которую подключает отчёт
-(её же скачивают перед тем, как отдать промпт GigaChat) ·
-<a href="reports/05_srednee.html" download>05_srednee.html</a> — наш готовый отчёт файлом ·
-<a href="reports/05_srednee.html" target="_blank">открыть его онлайн</a>.</p>
-<p style="margin:0" class="sub">Та же выгрузка в других форматах:
-<a href="data/msb_applications_q.csv" download>msb_applications_q.csv</a> — для Excel и Python ·
-<a href="data/msb_applications_q.txt" download>msb_applications_q.txt</a> — для вложения в чат.</p>
+<p class="sub" style="margin:0 0 12px">Шесть файлов, у каждого своя роль.
+Скачивать все не обязательно: для показа хватит эталона, для практики — выгрузки
+<code>msb_applications_q.js</code>.</p>
+<div class="scroll"><table>
+<tr><th style="width:38%">Файл</th><th>Что это</th></tr>
+<tr>
+  <td><a href="demos/05_srednee.html" target="_blank">эталон — открыть</a> ·
+      <a href="demos/05_srednee.html" download>скачать</a></td>
+  <td><b>Эталонный разбор.</b> Та самая страница, что была на занятии: все графики,
+      ключевые числа и код разбора. Ничего рядом с ней класть не нужно —
+      она самодостаточна. Это то, что показывают с экрана.</td>
+</tr>
+<tr>
+  <td><a href="downloads/05_srednee.zip" download>05_srednee.zip</a></td>
+  <td><b>Всё сразу одним архивом.</b> Эталон, пример генерации, выгрузка в трёх
+      форматах и инструкция на три строки. Распакуйте в одну папку и откройте
+      любой html двойным кликом — без интернета и без сервера.</td>
+</tr>
+<tr>
+  <td><a href="data/msb_applications_q.js" download>msb_applications_q.js</a></td>
+  <td><b>Выгрузка для отчёта.</b> Её скачивают перед тем, как отдать промпт
+      GigaChat, и кладут рядом с полученной страницей. 18400 строк.</td>
+</tr>
+<tr>
+  <td><a href="data/msb_applications_q.csv" download>msb_applications_q.csv</a></td>
+  <td>Та же выгрузка для Excel и Python.</td>
+</tr>
+<tr>
+  <td><a href="data/msb_applications_q.txt" download>msb_applications_q.txt</a></td>
+  <td>Та же выгрузка для вложения в чат: веб-версия GigaChat принимает TXT,
+      но не CSV.</td>
+</tr>
+<tr>
+  <td><a href="reports/05_srednee.html" target="_blank">пример генерации — открыть</a> ·
+      <a href="reports/05_srednee.html" download>скачать</a></td>
+  <td><b>Пример генерации по промпту.</b> Что собрал GigaChat по промпту ниже —
+      без правок. Графиков в нём меньше, чем в эталоне: это реальный результат
+      модели, и он же ориентир, с чем сравнивать свой.</td>
+</tr>
+</table></div>
 </div>
 
 <h3>Промпт: отчёт с графиками по этой выгрузке</h3>
@@ -1754,19 +1890,20 @@ row.querySelector(".val"), а не через родительскую карт�
 </div></section>
 
 <section id="data"><div class="wrap">
-<h2>Все выгрузки и готовые отчёты в одном месте</h2>
-<p>Архив — отчёт и выгрузка вместе, работает сразу после распаковки. Файл
-<code>.js</code> — тот, который подключает отчёт. CSV — для Excel и Python.
-TXT — если захотите приложить файл к чату: веб-версия GigaChat принимает DOCX, PDF
-и TXT, но не CSV.</p>
+<h2>Все файлы в одном месте</h2>
+<p>Эталон — разбор с занятия, тот самый, что показывали с экрана. Архив — всё
+по этому разбору вместе, работает сразу после распаковки. Файл <code>.js</code> —
+тот, который подключает отчёт. CSV — для Excel и Python. TXT — если захотите
+приложить файл к чату: веб-версия GigaChat принимает DOCX, PDF и TXT, но не CSV.
+Пример генерации — что собрал GigaChat по промпту.</p>
 <div class="scroll"><table>
-<tr><th>Разбор</th><th>Архив</th><th>Выгрузка для отчёта</th><th>Она же</th>
-    <th>Готовый отчёт</th><th>Объём</th></tr>
-<tr><td>1 · поиск выбросов по медиане и MAD</td><td><a href="downloads/01_vybrosy.zip" download>01_vybrosy.zip</a></td><td><a href="data/loan_tat_90d.js" download>loan_tat_90d.js</a></td><td><a href="data/loan_tat_90d.csv" download>csv</a> · <a href="data/loan_tat_90d.txt" download>txt</a></td><td><a href="reports/01_vybrosy.html" target="_blank">01_vybrosy.html</a></td><td>90 строк</td></tr>
-<tr><td>2 · частная корреляция</td><td><a href="downloads/02_korrelyaciya.zip" download>02_korrelyaciya.zip</a></td><td><a href="data/weekly_ops_26w.js" download>weekly_ops_26w.js</a></td><td><a href="data/weekly_ops_26w.csv" download>csv</a> · <a href="data/weekly_ops_26w.txt" download>txt</a></td><td><a href="reports/02_korrelyaciya.html" target="_blank">02_korrelyaciya.html</a></td><td>26 строк</td></tr>
-<tr><td>3 · снятие сезонности и сравнение сопоставимых периодов год к году</td><td><a href="downloads/03_sezonnost.zip" download>03_sezonnost.zip</a></td><td><a href="data/issues_daily_3y.js" download>issues_daily_3y.js</a></td><td><a href="data/issues_daily_3y.csv" download>csv</a> · <a href="data/issues_daily_3y.txt" download>txt</a></td><td><a href="reports/03_sezonnost.html" target="_blank">03_sezonnost.html</a></td><td>1095 строк</td></tr>
-<tr><td>4 · пересчёт темпов прироста в абсолютные деньги и в доли рынка</td><td><a href="downloads/04_nizkaya_baza.zip" download>04_nizkaya_baza.zip</a></td><td><a href="data/mortgage_market.js" download>mortgage_market.js</a></td><td><a href="data/mortgage_market.csv" download>csv</a> · <a href="data/mortgage_market.txt" download>txt</a></td><td><a href="reports/04_nizkaya_baza.html" target="_blank">04_nizkaya_baza.html</a></td><td>5 строк</td></tr>
-<tr><td>5 · анализ распределения: медиана и 90-й перцентиль вместо среднего</td><td><a href="downloads/05_srednee.zip" download>05_srednee.zip</a></td><td><a href="data/msb_applications_q.js" download>msb_applications_q.js</a></td><td><a href="data/msb_applications_q.csv" download>csv</a> · <a href="data/msb_applications_q.txt" download>txt</a></td><td><a href="reports/05_srednee.html" target="_blank">05_srednee.html</a></td><td>18400 строк</td></tr>
+<tr><th>Разбор</th><th>Эталон</th><th>Архив</th><th>Выгрузка для отчёта</th><th>Она же</th>
+    <th>Пример генерации</th><th>Объём</th></tr>
+<tr><td>1 · поиск выбросов по медиане и MAD</td><td><a href="demos/01_vybrosy.html" target="_blank">эталон</a></td><td><a href="downloads/01_vybrosy.zip" download>01_vybrosy.zip</a></td><td><a href="data/loan_tat_90d.js" download>loan_tat_90d.js</a></td><td><a href="data/loan_tat_90d.csv" download>csv</a> · <a href="data/loan_tat_90d.txt" download>txt</a></td><td><a href="reports/01_vybrosy.html" target="_blank">01_vybrosy.html</a></td><td>90 строк</td></tr>
+<tr><td>2 · частная корреляция</td><td><a href="demos/02_korrelyaciya.html" target="_blank">эталон</a></td><td><a href="downloads/02_korrelyaciya.zip" download>02_korrelyaciya.zip</a></td><td><a href="data/weekly_ops_26w.js" download>weekly_ops_26w.js</a></td><td><a href="data/weekly_ops_26w.csv" download>csv</a> · <a href="data/weekly_ops_26w.txt" download>txt</a></td><td><a href="reports/02_korrelyaciya.html" target="_blank">02_korrelyaciya.html</a></td><td>26 строк</td></tr>
+<tr><td>3 · снятие сезонности и сравнение сопоставимых периодов год к году</td><td><a href="demos/03_sezonnost.html" target="_blank">эталон</a></td><td><a href="downloads/03_sezonnost.zip" download>03_sezonnost.zip</a></td><td><a href="data/issues_daily_3y.js" download>issues_daily_3y.js</a></td><td><a href="data/issues_daily_3y.csv" download>csv</a> · <a href="data/issues_daily_3y.txt" download>txt</a></td><td><a href="reports/03_sezonnost.html" target="_blank">03_sezonnost.html</a></td><td>1095 строк</td></tr>
+<tr><td>4 · пересчёт темпов прироста в абсолютные деньги и в доли рынка</td><td><a href="demos/04_nizkaya_baza.html" target="_blank">эталон</a></td><td><a href="downloads/04_nizkaya_baza.zip" download>04_nizkaya_baza.zip</a></td><td><a href="data/mortgage_market.js" download>mortgage_market.js</a></td><td><a href="data/mortgage_market.csv" download>csv</a> · <a href="data/mortgage_market.txt" download>txt</a></td><td><a href="reports/04_nizkaya_baza.html" target="_blank">04_nizkaya_baza.html</a></td><td>5 строк</td></tr>
+<tr><td>5 · анализ распределения: медиана и 90-й перцентиль вместо среднего</td><td><a href="demos/05_srednee.html" target="_blank">эталон</a></td><td><a href="downloads/05_srednee.zip" download>05_srednee.zip</a></td><td><a href="data/msb_applications_q.js" download>msb_applications_q.js</a></td><td><a href="data/msb_applications_q.csv" download>csv</a> · <a href="data/msb_applications_q.txt" download>txt</a></td><td><a href="reports/05_srednee.html" target="_blank">05_srednee.html</a></td><td>18400 строк</td></tr>
 </table></div>
 <p class="sub">Все данные синтетические, сгенерированы для обучения. Совпадения
 с реальными клиентами и сделками случайны.</p>

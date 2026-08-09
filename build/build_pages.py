@@ -142,7 +142,7 @@ def main():
 
     # Ассеты, данные и готовые отчёты нужны обеим версиям: пути в HTML
     # относительные, поэтому внутри LMS всё работает так же, как на Pages.
-    for sub in ("assets", "data", "reports", "downloads"):
+    for sub in ("assets", "data", "demos", "reports", "downloads"):
         dst = scorm / sub
         if dst.exists():
             shutil.rmtree(dst)
