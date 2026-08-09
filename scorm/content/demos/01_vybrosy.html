@@ -1,11 +1,12 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Выбросы и шум · срок рассмотрения заявки</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#EEF1F4;font:14px/1.45 "SB Sans Text","Segoe UI",Arial,sans-serif;color:#2E3641;
  -webkit-font-smoothing:antialiased}
-.wrap{width:1320px;margin:0 auto;padding:18px 22px 26px}
+.wrap{width:100%;max-width:1320px;margin:0 auto;padding:18px 22px 26px}
 .top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .logo{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#21A038,#0FBF62);
  display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px}
@@ -40,6 +41,23 @@ body{background:#EEF1F4;font:14px/1.45 "SB Sans Text","Segoe UI",Arial,sans-seri
 code{font:12px/1.5 "JetBrains Mono",Consolas,monospace;background:#F4F6F8;border-radius:8px;
  padding:10px 12px;display:block;white-space:pre;color:#4A5560;overflow:auto;margin-top:10px}
 .foot{margin-top:14px;font-size:11.5px;color:#98A1AC}
+
+/* Телефон. Страницу открывают не только с проектора: ссылка на неё стоит
+   на слайде, и половина зала откроет её с телефона. Ширина холста была
+   жёсткие 1320 px, поэтому вправо уезжали и зелёный пузырь запроса,
+   и третья карточка разбора. Ниже 1100 px колонки складываются в одну,
+   графики тянутся по ширине сами — они и так в процентах. */
+@media (max-width:1100px){
+  .grid.g3,.grid.g2,.grid.g21{grid-template-columns:1fr}
+  .prompt,.reply{max-width:100%}
+}
+@media (max-width:640px){
+  .wrap{padding:12px 12px 18px}
+  .top span{display:none}
+  .badge{margin-left:auto}
+  .kpi{gap:16px;flex-wrap:wrap}
+  code{font-size:11px}
+}
 </style></head>
 <body><div class="wrap">
 <div class="top"><div class="logo">G</div><b>GigaChat</b>
