@@ -1,132 +1,164 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Отчет по сезонности потребительских кредитов</title>
-  <style>
-    body { font-family: Arial, sans-serif; }
-    h1 { color: #333; margin-bottom: 12px; }
-    p { line-height: 1.4; margin-top: 0; }
-    .track {
-      display: inline-block;
-      width: 320px;
-      height: 14px;
-      background: #eef2f5;
-      border-radius: 7px;
-      vertical-align: middle;
-    }
-    .bar {
-      display: block;
-      height: 14px;
-      background: #20BA72;
-      border-radius: 7px;
-    }
-    .row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 6px 0;
-    }
-    .val {
-      white-space: nowrap;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Отчет по сезонам кредитования</title>
+<style>
+body { background-color: white; color: #2E3641; margin: 0 auto; max-width: 920px; }
+h1 { font-size: 24px; line-height: 1.2; margin-bottom: 1em; }
+p { font-size: 16px; line-height: 1.4; margin-top: 0; margin-bottom: 1em; }
+.card { display: block; padding: 24px; border: 1px solid #e6ecf1; border-radius: 14px; box-shadow: rgba(0,0,0,.05) 0 1px 3px; margin-bottom: 24px; }
+.stats-tile { display: inline-flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 12px; gap: 4px; font-weight: bold; font-size: 14px; color: #8a94a0; }
+.stats-value { font-size: 32px; color: black; }
+.track{display:inline-block;width:320px;height:14px;background:#eef2f5;border-radius:7px;vertical-align:middle}
+.bar{display:block;height:14px;background:#20BA72;border-radius:7px}
+.row{display:flex;align-items:center;gap:12px;margin:6px 0}
+table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+th, td { padding: 8px; text-align: left; vertical-align: top; border-bottom: 1px solid #e6ecf1; }
+th { font-weight: bold; }
+td.numeric { text-align: right; }
+.graphic { overflow-x: scroll; }
+@media screen and (max-width: 600px) {
+  .stats-tile { display: block; margin-bottom: 12px; }
+}
+</style>
 </head>
 <body>
 <h1>Сезонность: рост, которого нет</h1>
-<p>Проверяются темпы роста выдач потребительских кредитов по кварталам и годам.</p>
-<div id="output"></div>
+<p>Анализ сезонности потребительских кредитов за период 2023–2025 гг.</p>
+<div id="root"></div>
+<script src="issues_daily_3y.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', async () => {
-  try {
-    const response = await fetch('../data/issues_daily_3y.csv');
-    if (!response.ok) throw new Error(`Ошибка HTTP ${response.status}`);
-    
-    const csvText = await response.text();
-    const rows = csvText.trim().split("\n").slice(1); // Пропускаем заголовки
-
-    let data = [];
-    for (const row of rows) {
-      const [dateStr, amountStr] = row.split(',').map(s => s.trim());
-      const amount = parseFloat(amountStr);
-      
-      if (!isNaN(amount)) {
-        const year = +dateStr.slice(0, 4);
-        const month = +dateStr.slice(5, 7)-1;
-        const day = +dateStr.slice(8, 10);
-        
-        const d = new Date(year, month, day);
-        const quarter = Math.floor(month / 3) + 1;
-        
-        data.push({ date: d, amount });
-      }
-    }
-
-    const quartersSums = {};
-    const yearsSums = {};
-
-    for (let i=0; i<data.length; ++i) {
-      const { date, amount } = data[i];
-      const qYear = date.getFullYear()+'q'+Math.floor(date.getMonth()/3+1);
-      const yYear = date.getFullYear();
-  
-      quartersSums[qYear] = (quartersSums[qYear] || 0) + amount;
-      yearsSums[yYear] = (yearsSums[yYear] || 0) + amount;
-    }
-
-    const outputDiv = document.querySelector('#output');
-
-    function formatNumber(n) {
-      return n.toLocaleString('ru-RU', { maximumFractionDigits: 1 });
-    }
-
-    function changeInPercent(newVal, oldVal) {
-      return ((newVal / oldVal - 1)*100).toFixed(1)+' %';
-    }
-
-    const totalOutput = [
-      `Годовые итоги (${'2023–2025'}):`,
-      `<div class="row"><span class="lab">2023:</span><span class="track"><span class="bar"></span></span><span class="val">${formatNumber(yearsSums['2023'])} млн руб.</span></div>`,
-      `<div class="row"><span class="lab">2024:</span><span class="track"><span class="bar"></span></span><span class="val">${formatNumber(yearsSums['2024'])} млн руб., ${changeInPercent(yearsSums['2024'], yearsSums['2023'])}</span></div>`,
-      `<div class="row"><span class="lab">2025:</span><span class="track"><span class="bar"></span></span><span class="val">${formatNumber(yearsSums['2025'])} млн руб., ${changeInPercent(yearsSums['2025'], yearsSums['2024'])}</span></div>`
-    ];
-
-    const quarters = ['2024q1','2024q2','2024q3','2024q4','2025q1','2025q2','2025q3','2025q4'];
-    const quartersOutput = [
-      'Квартальные итоги (2024–2025 гг.):'
-    ];
-
-    let quartersMax = Math.max(...Object.values(quartersSums));
-
-    for (const q of quarters) {
-      const sumQ = quartersSums[q];
-      quartersOutput.push(
-        `<div class="row"><span class="lab">${q}:</span><span class="track"><span class="bar" style="width:${(sumQ/quartersMax*100).toFixed(1)}%"></span></span><span class="val">${formatNumber(sumQ)} млн руб.</span></div>`
-      );
-    }
-
-    quartersOutput.push(
-      `<div class="row"><span class="lab">IV кв. 2025 к III кв. 2025:</span><span class="val">${changeInPercent(quartersSums['2025q4'], quartersSums['2025q3'])}</span></div>`,
-      `<div class="row"><span class="lab">IV кв. 2025 к IV кв. 2024:</span><span class="val">${changeInPercent(quartersSums['2025q4'], quartersSums['2024q4'])}</span></div>`
-    );
-
-    outputDiv.innerHTML += `
-      <section>
-        ${totalOutput.join('<br/>')}
-      </section>
-      <section>
-        ${quartersOutput.join('<br/>')}
-      </section>
-      <section>
-        <h2>Вывод</h2>
-        Сопоставимые кварталы демонстрируют отсутствие значимых колебаний в объемах выдач кредита. Годовые показатели также подтверждают стабильность тренда без выраженного прироста или падения объема кредитования.
-      </section>
-    `;
-
-  } catch(err) {
-    document.body.innerHTML = '<pre>' + err.message + '</pre>';
-  }
+function formatNum(v) {
+  if (!isFinite(v)) return v;
+  let f = v.toFixed(1).replace('.', ',');
+  return f.endsWith(',0') ? f.replace(/\,0$/, '') : f;
+}
+if (!window.DATA || !Array.isArray(window.DATA)) {
+  document.body.innerText = 'Файл issues_daily_3y.js должен лежать рядом со страницей.';
+} else {
+const data = window.DATA.filter(d => d.amount_mln_rub !== null && d.date !== null)
+                       .map(d => ({date: new Date(d.date), value: d.amount_mln_rub}));
+let amounts = data.map(d => d.value);
+let quarters = {};
+data.forEach(row => {
+  const year = row.date.getFullYear();
+  const quarter = ((row.date.getMonth() / 3 | 0) + 1);
+  const key = `${year}-Q${quarter}`;
+  if (!quarters[key]) quarters[key] = [];
+  quarters[key].push(row.value);
 });
+let quarterlySums = Object.keys(quarters).reduce((acc, q) => {
+  acc[q] = quarters[q].reduce((sum, val) => sum + val, 0);
+  return acc;
+}, {});
+// Суммы по кварталам
+let QIV2025 = quarterlySums['2025-Q4'];
+let QIII2025 = quarterlySums['2025-Q3'];
+let QIV2024 = quarterlySums['2024-Q4'];
+let changeToPreviousQuarter = ((QIV2025/QIII2025 - 1)*100).toFixed(1);
+let changeToComparablePeriod = ((QIV2025/QIV2024 - 1)*100).toFixed(1);
+// Годовые итоги
+let years = ['2023', '2024', '2025'].reduce((acc, yr) => {
+  let annualAmount = data.reduce((sum, row) => row.date.getFullYear() == yr ? sum + row.value : sum, 0);
+  acc[yr] = annualAmount;
+  return acc;
+}, {});
+let changeYOY2025 = ((years['2025']/years['2024'] - 1)*100).toFixed(1);
+let changeYOY2024 = ((years['2024']/years['2023'] - 1)*100).toFixed(1);
+document.getElementById('root').innerHTML = `
+<div class="card">
+  <div class="stats-tiles">
+    <div class="stats-tile">
+      <div class="stats-value">${formatNum(changeToPreviousQuarter)}%</div>
+      <div>IV кв. 2025 г./III кв. 2025 г.</div>
+    </div>
+    <div class="stats-tile">
+      <div class="stats-value">${formatNum(changeToComparablePeriod)}%</div>
+      <div>IV кв. 2025 г./IV кв. 2024 г.</div>
+    </div>
+    <div class="stats-tile">
+      <div class="stats-value">${formatNum(changeYOY2025)}%</div>
+      <div>2025 г./2024 г.</div>
+    </div>
+    <div class="stats-tile">
+      <div class="stats-value">${formatNum(years['2025'])}</div>
+      <div>Годовой итог 2025 г., млн руб.</div>
+    </div>
+  </div>
+</div>
+<div class="graphic card">
+  <svg viewBox="0 0 800 280" style="width:100%;height:auto;display:block">
+    <defs><linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#A8E0C4"/>
+        <stop offset="33%" stop-color="#5BC98D"/>
+        <stop offset="66%" stop-color="#20BA72"/>
+    </linearGradient></defs>
+    <!-- Calculate chart geometry -->
+    ${(()=>{
+      let values = amounts;
+      let n = values.length;
+      let min = Math.min(...values);
+      let max = Math.max(...values);
+      // Prepare grid lines and labels
+      let yValues = [min, max];
+      let yLines = [16, 74.5, 133, 191.5, 250]; 
+      let yLabels = ["Минимум", "Максимум"];
+      let rectWidth = 732/n*0.8;
+      let rectHeight = values.map(v => 250-(250-min)*(v-min)/(max-min));
+      let rectX = values.map((_,i)=>52+i*(732/(Math.max(n-1,1))));
+      let rectY = rectHeight.map(h=>Math.max(250-h,0));
+      let polylinePoints = values.map((v,i)=>{
+          let x = rectX[i], y = rectY[i]+rectHeight[i];
+          return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(" ");
+      // Rendering SVG elements
+      return `<g transform="translate(0,-16)">
+              ${yLines.map(yl=>`<line x1="52" x2="784" y1="${yl}" y2="${yl}" stroke="#e6ecf1"/>`).join("\n")}
+              ${rectX.map((x,i)=>
+                `<rect x="${x.toFixed(1)}" y="${rectY[i].toFixed(1)}" width="${rectWidth.toFixed(1)}" height="${rectHeight[i].toFixed(1)}" fill="url(#grad1)" rx="2"/>`
+              ).join("\n")}
+              <polyline fill="none" stroke="#20BA72" stroke-width="2" points="${polylinePoints}"/>
+              ${yValues.map((val,i)=>
+                `<text x="46" y="${yLines[i]}".5" text-anchor="end" font-size="11" fill="#8a94a0">${formatNum(val)}</text>`).join("\n")}
+            </g>`;
+    })()}
+  </svg>
+</div>
+<div class="card">
+  <div class="rows">
+    <div class="row"><span class="lab">Итоги 2023 года:</span>
+      <span class="track"><span class="bar" style="width:${(100*years['2023']/Math.max(...Object.values(years))).toFixed(1)}%"></span></span>
+      <span class="val">${formatNum(years['2023'])} млн руб.</span></div>
+    <div class="row"><span class="lab">Итоги 2024 года:</span>
+      <span class="track"><span class="bar" style="width:${(100*years['2024']/Math.max(...Object.values(years))).toFixed(1)}%"></span></span>
+      <span class="val">${formatNum(years['2024'])} млн руб.</span></div>
+    <div class="row"><span class="lab">Итоги 2025 года:</span>
+      <span class="track"><span class="bar" style="width:${(100*years['2025']/Math.max(...Object.values(years))).toFixed(1)}%"></span></span>
+      <span class="val">${formatNum(years['2025'])} млн руб.</span></div>
+  </div>
+</div>
+<div class="card">
+  <table>
+    <thead><tr><th>Год</th><th>I кв.</th><th>II кв.</th><th>III кв.</th><th>IV кв.</th><th>Итого</th></tr></thead>
+    <tbody>
+      ${['2023','2024','2025'].map(year=>
+        `<tr><td>${year}</td>
+           <td class="numeric">${formatNum(quarterlySums[`${year}-Q1`]||0)}</td>
+           <td class="numeric">${formatNum(quarterlySums[`${year}-Q2`]||0)}</td>
+           <td class="numeric">${formatNum(quarterlySums[`${year}-Q3`]||0)}</td>
+           <td class="numeric">${formatNum(quarterlySums[`${year}-Q4`]||0)}</td>
+           <td class="numeric">${formatNum(years[year])}</td></tr>`).join("\n")
+      }
+    </tbody>
+  </table>
+</div>
+<div class="card">
+  <h2>Вывод</h2>
+  <p>Потребительское кредитование демонстрирует сезонность роста в четвертом квартале относительно третьего, однако долгосрочная динамика показывает сжатие канала: сопоставимые периоды падают, ежегодные темпы отрицательные.</p>
+</div>
+`;
+}
 </script>
 </body>
 </html>

@@ -1,95 +1,222 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Корреляционный отчет</title>
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.5; }
-    h1 { margin-top: 2rem; color: #333; }
-    p { margin-bottom: 1rem; }
-    .track{display:inline-block;width:320px;height:14px;background:#eef2f5;
-          border-radius:7px;vertical-align:middle}
-    .bar{display:block;height:14px;background:#20BA72;border-radius:7px}
-    .row{display:flex;align-items:center;gap:12px;margin:6px 0}
-  </style>
+<meta charset="UTF-8">
+<title>Отчет по операциям</title>
+<style>
+body {font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#2E3641;max-width:920px;margin:0 auto;}
+h1,h2,p {margin-bottom:.5em}
+.card {padding:20px;border-radius:14px;border:1px solid #e6ecf1;margin-bottom:20px;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+.tiles {display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;justify-content:center}
+.tile {text-align:center;font-weight:bold;font-size:32px;line-height:1.2;margin-bottom:6px}
+.tile small {display:block;font-size:14px;color:#8A94A0;font-weight:normal}
+.graph {position:relative;overflow:hidden}
+.track{display:inline-block;width:320px;height:14px;background:#eef2f5;border-radius:7px;vertical-align:middle}
+.bar{display:block;height:14px;background:#20BA72;border-radius:7px}
+.row{display:flex;align-items:center;gap:12px;margin:6px 0}
+table{border-collapse:collapse;width:100%}
+th,td{padding:8px;text-align:left;border-bottom:1px solid #e6ecf1}
+th{font-weight:bold;color:#8A94A0}
+tr:nth-child(even){background-color:#F8FAFC}
+.svg-grid line {stroke:#e6ecf1;stroke-width:1}
+.svg-line {fill:none;stroke-width:2}
+.svg-label {font-size:11px;fill:#8A94A0}
+.legend-item {display:inline-block;margin-right:16px;font-size:14px;color:#8A94A0}
+.legend-swatch {display:inline-block;width:10px;height:10px;margin-right:4px}
+legend-swatch-calls {background-color:#20BA72}
+legend-swatch-churn {background-color:#2E6BE6}
+legend-swatch-error {background-color:#E4572E}
+</style>
 </head>
 <body>
 <h1>Общая причина: виноват релиз, а не контакт-центр</h1>
-<p>Отчет проверяет влияние количества звонков в контакт-центр и частоты ошибок мобильного приложения на показатель оттока клиентов.</p>
-<div id="report-container"></div>
+<p>Проверяем гипотезу, что рост количества обращений связан с ростом долей отказов в приложении.</p>
+<div class="card tiles">
+  <div class="tile"><span id="corrcallschurn"></span><small>Обращения ↔ Отток</small></div>
+  <div class="tile"><span id="correrrorscalls"></span><small>Ошибки ↔ Обращения</small></div>
+  <div class="tile"><span id="correrrorschurn"></span><small>Ошибки ↔ Отток</small></div>
+  <div class="tile"><span id="partialcorrcallschurn"></span><small>Частная корреляция<br>(при фиксированных ошибках)</small></div>
+</div>
+<div class="card graph">
+  <h2>Графики изменений</h2>
+  <svg viewBox="0 0 800 280" style="width:100%;height:auto;display:block"></svg>
+  <div class="legend">
+    <span class="legend-item"><span class="legend-swatch legend-swatch-calls"></span>Обращения</span>
+    <span class="legend-item"><span class="legend-swatch legend-swatch-churn"></span>Отток</span>
+    <span class="legend-item"><span class="legend-swatch legend-swatch-error"></span>Ошибка приложения</span>
+  </div>
+</div>
+<div class="card">
+  <h2>Корреляционные полосы</h2>
+  <div class="row"><span class="lab">Обращения ↔ Отток</span><span class="track"><span class="bar"></span></span><span class="val"></span></div>
+  <div class="row"><span class="lab">Ошибки ↔ Обращения</span><span class="track"><span class="bar"></span></span><span class="val"></span></div>
+  <div class="row"><span class="lab">Ошибки ↔ Отток</span><span class="track"><span class="bar"></span></span><span class="val"></span></div>
+  <div class="row"><span class="lab">Частная корреляция</span><span class="track"><span class="bar"></span></span><span class="val"></span></div>
+</div>
+<div class="card">
+  <h2>Таблица недель</h2>
+  <table>
+    <thead>
+      <tr><th>Неделя</th><th>Обращения</th><th>Отток</th><th>Ошибка приложения</th></tr>
+    </thead>
+    <tbody id="dataTableBody"></tbody>
+  </table>
+</div>
+<div class="card">
+  <h2>Вывод</h2>
+  <p id="conclusion"></p>
+</div>
+<script src="weekly_ops_26w.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', async () => {
-  try {
-    const response = await fetch('../data/weekly_ops_26w.csv');
-    if (!response.ok) throw new Error(`Ошибка HTTP ${response.status}`);
-    
-    const csvText = await response.text();
-    const rows = csvText.trim().split("\n").slice(1); // пропустить заголовки
+function formatNum(v) {
+  if (!Number.isFinite(v)) return v;
+  return v.toFixed(1).replace('.', ',');
+}
 
-    let data = [];
-    for(const row of rows){
-      const cols = row.split(',').map(col => col.trim());
-      const numCols = cols.map(col => parseFloat(col));
-      
-      if(numCols.some(isNaN)) continue; // пропускаем некорректные строки
-      data.push({
-        weekStart: cols[0],
-        callsTh: numCols[1], 
-        churnPct: numCols[2], 
-        errorRatePct: numCols[3]
-      });
-    }
-
-    function mean(arr) {
-      return arr.reduce((a,b)=>a+b,0)/arr.length;
-    }
-
-    function median(arr) {
-      const sortedArr = [...arr].sort((a,b)=>a-b);
-      const mid = Math.floor(sortedArr.length / 2);
-      return sortedArr.length % 2 !== 0 ? sortedArr[mid] : (sortedArr[mid-1]+sortedArr[mid])/2;
-    }
-
-    function pearsonCorrelation(x,y) {
-      const n = x.length;
-      const mX = mean(x), mY = mean(y);
-      const numerator = x.reduce((sum,i,idx)=>sum+(i-mX)*(y[idx]-mY),0);
-      const denominator = Math.sqrt(
-        x.reduce((sum,v)=>sum+Math.pow(v-mX,2),0)*y.reduce((sum,v)=>sum+Math.pow(v-mY,2),0)
-      );
-      return numerator / denominator;
-    }
-
-    const calls = data.map(d=>d.callsTh),
-          churns = data.map(d=>d.churnPct),
-          errors = data.map(d=>d.errorRatePct);
-
-    const corrCallsChurn = pearsonCorrelation(calls,churns),
-          corrErrorsCalls = pearsonCorrelation(errors,calls),
-          corrErrorsChurn = pearsonCorrelation(errors,churns);
-
-    // Частная корреляция
-    const partialCorr = (corrCallsChurn - corrErrorsCalls * corrErrorsChurn) /
-                        Math.sqrt((1-Math.pow(corrErrorsCalls,2))*(1-Math.pow(corrErrorsChurn,2)));
-
-    document.getElementById('report-container').innerHTML += `
-      <div class="row"><span class="lab">Обращения ↔ Отток:</span><span class="track"><span class="bar" style="width:${(100*Math.abs(corrCallsChurn)).toFixed(1)}%"></span></span><span class="val">${corrCallsChurn.toFixed(2).replace('.', ',')}</span></div>
-      <div class="row"><span class="lab">Ошибки ↔ Обращения:</span><span class="track"><span class="bar" style="width:${(100*Math.abs(corrErrorsCalls)).toFixed(1)}%"></span></span><span class="val">${corrErrorsCalls.toFixed(2).replace('.', ',')}</span></div>
-      <div class="row"><span class="lab">Ошибки ↔ Отток:</span><span class="track"><span class="bar" style="width:${(100*Math.abs(corrErrorsChurn)).toFixed(1)}%"></span></span><span class="val">${corrErrorsChurn.toFixed(2).replace('.', ',')}</span></div>
-      <div class="row"><span class="lab">Частная корреляция (с учетом ошибок):</span><span class="track"><span class="bar" style="width:${(100*Math.abs(partialCorr)).toFixed(1)}%"></span></span><span class="val">${partialCorr.toFixed(2).replace('.', ',')}</span></div>
-    `;
-
-    document.body.innerHTML += `<hr/><h2>Вывод</h2>`;
-    document.body.innerHTML += '<p>';
-    if(Math.abs(partialCorr)<0.1) document.body.innerHTML += 'Связь обращений с оттоком незначительна.';
-    else if(partialCorr > 0) document.body.innerHTML += 'Увеличение обращений связано с ростом оттока.';
-    else document.body.innerHTML += 'Рост обращений сопровождается снижением оттока.';
-    document.body.innerHTML += '</p>';
-
-  } catch(e) {
-    document.body.innerHTML = `<pre>Ошибка обработки данных: ${e.message}</pre>`;
+if (!window.DATA || !Array.isArray(window.DATA)) {
+  document.body.innerHTML = '<p>Файл weekly_ops_26w.js должен лежать рядом со страницей</p>';
+} else {
+  const data = window.DATA;
+  
+  function median(arr) {
+    let sorted = arr.slice().sort((a, b) => a - b);
+    let mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
   }
-});
+  
+  function mad(arr) {
+    let m = median(arr);
+    return median(arr.map(x => Math.abs(x - m)));
+  }
+  
+  function robustZScore(x, med, madVal) {
+    return 0.6745 * (x - med) / madVal;
+  }
+  
+  function percentile(arr, p) {
+    let idx = (arr.length - 1) * p / 100;
+    let lower = Math.floor(idx);
+    let upper = Math.ceil(idx);
+    if (lower === upper) return arr[upper];
+    let weight = idx - lower;
+    return arr[lower] * (1 - weight) + arr[upper] * weight;
+  }
+  
+  function pearsonCorrelation(x, y) {
+    let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0, sumYY = 0;
+    for (let i = 0; i < x.length; i++) {
+      sumX += x[i]; 
+      sumY += y[i];
+      sumXY += x[i]*y[i];
+      sumXX += x[i]*x[i];
+      sumYY += y[i]*y[i];
+    }
+    let meanX = sumX/x.length;
+    let meanY = sumY/y.length;
+    let numerator = sumXY - x.length*meanX*meanY;
+    let denominator = Math.sqrt((sumXX - x.length*meanX**2)*(sumYY - x.length*meanY**2));
+    return numerator / denominator;
+  }
+  
+  // Выгружаем ряды данных
+  let weeks = data.map(d => d.week_start);
+  let calls = data.map(d => d.calls_th).filter(Number.isFinite);
+  let churn = data.map(d => d.churn_pct).filter(Number.isFinite);
+  let errors = data.map(d => d.app_error_rate_pct).filter(Number.isFinite);
+  
+  // Корреляции
+  let corrCallsChurn = pearsonCorrelation(calls, churn);
+  let corrErrorsCalls = pearsonCorrelation(errors, calls);
+  let corrErrorsChurn = pearsonCorrelation(errors, churn);
+  
+  // Частная корреляция
+  let partialCorrCallsChurn = (corrCallsChurn - corrErrorsCalls * corrErrorsChurn) /
+                              Math.sqrt((1 - corrErrorsCalls ** 2) * (1 - corrErrorsChurn ** 2));
+  
+  // Форматируем коэффициенты
+  corrCallsChurn = formatNum(corrCallsChurn.toFixed(2));
+  corrErrorsCalls = formatNum(corrErrorsCalls.toFixed(2));
+  corrErrorsChurn = formatNum(corrErrorsErrorsChurn.toFixed(2));
+  partialCorrCallsChurn = formatNum(partialCorrCallsChurn.toFixed(2));
+  
+  // Выводим ключевые числа
+  document.getElementById('corrcallschurn').innerText = corrCallsChurn;
+  document.getElementById('correrrorscalls').innerText = corrErrorsCalls;
+  document.getElementById('correrrorschurn').innerText = corrErrorsChurn;
+  document.getElementById('partialcorrcallschurn').innerText = partialCorrCallsChurn;
+  
+  // Рисуем графики
+  let svgEl = document.querySelector('svg');
+  let rows = [];
+  
+  [calls, churn, errors].forEach((values, index) => {
+    let color = ['#20BA72', '#2E6BE6', '#E4572E'][index];
+    
+    let filteredValues = values.filter(Number.isFinite);
+    let minV = Math.min(...filteredValues);
+    let maxV = Math.max(...filteredValues);
+    if (minV === maxV && minV !== 0) maxV++;
+    
+    let coords = filteredValues.map((value, i) => {
+      let xCoord = ((i / (filteredValues.length - 1)) * 732 + 52).toFixed(1);
+      let yCoord = (250 - ((value - minV) * 234 / (maxV - minV))).toFixed(1);
+      return `${xCoord},${yCoord}`;
+    }).join(' ');
+    
+    rows.push(`<polyline class="svg-line" fill="none" stroke="${color}" stroke-width="2" points="${coords}"/>`);
+  });
+  
+  // Добавляем сетку
+  rows.push('<line x1="52" y1="16" x2="784" y2="16"/>' +
+            '<line x1="52" y1="74.5" x2="784" y2="74.5"/>' +
+            '<line x1="52" y1="133" x2="784" y2="133"/>' +
+            '<line x1="52" y1="191.5" x2="784" y2="191.5"/>' +
+            '<line x1="52" y1="250" x2="784" y2="250"/>');
+  
+  // Подписываем оси
+  rows.push(`<text x="46" y="12" text-anchor="end" class="svg-label">${formatNum(Math.max(...calls))}</text>` +
+            `<text x="46" y="262" text-anchor="end" class="svg-label">${formatNum(Math.min(...calls))}</text>` +
+            `<text x="788" y="262" text-anchor="start" class="svg-label">${weeks[weeks.length - 1]}</text>` +
+            `<text x="50" y="262" text-anchor="start" class="svg-label">${weeks[0]}</text>`);
+  
+  svgEl.innerHTML = rows.join('');
+  
+  // Рисуем корреляционные полосы
+  let correlationBars = [
+    {label: 'Обращения ↔ Отток', value: corrCallsChurn},
+    {label: 'Ошибки ↔ Обращения', value: corrErrorsCalls},
+    {label: 'Ошибки ↔ Отток', value: corrErrorsChurn},
+    {label: 'Частная корреляция', value: partialCorrCallsChurn}
+  ];
+  
+  let maxAbsValue = Math.max(...correlationBars.map(bar => Math.abs(parseFloat(bar.value))));
+  
+  correlationBars.forEach(({label, value}, index) => {
+    let rowEl = document.querySelectorAll('.row')[index];
+    let trackBar = rowEl.querySelector('.bar');
+    let valSpan = rowEl.querySelector('.val');
+    let absWidth = (Math.abs(value) / maxAbsValue * 100).toFixed(1) + '%';
+    trackBar.style.width = absWidth;
+    valSpan.textContent = value;
+  });
+  
+  // Формируем таблицу
+  let tableRows = '';
+  data.forEach(row => {
+    tableRows += `
+      <tr>
+        <td>${row.week_start}</td>
+        <td>${formatNum(row.calls_th)}</td>
+        <td>${formatNum(row.churn_pct)}</td>
+        <td>${formatNum(row.app_error_rate_pct)}</td>
+      </tr>
+    `;
+  });
+  document.getElementById('dataTableBody').innerHTML = tableRows;
+  
+  // Заключение
+  document.getElementById('conclusion').innerText = `Связь между количеством обращений и уровнем оттока низкая (${corrCallsChurn}). Высокие показатели корреляций наблюдаются между уровнями ошибок приложений и обращениями (${corrErrorsCalls}), а также между ошибками и оттоком (${corrErrorsChurn}). Это позволяет предположить, что основная причина роста обращений связана с техническими проблемами, а не качеством работы контакт-центра.`;
+}
 </script>
 </body>
 </html>

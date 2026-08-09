@@ -1,0 +1,25 @@
+{
+ "js_errors": [
+  "file:///root/work/sessions/max--76387277381017/a360/reports/03_sezonnost.html 227:242 Uncaught SyntaxError: Unexpected token '}'"
+ ],
+ "bars": [
+  0,
+  0
+ ],
+ "bar_ratio": 1.0,
+ "bar_scale_ok": false,
+ "svg_marks": 0,
+ "svg_width": 920,
+ "svg_bad_attrs": [],
+ "missing_numbers": [
+  "3[56][.,]?\\d*\\s*%",
+  "[-−]\\s?[67][.,]?\\d*\\s*%",
+  "38\\s?0[56]\\d",
+  "33\\s?39\\d",
+  "вывод противоречит числам разбора"
+ ],
+ "ok": false,
+ "text": "Сезонность: рост, которого нет\n\nАнализируем сезонность потребительского кредитования.",
+ "attempt": 5,
+ "model": "GigaChat-2-Max"
+}

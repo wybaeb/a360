@@ -1,100 +1,237 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>Анализ ипотечного рынка</title>
-<style>
-body { font-family: Arial, sans-serif; }
-h1 { color: #333; margin-bottom: 1em; }
-table { width: 100%; border-collapse: collapse; margin-top: 1em; }
-th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
-th { background-color: #f2f2f2; }
-.track{display:inline-block;width:320px;height:14px;background:#eef2f5;
-      border-radius:7px;vertical-align:middle}
-.bar{display:block;height:14px;background:#20BA72;border-radius:7px}
-.row{display:flex;align-items:center;gap:12px;margin:6px 0}
-</style>
+  <meta charset="UTF-8">
+  <title>Отчёт по ипотечному рынку</title>
+  <style>
+    body {
+      background-color: white;
+      color: #2E3641;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      margin: 0 auto;
+      padding: 20px;
+      max-width: 920px;
+    }
+    h1 {font-size: 24px;}
+    p {font-size: 14px; line-height: 1.5em;}
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #e6ecf1;
+    }
+    tr:nth-child(even) {background-color: #fafafa;}
+    div.card {
+      background-color: white;
+      border: 1px solid #e6ecf1;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .kpi {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: space-between;
+    }
+    .kpi-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      font-weight: bold;
+      color: #2E3641;
+    }
+    .kpi-value {
+      font-size: 32px;
+      line-height: 1;
+    }
+    .kpi-label {
+      font-size: 14px;
+      color: #8a94a0;
+    }
+    .graphic-title {
+      font-size: 16px;
+      margin-top: 16px;
+      margin-bottom: 8px;
+    }
+    .bars {
+      display: block;
+      margin-bottom: 20px;
+    }
+    .track{
+      display:inline-block;width:320px;height:14px;background:#eef2f5;
+      border-radius:7px;vertical-align:middle
+    }
+    .bar{display:block;height:14px;background:#20BA72;border-radius:7px}
+    .row{display:flex;align-items:center;gap:12px;margin:6px 0}
+    svg {display: block; width: 100%; height: auto;}
+  </style>
 </head>
 <body>
 <h1>Низкая база: проценты без базы ничего не значат</h1>
-<p>Проверяем, насколько корректно интерпретируются высокие темпы роста на фоне низкой исходной базы.</p>
-<div id="bars"></div>
-<div id="output"></div>
+<p>Проверяем влияние эффекта низкой базы на оценку динамики бизнеса.</p>
+<div class="card kpi">
+  <div class="kpi-item">
+    <div class="kpi-value">?</div>
+    <div class="kpi-label">Рынок был (млрд ₽)</div>
+  </div>
+  <div class="kpi-item">
+    <div class="kpi-value">?</div>
+    <div class="kpi-label">Рынок стал (млрд ₽)</div>
+  </div>
+  <div class="kpi-item">
+    <div class="kpi-value">?</div>
+    <div class="kpi-label">Прирост «Мы» (млрд ₽)</div>
+  </div>
+  <div class="kpi-item">
+    <div class="kpi-value">?</div>
+    <div class="kpi-label">Изменение доли «Мы» (+ п.п.)</div>
+  </div>
+</div>
+<div class="card graphic-title">Выдачи ипотеки по банкам</div>
+<div id="chart"></div>
+<div class="card bars">
+  <div class="graphic-title">Темпы прироста банков (%)</div>
+  <div class="bars" id="growthBars"></div>
+  <div class="graphic-title">Абсолютный прирост банков (млрд ₽)</div>
+  <div class="bars" id="absoluteGrowthBars"></div>
+</div>
+<div class="card">
+  <table>
+    <thead>
+      <tr><th>Банк</th><th>Было (млрд ₽)</th><th>Стало (млрд ₽)</th><th>Темп прироста (%)</th>
+          <th>Абсолютный прирост (млрд ₽)</th><th>Доля рынка была (%)</th><th>Доля рынка стала (%)</th>
+          <th>Изменение доли (п.п.)</th></tr>
+    </thead>
+    <tbody id="dataTableBody"></tbody>
+  </table>
+</div>
+<div class="card">
+  <h2>Вывод</h2>
+  <p id="conclusion"></p>
+</div>
+<script src="mortgage_market.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-fetch('../data/mortgage_market.csv')
-.then(response => response.text())
-.then(text => {
-const rows = text.trim().split("\n").slice(1); // Пропускаем шапку
-
-// Парсим данные
-let data = [];
-for(let row of rows){
-if(row.trim() === '') continue;
-let cols = row.split(',');
-cols.forEach((col,i)=>cols[i]=parseFloat(col.trim()));
-if(cols.some(isNaN)) continue;
-data.push({bank: cols.shift(), was_bn_rub: cols[0], now_bn_rub: cols[1]});
+function formatNum(v) {
+  if (!Number.isFinite(v)) return v;
+  let fmt = v.toFixed(1).replace('.', ',');
+  return `${fmt}`;
 }
+if (!window.DATA || !Array.isArray(window.DATA)) {
+  document.body.innerText = "Ошибка: файл mortgage_market.js должен лежать рядом со страницей.";
+} else {
+  const data = window.DATA;
+  
+  // Общие показатели рынка
+  let totalWas = data.reduce((acc, row) => acc + row.was_bn_rub, 0);
+  let totalNow = data.reduce((acc, row) => acc + row.now_bn_rub, 0);
+  let ourBank = data.find(row => row.bank === "Мы");
+  let growthOurBankAbs = ourBank ? (ourBank.now_bn_rub - ourBank.was_bn_rub) : null;
+  let marketShareChange = ourBank ? ((ourBank.now_bn_rub / totalNow * 100) -
+                                     (ourBank.was_bn_rub / totalWas * 100)) : null;
 
-// Общие показатели рынка
-let totalWas = data.reduce((sum,d)=>sum+d.was_bn_rub,0);
-let totalNow = data.reduce((sum,d)=>sum+d.now_bn_rub,0);
+  // Фильтруем значения для графиков
+  let banks = data.map(d => d.bank);
+  let valuesBefore = data.map(d => d.was_bn_rub).filter(Number.isFinite);
+  let valuesAfter = data.map(d => d.now_bn_rub).filter(Number.isFinite);
+  let sortedValuesBefore = [...valuesBefore].sort((a, b) => a - b);
+  let sortedValuesAfter = [...valuesAfter].sort((a, b) => a - b);
 
-// Рассчитываем дополнительные метрики
-data.forEach(d=>{
-d.growth_rate = ((d.now_bn_rub/d.was_bn_rub)-1)*100;
-d.absolute_growth = d.now_bn_rub-d.was_bn_rub;
-d.share_was = (d.was_bn_rub/totalWas)*100;
-d.share_now = (d.now_bn_rub/totalNow)*100;
-d.delta_share = d.share_now-d.share_was;
-});
+  // Основные цифры
+  document.querySelectorAll('.kpi-value')[0].innerText = formatNum(totalWas);
+  document.querySelectorAll('.kpi-value')[1].innerText = formatNum(totalNow);
+  document.querySelectorAll('.kpi-value')[2].innerText = formatNum(growthOurBankAbs);
+  document.querySelectorAll('.kpi-value')[3].innerText = `+${formatNum(marketShareChange)}`;
 
-// Максимумы для полос
-let maxGrowthRate = Math.max(...data.map(d=>Math.abs(d.growth_rate)));
-let maxAbsGrowth = Math.max(...data.map(d=>Math.abs(d.absolute_growth)));
+  // Данные таблицы
+  let rowsHtml = '';
+  for (let row of data) {
+    let percentGrowth = ((row.now_bn_rub / row.was_bn_rub - 1) * 100);
+    let absoluteGrowth = row.now_bn_rub - row.was_bn_rub;
+    let shareBefore = (row.was_bn_rub / totalWas * 100);
+    let shareAfter = (row.now_bn_rub / totalNow * 100);
+    let shareDelta = shareAfter - shareBefore;
+    
+    rowsHtml += `<tr>
+                   <td>${row.bank}</td>
+                   <td>${formatNum(row.was_bn_rub)}</td>
+                   <td>${formatNum(row.now_bn_rub)}</td>
+                   <td>${formatNum(percentGrowth)}%</td>
+                   <td>${formatNum(absoluteGrowth)}</td>
+                   <td>${formatNum(shareBefore)}%</td>
+                   <td>${formatNum(shareAfter)}%</td>
+                   <td>${formatNum(shareDelta)} п.п.</td>
+                 </tr>`;
+  }
+  document.getElementById('dataTableBody').innerHTML = rowsHtml;
 
-// Генерируем графики
-let barsHTML = '';
-['growth_rate','absolute_growth'].forEach(metric=>{
-barsHTML += `<h2>${metric==='growth_rate'?'Темпы прироста':'Абсолютный прирост'} (${metric})</h2>`;
-data.forEach(d=>{
-let v = d[metric];
-barsHTML += `
-<div class="row">
-<span class="lab">${d.bank}</span>
-<span class="track"><span class="bar" style="width:${(100*Math.abs(v)/max[d.metric]).toFixed(1)}%"></span></span>
-<span class="val">${v.toLocaleString('ru',{maximumFractionDigits:1})} ${metric==='growth_rate'?'':'млрд руб.'}</span>
-</div>`
-})
-})
+  // Столбчатая диаграмма
+  let chartSvg = '<svg viewBox="0 0 800 280" style="width:100%;height:auto;display:block">';
+  let gridLinesY = [16, 74.5, 133, 191.5, 250];
+  gridLinesY.forEach(y => {
+    chartSvg += `<line x1="52" x2="784" y1="${y}" y2="${y}" stroke="#e6ecf1"/>`
+  });
+  let minValue = 0;
+  let maxValue = Math.max(...sortedValuesBefore.concat(sortedValuesAfter));
+  let barWidth = 732 / data.length * 0.8;
+  let xStep = 732 / (Math.max(data.length - 1, 1));
 
-// Таблица итоговых результатов
-let tableHTML = '<table><thead><tr><th>Игрок</th><th>Было</th><th>Стало</th>'+
-'<th>Темп,%</th><th>Прирост, млрд руб.</th><th>Доля была,%</th>'+
-'<th>Доля стала,%</th><th>Изменение доли, п.п.</th></tr></thead>';
-data.forEach(d=>{
-tableHTML += `<tr><td>${d.bank}</td>` +
-`<td>${d.was_bn_rub.toLocaleString('ru')}</td>` +
-`<td>${d.now_bn_rub.toLocaleString('ru')}</td>` +
-`<td>${d.growth_rate.toFixed(1)}</td>` +
-`<td>${d.absolute_growth.toLocaleString('ru')}</td>` +
-`<td>${d.share_was.toFixed(1)}</td>` +
-`<td>${d.share_now.toFixed(1)}</td>` +
-`<td>${d.delta_share.toFixed(1)}</td></tr>`
-})
-tableHTML+='</table>'
+  function y(val) {
+    return val === minValue ? 250 : 250 - (val - minValue) * 234 / (maxValue - minValue)
+  }
 
-// Проверки
-console.assert(totalShareBefore >=99 && totalShareBefore <=101,'Сумма долей должна давать ~100 %');
-console.assert(totalShareAfter >=99 && totalShareAfter <=101,'Сумма долей должна давать ~100 %');
+  data.forEach((row, idx) => {
+    let xPosBefore = 52 + idx * xStep;
+    let beforeHeight = 250 - y(row.was_bn_rub);
+    let afterHeight = 250 - y(row.now_bn_rub);
+    chartSvg += `
+      <rect x="${xPosBefore}" y="${y(row.was_bn_rub)}" width="${barWidth}"
+            height="${beforeHeight > 0 ? beforeHeight : 0}" fill="#c8d2dc"/>
+      <rect x="${xPosBefore}" y="${y(row.now_bn_rub)}" width="${barWidth}"
+            height="${afterHeight > 0 ? afterHeight : 0}" fill="#20BA72"/>
+      <text x="${xPosBefore + barWidth / 2}" y="265" dy=".35em" text-anchor="middle"
+            font-size="11" fill="#8a94a0">${row.bank}</text>`;
+  });
+  chartSvg += '</svg>';
+  document.getElementById('chart').innerHTML = chartSvg;
 
-// Собираем результат
-document.getElementById('bars').innerHTML=barsHTML;
-document.getElementById('output').innerHTML=tableHTML+'<h2>Вывод:</h2>'+
-`На рынке ипотек рост заметен у нескольких крупных игроков, однако темпы сильно зависят от размера начальной базы.`;
-}).catch(err => document.body.innerText=`Ошибка загрузки данных: ${err}`);
-});
+  // Темпы прироста (полосы)
+  let growthRates = data.map(row => ((row.now_bn_rub / row.was_bn_rub - 1) * 100))
+                        .filter(Number.isFinite);
+  let maxRate = Math.max(...growthRates.map(Math.abs));
+  let growthRows = '';
+  for (let i = 0; i < data.length; i++) {
+    let rate = growthRates[i];
+    let w = (100 * Math.abs(rate) / maxRate).toFixed(1) + '%';
+    growthRows += `<div class="row"><span class="lab">${banks[i]}</span>
+                    <span class="track"><span class="bar" style="width:${w};"></span></span>
+                    <span class="val">${formatNum(rate)}%</span></div>`;
+  }
+  document.getElementById('growthBars').innerHTML = growthRows;
+
+  // Абсолютный прирост (полосы)
+  let absGrowths = data.map(row => row.now_bn_rub - row.was_bn_rub)
+                       .filter(Number.isFinite);
+  let maxAbsGrowth = Math.max(...absGrowths.map(Math.abs));
+  let absGrowthRows = '';
+  for (let i = 0; i < data.length; i++) {
+    let ag = absGrowths[i];
+    let w = (100 * Math.abs(ag) / maxAbsGrowth).toFixed(1) + '%';
+    absGrowthRows += `<div class="row"><span class="lab">${banks[i]}</span>
+                      <span class="track"><span class="bar" style="width:${w};"></span></span>
+                      <span class="val">${formatNum(ag)}</span></div>`;
+  }
+  document.getElementById('absoluteGrowthBars').innerHTML = absGrowthRows;
+
+  // Заключение
+  document.getElementById('conclusion').innerText = 
+    `Несмотря на меньший темп прироста, банк «Мы» показывает наибольший прирост как в объёме выдач (${formatNum(growthOurBankAbs)} млрд ₽), так и в изменении доли рынка (+${formatNum(marketShareChange)} п.п.). Высокая динамика у небольших игроков объясняется эффектом низкой базы.`;
+}
 </script>
 </body>
 </html>

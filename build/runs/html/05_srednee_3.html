@@ -1,123 +1,215 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Отчет по срокам рассмотрения заявок МСБ</title>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.5; padding: 20px; }
-        h1 { color: #333; margin-bottom: 20px; }
-        p { color: #555; margin-top: 0; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; }
-        tr:nth-child(even) { background-color: #fafafa; }
-        strong { color: #20BA72; }
-        pre { white-space: pre-wrap; word-break: break-all; overflow-x: auto; }
-        .track{display:inline-block;width:320px;height:14px;background:#eef2f5;
-               border-radius:7px;vertical-align:middle}
-        .bar{display:block;height:14px;background:#20BA72;border-radius:7px}
-        .row{display:flex;align-items:center;gap:12px;margin:6px 0}
-    </style>
+<meta charset="UTF-8">
+<title>Отчёт по заявкам MSB Applications Q</title>
+<style>
+body { background-color: white; color: #2E3641; margin: 0 auto; max-width: 920px; padding: 20px }
+h1 { font-size: 24px; line-height: 1.2; margin-bottom: 1em }
+.card { display: block; background-color: white; box-shadow: 0 1px 3px rgba(0,0,0,.1); border-radius: 14px; 
+        overflow: hidden; margin-bottom: 20px; padding: 20px }
+.tile { display: inline-block; vertical-align: top; width: calc(50% - 10px); margin-right: 20px; margin-bottom: 20px }
+.tile h2 { font-size: 32px; font-weight: bold; margin-top: 0; margin-bottom: 4px; color: inherit }
+.tile p { font-size: 14px; color: #8A94A0; margin-top: 0 }
+.track{display:inline-block;width:320px;height:14px;background:#eef2f5;border-radius:7px;vertical-align:middle}
+.bar{display:block;height:14px;background:#20BA72;border-radius:7px}
+.row{display:flex;align-items:center;gap:12px;margin:6px 0}
+pre { font-family: monospace; white-space: pre-wrap; margin: 0; padding: 0 }
+</style>
+<script src="msb_applications_q.js"></script>
 </head>
 <body>
 <h1>Среднее: норматив выполнен, клиент ждёт неделю</h1>
-<p>Проверяем сроки рассмотрения заявок малого бизнеса.</p>
-<div id="report"></div>
+<p>Проверено выполнение норматива обработки заявок MSB Applications Q.</p>
+<div class="card">
+  <div class="tile">
+    <h2 id="mean"></h2>
+    <p>Средний срок рассмотрения</p>
+  </div>
+  <div class="tile">
+    <h2 id="median"></h2>
+    <p>Медианное время ожидания</p>
+  </div>
+  <div class="tile">
+    <h2 id="percentile90"></h2>
+    <p>Срок ожидания для 90 % клиентов</p>
+  </div>
+  <div class="tile">
+    <h2 id="violationRate"></h2>
+    <p>Доля нарушений норматива &gt; 3 дней</p>
+  </div>
+</div>
+<div class="card">
+  <h2>Распределение сроков</h2>
+  <svg viewBox="0 0 800 280" style="width:100%;height:auto;display:block"></svg>
+</div>
+<div class="card">
+  <h2>Корзины сроков</h2>
+  <div class="row"><span class="lab">До 1 дня</span><span class="track"><span class="bar"></span></span><span class="val"></span></div>
+  <div class="row"><span class="lab">1–3 дня</span><span class="track"><span class="bar"></span></span><span class="val"></span></div>
+  <div class="row"><span class="lab">3–7 дней</span><span class="track"><span class="bar"></span></span><span class="val"></span></div>
+  <div class="row"><span class="lab">Больше 7 дней</span><span class="track"><span class="bar"></span></span><span class="val"></span></div>
+</div>
+<div class="card">
+  <h2>Конверсии по корзинам</h2>
+  <div class="row"><span class="lab">До 1 дня</span><span class="track"><span class="bar"></span></span><span class="val"></span></div>
+  <div class="row"><span class="lab">1–3 дня</span><span class="track"><span class="bar"></span></span><span class="val"></span></div>
+  <div class="row"><span class="lab">3–7 дней</span><span class="track"><span class="bar"></span></span><span class="val"></span></div>
+  <div class="row"><span class="lab">Больше 7 дней</span><span class="track"><span class="bar"></span></span><span class="val"></span></div>
+</div>
+<div class="card">
+  <table cellspacing="0" cellpadding="5" style="width:100%;border-collapse:collapse;font-size:14px">
+    <thead>
+      <tr><th>Корзина</th><th>Заявки</th><th>%</th><th>Выдача</th></tr>
+    </thead>
+    <tbody id="bucketsTable"></tbody>
+  </table>
+</div>
+<div class="card">
+  <h2>Вывод</h2>
+  <p id="conclusion"></p>
+</div>
 <script>
-document.addEventListener("DOMContentLoaded", async () => {
-    try {
-        const response = await fetch('../data/msb_applications_q.csv');
-        if (!response.ok) throw new Error('Ошибка получения данных');
-        
-        let data = [];
-        for await (const chunk of response.body.getReader()) {
-            const decoder = new TextDecoder();
-            const lines = decoder.decode(chunk.value).split('\n').filter(Boolean);
-            lines.forEach(line => {
-                const [appId, tatDays, issued] = line.split(',');
-                data.push({ appId, tatDays: parseFloat(tatDays), issued });
-            });
-        }
+if (!window.DATA || !Array.isArray(window.DATA)) {
+  document.body.innerHTML = "<p>Ошибка: файл msb_applications_q.js должен лежать рядом со страницей.</p>";
+} else {
+  function formatNum(num) {
+    if (!Number.isFinite(num)) return "";
+    return num.toFixed(1).replace(".", ",");
+  }
+  
+  // Срок рассмотрения
+  const tatDays = window.DATA.filter(row => row.tat_days !== null && Number.isFinite(row.tat_days))
+                            .map(row => row.tat_days);
+  let sortedTatDays = tatDays.slice().sort((a, b) => a - b);
+  
+  // Среднее
+  const mean = tatDays.reduce((acc, val) => acc + val, 0) / tatDays.length;
+  document.getElementById('mean').innerText = `${formatNum(mean)} день`;
+  
+  // Медиана
+  const medianIndex = Math.floor(sortedTatDays.length / 2);
+  const median = sortedTatDays.length % 2 ? sortedTatDays[medianIndex]
+                                          : (sortedTatDays[medianIndex - 1] + sortedTatDays[medianIndex]) / 2;
+  document.getElementById('median').innerText = `${formatNum(median)} день`;
+  
+  // Перцентиль 90%
+  const percentile90Index = Math.ceil(tatDays.length * 0.9) - 1;
+  const percentile90 = sortedTatDays[percentile90Index];
+  document.getElementById('percentile90').innerText = `${formatNum(percentile90)} день`;
+  
+  // Нарушение норматива > 3 дней
+  const violationCount = tatDays.filter(day => day > 3).length;
+  const violationRate = (violationCount / tatDays.length) * 100;
+  document.getElementById('violationRate').innerText = `${formatNum(violationRate)}%`;
+  
+  // Корзины сроков
+  const buckets = [
+    { label: 'До 1 дня', from: 0, to: 1 },
+    { label: '1–3 дня', from: 1, to: 3 },
+    { label: '3–7 дней', from: 3, to: 7 },
+    { label: 'Больше 7 дней', from: 7, to: Infinity }
+  ];
+  
+  const bucketData = buckets.map(bucket => ({
+    count: tatDays.filter(day => day >= bucket.from && day < bucket.to).length,
+    conversion: window.DATA.filter(row => row.tat_days >= bucket.from && row.tat_days < bucket.to)
+                           .reduce((sum, row) => sum + row.issued, 0),
+    share: 0,
+    issuanceRate: 0
+  }));
+  
+  const totalApplications = bucketData.reduce((total, data) => total + data.count, 0);
+  bucketData.forEach(data => {
+    data.share = (data.count / totalApplications) * 100;
+    data.issuanceRate = data.conversion / data.count * 100;
+  });
+  
+  // Выдать недостающие выдачи
+  const fastestBucketConversion = Math.max(...bucketData.map(d => d.issuanceRate));
+  const potentialIssuances = bucketData.reduce((sum, data) => sum + ((fastestBucketConversion - data.issuanceRate) / 100 * data.count), 0);
+  
+  // Форматирование таблицы
+  const tableBody = document.getElementById('bucketsTable');
+  for (let i = 0; i < buckets.length; i++) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${buckets[i].label}</td><td>${bucketData[i].count}</td><td>${formatNum(bucketData[i].share)}%</td><td>${formatNum(bucketData[i].issuanceRate)}%</td>`;
+    tableBody.appendChild(tr);
+  }
+  
+  // Диаграмма распределений
+  const histogramBins = [];
+  for (let i = 0; i <= 28; i++) {
+    const binStart = i * 0.5;
+    const binEnd = binStart + 0.5;
+    const binCount = tatDays.filter(day => day >= binStart && day < binEnd).length;
+    histogramBins.push({ start: binStart, end: binEnd, count: binCount });
+  }
+  histogramBins[histogramBins.length - 1].count += tatDays.filter(day => day >= 14).length;
+  
+  // Рисуем диаграмму
+  const svg = document.querySelector('svg');
+  const chartWidth = 732;
+  const chartHeight = 234;
+  const leftMargin = 52;
+  const rightMargin = 16;
+  const topMargin = 16;
+  const bottomMargin = 30;
+  const maxBinCount = Math.max(...histogramBins.map(bin => bin.count));
+  
+  const drawRects = () => {
+    const rectsMarkup = histogramBins.map(bin => {
+      const xPos = leftMargin + (bin.start / 14) * chartWidth;
+      const barHeight = (bin.count / maxBinCount) * chartHeight;
+      const barY = 250 - barHeight;
+      const barColor = bin.end > 3 ? '#E4572E' : '#20BA72';
+      
+      return `
+        <rect x="${Math.round(xPos)}" y="${Math.round(barY)}" width="${chartWidth / 28}" height="${Math.round(barHeight)}" fill="${barColor}" />
+      `;
+    }).join('');
     
-        // Вычисляем основные показатели
-        const sortedTats = data.map(d => d.tatDays).sort((a,b)=>a-b);
-        const avgTat = sortedTats.reduce((sum,x)=>sum+x,0)/sortedTats.length;
-        const medianIndex = Math.floor(sortedTats.length / 2);
-        const medianTat = sortedTats.length % 2 ? sortedTats[medianIndex]
-                     : (sortedTats[medianIndex-1]+sortedTats[medianIndex])/2;
-        const percentile90th = getPercentile(sortedTats, 90);
-        const violationsRatio = sortedTats.filter(x=>x>3).length/sortedTats.length * 100;
+    svg.innerHTML = `
+      <line x1="${leftMargin}" y1="16" x2="${leftMargin + chartWidth}" y2="16" stroke="#e6ecf1"/>
+      <line x1="${leftMargin}" y1="74.5" x2="${leftMargin + chartWidth}" y2="74.5" stroke="#e6ecf1"/>
+      <line x1="${leftMargin}" y1="133" x2="${leftMargin + chartWidth}" y2="133" stroke="#e6ecf1"/>
+      <line x1="${leftMargin}" y1="191.5" x2="${leftMargin + chartWidth}" y2="191.5" stroke="#e6ecf1"/>
+      <line x1="${leftMargin}" y1="250" x2="${leftMargin + chartWidth}" y2="250" stroke="#e6ecf1"/>
+      <text x="46" y="14" text-anchor="end" font-size="11" fill="#8a94a0">Максимум</text>
+      <text x="46" y="254" text-anchor="end" font-size="11" fill="#8a94a0">Минимум</text>
+      <text x="${leftMargin}" y="266" font-size="11" fill="#8a94a0">0 дней</text>
+      <text x="${leftMargin + chartWidth}" y="266" font-size="11" fill="#8a94a0">14+ дней</text>
+      <line x1="196" y1="16" x2="196" y2="250" stroke="#E4572E" stroke-dasharray="4,4"/>
+      <text x="196" y="266" font-size="11" fill="#E4572E">Норматив: 3 дня</text>
+      ${rectsMarkup}
+    `;
+  };
+  
+  drawRects();
+  
+  // Отображение долей корзин
+  const trackElements = document.querySelectorAll('.track');
+  const valElements = document.querySelectorAll('.val');
+  const sharesMax = Math.max(...bucketData.map(d => Math.abs(d.share)));
+  const issuanceRatesMax = Math.max(...bucketData.map(d => Math.abs(d.issuanceRate)));
+  
+  bucketData.forEach((data, index) => {
+    const trackShare = trackElements[index];
+    const trackIssuance = trackElements[index + buckets.length];
+    const valShare = valElements[index];
+    const valIssuance = valElements[index + buckets.length];
     
-        function getPercentile(arr, p) {
-            const index = ((arr.length - 1) * p / 100);
-            const lower = Math.floor(index);
-            const upper = Math.ceil(index);
-            return arr[lower] + (index - lower) * (arr[upper]-arr[lower]);
-        }
-    
-        // Корзины сроков рассмотрения
-        const bins = [
-            { label: 'До 1 дня', range: [0,1], count: 0 },
-            { label: '1-3 дня', range: [1,3], count: 0 },
-            { label: '3-7 дней', range: [3,7], count: 0 },
-            { label: '>7 дней', range: [7,Infinity], count: 0 }
-        ];
-    
-        bins.forEach(bin => bin.rows = []);
-        data.forEach(row => {
-            bins.find(b => row.tatDays >= b.range[0] && row.tatDays <= b.range[1]).count++;
-        });
-    
-        bins.forEach(bin => {
-            bin.percent = (bin.count/data.length)*100;
-            bin.rows = data.filter(r => r.tatDays>=bin.range[0]&&r.tatDays<=bin.range[1]);
-            bin.convRate = bin.rows.reduce((s,r)=>s+parseInt(r.issued),0)/bin.rows.length*100 || 0;
-        });
-    
-        // Недобор выдач
-        const bestConvBin = bins.sort((a,b)=>b.convRate-a.convRate)[0];
-        const potentialExtraIssues = bins.slice(1).reduce((acc,bin)=>{
-            acc += bin.rows.length*(bestConvBin.convRate-bin.convRate)/100;
-            return acc;
-        },0);
-    
-        // Генерация отчёта
-        document.querySelector('#report').innerHTML = `
-            <table>
-                <tr><td colspan=2>Основные показатели:</td></tr>
-                <tr><td>Средний срок рассмотрения, дней:</td><td>${avgTat.toFixed(1)}</td></tr>
-                <tr><td>Медианный срок рассмотрения, дней:</td><td>${medianTat.toFixed(1)}</td></tr>
-                <tr><td>90-й перцентиль срока рассмотрения, дней:</td><td>${percentile90th.toFixed(1)}</td></tr>
-                <tr><td>Доля нарушений (срок > 3 дней):</td><td>${violationsRatio.toFixed(1)}%</td></tr>
-            </table>
-            
-            <br/>
-            <strong>Корзины сроков рассмотрения заявок:</strong>
-            ${bins.map(bin => `<div class="row"><span class="lab">${bin.label}</span>
-                              <span class="track"><span class="bar"
-                                style="width:${bin.percent.toFixed(1)}%"></span></span>
-                              <span class="val">${bin.count} (${(bin.percent).toFixed(1)}%)</span></div>`).join('')}
-                              
-            <br/><strong>Конверсия в выдачу по корзинам:</strong>
-            ${bins.map(bin => `<div class="row"><span class="lab">${bin.label}</span>
-                              <span class="track"><span class="bar"
-                                style="width:${bin.convRate.toFixed(1)}%"></span></span>
-                              <span class="val">${bin.convRate.toFixed(1)}%</span></div>`).join('')}
-
-            <br/><strong>Потенциальное увеличение выдач:</strong>
-            <pre>Дополнительно было бы выдано примерно ${potentialExtraIssues.toFixed()} заявок.</pre>
-        `;
-    
-        // Добавим итоговый вывод
-        document.querySelector('#report').insertAdjacentHTML('beforeend',`
-            <hr />
-            <h2>Вывод</h2>
-            Средний срок рассмотрения заявок соответствует норме, однако значительное число клиентов ожидают решения дольше недели.<br>
-            Повышение скорости обработки замедленных заявок позволит увеличить объём выдачи почти на ${potentialExtraIssues.toFixed().replace('.',',')} штук.
-        `);
-    } catch(err) {
-        document.querySelector('#report').textContent = err.message;
-    }
-});
+    trackShare.style.width = `${(100 * data.share / sharesMax).toFixed(1)}%`;
+    trackIssuance.style.width = `${(100 * data.issuanceRate / issuanceRatesMax).toFixed(1)}%`;
+    valShare.textContent = `${formatNum(data.share)}%`;
+    valIssuance.textContent = `${formatNum(data.issuanceRate)}%`;
+  });
+  
+  // Вывод итогового заключения
+  document.getElementById('conclusion').innerText = `
+    Средний срок рассмотрения ниже норматива (${formatNum(mean)} дня против 3 дней), однако большинство клиентов ожидают около недели (${formatNum(percentile90)} дня для 90%). Возможности повышения эффективности лежат в ускорении обработки медленных корзин (${formatNum(potentialIssuances)} дополнительных выдач при выравнивании скорости работы).
+  `.trim();
+}
 </script>
 </body>
 </html>

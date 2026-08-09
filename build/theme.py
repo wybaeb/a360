@@ -96,6 +96,18 @@ figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
   border-radius:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;
   display:flex;align-items:center;justify-content:center}
 
+/* Раскрывающийся блок: три вспомогательных промпта не должны спорить за внимание
+   с главным, но и прятать их насовсем нельзя — по ним разбирают проверку. */
+details.more{border:1px solid var(--line);border-radius:14px;padding:0 22px;
+  margin:0 0 18px;background:var(--surf)}
+details.more>summary{cursor:pointer;font-weight:800;padding:16px 0;list-style:none;
+  color:var(--ink2)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸";color:var(--acc);margin-right:8px}
+details.more[open]>summary::before{content:"▾"}
+details.more[open]{padding-bottom:14px}
+details.more>summary:hover{color:var(--ink)}
+
 .toc{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
   margin:0 0 8px}
 .toc ol{margin:0;padding-left:20px}

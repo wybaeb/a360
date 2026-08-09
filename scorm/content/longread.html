@@ -91,6 +91,18 @@ figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
   border-radius:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;
   display:flex;align-items:center;justify-content:center}
 
+/* Раскрывающийся блок: три вспомогательных промпта не должны спорить за внимание
+   с главным, но и прятать их насовсем нельзя — по ним разбирают проверку. */
+details.more{border:1px solid var(--line);border-radius:14px;padding:0 22px;
+  margin:0 0 18px;background:var(--surf)}
+details.more>summary{cursor:pointer;font-weight:800;padding:16px 0;list-style:none;
+  color:var(--ink2)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸";color:var(--acc);margin-right:8px}
+details.more[open]>summary::before{content:"▾"}
+details.more[open]{padding-bottom:14px}
+details.more>summary:hover{color:var(--ink)}
+
 .toc{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
   margin:0 0 8px}
 .toc ol{margin:0;padding-left:20px}
@@ -399,8 +411,9 @@ a.fn:hover{border:0;text-decoration:underline}
 <h4>Про файлы</h4>
 <p>Веб-версия GigaChat принимает вложения только в форматах DOCX, PDF
 и TXT<a href="#src-giga-files" class="fn">[10]</a> — CSV и XLSX к ней приложить нельзя, хотя у API набор форматов
-шире<a href="#src-giga-api-files" class="fn">[11]</a>. Поэтому в практике данные вставляются прямо в промпт:
-так она работает в любом чате и не зависит от загрузки файлов.</p>
+шире<a href="#src-giga-api-files" class="fn">[11]</a>. Поэтому в практике мы не грузим файл в чат вовсе:
+модель получает описание выгрузки и пишет страницу, которая читает файл уже
+у вас на компьютере. Данные не покидают ваш диск, а считает их браузер.</p>
 <div class="card acc">
 <p><b>Правило работы с данными.</b> В кейсы и промпты берём только учебные
 и обезличенные данные. Реальные клиентские данные во внешние сервисы не выгружаем —

@@ -2,91 +2,185 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Анализ TAT заявок</title>
+<title>Отчет по срокам рассмотрения заявок</title>
 <style>
-body { font-family: sans-serif; }
-h1,h2,p { margin-bottom: 12px; }
-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-th,td { padding: 6px 12px; border: 1px solid #ccc; text-align: left; }
-.track{display:inline-block;width:320px;height:14px;background:#eef2f5;border-radius:7px;vertical-align:middle;}
-.bar{display:block;height:14px;background:#20BA72;border-radius:7px;}
-.row{display:flex;align-items:center;gap:12px;margin:6px 0;}
+body {
+  background-color: white;
+  color: #2E3641;
+  font-family: system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  margin: 0 auto;
+  padding: 20px;
+  max-width: 920px;
+}
+h1 {font-size: 24px;}
+p {color: #6B7C93; line-height: 1.6em;}
+.card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #e6ecf1;
+  border-radius: 14px;
+  box-shadow: 0 2px 4px rgba(0,0,0,.05);
+  margin-bottom: 16px;
+}
+.kpi-tile {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  border-right: 1px solid #e6ecf1;
+  vertical-align: top;
+  text-align: center;
+  font-weight: bold;
+  width: calc(100% / 7);
+}
+.kpi-tile:last-child {border-right: none;}
+.num {font-size: 32px; color: #2E3641;}
+.label {font-size: 12px; color: #8A94A0; margin-top: 4px;}
+.graph {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+th, td {padding: 8px; border: 1px solid #e6ecf1; text-align: left;}
+th {background-color: #F6FAFE;}
+.track{display:inline-block;width:320px;height:14px;background:#EEF2F5;border-radius:7px;vertical-align:middle}
+.bar{display:block;height:14px;background:#20BA72;border-radius:7px}
+.row{display:flex;align-items:center;gap:12px;margin:6px 0}
+.conclusion {font-style: italic; color: #6B7C93;}
 </style>
 </head>
 <body>
 <h1>Выброс: четыре дня сбоя вместо «конвейер замедлился»</h1>
-<p>Проверяем срок рассмотрения потребительских кредитов за последние 90 дней.</p>
-<div id="report"></div>
+<p>Проверяем наличие выбросов в сроках рассмотрения кредитных заявок.</p>
+<div id="kpis" class="card"></div>
+<div id="graph" class="graph"></div>
+<div id="bars" class="card"></div>
+<div id="outliers-table" class="table card"></div>
+<div id="conclusion" class="card conclusion"></div>
+<script src="loan_tat_90d.js"></script>
 <script>
-fetch('../data/loan_tat_90d.csv')
-.then(response => response.text())
-.then(text => {
-  const rows = text.trim().split("\n").slice(1); // пропускаем заголовки
-  let values = [];
-  
-  for(const row of rows){
-    const cols = row.split(',');
-    if(cols.length === 2 && !isNaN(parseFloat(cols[1].trim()))){
-      values.push({date:cols[0],tat:parseFloat(cols[1].trim())});
-    }
+if (!window.DATA || !Array.isArray(window.DATA)) {
+  document.body.innerText = "Ошибка: файл loan_tat_90d.js должен лежать рядом со страницей.";
+} else {
+function formatNum(num) {
+  if (typeof num !== 'number' || !Number.isFinite(num)) return num;
+  return num.toFixed(1).replace('.', ',');
+}
+// Число → проценты
+function pctChange(oldVal, newVal) {
+  const change = ((newVal / oldVal) - 1) * 100;
+  return `${change >= 0 ? '+' : ''}${formatNum(change)}%`;
+}
+// Среднее арифметическое
+function mean(arr) {
+  return arr.reduce((acc, val) => acc + val, 0) / arr.length;
+}
+// Медиана
+function median(arr) {
+  const sortedArr = arr.slice().sort((a, b) => a - b);
+  const midIndex = Math.floor(sortedArr.length / 2);
+  return sortedArr.length % 2 === 0 ?
+    (sortedArr[midIndex - 1] + sortedArr[midIndex]) / 2 :
+    sortedArr[midIndex];
+}
+// Медиана абсолютных отклонений (MAD)
+function mad(arr, med) {
+  return median(arr.map(val => Math.abs(val - med)));
+}
+// Робастная Z-оценка
+const robZScoreFactor = 0.6745;
+function robustZScore(value, medianValue, madValue) {
+  return robZScoreFactor * (value - medianValue) / madValue;
+}
+// Порог отклонения (модуль > 3.5)
+const thresholdMultiple = 3.5;
+// Строки и ряды данных
+var dates = window.DATA.map(r => r.date);
+var values = window.DATA.map(r => r.tat_min).filter(Number.isFinite);
+var firstHalfMean = mean(values.slice(0, 30));
+var lastHalfMean = mean(values.slice(-30));
+var totalMedian = median(values);
+var totalMad = mad(values, totalMedian);
+var outlierThreshold = totalMedian + thresholdMultiple * totalMad / robZScoreFactor;
+// Выявление выбросов
+let outliers = [];
+for (let i = 0; i < values.length; ++i) {
+  let score = robustZScore(values[i], totalMedian, totalMad);
+  if (Math.abs(score) > thresholdMultiple) {
+    outliers.push({date: dates[i], value: values[i], zscore: score});
   }
-
-  function median(arr){
-    arr.sort((a,b)=>a-b);
-    return arr.length%2 ? arr[(arr.length-1)/2] : (arr[arr.length/2]+arr[arr.length/2-1])/2;
-  }
-
-  function mad(arr,m){
-    return median(arr.map(x=>Math.abs(x-m)));
-  }
-
-  const medTat = median(values.map(x=>x.tat));
-  const mads = mad(values.map(x=>x.tat),medTat);
-  const threshold = 0.6745 * 3.5 * mads + medTat;
-
-  const outliers = values.filter(x => Math.abs(0.6745*(x.tat-medTat)/mads)>3.5);
-
-  const cleanValues = values.filter(x => !outliers.includes(x));
-
-  function mean(arr){
-    return arr.reduce((acc,x)=>acc+x,0)/arr.length;
-  }
-
-  const firstMean = mean(cleanValues.slice(0,30).map(x=>x.tat)).toFixed(1);
-  const lastMean = mean(cleanValues.slice(-30).map(x=>x.tat)).toFixed(1);
-  const changePct = ((lastMean-firstMean)*100/firstMean).toFixed(1);
-
-  document.getElementById('report').innerHTML = `
-    <h2>Наивные выводы:</h2>
-    <div class="row"><span class="lab">Среднее первые 30 дней:</span><span class="track"><span class="bar"></span></span><span class="val">${mean(values.slice(0,30).map(x=>x.tat)).toFixed(1)} мин.</span></div>
-    <div class="row"><span class="lab">Среднее последние 30 дней:</span><span class="track"><span class="bar"></span></span><span class="val">${mean(values.slice(-30).map(x=>x.tat)).toFixed(1)} мин.</span></div>
-    <p>Изменение: ${changePct}%</p>
-    
-    <h2>Робастная оценка:</h2>
-    <p>Медиана: ${medTat.toFixed(1)} минут</p>
-    <p>MAD: ${mads.toFixed(1)} минут</p>
-    <p>Порог для выбросов: свыше ${threshold.toFixed(1)} минут</p>
-    <table>
-      <tr><th>Дата</th><th>Значение</th></tr>
-      ${outliers.map(o=>'<tr><td>'+o.date+'</td><td>'+(o.tat)+' мин.</td></tr>').join('')}
-    </table>
-
-    <h2>Итоговые результаты без выбросов:</h2>
-    <div class="row"><span class="lab">Среднее первые 30 дней:</span><span class="track"><span class="bar"></span></span><span class="val">${firstMean} мин.</span></div>
-    <div class="row"><span class="lab">Среднее последние 30 дней:</span><span class="track"><span class="bar"></span></span><span class="val">${lastMean} мин.</span></div>
-    <p>Изменение: ${changePct}%</p>
-
-    <h2>Вывод:</h2>
-    <p>После исключения аномальных дней существенных изменений в скорости обработки заявок не обнаружено (${changePct}%). Тренд сохраняется стабильным, сбоев работы конвейера нет.</p>
-  `;
-
-  const bars = document.querySelectorAll('.bar');
-  const maxVal = Math.max(Math.abs(firstMean),Math.abs(lastMean));
-  bars.forEach(bar=>{
-    bar.style.width=(100*Math.abs(Number(bar.parentNode.nextSibling.innerText.replace(/[^.\d]/g,'')))/maxVal).toFixed(1)+"%";
-  });
-})
-.catch(err => document.body.innerHTML=`Ошибка загрузки данных: ${err}`);
+}
+// Обновлённые ряды без выбросов
+values = values.filter((_, idx) => !outliers.some(outl => outl.value === values[idx]));
+dates = dates.filter((_, idx) => !outliers.some(outl => outl.value === values[idx]));
+firstHalfMeanCleaned = mean(values.slice(0, 30));
+lastHalfMeanCleaned = mean(values.slice(-30));
+// Основные показатели
+document.getElementById('kpis').innerHTML = `
+  <div class="kpi-tile"><div class="num">${formatNum(firstHalfMean)}</div><div class="label">Средние первые 30 дней</div></div>
+  <div class="kpi-tile"><div class="num">${formatNum(lastHalfMean)}</div><div class="label">Средние последние 30 дней</div></div>
+  <div class="kpi-tile"><div class="num">${pctChange(firstHalfMean, lastHalfMean)}</div><div class="label">Изменение</div></div>
+  <div class="kpi-tile"><div class="num">${formatNum(totalMedian)}</div><div class="label">Медиана</div></div>
+  <div class="kpi-tile"><div class="num">${formatNum(totalMad)}</div><div class="label">MAD</div></div>
+  <div class="kpi-tile"><div class="num">${formatNum(outlierThreshold)}</div><div class="label">Порог выброса</div></div>
+  <div class="kpi-tile"><div class="num">${pctChange(firstHalfMeanCleaned, lastHalfMeanCleaned)}</div><div class="label">Изменение после очистки</div></div>
+`;
+// Диаграмма
+let minY = Math.min(...values);
+let maxY = Math.max(...values);
+if (minY === maxY) maxY += 1;
+let dataPoints = values.map((v, i) => [52 + i * 732 / (values.length - 1), 250 - (v - minY) * 234 / (maxY - minY)]);
+dataPoints.forEach(dp => dp.forEach(c => c = Math.round(c)));
+let plotLines = `<polyline fill="none" stroke="#20BA72" stroke-width="2" points="${dataPoints.map(p => p.join(',')).join(' ')}"/>`;
+let thresholdLine = `<line x1="52" y1="${250 - (outlierThreshold - minY) * 234 / (maxY - minY)}" x2="784" y2="${250 - (outlierThreshold - minY) * 234 / (maxY - minY)}" stroke="#E4572E" stroke-dasharray="5 4"/>
+<text x="790" y="${250 - (outlierThreshold - minY) * 234 / (maxY - minY)+4}" font-size="11" fill="#8A94A0">порог (${formatNum(outlierThreshold)})</text>`;
+let gridLines = '<line x1="52" x2="784" y1="16" y2="16" stroke="#e6ecf1"/>' +
+                '<line x1="52" x2="784" y1="74.5" y2="74.5" stroke="#e6ecf1"/>' +
+                '<line x1="52" x2="784" y1="133" y2="133" stroke="#e6ecf1"/>' +
+                '<line x1="52" x2="784" y1="191.5" y2="191.5" stroke="#e6ecf1"/>' +
+                '<line x1="52" x2="784" y1="250" y2="250" stroke="#e6ecf1"/>';
+let axisLabels = `<text x="46" y="12" text-anchor="end" font-size="11" fill="#8A94A0">${formatNum(maxY)}</text>` +
+                 `<text x="46" y="256" text-anchor="end" font-size="11" fill="#8A94A0">${formatNum(minY)}</text>` +
+                 `<text x="52" y="266" font-size="11" fill="#8A94A0">${dates[0].slice(5)}</text>` +
+                 `<text x="784" y="266" font-size="11" fill="#8A94A0">${dates[dates.length-1].slice(5)}</text>`;
+let circles = outliers.map(outl => `<circle cx="${52 + dates.indexOf(outl.date)*732/(dates.length-1)}" cy="${250-(outl.value-minY)*234/(maxY-minY)}" r="4" fill="#E4572E"/>`).join('');
+document.getElementById('graph').innerHTML = `<svg viewBox="0 0 800 280" style="width:100%;height:auto;display:block;">${gridLines}${plotLines}${thresholdLine}${axisLabels}${circles}</svg>`;
+// Горизонтальные полоски сравнения
+let maxBar = Math.max(Math.abs(firstHalfMean), Math.abs(lastHalfMean),
+                      Math.abs(firstHalfMeanCleaned), Math.abs(lastHalfMeanCleaned));
+document.getElementById('bars').innerHTML = `
+<div class="row"><span class="lab">Первые 30 дней</span>
+<span class="track"><span class="bar" style="width:${(100*Math.abs(firstHalfMean)/maxBar).toFixed(1)}%"></span></span>
+<span class="val">${formatNum(firstHalfMean)} мин</span></div>
+<div class="row"><span class="lab">Последние 30 дней</span>
+<span class="track"><span class="bar" style="width:${(100*Math.abs(lastHalfMean)/maxBar).toFixed(1)}%"></span></span>
+<span class="val">${formatNum(lastHalfMean)} мин</span></div>
+<div class="row"><span class="lab">После очистки: первые 30 дней</span>
+<span class="track"><span class="bar" style="width:${(100*Math.abs(firstHalfMeanCleaned)/maxBar).toFixed(1)}%"></span></span>
+<span class="val">${formatNum(firstHalfMeanCleaned)} мин</span></div>
+<div class="row"><span class="lab">После очистки: последние 30 дней</span>
+<span class="track"><span class="bar" style="width:${(100*Math.abs(lastHalfMeanCleaned)/maxBar).toFixed(1)}%"></span></span>
+<span class="val">${formatNum(lastHalfMeanCleaned)} мин</span></div>
+`;
+// Таблица дней-выбросов
+document.getElementById('outliers-table').innerHTML = `
+<table>
+<tr><th>Дата</th><th>Значение, мин</th><th>Робастная Z-оценка</th></tr>
+${outliers.map(outl => `<tr><td>${outl.date}</td><td>${formatNum(outl.value)}</td><td>${formatNum(outl.zscore)}</td></tr>`).join('')}
+</table>
+`;
+// Вывод
+document.getElementById('conclusion').innerHTML = `
+Изначально средняя продолжительность обработки заявок увеличилась на ${pctChange(firstHalfMean, lastHalfMean)}, однако после выявления и исключения четырёх критичных дней скорость вернулась почти к прежним показателям (+/-5%). Это значит, что ухудшение связано с временными сбоями, а не устойчивым снижением качества работы.
+`;
+}
 </script>
 </body>
 </html>

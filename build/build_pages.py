@@ -20,7 +20,9 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 import gate
+import gen_js
 import longread
+import make_bundles
 import practice
 import theme
 
@@ -54,16 +56,19 @@ HUB_BODY = """
 
 <div class="card acc">
 <h4><a href="practice.html">2 · Практика: повторите разборы в GigaChat</a></h4>
-<p>Те же пять разборов, что были на встрече, — но руками. Пятнадцать готовых промптов
-с кнопкой копирования, пошаговая инструкция для веб-версии GigaChat, эталонные ответы
-и таблица воспроизводимости. Программировать не нужно, файлы загружать не нужно.</p>
+<p>Те же пять разборов, что были на встрече, — но руками. Сценарий один на все пять:
+скачать выгрузку, отдать GigaChat один промпт, открыть страницу с графиками, которую
+он напишет. Плюс пошаговая инструкция для веб-версии GigaChat, готовые отчёты
+для сравнения и таблица воспроизводимости. Программировать не нужно.</p>
 <p class="sub" style="margin:0">40–60 минут. Проверено на GigaChat 2 и GigaChat 2 Max.</p>
 </div>
 
 <div class="card">
-<h4>3 · Данные</h4>
-<p>Пять синтетических выгрузок, на которых построены разборы, — в CSV и TXT.
-Ссылки на них лежат внизу страницы практики.</p>
+<h4>3 · Данные и готовые отчёты</h4>
+<p>Пять синтетических выгрузок, на которых построены разборы, — в трёх форматах:
+<b>.js</b> для отчёта, CSV для Excel и Python, TXT для вложения в чат. Рядом —
+пять готовых отчётов, которые GigaChat собрал по этим выгрузкам. Ссылки лежат
+в каждом разборе и таблицей внизу страницы практики.</p>
 </div>
 </div></section>
 
@@ -122,6 +127,8 @@ def main():
         sys.exit("нужен пароль: --password '...' или A360_PASSWORD=...")
 
     make_txt()
+    gen_js.main()          # .js-копии выгрузок + их дубли рядом с отчётами
+    make_bundles.main()    # архивы «отчёт + выгрузка» под каждый разбор
     scorm = ROOT / "scorm" / "content"
     scorm.mkdir(parents=True, exist_ok=True)
 
@@ -133,13 +140,14 @@ def main():
         print(f"  {name:15} открытая {len(html) // 1024:>4} КБ · "
               f"зашифрованная {len(( ROOT / name).read_text(encoding='utf-8')) // 1024:>4} КБ")
 
-    # Ассеты и данные нужны обеим версиям: пути в HTML относительные.
-    for sub in ("assets", "data"):
+    # Ассеты, данные и готовые отчёты нужны обеим версиям: пути в HTML
+    # относительные, поэтому внутри LMS всё работает так же, как на Pages.
+    for sub in ("assets", "data", "reports", "downloads"):
         dst = scorm / sub
         if dst.exists():
             shutil.rmtree(dst)
         shutil.copytree(ROOT / sub, dst)
-    print("  scorm/content: страницы, assets, data")
+    print("  scorm/content: страницы, assets, data, reports")
 
 
 if __name__ == "__main__":

@@ -91,6 +91,18 @@ figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
   border-radius:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;
   display:flex;align-items:center;justify-content:center}
 
+/* Раскрывающийся блок: три вспомогательных промпта не должны спорить за внимание
+   с главным, но и прятать их насовсем нельзя — по ним разбирают проверку. */
+details.more{border:1px solid var(--line);border-radius:14px;padding:0 22px;
+  margin:0 0 18px;background:var(--surf)}
+details.more>summary{cursor:pointer;font-weight:800;padding:16px 0;list-style:none;
+  color:var(--ink2)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸";color:var(--acc);margin-right:8px}
+details.more[open]>summary::before{content:"▾"}
+details.more[open]{padding-bottom:14px}
+details.more>summary:hover{color:var(--ink)}
+
 .toc{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
   margin:0 0 8px}
 .toc ol{margin:0;padding-left:20px}
@@ -136,16 +148,19 @@ a.fn:hover{border:0;text-decoration:underline}
 
 <div class="card acc">
 <h4><a href="practice.html">2 · Практика: повторите разборы в GigaChat</a></h4>
-<p>Те же пять разборов, что были на встрече, — но руками. Пятнадцать готовых промптов
-с кнопкой копирования, пошаговая инструкция для веб-версии GigaChat, эталонные ответы
-и таблица воспроизводимости. Программировать не нужно, файлы загружать не нужно.</p>
+<p>Те же пять разборов, что были на встрече, — но руками. Сценарий один на все пять:
+скачать выгрузку, отдать GigaChat один промпт, открыть страницу с графиками, которую
+он напишет. Плюс пошаговая инструкция для веб-версии GigaChat, готовые отчёты
+для сравнения и таблица воспроизводимости. Программировать не нужно.</p>
 <p class="sub" style="margin:0">40–60 минут. Проверено на GigaChat 2 и GigaChat 2 Max.</p>
 </div>
 
 <div class="card">
-<h4>3 · Данные</h4>
-<p>Пять синтетических выгрузок, на которых построены разборы, — в CSV и TXT.
-Ссылки на них лежат внизу страницы практики.</p>
+<h4>3 · Данные и готовые отчёты</h4>
+<p>Пять синтетических выгрузок, на которых построены разборы, — в трёх форматах:
+<b>.js</b> для отчёта, CSV для Excel и Python, TXT для вложения в чат. Рядом —
+пять готовых отчётов, которые GigaChat собрал по этим выгрузкам. Ссылки лежат
+в каждом разборе и таблицей внизу страницы практики.</p>
 </div>
 </div></section>
 

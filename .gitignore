@@ -1,2 +1,4 @@
 scorm/package/
 __pycache__/
+build/log_*.txt
+build/runs_html.log
