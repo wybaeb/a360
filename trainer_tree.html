@@ -10,26 +10,26 @@
 <style>
 /* ===== DESIGN TOKENS — change these to rebrand ===== */
 :root {
-  --bg:             #1e2027;
-  --bg-surface:     #282a31;
-  --bg-elevated:    #32343c;
-  --bg-hover:       #3a3c45;
-  --text:           #ffffff;
-  --text-sec:       rgba(255,255,255,.6);
-  --text-muted:     rgba(255,255,255,.32);
-  --accent:         #ff5533;
-  --accent-hover:   #ff6b4a;
-  --color-leading:  #4ecdc4;
-  --color-calc:     #a78bfa;
-  --color-lagging:  #ff5533;
-  --bg-leading:     rgba(78,205,196,.10);
-  --bg-calc:        rgba(167,139,250,.10);
-  --bg-lagging:     rgba(255,85,51,.10);
-  --ok:             #22c55e;
-  --warn:           #eab308;
-  --err:            #ef4444;
-  --info:           #3b82f6;
-  --edge-color:     #6b7280;
+  --bg:             #f2f7f4;
+  --bg-surface:     #ffffff;
+  --bg-elevated:    #eef5f1;
+  --bg-hover:       #e3efe8;
+  --text:           #10281c;
+  --text-sec:       rgba(16,40,28,.64);
+  --text-muted:     rgba(16,40,28,.38);
+  --accent:         #20BA72;
+  --accent-hover:   #17a563;
+  --color-leading:  #20BA72;
+  --color-calc:     #2E6BB8;
+  --color-lagging:  #D9822B;
+  --bg-leading:     rgba(32,186,114,.10);
+  --bg-calc:        rgba(46,107,184,.10);
+  --bg-lagging:     rgba(217,130,43,.12);
+  --ok:             #0f7a46;
+  --warn:           #b07708;
+  --err:            #C4453B;
+  --info:           #2E6BB8;
+  --edge-color:     #5c7268;
   --node-w:         194px;
   --port-r:         7px;
   --radius:         12px;
@@ -42,24 +42,24 @@ button{font-family:var(--font)}
 
 /* ===== LAYOUT ===== */
 #app{display:flex;flex-direction:column;height:100vh}
-.header{display:flex;align-items:center;gap:16px;padding:10px 20px;background:var(--bg-surface);border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
+.header{display:flex;align-items:center;gap:16px;padding:10px 20px;background:var(--bg-surface);border-bottom:1px solid rgba(16,40,28,.06);flex-shrink:0}
 .header-brand{display:flex;align-items:baseline;gap:8px}
 .header-title{font-size:16px;font-weight:700}
 .header-tag{font-size:11px;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
-.case-select{background:var(--bg-elevated);color:var(--text);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:7px 12px;font-size:13px;font-family:var(--font);cursor:pointer;min-width:240px}
+.case-select{background:var(--bg-elevated);color:var(--text);border:1px solid rgba(16,40,28,.1);border-radius:var(--radius-sm);padding:7px 12px;font-size:13px;font-family:var(--font);cursor:pointer;min-width:240px}
 .case-select:focus{outline:2px solid var(--accent);outline-offset:-2px}
 .case-select option{background:var(--bg-surface);color:var(--text)}
 .legend{display:flex;gap:14px;font-size:11px;color:var(--text-sec);margin-left:auto}
 .legend-item{display:flex;align-items:center;gap:5px}
 .legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 
-.case-bar{padding:6px 20px 8px;font-size:12px;color:var(--text-sec);background:var(--bg);border-bottom:1px solid rgba(255,255,255,.04);flex-shrink:0;line-height:1.4}
+.case-bar{padding:6px 20px 8px;font-size:12px;color:var(--text-sec);background:var(--bg);border-bottom:1px solid rgba(16,40,28,.04);flex-shrink:0;line-height:1.4}
 .case-bar .dir-hint{color:var(--text-muted)}
 
 .workspace{display:flex;flex:1;overflow:hidden}
 
 /* ===== PALETTE ===== */
-.palette{width:260px;background:var(--bg-surface);border-right:1px solid rgba(255,255,255,.06);overflow-y:auto;padding:12px;flex-shrink:0;scrollbar-width:thin;scrollbar-color:var(--bg-elevated) transparent}
+.palette{width:260px;background:var(--bg-surface);border-right:1px solid rgba(16,40,28,.06);overflow-y:auto;padding:12px;flex-shrink:0;scrollbar-width:thin;scrollbar-color:var(--bg-elevated) transparent}
 .pal-section{margin-bottom:16px}
 .pal-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:4px 8px;margin-bottom:6px;border-radius:4px}
 .pal-title.leading{color:var(--color-leading);background:var(--bg-leading)}
@@ -75,7 +75,7 @@ button{font-family:var(--font)}
 .pal-card.hint{animation:hint-flash .45s ease 3}
 
 /* ===== CANVAS ===== */
-.canvas-wrap{flex:1;position:relative;overflow:hidden;background:radial-gradient(circle at 1px 1px,rgba(255,255,255,.025) 1px,transparent 0) 0 0/24px 24px}
+.canvas-wrap{flex:1;position:relative;overflow:hidden;background:radial-gradient(circle at 1px 1px,rgba(16,40,28,.025) 1px,transparent 0) 0 0/24px 24px}
 .canvas-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--text-muted);font-size:14px;pointer-events:none;z-index:0;line-height:1.6;transition:opacity .3s}
 .canvas-hint svg{margin-bottom:8px;opacity:.3}
 .edge-layer{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1}
@@ -109,7 +109,7 @@ button{font-family:var(--font)}
 .port-in.glow{transform:translateX(-50%) scale(1.5);box-shadow:0 0 14px var(--ok);border-color:var(--ok)}   /* цель при протягивании связи */
 
 /* ===== TOOLBAR ===== */
-.toolbar{display:flex;align-items:center;gap:10px;padding:10px 20px;background:var(--bg-surface);border-top:1px solid rgba(255,255,255,.06);flex-shrink:0}
+.toolbar{display:flex;align-items:center;gap:10px;padding:10px 20px;background:var(--bg-surface);border-top:1px solid rgba(16,40,28,.06);flex-shrink:0}
 .toolbar-info{font-size:12px;color:var(--text-sec)}
 .btn{padding:8px 20px;border-radius:var(--radius-sm);border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
 .btn-primary{background:var(--accent);color:#fff}
@@ -147,30 +147,39 @@ button{font-family:var(--font)}
 @keyframes pop{0%{transform:scale(0)}80%{transform:scale(1.1)}100%{transform:scale(1)}}
 .pop{animation:pop .35s ease-out}
 
-/* A360: качество данных + help */
-.q-badge{font-size:9.5px;color:#8a6d1a;background:rgba(253,243,215,.92);border:1px solid #d9c27c;
+/* A360: экономика данных + help */
+.q-badge{font-size:9.5px;color:#7a5c10;background:#fdf3d7;border:1px solid #e3cc8a;
   border-radius:6px;padding:0 5px;margin-top:3px;display:inline-block;line-height:15px}
-.help-btn{border:1px solid rgba(127,127,127,.55);background:rgba(255,255,255,.08);color:inherit;
-  opacity:.75;border-radius:50%;width:17px;height:17px;line-height:14px;font-size:10.5px;
+.help-btn{border:1px solid rgba(16,40,28,.35);background:#fff;color:#33463c;
+  opacity:.8;border-radius:50%;width:17px;height:17px;line-height:14px;font-size:10.5px;
   cursor:pointer;flex:none;padding:0;margin-left:auto}
-.help-btn:hover{opacity:1;border-color:#7aa}
+.help-btn:hover{opacity:1;border-color:var(--accent)}
 .pal-card{position:relative}
 .pal-card .help-btn{position:absolute;top:6px;right:6px}
 .help-btn-node{position:absolute;top:4px;right:4px}
-.q-modal-back{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;
+.q-modal-back{position:fixed;inset:0;background:rgba(10,30,20,.45);display:none;
   align-items:center;justify-content:center;z-index:60}
 .q-modal-back.open{display:flex}
-.q-modal{background:#fff;color:#1c1c28;max-width:460px;width:92%;border-radius:14px;
-  padding:20px 22px;box-shadow:0 18px 50px rgba(0,0,0,.4);font-size:13.5px;line-height:1.55}
+.q-modal{background:#fff;color:#10281c;max-width:470px;width:92%;border-radius:14px;
+  padding:20px 22px;box-shadow:0 18px 50px rgba(10,30,20,.35);font-size:13.5px;line-height:1.55}
 .q-modal h3{margin:0 0 8px;font-size:16px}
-.q-modal .q-meta{color:#8a6d1a;font-size:12.5px;margin:10px 0}
+.q-modal .q-meta{color:#7a5c10;font-size:12.5px;margin:10px 0}
 .q-modal .q-row{display:flex;gap:12px;justify-content:flex-end;align-items:center;margin-top:12px}
-.q-modal a{color:#0b6b48;font-weight:600;text-decoration:none}
-.q-modal button{border:0;background:#e8e8ee;border-radius:8px;padding:7px 14px;cursor:pointer;font:inherit}
+.q-modal a{color:#0f7a46;font-weight:600;text-decoration:none}
+.q-modal button{border:0;background:#e7efe9;border-radius:8px;padding:7px 14px;cursor:pointer;font:inherit}
 .q-note{border-left:3px solid;padding:8px 10px;border-radius:6px;margin:6px 0;font-size:12.5px;line-height:1.45}
-.q-note.ok{border-color:#22c55e;background:rgba(34,197,94,.09)}
-.q-note.warn{border-color:#eab308;background:rgba(234,179,8,.10)}
-.q-note.err{border-color:#ef4444;background:rgba(239,68,68,.10)}
+.q-note.ok{border-color:#0f7a46;background:rgba(32,186,114,.10)}
+.q-note.warn{border-color:#b07708;background:rgba(217,166,43,.13)}
+.q-note.err{border-color:#C4453B;background:rgba(196,69,59,.10)}
+.eco-badge{font-size:12px;color:var(--text-sec);background:var(--bg-elevated);
+  border:1px solid rgba(16,40,28,.14);border-radius:8px;padding:4px 10px;margin-right:10px;
+  display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
+.eco-badge b{color:var(--text)}
+.eco-badge .eco-i{cursor:pointer;border:1px solid rgba(16,40,28,.3);border-radius:50%;
+  width:15px;height:15px;line-height:13px;font-size:10px;text-align:center;opacity:.75}
+.eco-badge .eco-i:hover{opacity:1;border-color:var(--accent)}
+.overlay{background:rgba(10,30,20,.4)}
+.results{background:#fff;box-shadow:0 24px 60px rgba(10,30,20,.35)}
 </style>
 </head>
 <body>
@@ -199,7 +208,7 @@ button{font-family:var(--font)}
           <marker id="aw-a" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0L10 4L0 8z" fill="#ff5533"/></marker>
           <marker id="aw-ok" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0L10 4L0 8z" fill="#22c55e"/></marker>
           <marker id="aw-err" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0L10 4L0 8z" fill="#ef4444"/></marker>
-          <marker id="aw-t" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0L10 4L0 8z" fill="rgba(255,255,255,.3)"/></marker>
+          <marker id="aw-t" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0L10 4L0 8z" fill="rgba(16,40,28,.3)"/></marker>
         </defs>
       </svg>
       <div class="node-layer" id="nodeLayer"></div>
@@ -229,27 +238,29 @@ window.addEventListener('beforeunload',()=>SCORM.finish());
 const CASES=[
 {
   id:'retail',title:'1. Розница: кредитная карта',
-  desc:'Дерево метрик со слайда Шага 1: от заявок и доставки — к P&L продукта. Соберите его целиком. У каждой метрики указаны цена (₽…₽₽₽) и скорость сбора данных — присмотритесь к ним, они решают в кейсах 2 и 3.',
+  desc:'Дерево метрик со слайда Шага 1: от заявок и доставки — к P&L продукта. Соберите его целиком и соедините все размещённые метрики: изолированная карточка на холсте — это несобранные данные. На каждой метрике — экономика сбора: CAPEX + OPEX и дни до доверяемого сигнала.',
+  horizon:3,
+  ideal:['app','appr','tat','err','iss','act','alive','churn','rev','pnl'],
   metrics:[
-    {id:'app',name:'Заявки на карту',abbr:'шт./нед. · CRM',type:'leading',cost:'₽',days:7,
+    {id:'app',name:'Заявки на карту',abbr:'шт./нед. · CRM',type:'leading',capex:20,opex:5,tte:7,
      def:'Поток входящих заявок по всем каналам. Источник: CRM, доступен онлайн.',link:'longread_data.html#d6'},
-    {id:'appr',name:'Одобрение',abbr:'% заявок · скоринг',type:'leading',cost:'₽',days:7,
+    {id:'appr',name:'Одобрение',abbr:'% заявок · скоринг',type:'leading',capex:20,opex:5,tte:7,
      def:'Доля заявок, прошедших скоринг. Источник: лог скоринговой системы.',link:'longread_data.html#d6'},
-    {id:'tat',name:'Срок доставки',abbr:'дн. · подрядчик',type:'leading',cost:'₽₽',days:21,
-     def:'Время от выпуска карты до вручения. Данные внешнего подрядчика: без регулярной выгрузки по договору сигнал приходит с задержкой в недели.',link:'longread_data.html#d4'},
-    {id:'err',name:'Ошибки в заявке',abbr:'% заявок',type:'leading',cost:'₽₽',days:14,
-     def:'Доля заявок с ошибками оформления. Ранний сигнал: предсказывает и активацию, и отток — связь «предсказывает», а не «определяет».',link:'longread_data.html#d6'},
-    {id:'iss',name:'Выдачи',abbr:'шт./нед. · АБС',type:'calc',cost:'₽',days:7,
+    {id:'tat',name:'Срок доставки',abbr:'дн. · подрядчик',type:'leading',capex:120,opex:40,tte:21,
+     def:'Время от выпуска карты до вручения. Данные внешнего подрядчика: нужна регулярная выгрузка по договору — это CAPEX на доработку договора и OPEX на контроль полноты.',link:'longread_data.html#d4'},
+    {id:'err',name:'Ошибки в заявке',abbr:'% заявок',type:'leading',capex:80,opex:20,tte:14,
+     def:'Доля заявок с ошибками оформления. Ранний сигнал: предсказывает и активацию, и отток — связь «предсказывает», а не «определяет». Требует кодификатора причин.',link:'longread_data.html#d6'},
+    {id:'iss',name:'Выдачи',abbr:'шт./нед. · АБС',type:'calc',capex:10,opex:2,tte:7,
      def:'Количество выданных карт. Считается из заявок и одобрения; факт — в АБС.',link:'longread_data.html#d6'},
-    {id:'act',name:'Активация за 30 дн.',abbr:'% выдач · витрина',type:'calc',cost:'₽₽',days:14,
+    {id:'act',name:'Активация за 30 дн.',abbr:'% выдач · витрина',type:'calc',capex:60,opex:15,tte:14,
      def:'Доля карт с первой операцией за 30 дней. Внимание: CRM меряет выпуск, витрина — операцию; какое определение официальное — вопрос master-source.',link:'longread_data.html#d7'},
-    {id:'alive',name:'Активные клиенты',abbr:'% портфеля',type:'calc',cost:'₽₽',days:14,
+    {id:'alive',name:'Активные клиенты',abbr:'% портфеля',type:'calc',capex:40,opex:10,tte:14,
      def:'Клиенты с операциями за период. Накапливаются из выдач и активации.',link:'longread_data.html#d6'},
-    {id:'churn',name:'Отток за 90 дн.',abbr:'%',type:'calc',cost:'₽₽',days:90,
+    {id:'churn',name:'Отток за 90 дн.',abbr:'%',type:'calc',capex:40,opex:10,tte:90,
      def:'Доля клиентов, прекративших операции. Горизонт наблюдения 90 дней — сигнал приходит поздно, поэтому важны предсказывающие его ранние метрики.',link:'longread_data.html#d5'},
-    {id:'rev',name:'Доход по продукту',abbr:'₽/мес.',type:'lagging',cost:'₽',days:30,
+    {id:'rev',name:'Доход по продукту',abbr:'₽/мес.',type:'lagging',capex:20,opex:5,tte:30,
      def:'Процентный и комиссионный доход по портфелю карт. Запаздывающая: констатирует, управлять поздно.',link:'longread_data.html#d6'},
-    {id:'pnl',name:'P&L продукта',abbr:'NPV, ₽',type:'lagging',cost:'₽₽₽',days:90,
+    {id:'pnl',name:'P&L продукта',abbr:'NPV, ₽',type:'lagging',capex:150,opex:30,tte:90,
      def:'Финансовый результат с учётом привлечения и рисков. Порог из финмодели: NPV > 0 к 36-му месяцу.',link:'longread_data.html#d3'},
   ],
   rules:{
@@ -270,19 +281,21 @@ const CASES=[
 },
 {
   id:'corporate',title:'2. Корпоративный блок: подключение юрлиц',
-  desc:'Дерево проще, но появляется развилка данных: след процесса можно взять из журнала workflow или собрать ручной выборкой. Дерево может быть верным при обоих вариантах — а вот конфигурация данных у них разного качества. Смотрите на цену и скорость сбора.',
+  desc:'Дерево проще, но появляется развилка данных: след процесса — из журнала workflow или ручной выборкой. Дерево верно при обоих вариантах, а вот экономика конфигураций разная: сравните CAPEX, OPEX и time-to-evidence — тренажёр посчитает интегральную эффективность.',
+  horizon:3,
+  ideal:['ts','rw','t2a','actv','fee'],
   metrics:[
-    {id:'ts',name:'Журнал этапов workflow',abbr:'таймстампы · workflow+CRM',type:'leading',cost:'₽₽',days:21,
-     def:'Отметки времени всех этапов подключения. Дороже в сборке (нужны ключи связи), но даёт полный след процесса: видно, где теряется время.',link:'longread_data.html#d4'},
-    {id:'mn',name:'Ручная выборка кейсов',abbr:'Excel · фронт',type:'leading',cost:'₽',days:40,
-     def:'Досье, разобранные руками. Дёшево начать, но до доверяемой картины ~40 дней, полного следа по этапам нет.',link:'longread_data.html#d4'},
-    {id:'rw',name:'Доля досье на доработку',abbr:'% заявок · CRM',type:'leading',cost:'₽',days:14,
+    {id:'ts',name:'Журнал этапов workflow',abbr:'таймстампы · workflow+CRM',type:'leading',capex:180,opex:45,tte:21,
+     def:'Отметки времени всех этапов подключения. Дорого в постройке (ключи связи, витрина), но даёт полный след процесса: видно, где теряется время.',link:'longread_data.html#d4'},
+    {id:'mn',name:'Ручная выборка кейсов',abbr:'Excel · фронт',type:'leading',capex:15,opex:25,tte:40,
+     def:'Досье, разобранные руками. Дёшево начать, но труд повторяется каждый месяц, до доверяемой картины ~40 дней, полного следа по этапам нет.',link:'longread_data.html#d4'},
+    {id:'rw',name:'Доля досье на доработку',abbr:'% заявок · CRM',type:'leading',capex:30,opex:8,tte:14,
      def:'Доля досье, возвращённых клиенту на доработку. Ранний сигнал длинного подключения.',link:'longread_data.html#d6'},
-    {id:'t2a',name:'Время подключения',abbr:'дн., подача → активация',type:'calc',cost:'₽₽',days:21,
+    {id:'t2a',name:'Время подключения',abbr:'дн., подача → активация',type:'calc',capex:60,opex:15,tte:21,
      def:'Среднее время от подачи заявки юрлица до активной работы. Считается только по собранному следу процесса.',link:'longread_data.html#d4'},
-    {id:'actv',name:'Активные юрлица',abbr:'шт./мес.',type:'calc',cost:'₽₽',days:30,
+    {id:'actv',name:'Активные юрлица',abbr:'шт./мес.',type:'calc',capex:40,opex:10,tte:30,
      def:'Клиенты, начавшие операции. Чем короче подключение, тем раньше клиент активен.',link:'longread_data.html#d6'},
-    {id:'fee',name:'Комиссионный доход',abbr:'₽/мес.',type:'lagging',cost:'₽',days:30,
+    {id:'fee',name:'Комиссионный доход',abbr:'₽/мес.',type:'lagging',capex:20,opex:5,tte:30,
      def:'Доход РКО и сопутствующих продуктов. Запаздывающая метрика блока.',link:'longread_data.html#d6'},
   ],
   rules:{
@@ -292,8 +305,8 @@ const CASES=[
   },
   quality:[
     {target:'t2a',options:['ts','mn'],best:'ts',
-     note:'«Время подключения» собрано из ручной выборки: ₽ и 3 дня на старт, но ~40 дней до доверяемого результата и не видно, какой этап съедает время. Журнал workflow: ₽₽ и ~21 день, зато след полный. Для решения о переброске людей нужен второй вариант.',
-     okNote:'След процесса взят из журнала workflow: узкие места видны по этапам, результату можно доверять через ~21 день.'},
+     note:'След процесса — ручная выборка: 15 т₽ на старт, но 25 т₽/мес ручного труда и ~40 дней до доверяемого результата, этапов не видно. Журнал workflow дороже (180 + 45/мес), зато ~21 день и виден каждый этап — по интегральному критерию (1 / (TTE × TCO)) он выигрывает.',
+     okNote:'След процесса взят из журнала workflow: узкие места видны по этапам, доверяемый результат через ~21 день — лучшая конфигурация кейса.'},
   ],
   calc:{
     t2a:{lbl:'След процесса → Время подключения',formula:'T = t(активация) − t(подача), по этапам',example:'медиана 9 дн, 90-й перцентиль 23 дн'},
@@ -303,21 +316,23 @@ const CASES=[
 },
 {
   id:'portfolio',title:'3. Портфель: сопоставимые продукты',
-  desc:'Уровень руководителя портфеля. Дерево короткое, но развилок две: источник активации и способ выравнивания определений. Правильных рёбер мало — вся сложность в выборе конфигурации данных по цене и скорости.',
+  desc:'Уровень руководителя портфеля. Дерево короткое, развилок две: источник активации и способ выравнивания определений. Правильных рёбер мало — вся сложность в выборе конфигурации по экономике данных. Соберите самую эффективную.',
+  horizon:3,
+  ideal:['actA','dict','npvp','cmp','alloc'],
   metrics:[
-    {id:'actA',name:'Активация: витрина DWH',abbr:'первая операция · 30 дн',type:'leading',cost:'₽₽',days:14,
+    {id:'actA',name:'Активация: витрина DWH',abbr:'первая операция · 30 дн',type:'leading',capex:60,opex:15,tte:14,
      def:'Активация = первая операция в 30 дней; прослеживается до транзакций, есть владелец и регламент. По смыслу решения комитета.',link:'longread_data.html#d7'},
-    {id:'actB',name:'Активация: флаг CRM',abbr:'выпуск карты',type:'leading',cost:'₽',days:60,
-     def:'Меряет выпуск карты, а не операцию. Цифра быстрая и онлайн, но каждый комитет начинается со спора о ней — до доверяемого результата ~60 дней пересчётов.',link:'longread_data.html#d7'},
-    {id:'dict',name:'Словарь определений портфеля',abbr:'регламент + владелец',type:'leading',cost:'₽₽',days:21,
+    {id:'actB',name:'Активация: флаг CRM',abbr:'выпуск карты',type:'leading',capex:10,opex:20,tte:60,
+     def:'Меряет выпуск карты, а не операцию. Стартует дёшево, но каждый комитет начинается со спора о цифре: OPEX — постоянные сверки, ~60 дней до доверяемого результата.',link:'longread_data.html#d7'},
+    {id:'dict',name:'Словарь определений портфеля',abbr:'регламент + владелец',type:'leading',capex:120,opex:20,tte:21,
      def:'Единые определения показателей по всем продуктам. Требует владельца и регламента изменений, зато расхождения ловятся до комитета.',link:'longread_data.html#d7'},
-    {id:'adhoc',name:'Точечные сверки',abbr:'по жалобам',type:'leading',cost:'₽',days:40,
-     def:'Сверка определений от случая к случаю: дёшево, но каждое расхождение всплывает уже на комитете.',link:'longread_data.html#d7'},
-    {id:'npvp',name:'NPV по продуктам',abbr:'₽, по каждому продукту',type:'calc',cost:'₽₽₽',days:30,
+    {id:'adhoc',name:'Точечные сверки',abbr:'по жалобам',type:'leading',capex:10,opex:25,tte:40,
+     def:'Сверка определений от случая к случаю: дёшево начать, но каждое расхождение всплывает уже на комитете и разбирается вручную.',link:'longread_data.html#d7'},
+    {id:'npvp',name:'NPV по продуктам',abbr:'₽, по каждому продукту',type:'calc',capex:150,opex:30,tte:30,
      def:'Финансовый эффект каждого продукта портфеля. Считается только от источника активации, которому доверяют.',link:'longread_data.html#d3'},
-    {id:'cmp',name:'Сопоставимость продуктов',abbr:'единые определения',type:'calc',cost:'₽₽',days:21,
+    {id:'cmp',name:'Сопоставимость продуктов',abbr:'единые определения',type:'calc',capex:40,opex:10,tte:21,
      def:'Продукты можно сравнивать, только если метрики означают одно и то же. На уровне портфеля расхождения рождаются в определениях, а не в выгрузках.',link:'longread_data.html#d7'},
-    {id:'alloc',name:'Перераспределение ресурсов',abbr:'решение портфеля',type:'lagging',cost:'₽₽₽',days:90,
+    {id:'alloc',name:'Перераспределение ресурсов',abbr:'решение портфеля',type:'lagging',capex:60,opex:10,tte:90,
      def:'Куда переложить бюджет и людей между продуктами. Верно только на сопоставимых, доверяемых цифрах.',link:'longread_data.html#d2'},
   ],
   rules:{
@@ -327,10 +342,10 @@ const CASES=[
   },
   quality:[
     {target:'npvp',options:['actA','actB'],best:'actA',
-     note:'NPV считается от флага CRM: цифра приходит онлайн, но меряет выпуск, а не операцию — ~60 дней споров и пересчётов до доверяемого результата. Витрина DWH: ~14 дней, прослеживается до транзакций.',
+     note:'NPV считается от флага CRM: 10 т₽ на старт, но 20 т₽/мес на сверки и ~60 дней споров до доверяемого результата — цифра меряет выпуск, а не операцию. Витрина DWH: ~14 дней, прослеживается до транзакций.',
      okNote:'NPV считается от витрины DWH: цифра по смыслу решения, прослеживается и не оспаривается.'},
     {target:'cmp',options:['dict','adhoc'],best:'dict',
-     note:'Сопоставимость держится на точечных сверках: каждое расхождение всплывает уже на комитете (~40 дней). Словарь с владельцем и регламентом ловит их заранее (~21 день).',
+     note:'Сопоставимость держится на точечных сверках: каждое расхождение всплывает уже на комитете (~40 дней, 25 т₽/мес ручного разбора). Словарь с владельцем: 120 т₽ на старт, зато ~21 день и расхождения ловятся заранее.',
      okNote:'Определения выровнены словарём портфеля с владельцем и регламентом.'},
   ],
   calc:{
@@ -341,43 +356,44 @@ const CASES=[
 },
 {
   id:'universal',title:'4. Универсальный конструктор (все метрики)',
-  desc:'Свободный режим: метрики трёх категорий — инвестиционные, управленческие и качества опыта. Соберите дерево своего продукта, процесса или портфеля. Единственно верного ответа нет: проверка покажет структуру, а цены и скорости сбора помогут выбрать реалистичную конфигурацию.',
+  desc:'Свободный режим: метрики трёх категорий — инвестиционные, управленческие и качества опыта. Соберите дерево своего продукта, процесса или портфеля. Единственно верного ответа нет; живой замер TTE и TCO внизу поможет держать конфигурацию реалистичной.',
+  horizon:3,
   metrics:[
-    {id:'u_traffic',name:'Заявки / трафик',abbr:'шт.',type:'leading',cost:'₽',days:7,
+    {id:'u_traffic',name:'Заявки / трафик',abbr:'шт.',type:'leading',capex:20,opex:5,tte:7,
      def:'Входящий поток: заявки, визиты, обращения.',link:'longread_data.html#d6'},
-    {id:'u_conv',name:'Конверсия этапа',abbr:'%',type:'leading',cost:'₽',days:7,
+    {id:'u_conv',name:'Конверсия этапа',abbr:'%',type:'leading',capex:20,opex:5,tte:7,
      def:'Доля перешедших на следующий шаг воронки.',link:'longread_data.html#d6'},
-    {id:'u_tat',name:'Время процесса',abbr:'дн./ч',type:'leading',cost:'₽₽',days:21,
+    {id:'u_tat',name:'Время процесса',abbr:'дн./ч',type:'leading',capex:120,opex:30,tte:21,
      def:'Сквозное время процесса или этапа. Считается только при полном следе процесса с общим ключом.',link:'longread_data.html#d4'},
-    {id:'u_err',name:'Ошибки / возвраты',abbr:'%',type:'leading',cost:'₽₽',days:14,
+    {id:'u_err',name:'Ошибки / возвраты',abbr:'%',type:'leading',capex:80,opex:20,tte:14,
      def:'Доля ошибок оформления или возвратов на доработку. Ранний предсказывающий сигнал.',link:'longread_data.html#d6'},
-    {id:'u_ops',name:'Операций на сотрудника',abbr:'шт./день',type:'leading',cost:'₽',days:14,
+    {id:'u_ops',name:'Операций на сотрудника',abbr:'шт./день',type:'leading',capex:30,opex:8,tte:14,
      def:'Ключевая метрика оси «процесс»: производительность роли.',link:'longread_data.html#d2'},
-    {id:'u_nps',name:'Индекс лояльности',abbr:'NPS',type:'leading',cost:'₽₽',days:30,
+    {id:'u_nps',name:'Индекс лояльности',abbr:'NPS',type:'leading',capex:60,opex:20,tte:30,
      def:'Готовность рекомендовать. Смотрите на репрезентативность выборки: NPS по «дошедшим до конца» завышен.',link:'longread_data.html#d3'},
-    {id:'u_csat',name:'Удовлетворённость',abbr:'CSAT',type:'leading',cost:'₽',days:14,
+    {id:'u_csat',name:'Удовлетворённость',abbr:'CSAT',type:'leading',capex:30,opex:10,tte:14,
      def:'Оценка взаимодействия сразу после контакта.',link:'longread_data.html#d3'},
-    {id:'u_cac',name:'Стоимость привлечения',abbr:'CAC',type:'leading',cost:'₽₽',days:30,
+    {id:'u_cac',name:'Стоимость привлечения',abbr:'CAC',type:'leading',capex:40,opex:10,tte:30,
      def:'Расходы на привлечение одного клиента.',link:'longread_data.html#d6'},
-    {id:'u_price',name:'Цена / тариф',abbr:'₽',type:'leading',cost:'₽',days:7,
+    {id:'u_price',name:'Цена / тариф',abbr:'₽',type:'leading',capex:10,opex:2,tte:7,
      def:'Управляемый рычаг монетизации.',link:'longread_data.html#d6'},
-    {id:'u_iss',name:'Сделки / выдачи',abbr:'шт.',type:'calc',cost:'₽',days:7,
+    {id:'u_iss',name:'Сделки / выдачи',abbr:'шт.',type:'calc',capex:10,opex:2,tte:7,
      def:'Результат воронки: заявки × конверсия.',link:'longread_data.html#d6'},
-    {id:'u_mau',name:'Активные клиенты',abbr:'MAU',type:'calc',cost:'₽₽',days:14,
+    {id:'u_mau',name:'Активные клиенты',abbr:'MAU',type:'calc',capex:40,opex:10,tte:14,
      def:'Клиенты с операциями за период.',link:'longread_data.html#d6'},
-    {id:'u_churn',name:'Отток',abbr:'Churn',type:'calc',cost:'₽₽',days:90,
+    {id:'u_churn',name:'Отток',abbr:'Churn',type:'calc',capex:40,opex:10,tte:90,
      def:'Доля ушедших за период. Длинный горизонт наблюдения.',link:'longread_data.html#d5'},
-    {id:'u_aov',name:'Средний чек',abbr:'AOV',type:'calc',cost:'₽',days:14,
+    {id:'u_aov',name:'Средний чек',abbr:'AOV',type:'calc',capex:20,opex:5,tte:14,
      def:'Средняя сумма операции.',link:'longread_data.html#d6'},
-    {id:'u_ltv',name:'Ценность клиента',abbr:'LTV',type:'calc',cost:'₽₽₽',days:90,
+    {id:'u_ltv',name:'Ценность клиента',abbr:'LTV',type:'calc',capex:100,opex:20,tte:90,
      def:'Доход за время жизни клиента: чек × частота × срок жизни.',link:'longread_data.html#d6'},
-    {id:'u_rev',name:'Выручка / доход',abbr:'₽/мес.',type:'lagging',cost:'₽',days:30,
+    {id:'u_rev',name:'Выручка / доход',abbr:'₽/мес.',type:'lagging',capex:20,opex:5,tte:30,
      def:'Итог месяца: констатирует, управлять поздно.',link:'longread_data.html#d6'},
-    {id:'u_mrr',name:'Регулярный доход',abbr:'MRR',type:'lagging',cost:'₽',days:30,
+    {id:'u_mrr',name:'Регулярный доход',abbr:'MRR',type:'lagging',capex:20,opex:5,tte:30,
      def:'Повторяющаяся месячная выручка.',link:'longread_data.html#d6'},
-    {id:'u_roi',name:'Возврат инвестиций',abbr:'ROI',type:'lagging',cost:'₽₽₽',days:90,
+    {id:'u_roi',name:'Возврат инвестиций',abbr:'ROI',type:'lagging',capex:100,opex:20,tte:90,
      def:'Инвестиционная метрика: эффект к затратам.',link:'longread_data.html#d3'},
-    {id:'u_npv',name:'NPV / P&L',abbr:'₽',type:'lagging',cost:'₽₽₽',days:90,
+    {id:'u_npv',name:'NPV / P&L',abbr:'₽',type:'lagging',capex:150,opex:30,tte:90,
      def:'Финансовый результат с учётом стоимости денег. Порог решения задаёт финмодель.',link:'longread_data.html#d3'},
   ],
 }
@@ -429,7 +445,7 @@ function renderPal(){
       const used=S.nodes.some(n=>n.metricId===m.id);
       const d=document.createElement('div');
       d.className='pal-card'+(used?' used':'');d.dataset.mid=m.id;
-      d.innerHTML=`<span class="pal-card-dot" style="background:${tColor(m.type)}"></span><div><div class="pal-card-name">${m.name}</div><div class="pal-card-abbr">${m.abbr}</div>${m.cost?`<div class="q-badge" title="цена сбора · дней до доверяемого сигнала">${m.cost} · ${m.days} дн</div>`:``}</div>${m.def?`<button class="help-btn" data-mid="${m.id}" type="button" title="Что это за метрика">?</button>`:``}`;
+      d.innerHTML=`<span class="pal-card-dot" style="background:${tColor(m.type)}"></span><div><div class="pal-card-name">${m.name}</div><div class="pal-card-abbr">${m.abbr}</div>${m.capex!=null?`<div class="q-badge" title="CAPEX + OPEX/мес (тыс. ₽) · time-to-evidence">${m.capex}+${m.opex}/мес т₽ · ${m.tte} дн</div>`:``}</div>${m.def?`<button class="help-btn" data-mid="${m.id}" type="button" title="Что это за метрика">?</button>`:``}`;
       sec.appendChild(d);
     }
     pal.appendChild(sec);
@@ -508,7 +524,7 @@ function addNode(mid,x,y){
   el.className='node';el.dataset.nid=id;el.dataset.mid=mid;
   el.style.left=x+'px';el.style.top=y+'px';
   el.style.setProperty('--mc',tColor(m.type));
-  el.innerHTML=`<div class="port port-in" data-p="in" title="Входящие связи приходят сюда (сверху)"></div><div class="node-body"><div class="node-name">${m.name}</div><div class="node-abbr">${m.abbr}</div>${m.cost?`<div class="q-badge">${m.cost} · ${m.days} дн</div>`:``}${m.def?`<button class="help-btn help-btn-node" data-mid="${m.id}" type="button" title="Что это за метрика">?</button>`:``}</div><div class="port port-out" data-p="out" title="Потяните отсюда вниз, чтобы создать связь"></div>`;
+  el.innerHTML=`<div class="port port-in" data-p="in" title="Входящие связи приходят сюда (сверху)"></div><div class="node-body"><div class="node-name">${m.name}</div><div class="node-abbr">${m.abbr}</div>${m.capex!=null?`<div class="q-badge">${m.capex}+${m.opex}/мес т₽ · ${m.tte} дн</div>`:``}${m.def?`<button class="help-btn help-btn-node" data-mid="${m.id}" type="button" title="Что это за метрика">?</button>`:``}</div><div class="port port-out" data-p="out" title="Потяните отсюда вниз, чтобы создать связь"></div>`;
   nodeL.appendChild(el);
   markPalUsed();updHint();updTb();
 }
@@ -811,8 +827,8 @@ function showRes(r){
     SCORM.done();
   }else{
     const corr=r.edges.filter(e=>e.s==='ok').length;
-    const total=Object.values(c.rules).reduce((s,rl)=>s+rl.req.length,0);
-    hd.innerHTML=`<span class="res-icon">&#9888;&#65039;</span><div><div class="res-title">Есть замечания</div><div class="res-sub">Верных связей: ${corr} из ${total} необходимых</div></div>`;
+    const total=Object.values(c.rules).reduce((s,rl)=>s+rl.req.length+(rl.opt||[]).length,0);
+    hd.innerHTML=`<span class="res-icon">&#9888;&#65039;</span><div><div class="res-title">Есть замечания</div><div class="res-sub">Верных связей: ${corr} из ${total} возможных</div></div>`;
   }
   resP.appendChild(hd);
 
@@ -1066,37 +1082,90 @@ init();
   </div>
 </div>
 <script>
-/* A360-расширение: help-модалка и проверка качества конфигурации. */
+/* A360-расширение: экономика данных, изолированные метрики, help-модалка. */
 (function(){
+  var H=3; // горизонт пилота, мес
   var back=document.getElementById('qModalBack');
-  function openHelp(mid){
-    var m=met(mid);if(!m)return;
-    document.getElementById('qModalTitle').textContent=m.name+' ('+m.abbr+')';
-    document.getElementById('qModalBody').textContent=m.def||'';
-    document.getElementById('qModalMeta').textContent=m.cost?('Цена сбора: '+m.cost+' · до доверяемого сигнала: ~'+m.days+' дн'):'';
+
+  function openModal(title,body,meta,link){
+    document.getElementById('qModalTitle').textContent=title;
+    document.getElementById('qModalBody').textContent=body;
+    document.getElementById('qModalMeta').textContent=meta||'';
     var a=document.getElementById('qModalLink');
-    if(m.link){a.style.display='';a.href=m.link}else{a.style.display='none'}
+    if(link){a.style.display='';a.href=link}else{a.style.display='none'}
     back.classList.add('open');
   }
+  function openHelp(mid){
+    var m=met(mid);if(!m)return;
+    openModal(m.name+' ('+m.abbr+')',m.def||'',
+      m.capex!=null?('Экономика сбора: CAPEX '+m.capex+' т₽ единоразово · OPEX '+m.opex+
+        ' т₽/мес (сбор и обработка) · time-to-evidence ~'+m.tte+' дн'):'',m.link);
+  }
+  var CRIT_TEXT='TTE (time-to-evidence) конфигурации — максимум по опережающим метрикам: '+
+    'решение пилота принимается по ним, и оно не раньше самого медленного сигнала. '+
+    'TCO за горизонт пилота ('+H+' мес) = сумма CAPEX + '+H+' × сумма OPEX по всем метрикам дерева. '+
+    'Интегральный критерий E = 1 / (TTE × TCO) — «скорость доверяемого решения на рубль»: '+
+    'конфигурация тем лучше, чем быстрее и дешевле она доводит до решения, которому можно верить. '+
+    'Эффективность = E вашей конфигурации к E лучшей конфигурации кейса. '+
+    'Составлено из трёх стандартных компонент: time-to-insight, совокупная стоимость владения (TCO) '+
+    'и стоимость некачественных данных (Redman; DAMA DMBOK); связка с решением — NPV-логика курса.';
+
   ['mousedown','dblclick'].forEach(function(ev){
     document.addEventListener(ev,function(e){
-      if(e.target.closest&&e.target.closest('.help-btn'))e.stopPropagation();
+      if(e.target.closest&&(e.target.closest('.help-btn')||e.target.closest('.eco-i')))e.stopPropagation();
     },true);
   });
   document.addEventListener('click',function(e){
     var b=e.target.closest&&e.target.closest('.help-btn');
     if(b){e.stopPropagation();openHelp(b.dataset.mid);return}
+    if(e.target.closest&&e.target.closest('.eco-i')){
+      e.stopPropagation();
+      openModal('Как считается эффективность конфигурации',CRIT_TEXT,'','longread_data.html#d4');return}
     if(e.target===back||e.target.id==='qModalClose')back.classList.remove('open');
   },true);
 
+  /* ── экономика ── */
+  function ecoOf(mids){
+    var ms=mids.map(met).filter(Boolean).filter(function(m){return m.capex!=null});
+    if(!ms.length)return null;
+    var capex=ms.reduce(function(s,m){return s+m.capex},0);
+    var opex=ms.reduce(function(s,m){return s+m.opex},0);
+    var lead=ms.filter(function(m){return m.type==='leading'});
+    var tte=lead.length?Math.max.apply(null,lead.map(function(m){return m.tte})):0;
+    var tco=capex+H*opex;
+    return {tte:tte,tco:tco,e:(tte&&tco)?1e6/(tte*tco):0};
+  }
+  function ecoNow(){return ecoOf(S.nodes.map(function(n){return n.metricId}))}
+  function ecoIdeal(){var c=cas();return c&&c.ideal?ecoOf(c.ideal):null}
+
+  /* живой замер в тулбаре */
+  var tb=document.querySelector('.toolbar');
+  var eb=document.createElement('span');eb.className='eco-badge';eb.style.display='none';
+  var tbInfo=document.getElementById('tbInfo');
+  tb.insertBefore(eb,tbInfo);
+  var _updTb=updTb;
+  updTb=function(){
+    _updTb();
+    var eco=ecoNow();
+    if(!eco||!S.nodes.length){eb.style.display='none';return}
+    eb.style.display='';
+    eb.innerHTML='TTE <b>'+(eco.tte||'—')+(eco.tte?' дн':'')+'</b> · TCO('+H+' мес) <b>'+
+      eco.tco+' т₽</b> <span class="eco-i" title="как это считается">i</span>';
+  };
+
+  /* ── проверка: развилки, изолированные метрики, эффективность ── */
   var _validate=validate;
   validate=function(){
     var r=_validate();
-    if(r.sandbox)return r;
+    if(r.sandbox){
+      var isoS=S.nodes.filter(function(n){return !S.edges.some(function(e){return e.from===n.id||e.to===n.id})});
+      if(isoS.length&&r.msgs)r.msgs.push({t:'warn',m:'Изолированные метрики (без единой связи): '+
+        isoS.map(function(n){return met(n.metricId).name}).join(', ')});
+      return r;
+    }
     var c=cas();r.qmsgs=[];
-    if(!c.quality||!c.quality.length)return r;
     var absentAllowed=[];
-    c.quality.forEach(function(g){
+    (c.quality||[]).forEach(function(g){
       var tn=nodeByMet(g.target);
       var conn=tn?S.edges.filter(function(e){return e.to===tn.id})
         .map(function(e){var n=S.nodes.find(function(x){return x.id===e.from});return n&&n.metricId})
@@ -1106,7 +1175,6 @@ init();
         r.qmsgs.push({t:'err',m:'Для «'+met(g.target).name+'» нужен один из источников: '+
           g.options.map(function(o){return met(o).name}).join(' / ')});
       }else{
-        // выбранной хватает: невыбранные варианты развилки не обязаны быть на холсте
         g.options.forEach(function(o){if(chosen.indexOf(o)<0)absentAllowed.push(o)});
         if(chosen.length===1&&chosen[0]===g.best){
           r.qmsgs.push({t:'ok',m:g.okNote||('Конфигурация оптимальна: '+met(g.best).name)});
@@ -1117,26 +1185,79 @@ init();
     });
     r.metrics=r.metrics.filter(function(m){
       return !((m.s==='not_on_canvas'||m.s==='missing')&&absentAllowed.indexOf(m.mid)>=0)});
+    /* метрика на холсте без единой связи — ошибка, а не «всё окей» */
+    r.iso=S.nodes.filter(function(n){return !S.edges.some(function(e){return e.from===n.id||e.to===n.id})})
+      .map(function(n){return n.metricId});
     var edgesOk=r.edges.every(function(e){return e.s==='ok'});
     var metricsOk=r.metrics.every(function(m){return m.s==='ok'});
     var qOk=r.qmsgs.every(function(q){return q.t!=='err'});
-    r.ok=edgesOk&&metricsOk&&qOk;
+    r.ok=edgesOk&&metricsOk&&qOk&&!r.iso.length;
     return r;
   };
+
+  function connectHint(mid){
+    var c=cas();var to=[],from=[];
+    for(var k in (c.rules||{})){
+      var rl=c.rules[k];
+      if((rl.req||[]).indexOf(mid)>=0||(rl.opt||[]).indexOf(mid)>=0)to.push(met(k).name);
+    }
+    if(c.rules&&c.rules[mid]){
+      var rl2=c.rules[mid];
+      from=(rl2.req||[]).concat(rl2.opt||[]).map(function(x){return met(x).name});
+    }
+    var parts=[];
+    if(to.length)parts.push('влияет на: '+to.join(', '));
+    if(from.length)parts.push('рассчитывается из: '+from.join(', '));
+    return parts.join(' · ')||'соедините с деревом';
+  }
 
   var _showRes=showRes;
   showRes=function(r){
     _showRes(r);
-    if(!r||!r.qmsgs||!r.qmsgs.length)return;
-    var sec=document.createElement('div');
-    sec.innerHTML='<div class="res-section-title">Качество данных конфигурации</div>';
-    r.qmsgs.forEach(function(q){
-      var d=document.createElement('div');
-      d.className='q-note '+q.t;
-      d.textContent=(q.t==='ok'?'\u2713 ':q.t==='warn'?'\u26a0 ':'\u2715 ')+q.m;
-      sec.appendChild(d);
-    });
-    resP.appendChild(sec);
+    if(!r||r.sandbox)return;
+    /* изолированные метрики */
+    if(r.iso&&r.iso.length){
+      var si=document.createElement('div');
+      si.innerHTML='<div class="res-section-title" style="color:var(--err)">Метрики без связей</div>';
+      r.iso.forEach(function(mid){
+        var d=document.createElement('div');d.className='q-note err';
+        d.textContent='\u2715 «'+met(mid).name+'» лежит на холсте, но ни с чем не связана — '+
+          'несобранные данные не работают. Подключите: '+connectHint(mid);
+        si.appendChild(d);
+      });
+      resP.appendChild(si);
+    }
+    /* качество конфигурации (развилки) */
+    if(r.qmsgs&&r.qmsgs.length){
+      var sq=document.createElement('div');
+      sq.innerHTML='<div class="res-section-title">Качество данных конфигурации</div>';
+      r.qmsgs.forEach(function(q){
+        var d=document.createElement('div');d.className='q-note '+q.t;
+        d.textContent=(q.t==='ok'?'\u2713 ':q.t==='warn'?'\u26a0 ':'\u2715 ')+q.m;
+        sq.appendChild(d);
+      });
+      resP.appendChild(sq);
+    }
+    /* экономика конфигурации */
+    var eco=ecoNow();
+    if(eco){
+      var se=document.createElement('div');
+      se.innerHTML='<div class="res-section-title">Экономика конфигурации</div>';
+      var line='TTE '+eco.tte+' дн (по опережающим) · TCO за '+H+' мес: '+eco.tco+' т₽';
+      var ideal=ecoIdeal();
+      var cls='ok',txt;
+      if(ideal&&r.ok){
+        var eff=Math.min(100,Math.round(100*eco.e/ideal.e));
+        if(eff>=100){txt='\u2713 '+line+' · эффективность 100 % — лучшая конфигурация кейса';}
+        else{cls='warn';txt='\u26a0 '+line+' · эффективность '+eff+' % от лучшей конфигурации — '+
+          'посмотрите на развилки и экономику на карточках (критерий: 1 / (TTE × TCO), кнопка i внизу)';}
+      }else{
+        cls=r.ok?'ok':'warn';txt=(r.ok?'\u2713 ':'\u26a0 ')+line;
+      }
+      var d2=document.createElement('div');d2.className='q-note '+cls;d2.textContent=txt;
+      se.appendChild(d2);
+      resP.appendChild(se);
+    }
     var closeBtn=resP.querySelector('button');
     if(closeBtn)resP.appendChild(closeBtn);
   };
