@@ -253,3 +253,105 @@ NUM_DATA = {s["id"]: i + 1 for i, s in enumerate(SOURCES_DATA)}
 def ref_data(sid):
     """Сноска для лонгрида «Роль данных» — нумерация его собственного списка."""
     return (f'<a href="#src-{sid}" class="fn">[{NUM_DATA[sid]}]</a>')
+
+
+# ── Лонгрид-справочник «Метрики и качество данных» ──────────────────────────
+# Собственная нумерация; ISO 25012 и опережающие/запаздывающие переиспользуются
+# из списка «Роль данных» — та же запись, чтобы цитата и статус не разошлись.
+
+CHECKED_METRICS = "2026-08-11"
+
+SOURCES_METRICS = [
+    dict(
+        id="cod",
+        claim="Стоимость задержки (Cost of Delay) — денежное выражение влияния времени "
+              "на результат; Райнертсен называет её главной величиной, которую стоит "
+              "квантифицировать в разработке продукта.",
+        quote="A way of communicating the impact of time on the outcomes we hope to achieve. … "
+              "If you only quantify one thing, quantify the Cost of Delay.",
+        ref="Reinertsen D. «The Principles of Product Development Flow», Celeritas, 2009; "
+            "Wikipedia, «Cost of delay»",
+        url="https://en.wikipedia.org/wiki/Cost_of_delay",
+        status="подтверждено",
+    ),
+    dict(
+        id="wsjf",
+        claim="Варианты сравниваются по стоимости задержки, делённой на длительность: "
+              "CD3 (Cost of Delay Divided by Duration), в SAFe тот же принцип называется WSJF.",
+        quote="WSJF is estimated as the relative cost of delay divided by the relative "
+              "job duration.",
+        ref="Scaled Agile Framework, «WSJF — Weighted Shortest Job First»",
+        url="https://framework.scaledagile.com/wsjf",
+        status="подтверждено",
+    ),
+    dict(
+        id="gartner-dq",
+        claim="Плохое качество данных стоит организации в среднем 12,9 млн долларов в год "
+              "(оценка Gartner).",
+        quote="Every year, poor data quality costs organizations an average $12.9 million.",
+        ref="Gartner, «How to Improve Your Data Quality», Smarter with Gartner, 14.07.2021",
+        url="https://www.gartner.com/smarterwithgartner/how-to-improve-your-data-quality",
+        status="подтверждено",
+    ),
+]
+
+SOURCES_METRICS = SOURCES_METRICS + [BY_ID_DATA["iso25012"], BY_ID_DATA["leading-lagging"]]
+
+BY_ID_METRICS = {s["id"]: s for s in SOURCES_METRICS}
+NUM_METRICS = {s["id"]: i + 1 for i, s in enumerate(SOURCES_METRICS)}
+
+
+def ref_metrics(sid):
+    """Сноска для справочника метрик — нумерация его собственного списка."""
+    return (f'<a href="#src-{sid}" class="fn">[{NUM_METRICS[sid]}]</a>')
+
+
+# ── Лонгрид «Инструменты анализа» (предчтение к Шагу 2) ─────────────────────
+
+CHECKED_TOOLS = "2026-08-11"
+
+SOURCES_TOOLS = [
+    dict(
+        id="eda",
+        claim="Разведочный анализ данных (EDA) — подход к анализу, использующий "
+              "преимущественно графические техники, чтобы максимально раскрыть "
+              "структуру набора данных до построения моделей.",
+        quote="Exploratory Data Analysis (EDA) is an approach/philosophy for data "
+              "analysis that employs a variety of techniques (mostly graphical) to "
+              "maximize insight into a data set.",
+        ref="NIST/SEMATECH e-Handbook of Statistical Methods, §1.1.1 «What is EDA?»",
+        url="https://www.itl.nist.gov/div898/handbook/eda/section1/eda11.htm",
+        status="подтверждено",
+    ),
+    dict(
+        id="histogram",
+        claim="Гистограмма — базовый инструмент: она графически сводит распределение "
+              "одномерного набора данных и показывает форму, которую среднее прячет.",
+        quote="The purpose of a histogram is to graphically summarize the distribution "
+              "of a univariate data set.",
+        ref="NIST/SEMATECH e-Handbook of Statistical Methods, §1.3.3.14 «Histogram»",
+        url="https://www.itl.nist.gov/div898/handbook/eda/section3/histogra.htm",
+        status="подтверждено",
+    ),
+    dict(
+        id="pandas",
+        claim="Pandas — открытая библиотека анализа и обработки данных для Python, "
+              "стандарт де-факто для табличных данных.",
+        quote="pandas is a fast, powerful, flexible and easy to use open source data "
+              "analysis and manipulation tool, built on top of the Python programming "
+              "language.",
+        ref="pandas.pydata.org — официальный сайт проекта",
+        url="https://pandas.pydata.org/",
+        status="подтверждено",
+    ),
+]
+
+SOURCES_TOOLS = SOURCES_TOOLS + [BY_ID["median"], BY_ID["percentile"]]
+
+BY_ID_TOOLS = {s["id"]: s for s in SOURCES_TOOLS}
+NUM_TOOLS = {s["id"]: i + 1 for i, s in enumerate(SOURCES_TOOLS)}
+
+
+def ref_tools(sid):
+    """Сноска для лонгрида «Инструменты анализа»."""
+    return (f'<a href="#src-{sid}" class="fn">[{NUM_TOOLS[sid]}]</a>')

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Инструменты анализа: Excel, BI, Python и GigaChat · Аналитика 360</title>
+<style>
+:root{
+  --acc:#20BA72; --acc-soft:rgba(32,186,114,.10); --acc-line:rgba(32,186,114,.30);
+  --bg:#ffffff; --surf:#f4f8f6; --elev:#e9f3ee; --line:rgba(46,54,65,.13);
+  --ink:#2E3641; --ink2:rgba(46,54,65,.74); --ink3:rgba(46,54,65,.48);
+  --warn:#E4572E; --warn-soft:rgba(228,87,46,.09);
+  --font:'SB Sans Text','Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'SFMono-Regular',Consolas,'Liberation Mono',monospace;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth}
+body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 22px}
+a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line)}
+a:hover{border-bottom-color:var(--acc)}
+
+header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
+  border-bottom:1px solid var(--line)}
+.eyebrow{color:var(--acc);font-weight:800;font-size:12.5px;letter-spacing:.14em;
+  text-transform:uppercase;margin-bottom:14px}
+h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 16px}
+.lead{font-size:clamp(16.5px,2vw,19px);color:var(--ink2);margin:0 0 22px}
+.meta{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;
+  font-size:13.5px;color:var(--ink2)}
+.chip b{color:var(--ink)}
+
+section{padding:44px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-size:clamp(22px,3vw,30px);font-weight:800;margin:0 0 8px;line-height:1.18}
+h2 .num{color:var(--acc);margin-right:.4em;font-variant-numeric:tabular-nums}
+h3{font-size:19px;font-weight:800;margin:30px 0 10px}
+h4{font-size:16px;font-weight:800;margin:22px 0 8px;color:var(--ink2)}
+p{margin:0 0 15px}
+ul,ol{margin:0 0 15px;padding-left:22px}
+li{margin-bottom:7px}
+.sub{color:var(--ink3);margin:0 0 22px;font-size:15.5px}
+
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:20px 22px;margin:0 0 18px}
+.card.acc{background:var(--acc-soft);border-color:var(--acc-line)}
+.card.warn{background:var(--warn-soft);border-color:rgba(228,87,46,.28)}
+.card h4{margin-top:0}
+.card p:last-child,.card ul:last-child,.card ol:last-child{margin-bottom:0}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0 0 15px;font-size:15.5px}
+.kv dt{color:var(--ink3)}
+.kv dd{margin:0;font-weight:600}
+
+table{border-collapse:collapse;width:100%;font-size:15px;margin:0 0 15px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{font-weight:800;color:var(--ink2);font-size:13.5px;text-transform:uppercase;
+  letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 15px}
+.scroll table{margin:0}
+
+pre{background:#20262e;color:#e7edf3;border-radius:12px;padding:16px 18px;overflow-x:auto;
+  font-family:var(--mono);font-size:13.5px;line-height:1.55;margin:0 0 15px}
+code{font-family:var(--mono);font-size:.9em;background:var(--elev);padding:2px 6px;
+  border-radius:5px}
+pre code{background:none;padding:0;font-size:1em}
+
+.prompt{position:relative;background:#20262e;color:#e7edf3;border-radius:12px;
+  padding:16px 18px;margin:0 0 14px}
+/* Промпт должен быть виден целиком: участник его читает, а не только копирует.
+   pre-wrap переносит длинные строки, но сохраняет переводы строк — innerText
+   в кнопке копирования отдаёт ровно исходный текст. */
+.prompt pre{margin:0;padding:0;background:none;max-height:none;
+  white-space:pre-wrap;overflow-wrap:anywhere}
+.prompt{padding-top:46px}
+.copy{position:absolute;top:10px;right:10px;background:var(--acc);color:#fff;border:0;
+  border-radius:8px;padding:7px 13px;font:600 13px var(--font);cursor:pointer}
+.copy:hover{filter:brightness(1.08)}
+.copy.done{background:#0f7a46}
+
+figure{margin:0 0 18px}
+figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;
+  border-radius:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;
+  display:flex;align-items:center;justify-content:center}
+
+/* Раскрывающийся блок: три вспомогательных промпта не должны спорить за внимание
+   с главным, но и прятать их насовсем нельзя — по ним разбирают проверку. */
+details.more{border:1px solid var(--line);border-radius:14px;padding:0 22px;
+  margin:0 0 18px;background:var(--surf)}
+details.more>summary{cursor:pointer;font-weight:800;padding:16px 0;list-style:none;
+  color:var(--ink2)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸";color:var(--acc);margin-right:8px}
+details.more[open]>summary::before{content:"▾"}
+details.more[open]{padding-bottom:14px}
+details.more>summary:hover{color:var(--ink)}
+
+.toc{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+  margin:0 0 8px}
+.toc ol{margin:0;padding-left:20px}
+.toc a{border:0}
+.toc a:hover{border-bottom:1px solid var(--acc)}
+
+footer{padding:36px 0 60px;color:var(--ink3);font-size:14.5px}
+/* Сноска на источник: верхний индекс, чтобы номер не читался как часть текста */
+a.fn{border:0;font-size:.72em;vertical-align:super;font-weight:700;padding-left:2px}
+a.fn:hover{border:0;text-decoration:underline}
+.tag{display:inline-block;background:var(--elev);border-radius:6px;padding:1px 8px;
+  font-size:13px;color:var(--ink2);font-weight:600}
+@media(max-width:600px){
+  body{font-size:16px}
+  .kv{grid-template-columns:1fr}
+}
+</style>
+</head><body>
+
+<header><div class="wrap">
+  <div class="eyebrow">Аналитика 360 · предчтение к Шагу 2</div>
+  <h1>Инструменты анализа: Excel, BI, Python и GigaChat</h1>
+  <p class="lead">Это текст к Шагу 2 (20 августа, 09:15). На встрече — три
+     кейса: продуктовые метрики в Excel с ИИ, управленческий дашборд по
+     процессным метрикам и разбор отклонений на дашборде. Текст даёт рамку:
+     какой инструмент под какую задачу, что в каждом из них делает GigaChat
+     и какой минимум статистики нужен, чтобы читать графики, а не верить им.</p>
+  <div class="meta">
+    <span class="chip">Чтение <b>12 минут</b></span>
+    <span class="chip">Шаг <b>2</b></span>
+    <span class="chip">Писать код <b>не понадобится</b></span>
+  </div>
+</div></header>
+
+<section><div class="wrap">
+<div class="toc">
+<b>В этом тексте</b>
+<ol>
+  <li><a href="#t1">Рамка: какой инструмент под какую задачу</a></li>
+  <li><a href="#t2">GigaChat: что он ускоряет и где его границы</a></li>
+  <li><a href="#t3">Excel + ИИ: где заканчиваются возможности таблицы</a></li>
+  <li><a href="#t4">SQL: язык вопросов к данным</a></li>
+  <li><a href="#t5">Python и Pandas: когда таблице тесно</a></li>
+  <li><a href="#t6">Разведочный анализ: семь шагов до вывода</a></li>
+  <li><a href="#t7">Минимум статистики: гистограмма, медиана, перцентиль</a></li>
+  <li><a href="#t8">Какой график под какой вопрос</a></li>
+  <li><a href="#todo">Что сделать до встречи</a></li>
+  <li><a href="#src">Источники</a></li>
+</ol>
+</div>
+</div></section>
+
+<section id="t1"><div class="wrap">
+<h2><span class="num">1</span>Рамка: какой инструмент под какую задачу</h2>
+<p>Инструмент выбирается под задачу и под данные — не наоборот. Рабочая рамка
+курса:</p>
+<div class="scroll"><table>
+<tr><th>Задача</th><th>Инструмент</th><th>Когда его хватает</th><th>Когда уже нет</th></tr>
+<tr><td>Разовый разбор выгрузки до ~100 тыс. строк</td>
+    <td><b>Excel</b> (+ GigaChat пишет формулы)</td>
+    <td>посмотреть, почистить, свести, решить один раз</td>
+    <td>данные обновляются регулярно, а разбор повторяется руками</td></tr>
+<tr><td>Регулярный мониторинг одних и тех же метрик</td>
+    <td><b>BI-дашборд</b> (Навигатор; в учёбе — Metabase)</td>
+    <td>одно окно правды, обновляется само, видно отклонения</td>
+    <td>нужен нестандартный расчёт или разовая гипотеза</td></tr>
+<tr><td>Большие объёмы, повторяемые расчёты, модели</td>
+    <td><b>Python</b> (код пишет GigaChat)</td>
+    <td>миллионы строк, кластеризация, воспроизводимость</td>
+    <td>для еженедельного взгляда на пять цифр он избыточен</td></tr>
+</table></div>
+<p>GigaChat — не четвёртая строка таблицы, а ускоритель во всех трёх:
+формулы для Excel, запросы к BI, код для Python. Правило курса: анализ
+данных — это анализ данных с помощью ИИ.</p>
+</div></section>
+
+<section id="t2"><div class="wrap">
+<h2><span class="num">2</span>GigaChat: что он ускоряет и где его границы</h2>
+<p><b>Ускоряет:</b> структурирование (список источников, план очистки),
+генерацию формул и кода, черновики отчётов, вопросы, которые стоит задать
+владельцу данных. Написать запрос ассистенту и запрос аналитику стоит
+одинакового времени — ассистент отвечает быстрее и дешевле.</p>
+<p><b>Границы:</b> он не знает вашего ландшафта и уверенно называет системы,
+которых у вас нет; он не видит ваших данных, пока вы их не показали; его
+арифметике на больших таблицах доверять нельзя — считать должны Excel, BI
+или Python, а он пишет то, чем считают.</p>
+<div class="card warn">
+<p><b>Правило данных.</b> В публичный GigaChat не отправляем закрытые данные
+банка, персональные данные и внутренние наименования систем. Для учебных
+кейсов это и не нужно: работаем на синтетических выгрузках и названиях
+метрик.</p>
+</div>
+</div></section>
+
+<section id="t3"><div class="wrap">
+<h2><span class="num">3</span>Excel + ИИ: где заканчиваются возможности таблицы</h2>
+<p>Маршрут кейса «Продукт» на встрече: выгрузка → очистка → агрегация →
+вывод. GigaChat в нём пишет формулы по описанию задачи («выдели месяц из
+даты», «сведи по сегментам», «найди дубли по клиенту и продукту») — участник
+проверяет и применяет. Это быстрее, чем вспоминать синтаксис, и надёжнее,
+чем делать руками.</p>
+<p>Excel заканчивается не на объёме, а на повторяемости: если один и тот же
+разбор делается второй месяц подряд — это уже не разбор, а процесс, и ему
+место в BI или в скрипте.</p>
+</div></section>
+
+<section id="t4"><div class="wrap">
+<h2><span class="num">4</span>SQL: язык вопросов к данным</h2>
+<p>SQL — язык, на котором задают вопросы витринам: «сколько выдач по каналу
+за неделю», «какие заявки без адреса». Руководителю не нужно писать SQL —
+нужно понимать две вещи. Первая: каждый SQL-запрос — это зафиксированное
+определение метрики; спор о цифрах часто решается сравнением двух запросов.
+Вторая: агент пишет SQL по словесному описанию — «покажи запрос, которым
+считается активация» становится нормальной репликой руководителя.</p>
+</div></section>
+
+<section id="t5"><div class="wrap">
+<h2><span class="num">5</span>Python и Pandas: когда таблице тесно</h2>
+<p>Python подключается, когда данных много, расчёт повторяется или нужна
+модель. Рабочая лошадка — Pandas, открытая библиотека анализа и обработки
+табличных данных<a href="#src-pandas" class="fn">[3]</a>. Сценарий курса: код пишет GigaChat,
+участник переносит его в окружение и запускает — на Шаге 3 так собирается
+кластеризация клиентов с 3D-визуализацией, которую в Excel не увидеть.</p>
+<p>Порог входа сегодня — не «уметь программировать», а «уметь проверить
+результат»: те же вопросы качества данных, что и в Excel, только объём больше.</p>
+</div></section>
+
+<section id="t6"><div class="wrap">
+<h2><span class="num">6</span>Разведочный анализ: семь шагов до вывода</h2>
+<p>Разведочный анализ данных (EDA) — подход, который через простые, в основном
+графические техники раскрывает структуру данных до всяких моделей<a href="#src-eda" class="fn">[1]</a>.
+Курсовая последовательность из семи шагов — она же промпт для GigaChat:</p>
+<ol class="steps">
+  <li><b>Паспорт выгрузки:</b> сколько строк, какие колонки, какой период.</li>
+  <li><b>Типы:</b> числа читаются как числа, даты как даты.</li>
+  <li><b>Пропуски и дубли:</b> доля по ключевым полям; правило дедупликации.</li>
+  <li><b>Распределения:</b> гистограмма по каждой ключевой величине.</li>
+  <li><b>Срезы и связи:</b> сводные по сегментам, диаграммы рассеяния.</li>
+  <li><b>Аномалии:</b> выбросы, разрывы ряда, подозрительные скачки.</li>
+  <li><b>Выводы и вопросы:</b> что проверить у владельца данных, какое
+      действие следует из увиденного.</li>
+</ol>
+<p>Первые три шага — это и есть быстрая оценка качества данных: десять минут
+профилирования до любого вывода экономят недели споров после него.</p>
+</div></section>
+
+<section id="t7"><div class="wrap">
+<h2><span class="num">7</span>Минимум статистики: гистограмма, медиана, перцентиль</h2>
+<p><b>Гистограмма</b> графически сводит распределение одной величины
+<a href="#src-histogram" class="fn">[2]</a> — и показывает форму, которую среднее прячет: два
+горба вместо одного означают два разных процесса под одним показателем.</p>
+<p><b>Медиана</b> устойчива к выбросам: среднее сдвигается редкими
+экстремальными значениями, медиана — нет<a href="#src-median" class="fn">[4]</a>. Рядом с любым
+средним запрашивайте медиану.</p>
+<p><b>Перцентиль</b> отвечает за хвост: норматив на срок процесса задаётся
+по 90-му перцентилю, а не по среднему — в хвосте и живёт клиентский опыт
+<a href="#src-percentile" class="fn">[5]</a>.</p>
+</div></section>
+
+<section id="t8"><div class="wrap">
+<h2><span class="num">8</span>Какой график под какой вопрос</h2>
+<div class="scroll"><table>
+<tr><th>Вопрос</th><th>График</th><th>Типовая ошибка</th></tr>
+<tr><td>Как меняется во времени?</td><td>линия</td>
+    <td>ось Y обрезана — рост на 2 % выглядит взлётом</td></tr>
+<tr><td>Кто больше / меньше?</td><td>столбцы, отсортированные</td>
+    <td>сортировка по алфавиту вместо величины</td></tr>
+<tr><td>Как распределено?</td><td>гистограмма, box-plot</td>
+    <td>показано только среднее — форма скрыта</td></tr>
+<tr><td>Связаны ли две величины?</td><td>диаграмма рассеяния</td>
+    <td>связь принята за причину без проверки</td></tr>
+<tr><td>Из чего состоит целое?</td><td>стековые столбцы</td>
+    <td>круговая диаграмма на 12 сегментов — не читается</td></tr>
+</table></div>
+<p>Просить график у GigaChat нормально; проверять, что выбран график под
+вопрос, а не под красоту, — обязанность того, кто принимает решение.</p>
+</div></section>
+
+<section id="todo"><div class="wrap">
+<h2>Что сделать до встречи</h2>
+<ol class="steps">
+  <li><b>Принесите карту источников (A1).</b> Шаг 2 начинается с разбора
+      двух-трёх принесённых карт, и на неё ляжет выбор инструмента:
+      показатель → Excel / BI / Python.</li>
+  <li><b>Выберите один показатель из своей карты,</b> по которому вы сейчас
+      смотрите в отчёт чаще всего, — на встрече примерите на него рамку
+      инструментов.</li>
+  <li><b>Откройте GigaChat</b> и попросите его написать формулу Excel для
+      любой своей задачи — три минуты, которые снимут барьер до кейсов.</li>
+</ol>
+</div></section>
+
+<section id="src"><div class="wrap">
+<h2>Источники</h2>
+<p class="sub">Методические утверждения проверены по источникам. Рамка
+инструментов и сценарии кейсов — авторские, из программы курса; материалы
+опираются на курс «Принятие решений на основе данных» (Карпов Курсы) и книгу
+Я. Шуваева «Менеджмент цифрового продукта» без прямого цитирования.</p>
+<ol>
+<li id="src-eda"><b>NIST/SEMATECH e-Handbook of Statistical Methods, §1.1.1 «What is EDA?»</b><br><a href="https://www.itl.nist.gov/div898/handbook/eda/section1/eda11.htm" target="_blank" rel="noopener">https://www.itl.nist.gov/div898/handbook/eda/section1/eda11.htm</a></li><li id="src-histogram"><b>NIST/SEMATECH e-Handbook of Statistical Methods, §1.3.3.14 «Histogram»</b><br><a href="https://www.itl.nist.gov/div898/handbook/eda/section3/histogra.htm" target="_blank" rel="noopener">https://www.itl.nist.gov/div898/handbook/eda/section3/histogra.htm</a></li><li id="src-pandas"><b>pandas.pydata.org — официальный сайт проекта</b><br><a href="https://pandas.pydata.org/" target="_blank" rel="noopener">https://pandas.pydata.org/</a></li><li id="src-median"><b>NIST/SEMATECH e-Handbook of Statistical Methods, §1.3.5.1 «Measures of Location»</b><br><a href="https://www.itl.nist.gov/div898/handbook/eda/section3/eda351.htm" target="_blank" rel="noopener">https://www.itl.nist.gov/div898/handbook/eda/section3/eda351.htm</a></li><li id="src-percentile"><b>Beyer B., Jones C., Petoff J., Murphy N. R. «Site Reliability Engineering», O’Reilly / Google, 2016, гл. 4 «Service Level Objectives»</b><br><a href="https://sre.google/sre-book/service-level-objectives/" target="_blank" rel="noopener">https://sre.google/sre-book/service-level-objectives/</a></li>
+</ol>
+</div></section>
+
+<footer><div class="wrap">
+  Аналитика 360 · практическая часть, Шаги 1–4 · Карпов Курсы для Сбера.<br>
+  Все данные в примерах синтетические, сгенерированы для обучения.
+</div></footer>
+
+<script>
+// Кнопка «скопировать промпт»: сначала пробуем Clipboard API, при отказе —
+// старый execCommand. В LMS страница часто открыта в iframe без разрешения
+// на буфер обмена, и без запасного пути кнопка молча ничего не делает.
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.copy'); if(!b) return;
+  var t=b.parentNode.querySelector('pre').innerText;
+  function done(){b.textContent='Скопировано';b.classList.add('done');
+    setTimeout(function(){b.textContent='Копировать';b.classList.remove('done')},1800);}
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(done,fallback);
+  } else { fallback(); }
+  function fallback(){
+    var a=document.createElement('textarea');a.value=t;a.style.position='fixed';
+    a.style.opacity=0;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');done();}catch(_e){b.textContent='Выделите вручную';}
+    document.body.removeChild(a);
+  }
+});
+</script>
+</body></html>

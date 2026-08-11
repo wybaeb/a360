@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Метрики и качество данных · справочник · Аналитика 360</title>
+<style>
+:root{
+  --acc:#20BA72; --acc-soft:rgba(32,186,114,.10); --acc-line:rgba(32,186,114,.30);
+  --bg:#ffffff; --surf:#f4f8f6; --elev:#e9f3ee; --line:rgba(46,54,65,.13);
+  --ink:#2E3641; --ink2:rgba(46,54,65,.74); --ink3:rgba(46,54,65,.48);
+  --warn:#E4572E; --warn-soft:rgba(228,87,46,.09);
+  --font:'SB Sans Text','Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'SFMono-Regular',Consolas,'Liberation Mono',monospace;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth}
+body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 22px}
+a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line)}
+a:hover{border-bottom-color:var(--acc)}
+
+header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
+  border-bottom:1px solid var(--line)}
+.eyebrow{color:var(--acc);font-weight:800;font-size:12.5px;letter-spacing:.14em;
+  text-transform:uppercase;margin-bottom:14px}
+h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 16px}
+.lead{font-size:clamp(16.5px,2vw,19px);color:var(--ink2);margin:0 0 22px}
+.meta{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;
+  font-size:13.5px;color:var(--ink2)}
+.chip b{color:var(--ink)}
+
+section{padding:44px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-size:clamp(22px,3vw,30px);font-weight:800;margin:0 0 8px;line-height:1.18}
+h2 .num{color:var(--acc);margin-right:.4em;font-variant-numeric:tabular-nums}
+h3{font-size:19px;font-weight:800;margin:30px 0 10px}
+h4{font-size:16px;font-weight:800;margin:22px 0 8px;color:var(--ink2)}
+p{margin:0 0 15px}
+ul,ol{margin:0 0 15px;padding-left:22px}
+li{margin-bottom:7px}
+.sub{color:var(--ink3);margin:0 0 22px;font-size:15.5px}
+
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:20px 22px;margin:0 0 18px}
+.card.acc{background:var(--acc-soft);border-color:var(--acc-line)}
+.card.warn{background:var(--warn-soft);border-color:rgba(228,87,46,.28)}
+.card h4{margin-top:0}
+.card p:last-child,.card ul:last-child,.card ol:last-child{margin-bottom:0}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0 0 15px;font-size:15.5px}
+.kv dt{color:var(--ink3)}
+.kv dd{margin:0;font-weight:600}
+
+table{border-collapse:collapse;width:100%;font-size:15px;margin:0 0 15px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{font-weight:800;color:var(--ink2);font-size:13.5px;text-transform:uppercase;
+  letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 15px}
+.scroll table{margin:0}
+
+pre{background:#20262e;color:#e7edf3;border-radius:12px;padding:16px 18px;overflow-x:auto;
+  font-family:var(--mono);font-size:13.5px;line-height:1.55;margin:0 0 15px}
+code{font-family:var(--mono);font-size:.9em;background:var(--elev);padding:2px 6px;
+  border-radius:5px}
+pre code{background:none;padding:0;font-size:1em}
+
+.prompt{position:relative;background:#20262e;color:#e7edf3;border-radius:12px;
+  padding:16px 18px;margin:0 0 14px}
+/* Промпт должен быть виден целиком: участник его читает, а не только копирует.
+   pre-wrap переносит длинные строки, но сохраняет переводы строк — innerText
+   в кнопке копирования отдаёт ровно исходный текст. */
+.prompt pre{margin:0;padding:0;background:none;max-height:none;
+  white-space:pre-wrap;overflow-wrap:anywhere}
+.prompt{padding-top:46px}
+.copy{position:absolute;top:10px;right:10px;background:var(--acc);color:#fff;border:0;
+  border-radius:8px;padding:7px 13px;font:600 13px var(--font);cursor:pointer}
+.copy:hover{filter:brightness(1.08)}
+.copy.done{background:#0f7a46}
+
+figure{margin:0 0 18px}
+figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;
+  border-radius:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;
+  display:flex;align-items:center;justify-content:center}
+
+/* Раскрывающийся блок: три вспомогательных промпта не должны спорить за внимание
+   с главным, но и прятать их насовсем нельзя — по ним разбирают проверку. */
+details.more{border:1px solid var(--line);border-radius:14px;padding:0 22px;
+  margin:0 0 18px;background:var(--surf)}
+details.more>summary{cursor:pointer;font-weight:800;padding:16px 0;list-style:none;
+  color:var(--ink2)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸";color:var(--acc);margin-right:8px}
+details.more[open]>summary::before{content:"▾"}
+details.more[open]{padding-bottom:14px}
+details.more>summary:hover{color:var(--ink)}
+
+.toc{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+  margin:0 0 8px}
+.toc ol{margin:0;padding-left:20px}
+.toc a{border:0}
+.toc a:hover{border-bottom:1px solid var(--acc)}
+
+footer{padding:36px 0 60px;color:var(--ink3);font-size:14.5px}
+/* Сноска на источник: верхний индекс, чтобы номер не читался как часть текста */
+a.fn{border:0;font-size:.72em;vertical-align:super;font-weight:700;padding-left:2px}
+a.fn:hover{border:0;text-decoration:underline}
+.tag{display:inline-block;background:var(--elev);border-radius:6px;padding:1px 8px;
+  font-size:13px;color:var(--ink2);font-weight:600}
+@media(max-width:600px){
+  body{font-size:16px}
+  .kv{grid-template-columns:1fr}
+}
+</style>
+</head><body>
+
+<header><div class="wrap">
+  <div class="eyebrow">Аналитика 360 · справочник курса</div>
+  <h1>Метрики и качество данных</h1>
+  <p class="lead">Справочная страница: сюда ведут кнопки «?» из тренажёров.
+     Все метрики конструктора с определениями, дерево метрик и ансамбль,
+     пять типовых дефектов данных, правила эксперимента и накопления
+     и экономика данных — во что обходится цифра и как сравнивать
+     конфигурации.</p>
+  <div class="meta">
+    <span class="chip">Чтение подряд <b>14 минут</b></span>
+    <span class="chip">Метрик в справочнике <b>41</b></span>
+    <span class="chip">Формул для запоминания <b>одна</b></span>
+  </div>
+</div></header>
+
+<section><div class="wrap">
+<div class="toc">
+<b>На этой странице</b>
+<ol>
+  <li><a href="#card">Как читать карточку метрики</a></li>
+  <li><a href="#tree">Дерево метрик и ансамбль</a></li>
+  <li><a href="#eco">Экономика данных: во что обходится цифра</a></li>
+  <li><a href="#quality">Качество данных: измерения и пять дефектов</a></li>
+  <li><a href="#experiment">Эксперимент и накопление данных</a></li>
+  <li><a href="#guide">Справочник метрик конструктора</a></li>
+  <li><a href="#src">Источники</a></li>
+</ol>
+</div>
+</div></section>
+
+<section id="card"><div class="wrap">
+<h2><span class="num">1</span>Как читать карточку метрики</h2>
+<p>У каждой метрики в тренажёрах и в этом справочнике два паспорта.</p>
+<p><b>Роль в дереве.</b> <span style="color:#20BA72"><b>Опережающая</b></span> —
+собирается из первички и меняется раньше результата: по ней управляют.
+<span style="color:#2E6BB8"><b>Расчётная</b></span> — вычисляется из других
+метрик; наследует их скорость и их проблемы.
+<span style="color:#D9822B"><b>Запаздывающая</b></span> — итоговая: констатирует
+результат, когда влиять уже поздно<a href="#src-leading-lagging" class="fn">[5]</a>.</p>
+<p><b>Экономика сбора.</b> Три числа на жёлтом бейдже:</p>
+<div class="scroll"><table>
+<tr><th>Параметр</th><th>Что это</th><th>Типовой пример</th></tr>
+<tr><td><b>CAPEX</b>, т₽</td>
+    <td>Единоразовые затраты, чтобы данные вообще появились: доработка договора,
+        ключи связи, витрина, кодификатор</td>
+    <td>регулярная выгрузка курьерской службы — доработка договора и обмена</td></tr>
+<tr><td><b>OPEX</b>, т₽/мес</td>
+    <td>Периодические затраты на сбор и обработку: контроль полноты, ручной
+        разбор, сверки</td>
+    <td>ручная выборка досье — труд команды каждый месяц</td></tr>
+<tr><td><b>TTE</b>, дни</td>
+    <td>Time-to-evidence: сколько ждать, пока значению метрики можно верить —
+        сбор, накопление, стабилизация</td>
+    <td>отток за 90 дней не узнать быстрее, чем за 90 дней</td></tr>
+</table></div>
+<p>Числа в кейсах учебные: порядок величин типовой, но в вашем подразделении
+паспорт каждой метрики надо заполнить своими значениями — это часть работы
+с картой источников.</p>
+</div></section>
+
+<section id="tree"><div class="wrap">
+<h2><span class="num">2</span>Дерево метрик и ансамбль</h2>
+<p>Метрики подразделения — не список, а дерево: опережающие сигналы собираются
+в расчётные уровни и поднимаются до финансового итога. Связи в дереве двух видов:
+<b>«определяет»</b> — вход входит в формулу (выдачи = заявки × одобрение), и
+<b>«предсказывает»</b> — метрика надёжно предвещает другую, не участвуя в расчёте
+(ошибки оформления предсказывают отток)<a href="#src-leading-lagging" class="fn">[5]</a>.</p>
+<div class="card">
+<h4>Ансамбль: время решения считается по всей композиции</h4>
+<p>Время до доверяемого решения — свойство не отдельной метрики, а всего
+ансамбля. Расчётный уровень готов не раньше самого медленного из своих входов,
+а некоторые сочленения добавляют собственное время: накопительную сверку,
+стабилизацию, сезонный цикл. Отсюда главный подвох конфигураций:
+<b>быстрая метрика на первом уровне не гарантирует быстрого решения</b> —
+флаг, доступный онлайн, может требовать месяцев сверок на следующем уровне.
+Тренажёр «Дерево метрик» считает TTE ансамбля по критическому пути built-дерева
+и показывает его в живом замере.</p>
+</div>
+<p>Правило выбора метрики для управления то же, что на встрече: план ставится
+по запаздывающим, управление идёт по опережающим — и опережающая метрика
+обязана быть дешёвой и быстрой в сборе, иначе управлять ею не получится.</p>
+</div></section>
+
+<section id="eco"><div class="wrap">
+<h2><span class="num">3</span>Экономика данных: во что обходится цифра</h2>
+<p>У задержки решения есть денежная цена. Этот принцип называется
+<b>Cost of Delay</b>: стоимость задержки — способ выразить влияние времени на
+результат, и Райнертсен называет её главной величиной, которую стоит посчитать
+в продуктовой работе<a href="#src-cod" class="fn">[1]</a>. Каждая неделя, пока показатель
+недоверяем, — это неделя, когда решение не принимается или принимается вслепую.</p>
+<p>Сравнивать варианты принято по <b>стоимости задержки, делённой на
+длительность</b> — CD3 (Cost of Delay Divided by Duration); в SAFe тот же
+принцип называется WSJF<a href="#src-wsjf" class="fn">[2]</a>. Чем быстрее и дешевле вариант
+доводит до доверяемого результата, тем он выгоднее.</p>
+<div class="card acc">
+<h4>Критерий курса — одна формула</h4>
+<p>В кейсах ценность решения фиксирована, поэтому сравнение конфигураций
+сводится к знаменателю CD3:</p>
+<p style="font-size:17px"><b>E = 1 / (TTE × TCO)</b> — «скорость доверяемого
+решения на рубль», где <b>TTE</b> — время ансамбля по критическому пути дерева,
+<b>TCO</b> — стоимость конфигурации за горизонт пилота
+(ΣCAPEX + месяцы × ΣOPEX). Эффективность в тренажёре — отношение E вашей
+конфигурации к E лучшей конфигурации кейса.</p>
+</div>
+<p>Актуальность данных — не удобство, а измеряемая характеристика качества:
+в модели ISO/IEC 25012 она входит в число ключевых характеристик наравне с
+точностью и полнотой<a href="#src-iso25012" class="fn">[4]</a>. А цена некачественных данных
+вполне материальна: по оценке Gartner организация теряет на них в среднем
+12,9 млн долларов в год<a href="#src-gartner-dq" class="fn">[3]</a>.</p>
+</div></section>
+
+<section id="quality"><div class="wrap">
+<h2><span class="num">4</span>Качество данных: измерения и пять дефектов</h2>
+<p>Управленческое понятие качества данных шире «грязных данных». Стандарт
+ISO/IEC 25012 описывает пятнадцать характеристик<a href="#src-iso25012" class="fn">[4]</a>;
+для руководителя критичны четыре измерения — те же, что на слайде Шага 1:</p>
+<div class="scroll"><table>
+<tr><th>Измерение</th><th>Вопрос руководителя</th></tr>
+<tr><td><b>Чистота и согласованность</b></td>
+    <td>Одинаково ли называется одно и то же во всех системах, нет ли дублей
+        и пропусков?</td></tr>
+<tr><td><b>Актуальность</b></td>
+    <td>Успевают ли данные за частотой решения? Данные раз в месяц не поддержат
+        еженедельное решение</td></tr>
+<tr><td><b>Прослеживаемость</b></td>
+    <td>Можно ли довести цифру до первички? Цифра без источника — не факт,
+        а мнение</td></tr>
+<tr><td><b>Доступность и цена сбора</b></td>
+    <td>Сколько стоит и сколько длится сбор? Метрика, требующая переделки
+        ландшафта, не поможет решению этого квартала</td></tr>
+</table></div>
+
+<h3 id="defects" style="margin-top:26px">Пять типовых дефектов данных</h3>
+<p>Пять дефектов, из-за которых правильная арифметика даёт неверную цифру.
+На встрече каждый показан отдельным слайдом; здесь — что это и что делать.</p>
+<div class="card">
+<h4>1 · Пропуски</h4>
+<p>Поле не заполнено: без адреса не считается срок доставки, без отметки
+времени — длительность этапа. Доля пропусков по ключевым полям — первое, что
+запрашивается у владельца выгрузки; пропуски не «лечатся средним» в
+управленческой отчётности — они честно исключаются с указанием доли.</p>
+</div>
+<div class="card">
+<h4>2 · Дубликаты</h4>
+<p>Один объект — несколько записей: заявка из двух каналов, клиент с двумя
+карточками. Сумма и конверсия искажаются молча. Лечится правилом дедупликации
+по ключу (клиент + продукт + период) до всякой аналитики.</p>
+</div>
+<div class="card">
+<h4>3 · Неправильные типы</h4>
+<p>Число стало текстом («12,4» с запятой, дата в трёх форматах) — сортировки
+и суммы работают, но врут. Ловится профилированием колонок; чинится один раз
+на входе, а не в каждом отчёте заново.</p>
+</div>
+<div class="card">
+<h4>4 · Выбросы</h4>
+<p>Одна аномальная запись двигает среднее: сбой на четыре дня превращается в
+«процесс замедлился на 74 %». Правило встречи: выброс — это вопрос
+«ошибка или инсайт», и отвечает на него руководитель, знающий контекст,
+а не формула. Медиана и 90-й перцентиль рядом с любым средним.</p>
+</div>
+<div class="card">
+<h4>5 · Справочники</h4>
+<p>«Москва / москва / МСК» — три разных региона для системы. Любая группировка
+по такому полю делит показатель на части. Лечится одним справочником с
+владельцем; ИИ ускоряет: по описанию выгрузки GigaChat предлагает план
+нормализации.</p>
+</div>
+</div></section>
+
+<section id="experiment"><div class="wrap">
+<h2><span class="num">5</span>Эксперимент и накопление данных</h2>
+<p>Три правила, которые оберегают решение от ложных цифр — без формул,
+на уровне ориентиров.</p>
+<div class="card">
+<h4>Объём: наблюдений должно хватать</h4>
+<p>Малые числа скачут: на базе из двадцати событий «рост на 30 %» — это шесть
+случаев против четырёх с половиной. Прежде чем сравнивать доли, спросите про
+абсолютную базу; сравнение процентов без базы не значит ничего. Ориентир
+встречи: наблюдение не закрывают раньше, чем набран целевой объём.</p>
+</div>
+<div class="card">
+<h4>Срок: горизонт должен пройти</h4>
+<p>Накопительные метрики не ускоряются деньгами: отток за 90 дней требует
+90 дней, полный сезонный цикл — года. Эксперимент, закрытый до горизонта,
+меряет нетерпение, а не эффект. Поэтому длительность наблюдения — часть
+паспорта метрики (TTE), и ансамбль решения не быстрее самой медленной из
+задействованных метрик.</p>
+</div>
+<div class="card">
+<h4>Выборка: она должна повторять целое</h4>
+<p>Выборка обязана повторять структуру генеральной совокупности. Опрос
+«дошедших до конца обслуживания» систематически завышает лояльность:
+недовольные до опроса не доходят. Проверка одна: сравнить состав выборки
+с составом всей аудитории по ключевым срезам до того, как смотреть на
+результат.</p>
+</div>
+<p>Контргипотеза — часть плана эксперимента: заранее сформулированное условие,
+при котором пилот останавливается, даже если целевая метрика выглядит хорошо
+(например, несколько случаев фрода). Отслеживается не только целевая метрика,
+но и риск-сигналы.</p>
+</div></section>
+
+<section id="guide"><div class="wrap">
+<h2><span class="num">6</span>Справочник метрик конструктора</h2>
+<p>Все метрики тренажёра «Дерево метрик» — по кейсам. Кнопка «?» на карточке
+метрики в тренажёре ведёт сюда, на её описание.</p>
+<h3 style="margin:26px 0 10px">Розница: кредитная карта (кейс 1 и дерево со слайда Шага 1)</h3><div class="card" id="m-app"><h4>Заявки на карту <span class="sub" style="font-weight:400">· шт./нед. · CRM</span> <span style="font-size:12px;color:#20BA72;border:1px solid #20BA72;border-radius:10px;padding:1px 8px;vertical-align:middle">опережающая</span></h4><p>Верх воронки продукта: сколько клиентов вообще пришло за картой. Метрика управляемая — на неё влияют каналы и коммуникация, и быстрая: CRM отдаёт её онлайн. Типовая ловушка — дубли заявок из разных каналов: без дедупликации воронка выглядит больше, чем есть.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 20 т₽ · OPEX 5 т₽/мес · time-to-evidence ~7 дн</p></div><div class="card" id="m-appr"><h4>Одобрение <span class="sub" style="font-weight:400">· % заявок · скоринг</span> <span style="font-size:12px;color:#20BA72;border:1px solid #20BA72;border-radius:10px;padding:1px 8px;vertical-align:middle">опережающая</span></h4><p>Доля заявок, которым банк готов выдать карту. Вместе с потоком заявок определяет выдачи расчётом, а не корреляцией. Резкое движение одобрения — почти всегда изменение правил скоринга или качества входящего потока, а не «рынок».</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 20 т₽ · OPEX 5 т₽/мес · time-to-evidence ~7 дн</p></div><div class="card" id="m-tat"><h4>Срок доставки <span class="sub" style="font-weight:400">· дн. · подрядчик</span> <span style="font-size:12px;color:#20BA72;border:1px solid #20BA72;border-radius:10px;padding:1px 8px;vertical-align:middle">опережающая</span></h4><p>Время, которое карта едет к клиенту. Сильнейший опережающий сигнал активации: чем дольше доставка, тем холоднее клиент. Данные живут у внешнего подрядчика — без регулярной выгрузки по договору метрика существует «по запросу» и решения по ней опаздывают на недели.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 120 т₽ · OPEX 40 т₽/мес · time-to-evidence ~21 дн</p></div><div class="card" id="m-err"><h4>Ошибки в заявке <span class="sub" style="font-weight:400">· % заявок</span> <span style="font-size:12px;color:#20BA72;border:1px solid #20BA72;border-radius:10px;padding:1px 8px;vertical-align:middle">опережающая</span></h4><p>Доля заявок, оформленных с ошибками (адрес, телефон, скан документа). Связь с активацией и оттоком — «предсказывает», а не «определяет»: ошибка не входит в формулу, но надёжно предвещает проблему. Чтобы метрика работала, нужен кодификатор причин, а не свободный текст.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 80 т₽ · OPEX 20 т₽/мес · time-to-evidence ~14 дн</p></div><div class="card" id="m-iss"><h4>Выдачи <span class="sub" style="font-weight:400">· шт./нед. · АБС</span> <span style="font-size:12px;color:#2E6BB8;border:1px solid #2E6BB8;border-radius:10px;padding:1px 8px;vertical-align:middle">расчётная</span></h4><p>Выданные карты за период: заявки × одобрение. Расчётная метрика первого уровня — правильность её значения проверяется прослеживанием до транзакций выдачи в АБС.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 10 т₽ · OPEX 2 т₽/мес · time-to-evidence ~7 дн</p></div><div class="card" id="m-act"><h4>Активация за 30 дн. <span class="sub" style="font-weight:400">· % выдач · витрина</span> <span style="font-size:12px;color:#2E6BB8;border:1px solid #2E6BB8;border-radius:10px;padding:1px 8px;vertical-align:middle">расчётная</span></h4><p>Доля выданных карт, по которым прошла первая операция в 30 дней. Классический источник «спора о цифрах»: CRM считает активацией выпуск, витрина — первую операцию, и разница в 3 п.п. надёжно съедает полчаса любого комитета, пока master-source не зафиксирован письменно.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 60 т₽ · OPEX 15 т₽/мес · time-to-evidence ~14 дн</p></div><div class="card" id="m-alive"><h4>Активные клиенты <span class="sub" style="font-weight:400">· % портфеля</span> <span style="font-size:12px;color:#2E6BB8;border:1px solid #2E6BB8;border-radius:10px;padding:1px 8px;vertical-align:middle">расчётная</span></h4><p>Доля портфеля с живыми операциями. Накопительная метрика: выдачи и активация пополняют её, отток вымывает. Именно по ней принимается решение «вкладываться в доставку, коммуникацию или оформление» — раньше, чем это увидит доход.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 40 т₽ · OPEX 10 т₽/мес · time-to-evidence ~14 дн</p></div><div class="card" id="m-churn"><h4>Отток за 90 дн. <span class="sub" style="font-weight:400">· %</span> <span style="font-size:12px;color:#2E6BB8;border:1px solid #2E6BB8;border-radius:10px;padding:1px 8px;vertical-align:middle">расчётная</span></h4><p>Доля клиентов без операций за 90 дней. Накопительная и медленная по построению: чтобы увидеть отток, нужно прожить весь горизонт. Поэтому в дереве её предсказывают ранние сигналы (ошибки оформления, жалобы) — ждать 90 дней, чтобы узнать о проблеме, дорого.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 40 т₽ · OPEX 10 т₽/мес · time-to-evidence ~90 дн</p></div><div class="card" id="m-rev"><h4>Доход по продукту <span class="sub" style="font-weight:400">· ₽/мес.</span> <span style="font-size:12px;color:#D9822B;border:1px solid #D9822B;border-radius:10px;padding:1px 8px;vertical-align:middle">запаздывающая</span></h4><p>Итоговый доход портфеля карт за месяц. Запаздывающая метрика: когда она сдвинулась, причина случилась месяцы назад — управлять надо было активными клиентами и оттоком выше по дереву.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 20 т₽ · OPEX 5 т₽/мес · time-to-evidence ~30 дн</p></div><div class="card" id="m-pnl"><h4>P&L продукта <span class="sub" style="font-weight:400">· NPV, ₽</span> <span style="font-size:12px;color:#D9822B;border:1px solid #D9822B;border-radius:10px;padding:1px 8px;vertical-align:middle">запаздывающая</span></h4><p>Финансовый результат продукта с учётом стоимости привлечения, обслуживания и риска. Порог принятия решения задаёт финмодель (например, NPV > 0 к 36-му месяцу по инвестиционным правилам банка) — без порога цифра неинтерпретируема: по ней не видно, что делать.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 150 т₽ · OPEX 30 т₽/мес · time-to-evidence ~90 дн</p></div><h3 style="margin:26px 0 10px">Корпоративный блок: подключение юрлиц (кейс 2)</h3><div class="card" id="m-ts"><h4>Журнал этапов workflow <span class="sub" style="font-weight:400">· таймстампы · workflow+CRM</span> <span style="font-size:12px;color:#20BA72;border:1px solid #20BA72;border-radius:10px;padding:1px 8px;vertical-align:middle">опережающая</span></h4><p>Таймстампы каждого этапа подключения юрлица, склеенные сквозным ключом заявки. Дорогой вход (ключи связи, витрина), но единственный источник, по которому видно, какой этап съедает время. Альтернативы дешевле стартуют — и не отвечают на главный вопрос.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 180 т₽ · OPEX 45 т₽/мес · time-to-evidence ~21 дн</p></div><div class="card" id="m-mn"><h4>Ручная выборка кейсов <span class="sub" style="font-weight:400">· Excel · фронт</span> <span style="font-size:12px;color:#20BA72;border:1px solid #20BA72;border-radius:10px;padding:1px 8px;vertical-align:middle">опережающая</span></h4><p>Выборка досье, разобранная фронтом вручную. Обманчиво дешёвая конфигурация: старт почти бесплатный, но ручной труд — это полновесный OPEX каждый месяц, накопление доверяемой картины занимает ~50 дней, а следа по этапам всё равно нет. Пример того, как быстрый старт проигрывает ансамблем.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 15 т₽ · OPEX 45 т₽/мес · time-to-evidence ~50 дн</p></div><div class="card" id="m-rw"><h4>Доля досье на доработку <span class="sub" style="font-weight:400">· % заявок · CRM</span> <span style="font-size:12px;color:#20BA72;border:1px solid #20BA72;border-radius:10px;padding:1px 8px;vertical-align:middle">опережающая</span></h4><p>Доля заявок юрлиц, возвращённых на доработку документов. Ранний сигнал: каждый возврат — плюс дни к подключению и минус к вероятности, что клиент дойдёт до активации.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 30 т₽ · OPEX 8 т₽/мес · time-to-evidence ~14 дн</p></div><div class="card" id="m-t2a"><h4>Время подключения <span class="sub" style="font-weight:400">· дн., подача → активация</span> <span style="font-size:12px;color:#2E6BB8;border:1px solid #2E6BB8;border-radius:10px;padding:1px 8px;vertical-align:middle">расчётная</span></h4><p>Сквозное время от подачи заявки до активной работы клиента. Считается только по следу процесса — из какого источника этот след собран, решает и цену, и скорость, и доверие к цифре. Смотреть стоит на медиану и 90-й перцентиль, а не на среднее.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 60 т₽ · OPEX 15 т₽/мес · time-to-evidence ~21 дн</p></div><div class="card" id="m-actv"><h4>Активные юрлица <span class="sub" style="font-weight:400">· шт./мес.</span> <span style="font-size:12px;color:#2E6BB8;border:1px solid #2E6BB8;border-radius:10px;padding:1px 8px;vertical-align:middle">расчётная</span></h4><p>Юрлица, дошедшие до реальных операций. Продолжение времени подключения: каждый лишний день процесса — это отвал части клиентов до старта оборота.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 40 т₽ · OPEX 10 т₽/мес · time-to-evidence ~30 дн</p></div><div class="card" id="m-fee"><h4>Комиссионный доход <span class="sub" style="font-weight:400">· ₽/мес.</span> <span style="font-size:12px;color:#D9822B;border:1px solid #D9822B;border-radius:10px;padding:1px 8px;vertical-align:middle">запаздывающая</span></h4><p>Комиссионный доход расчётно-кассового обслуживания и сопутствующих продуктов. Запаздывающий итог: им управляют выше по дереву — скоростью подключения и активацией.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 20 т₽ · OPEX 5 т₽/мес · time-to-evidence ~30 дн</p></div><h3 style="margin:26px 0 10px">Портфель: сопоставимые продукты (кейс 3)</h3><div class="card" id="m-actA"><h4>Активация: витрина DWH <span class="sub" style="font-weight:400">· первая операция · 30 дн</span> <span style="font-size:12px;color:#20BA72;border:1px solid #20BA72;border-radius:10px;padding:1px 8px;vertical-align:middle">опережающая</span></h4><p>Официальная цифра активации из витрины: первая операция в 30 дней, прослеживается до транзакций, есть владелец и регламент обновления. Дороже флага CRM, но не порождает споров — а спор о цифрах и есть главная скрытая стоимость данных на уровне комитета.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 60 т₽ · OPEX 15 т₽/мес · time-to-evidence ~14 дн</p></div><div class="card" id="m-actB"><h4>Активация: флаг CRM <span class="sub" style="font-weight:400">· выпуск карты · онлайн</span> <span style="font-size:12px;color:#20BA72;border:1px solid #20BA72;border-radius:10px;padding:1px 8px;vertical-align:middle">опережающая</span></h4><p>Флаг активации в CRM: доступен онлайн, стартует почти бесплатно — на первом уровне это самая быстрая метрика кейса. Подвох в сочленении: флаг меряет выпуск карты, а не операцию, поэтому любой расчёт на нём требует накопительной сверки с витриной — и весь ансамбль оказывается медленнее, чем у «дорогого» источника. Быстрая метрика ≠ быстрое решение.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 10 т₽ · OPEX 20 т₽/мес · time-to-evidence ~7 дн</p></div><div class="card" id="m-dict"><h4>Словарь определений портфеля <span class="sub" style="font-weight:400">· регламент + владелец</span> <span style="font-size:12px;color:#20BA72;border:1px solid #20BA72;border-radius:10px;padding:1px 8px;vertical-align:middle">опережающая</span></h4><p>Словарь показателей портфеля: одно определение каждого показателя для всех продуктов, владелец и регламент изменений. Дорогой вход, но именно он делает продукты сравнимыми — на уровне портфеля расхождения рождаются в определениях, а не в выгрузках.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 120 т₽ · OPEX 20 т₽/мес · time-to-evidence ~21 дн</p></div><div class="card" id="m-adhoc"><h4>Точечные сверки <span class="sub" style="font-weight:400">· по жалобам</span> <span style="font-size:12px;color:#20BA72;border:1px solid #20BA72;border-radius:10px;padding:1px 8px;vertical-align:middle">опережающая</span></h4><p>Выравнивание определений «по жалобам»: каждое расхождение разбирается вручную, когда уже всплыло на комитете. Нулевой вход и постоянный ручной OPEX; накопленного эффекта нет — следующий спор начинается с чистого листа.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 10 т₽ · OPEX 40 т₽/мес · time-to-evidence ~55 дн</p></div><div class="card" id="m-npvp"><h4>NPV по продуктам <span class="sub" style="font-weight:400">· ₽, по каждому продукту</span> <span style="font-size:12px;color:#2E6BB8;border:1px solid #2E6BB8;border-radius:10px;padding:1px 8px;vertical-align:middle">расчётная</span></h4><p>NPV каждого продукта портфеля. Расчёт второго уровня: наследует и скорость, и доверие своих входов. На недоверяемой активации NPV не становится быстрым — он становится спорным, и накопительная сверка съедает весь выигрыш быстрого источника.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 150 т₽ · OPEX 30 т₽/мес · time-to-evidence ~30 дн</p></div><div class="card" id="m-cmp"><h4>Сопоставимость продуктов <span class="sub" style="font-weight:400">· единые определения</span> <span style="font-size:12px;color:#2E6BB8;border:1px solid #2E6BB8;border-radius:10px;padding:1px 8px;vertical-align:middle">расчётная</span></h4><p>Свойство портфеля, а не отдельного продукта: показатели всех продуктов означают одно и то же. Достигается словарём определений; без него сравнение NPV продуктов — сравнение яблок с зелёными яблоками, различающимися определением яблока.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 40 т₽ · OPEX 10 т₽/мес · time-to-evidence ~21 дн</p></div><div class="card" id="m-alloc"><h4>Перераспределение ресурсов <span class="sub" style="font-weight:400">· решение портфеля</span> <span style="font-size:12px;color:#D9822B;border:1px solid #D9822B;border-radius:10px;padding:1px 8px;vertical-align:middle">запаздывающая</span></h4><p>Итоговое решение портфельного уровня: перераспределение бюджета и людей между продуктами. Требует одновременно доверяемого NPV и сопоставимости определений — ошибка в любом из входов масштабируется на весь портфель.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 60 т₽ · OPEX 10 т₽/мес · time-to-evidence ~90 дн</p></div><h3 style="margin:26px 0 10px">Универсальный конструктор</h3><div class="card" id="m-u_traffic"><h4>Заявки / трафик <span class="sub" style="font-weight:400">· шт.</span> <span style="font-size:12px;color:#20BA72;border:1px solid #20BA72;border-radius:10px;padding:1px 8px;vertical-align:middle">опережающая</span></h4><p>Входящий поток воронки: заявки, визиты, обращения. Общая точка старта продуктовых и процессных деревьев; сама по себе ни хороша, ни плоха — смысл появляется в связке с конверсией.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 20 т₽ · OPEX 5 т₽/мес · time-to-evidence ~7 дн</p></div><div class="card" id="m-u_conv"><h4>Конверсия этапа <span class="sub" style="font-weight:400">· %</span> <span style="font-size:12px;color:#20BA72;border:1px solid #20BA72;border-radius:10px;padding:1px 8px;vertical-align:middle">опережающая</span></h4><p>Доля перешедших на следующий шаг воронки. Главный управляемый рычаг верха дерева: сравнивать конверсию можно только при одинаковом определении шага и одинаковой базе.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 20 т₽ · OPEX 5 т₽/мес · time-to-evidence ~7 дн</p></div><div class="card" id="m-u_tat"><h4>Время процесса <span class="sub" style="font-weight:400">· дн./ч</span> <span style="font-size:12px;color:#20BA72;border:1px solid #20BA72;border-radius:10px;padding:1px 8px;vertical-align:middle">опережающая</span></h4><p>Сквозное время процесса от входа до результата. Существует только при полном следе процесса с общим ключом между системами; без ключа «время» — это чьё-то мнение.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 120 т₽ · OPEX 30 т₽/мес · time-to-evidence ~21 дн</p></div><div class="card" id="m-u_err"><h4>Ошибки / возвраты <span class="sub" style="font-weight:400">· %</span> <span style="font-size:12px;color:#20BA72;border:1px solid #20BA72;border-radius:10px;padding:1px 8px;vertical-align:middle">опережающая</span></h4><p>Доля ошибок или возвратов на доработку. Универсальный ранний сигнал деградации и качества входа; требует кодификатора причин, иначе анализируется руками.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 80 т₽ · OPEX 20 т₽/мес · time-to-evidence ~14 дн</p></div><div class="card" id="m-u_ops"><h4>Операций на сотрудника <span class="sub" style="font-weight:400">· шт./день</span> <span style="font-size:12px;color:#20BA72;border:1px solid #20BA72;border-radius:10px;padding:1px 8px;vertical-align:middle">опережающая</span></h4><p>Операций на сотрудника в день — ключевая метрика процессной оси примерно в 90 % случаев: производительность роли, а не человека. Сравнивается между командами только при одинаковом определении «операции».</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 30 т₽ · OPEX 8 т₽/мес · time-to-evidence ~14 дн</p></div><div class="card" id="m-u_nps"><h4>Индекс лояльности <span class="sub" style="font-weight:400">· NPS</span> <span style="font-size:12px;color:#20BA72;border:1px solid #20BA72;border-radius:10px;padding:1px 8px;vertical-align:middle">опережающая</span></h4><p>Готовность рекомендовать (промоутеры минус критики). Самая частая поломка — репрезентативность: NPS, собранный по дошедшим до конца обслуживания, систематически завышен, потому что недовольные до опроса не доходят.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 60 т₽ · OPEX 20 т₽/мес · time-to-evidence ~30 дн</p></div><div class="card" id="m-u_csat"><h4>Удовлетворённость <span class="sub" style="font-weight:400">· CSAT</span> <span style="font-size:12px;color:#20BA72;border:1px solid #20BA72;border-radius:10px;padding:1px 8px;vertical-align:middle">опережающая</span></h4><p>Оценка удовлетворённости сразу после контакта. Быстрее и дешевле NPS, но локальнее: меряет эпизод, а не отношение к продукту.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 30 т₽ · OPEX 10 т₽/мес · time-to-evidence ~14 дн</p></div><div class="card" id="m-u_cac"><h4>Стоимость привлечения <span class="sub" style="font-weight:400">· CAC</span> <span style="font-size:12px;color:#20BA72;border:1px solid #20BA72;border-radius:10px;padding:1px 8px;vertical-align:middle">опережающая</span></h4><p>Полные расходы на привлечение одного клиента. Смысл появляется только в паре с ценностью клиента (LTV): CAC без LTV — просто расход.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 40 т₽ · OPEX 10 т₽/мес · time-to-evidence ~30 дн</p></div><div class="card" id="m-u_price"><h4>Цена / тариф <span class="sub" style="font-weight:400">· ₽</span> <span style="font-size:12px;color:#20BA72;border:1px solid #20BA72;border-radius:10px;padding:1px 8px;vertical-align:middle">опережающая</span></h4><p>Цена или тариф — самый быстрый управляемый рычаг монетизации; каждая проверка ценового решения тянет за собой пересчёт конверсии и оттока.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 10 т₽ · OPEX 2 т₽/мес · time-to-evidence ~7 дн</p></div><div class="card" id="m-u_iss"><h4>Сделки / выдачи <span class="sub" style="font-weight:400">· шт.</span> <span style="font-size:12px;color:#2E6BB8;border:1px solid #2E6BB8;border-radius:10px;padding:1px 8px;vertical-align:middle">расчётная</span></h4><p>Результат воронки за период: поток × конверсия. Первый расчётный уровень большинства деревьев; проверяется прослеживанием до фактических транзакций.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 10 т₽ · OPEX 2 т₽/мес · time-to-evidence ~7 дн</p></div><div class="card" id="m-u_mau"><h4>Активные клиенты <span class="sub" style="font-weight:400">· MAU</span> <span style="font-size:12px;color:#2E6BB8;border:1px solid #2E6BB8;border-radius:10px;padding:1px 8px;vertical-align:middle">расчётная</span></h4><p>Клиенты с операциями за период (месяц — MAU). Накопительная метрика: пополняется новыми сделками, вымывается оттоком; определение «активности» должно быть зафиксировано.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 40 т₽ · OPEX 10 т₽/мес · time-to-evidence ~14 дн</p></div><div class="card" id="m-u_churn"><h4>Отток <span class="sub" style="font-weight:400">· Churn</span> <span style="font-size:12px;color:#2E6BB8;border:1px solid #2E6BB8;border-radius:10px;padding:1px 8px;vertical-align:middle">расчётная</span></h4><p>Доля клиентов, прекративших пользоваться продуктом. Медленная по построению (нужно прожить горизонт наблюдения), поэтому в зрелых деревьях её предсказывают ранние сигналы.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 40 т₽ · OPEX 10 т₽/мес · time-to-evidence ~90 дн</p></div><div class="card" id="m-u_aov"><h4>Средний чек <span class="sub" style="font-weight:400">· AOV</span> <span style="font-size:12px;color:#2E6BB8;border:1px solid #2E6BB8;border-radius:10px;padding:1px 8px;vertical-align:middle">расчётная</span></h4><p>Средняя сумма операции. Чувствителен к выбросам: одна крупная сделка двигает среднее — рядом со средним чеком всегда полезна медиана.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 20 т₽ · OPEX 5 т₽/мес · time-to-evidence ~14 дн</p></div><div class="card" id="m-u_ltv"><h4>Ценность клиента <span class="sub" style="font-weight:400">· LTV</span> <span style="font-size:12px;color:#2E6BB8;border:1px solid #2E6BB8;border-radius:10px;padding:1px 8px;vertical-align:middle">расчётная</span></h4><p>Доход за всё время жизни клиента: чек × частота × срок жизни. Дорогая и медленная в надёжном расчёте (нужна история), но именно она делает CAC интерпретируемым.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 100 т₽ · OPEX 20 т₽/мес · time-to-evidence ~90 дн</p></div><div class="card" id="m-u_rev"><h4>Выручка / доход <span class="sub" style="font-weight:400">· ₽/мес.</span> <span style="font-size:12px;color:#D9822B;border:1px solid #D9822B;border-radius:10px;padding:1px 8px;vertical-align:middle">запаздывающая</span></h4><p>Выручка за период. Запаздывающий итог: планы ставятся по ней, а управление происходит выше по дереву — опережающими метриками.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 20 т₽ · OPEX 5 т₽/мес · time-to-evidence ~30 дн</p></div><div class="card" id="m-u_mrr"><h4>Регулярный доход <span class="sub" style="font-weight:400">· MRR</span> <span style="font-size:12px;color:#D9822B;border:1px solid #D9822B;border-radius:10px;padding:1px 8px;vertical-align:middle">запаздывающая</span></h4><p>Повторяющаяся месячная выручка (подписки, обслуживание). Более предсказуемая форма дохода; раскладывается на активных клиентов × средний платёж.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 20 т₽ · OPEX 5 т₽/мес · time-to-evidence ~30 дн</p></div><div class="card" id="m-u_roi"><h4>Возврат инвестиций <span class="sub" style="font-weight:400">· ROI</span> <span style="font-size:12px;color:#D9822B;border:1px solid #D9822B;border-radius:10px;padding:1px 8px;vertical-align:middle">запаздывающая</span></h4><p>Отношение эффекта к затратам. Итоговая инвестиционная метрика: сравнивать по ней можно только инициативы с одинаковым горизонтом и базой расчёта.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 100 т₽ · OPEX 20 т₽/мес · time-to-evidence ~90 дн</p></div><div class="card" id="m-u_npv"><h4>NPV / P&L <span class="sub" style="font-weight:400">· ₽</span> <span style="font-size:12px;color:#D9822B;border:1px solid #D9822B;border-radius:10px;padding:1px 8px;vertical-align:middle">запаздывающая</span></h4><p>Чистая приведённая стоимость: финансовый результат с учётом стоимости денег во времени. Язык инвестиционного комитета; порог (например, NPV > 0 к 36-му месяцу) превращает цифру в решение.</p><p class="sub" style="margin:0">Экономика сбора: CAPEX 150 т₽ · OPEX 30 т₽/мес · time-to-evidence ~90 дн</p></div>
+</div></section>
+
+<section id="src"><div class="wrap">
+<h2>Источники</h2>
+<p class="sub">Методические утверждения проверены по источникам; цитаты — в
+отчёте проверки. Учебные числа CAPEX/OPEX/TTE в кейсах — авторские и на
+источники не ссылаются. Определения метрик опираются на книгу Я. Шуваева
+«Менеджмент цифрового продукта» (пересказ без прямого цитирования) и открытые
+отраслевые источники.</p>
+<ol>
+<li id="src-cod"><b>Reinertsen D. «The Principles of Product Development Flow», Celeritas, 2009; Wikipedia, «Cost of delay»</b><br><a href="https://en.wikipedia.org/wiki/Cost_of_delay" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/Cost_of_delay</a></li><li id="src-wsjf"><b>Scaled Agile Framework, «WSJF — Weighted Shortest Job First»</b><br><a href="https://framework.scaledagile.com/wsjf" target="_blank" rel="noopener">https://framework.scaledagile.com/wsjf</a></li><li id="src-gartner-dq"><b>Gartner, «How to Improve Your Data Quality», Smarter with Gartner, 14.07.2021</b><br><a href="https://www.gartner.com/smarterwithgartner/how-to-improve-your-data-quality" target="_blank" rel="noopener">https://www.gartner.com/smarterwithgartner/how-to-improve-your-data-quality</a></li><li id="src-iso25012"><b>ISO/IEC 25012:2008 «Data quality model»; проверено по своду arc42 Quality Model, раздел «ISO/IEC 25012 — Data Quality Model»</b><br><a href="https://quality.arc42.org/standards/iso-iec-25012" target="_blank" rel="noopener">https://quality.arc42.org/standards/iso-iec-25012</a></li><li id="src-leading-lagging"><b>Kaplan R. S., Norton D. P. «The Balanced Scorecard: Translating Strategy into Action», HBS Press, 1996; цитируется по изложению теории в документации Oracle PeopleSoft Scorecard, раздел «Balanced Scorecard Theory»</b><br><a href="https://docs.oracle.com/cd/E41507_01/epm91pbr3/eng/epm/pbsc/task_BalancedScorecardTheory-991810.html" target="_blank" rel="noopener">https://docs.oracle.com/cd/E41507_01/epm91pbr3/eng/epm/pbsc/task_BalancedScorecardTheory-991810.html</a></li>
+</ol>
+</div></section>
+
+<footer><div class="wrap">
+  Аналитика 360 · практическая часть, Шаги 1–4 · Карпов Курсы для Сбера.<br>
+  Справочная страница курса; открывается из тренажёров. Все данные учебные.
+</div></footer>
+
+<script>
+// Кнопка «скопировать промпт»: сначала пробуем Clipboard API, при отказе —
+// старый execCommand. В LMS страница часто открыта в iframe без разрешения
+// на буфер обмена, и без запасного пути кнопка молча ничего не делает.
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.copy'); if(!b) return;
+  var t=b.parentNode.querySelector('pre').innerText;
+  function done(){b.textContent='Скопировано';b.classList.add('done');
+    setTimeout(function(){b.textContent='Копировать';b.classList.remove('done')},1800);}
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(done,fallback);
+  } else { fallback(); }
+  function fallback(){
+    var a=document.createElement('textarea');a.value=t;a.style.position='fixed';
+    a.style.opacity=0;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');done();}catch(_e){b.textContent='Выделите вручную';}
+    document.body.removeChild(a);
+  }
+});
+</script>
+</body></html>
