@@ -169,3 +169,87 @@ NUM = {s["id"]: i + 1 for i, s in enumerate(SOURCES)}
 def ref(sid):
     """Ссылка-сноска в тексте лонгрида."""
     return (f'<a href="#src-{sid}" class="fn">[{NUM[sid]}]</a>')
+
+
+# ── Лонгрид «Роль данных: категории и критерии ценности» ────────────────────
+# Отдельный список с собственной нумерацией: страницы независимые, и сноска
+# [2] на каждой из них должна вести на второй пункт её собственного списка.
+
+CHECKED_DATA = "2026-08-11"
+
+SOURCES_DATA = [
+    dict(
+        id="iso25012",
+        claim="Стандарт качества данных ISO/IEC 25012 описывает пятнадцать характеристик; "
+              "собственные (inherent) характеристики данных — точность, полнота, "
+              "согласованность, достоверность, актуальность.",
+        quote="The model defines 15 data quality characteristics … Inherent: Accuracy, "
+              "Completeness, Consistency, Credibility, Currentness — quality properties "
+              "that can be assessed from the data itself.",
+        ref="ISO/IEC 25012:2008 «Data quality model»; проверено по своду "
+            "arc42 Quality Model, раздел «ISO/IEC 25012 — Data Quality Model»",
+        url="https://quality.arc42.org/standards/iso-iec-25012",
+        status="подтверждено с оговоркой: текст самого стандарта платный, состав "
+               "характеристик проверен по независимому своду. В лонгриде характеристики "
+               "пересобраны в четыре управленческих измерения, и это в тексте оговорено "
+               "(«стандарт выделяет полтора десятка … для руководителя критичны четыре»)",
+    ),
+    dict(
+        id="moe",
+        claim="При 95-процентном уровне доверия погрешность оценки доли составляет "
+              "примерно 0,98/√n: около 400 наблюдений дают ±5 %, около 1 100 — ±3 %.",
+        quote="MOE₉₅(0.5) = z₀.₉₅ σₚ̄ ≈ z₀.₉₅ √(σ²ₚ/n) = 1.96 √(.25/n) = 0.98/√n",
+        ref="Wikipedia, «Margin of error» (формула максимальной погрешности доли "
+            "при p = 0,5)",
+        url="https://en.wikipedia.org/wiki/Margin_of_error",
+        status="подтверждено с оговоркой: энциклопедическая ссылка — не первоисточник, "
+               "но формула стандартная и сверена расчётом: 0,98/√400 = 4,9 %, "
+               "0,98/√1067 = 3,0 %. Ориентиры лонгрида «около 400 → ±5 %, "
+               "около 1 100 → ±3 %» совпадают с расчётом",
+    ),
+    dict(
+        id="leading-lagging",
+        claim="Метрики результата — запаздывающие индикаторы, драйверы — опережающие; "
+              "рабочая система показателей требует и тех и других: без результатов "
+              "не видно, достигнута ли цель, без драйверов — работает ли способ "
+              "её достижения.",
+        quote="Performance drivers (leading indicators) and outcomes (lagging indicators). "
+              "… An effective balanced scorecard needs a combination of both performance "
+              "drivers and outcome measures. Without outcome measures such as "
+              "profitability, market share, or customer satisfaction, among others, "
+              "a scorecard does not provide an indication of how well the organization "
+              "is performing. Without performance drivers … you don't have an indication "
+              "of whether your strategy is working.",
+        ref="Kaplan R. S., Norton D. P. «The Balanced Scorecard: Translating Strategy "
+            "into Action», HBS Press, 1996; цитируется по изложению теории в документации "
+            "Oracle PeopleSoft Scorecard, раздел «Balanced Scorecard Theory»",
+        url="https://docs.oracle.com/cd/E41507_01/epm91pbr3/eng/epm/pbsc/task_BalancedScorecardTheory-991810.html",
+        status="подтверждено с оговоркой: проверка сделана по вторичному источнику — "
+               "вендорской документации, прямо ссылающейся на книгу Каплана и Нортона; "
+               "первоисточник платный. Управленческое правило «план по запаздывающим, "
+               "управление по опережающим» — авторская формулировка программы, "
+               "источнику не приписывается",
+    ),
+    dict(
+        id="ssot",
+        claim="Единый источник правды — практика, при которой каждый элемент данных "
+              "ведётся (mastered) ровно в одном месте; она защищает от расхождения копий.",
+        quote="Single source of truth (SSOT) architecture … is the practice of structuring "
+              "information models and associated data schemas such that every data element "
+              "is mastered (or edited) in only one place … easier prevention of mistaken "
+              "inconsistencies (such as a duplicate value/copy somewhere being forgotten).",
+        ref="Wikipedia, «Single source of truth»",
+        url="https://en.wikipedia.org/wiki/Single_source_of_truth",
+        status="подтверждено с оговоркой: энциклопедическая ссылка — не первоисточник. "
+               "В лонгриде термин применён к управленческой договорённости о master-source "
+               "(а не к архитектуре систем), и это в тексте оговорено",
+    ),
+]
+
+BY_ID_DATA = {s["id"]: s for s in SOURCES_DATA}
+NUM_DATA = {s["id"]: i + 1 for i, s in enumerate(SOURCES_DATA)}
+
+
+def ref_data(sid):
+    """Сноска для лонгрида «Роль данных» — нумерация его собственного списка."""
+    return (f'<a href="#src-{sid}" class="fn">[{NUM_DATA[sid]}]</a>')
