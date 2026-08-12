@@ -1,0 +1,10 @@
+[
+  {
+    "preset": "churn",
+    "model": "GigaChat-2-Max",
+    "chars_prompt": 5281,
+    "chars_answer": 1787,
+    "sec": 7.8,
+    "error": null
+  }
+]

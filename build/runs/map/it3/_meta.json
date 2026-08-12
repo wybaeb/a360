@@ -1,0 +1,74 @@
+[
+  {
+    "preset": "case_product",
+    "model": "GigaChat-2-Max",
+    "chars_prompt": 4788,
+    "chars_answer": 1836,
+    "sec": 11.5,
+    "error": null
+  },
+  {
+    "preset": "case_process",
+    "model": "GigaChat-2-Max",
+    "chars_prompt": 5157,
+    "chars_answer": 1424,
+    "sec": 6.8,
+    "error": null
+  },
+  {
+    "preset": "case_master",
+    "model": "GigaChat-2-Max",
+    "chars_prompt": 4335,
+    "chars_answer": 791,
+    "sec": 9.5,
+    "error": null
+  },
+  {
+    "preset": "rko",
+    "model": "GigaChat-2-Max",
+    "chars_prompt": 5223,
+    "chars_answer": 1431,
+    "sec": 7.0,
+    "error": null
+  },
+  {
+    "preset": "cc_util",
+    "model": "GigaChat-2-Max",
+    "chars_prompt": 4818,
+    "chars_answer": 1732,
+    "sec": 8.0,
+    "error": null
+  },
+  {
+    "preset": "contact",
+    "model": "GigaChat-2-Max",
+    "chars_prompt": 4999,
+    "chars_answer": 1539,
+    "sec": 7.7,
+    "error": null
+  },
+  {
+    "preset": "onboard",
+    "model": "GigaChat-2-Max",
+    "chars_prompt": 4773,
+    "chars_answer": 1511,
+    "sec": 7.2,
+    "error": null
+  },
+  {
+    "preset": "churn",
+    "model": "GigaChat-2-Max",
+    "chars_prompt": 4984,
+    "chars_answer": 1541,
+    "sec": 7.2,
+    "error": null
+  },
+  {
+    "preset": "portfolio",
+    "model": "GigaChat-2-Max",
+    "chars_prompt": 4702,
+    "chars_answer": 873,
+    "sec": 5.5,
+    "error": null
+  }
+]
