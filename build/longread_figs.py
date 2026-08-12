@@ -90,15 +90,22 @@ def npv_curve():
 
 # ── Доверительный интервал и порог решения ──────────────────────────────────
 def ci_funnel():
+    """Сужающийся доверительный интервал против порога решения.
+
+    Подписи линий стоят справа от последней точки данных, а не поверх них:
+    раньше «оценка метрики» лежала прямо на коридоре и на самой линии оценки.
+    Поэтому ряд обрывается на XE, а правое поле шириной XPAD отдано подписям.
+    """
     s = []
     X0, Y0, X1, Y1 = 60, 26, 880, 330
     MID, THR = 178, 250
+    XPAD = 200                      # правое поле под подписи линий
     s.append(_axes(X0, Y0, X1, Y1))
     s.append(_txt(X1, Y1 + 22, "наблюдений накоплено →", 12, None, DARK, op=0.6, anchor="end"))
     wob = lambda x: (11 * math.sin((x - X0) / 46) + 6 * math.sin((x - X0) / 15 + 1.7)) \
         * (0.45 + 0.55 * math.exp(-(x - X0) / 420))
     half = lambda x: 14 + 100 * math.exp(-(x - X0 - 40) / 240)
-    xs = [X0 + 40 + i * 8 for i in range(int((X1 - 30 - X0 - 40) / 8) + 1)]
+    xs = [X0 + 40 + i * 8 for i in range(int((X1 - 30 - XPAD - X0 - 40) / 8) + 1)]
     up = [(x, MID + wob(x) - half(x)) for x in xs]
     lo = [(x, MID + wob(x) + half(x)) for x in xs]
     est = [(x, MID + wob(x)) for x in xs]
@@ -119,8 +126,11 @@ def ci_funnel():
     s.append(f'<line x1="{xc:.0f}" y1="{Y0 + 6}" x2="{xc:.0f}" y2="{Y1}" stroke="{DEEP}" '
              f'stroke-width="2" stroke-dasharray="3 4"/>')
     s.append(_txt(min(xc + 10, X1 - 300), Y0 + 18, "вывод достоверен: нижняя граница выше порога", 12, "700", DEEP))
-    s.append(_txt(X1 - 24, MID - 46, "доверительный интервал", 11.5, "700", ACC, anchor="end"))
-    s.append(_txt(X1 - 24, MID - 6, "оценка метрики", 12, "700", DEEP, anchor="end"))
+    # Подписи — на высоте самой линии, но правее последней точки ряда.
+    xe = xs[-1]
+    s.append(_txt(xe + 12, MID + wob(xe) - half(xe) + 4, "доверительный интервал",
+                  11.5, "700", ACC))
+    s.append(_txt(xe + 12, MID + wob(xe) + 4, "оценка метрики", 12, "700", DEEP))
     return _svg(360, ''.join(s))
 
 
@@ -149,8 +159,9 @@ def accumulation():
         s.append(f'<line x1="{x:.0f}" y1="{Y0 + 6}" x2="{x:.0f}" y2="{Y1}" stroke="{DEEP}" '
                  f'stroke-width="1.6" stroke-dasharray="6 5"/>')
         s.append(_txt(x, Y0, name, 13, "800", DEEP, anchor="middle"))
-    s.append(_txt(xg - 14, 120, "участников достаточно —", 11.5, "700", DARK, anchor="end"))
-    s.append(_txt(xg - 14, 137, "можно завершить досрочно", 11.5, None, DARK, op=0.75, anchor="end"))
+    # Подпись к GST — выше кривой: на 137 вторая строка ложилась прямо на неё.
+    s.append(_txt(xg - 14, 100, "участников достаточно —", 11.5, "700", DARK, anchor="end"))
+    s.append(_txt(xg - 14, 117, "можно завершить досрочно", 11.5, None, DARK, op=0.75, anchor="end"))
     s.append(_txt(xf - 14, 190, "плановое завершение —", 11.5, "700", DARK, anchor="end"))
     s.append(_txt(xf - 14, 207, "фиксированная выборка набрана", 11.5, None, DARK, op=0.75, anchor="end"))
     s.append(f'<rect x="{X0}" y="{Y1 + 30}" width="{(xg - X0):.0f}" height="24" rx="7" fill="{ACC}" fill-opacity="0.75"/>')
@@ -179,8 +190,11 @@ def tradeoff_scatter():
         s.append(f'<circle cx="{px(t):.0f}" cy="{py(c):.0f}" r="7" fill="{col}" fill-opacity="0.9"/>')
     s.append(_txt(px(5) + 12, py(700) - 4, "Готовый отчёт подрядчика: быстро, но дорого", 12, "700", DEEP))
     s.append(_txt(px(55), py(420) - 14, "Ручная выгрузка: за фронтом, проигрывает всегда", 12, "700", WARN, anchor="middle"))
-    s.append(_txt(px(14) - 10, py(105) - 14, "Витрина DWH: лучшая интегральная оценка", 12, "700", DEEP, anchor="end"))
-    s.append(_txt(px(67), py(70) + 26, "Флаг CRM: дёшево, но решение ждёт", 12, "700", DEEP, anchor="middle"))
+    # Обе подписи — над своими точками. Раньше «Витрина DWH» шла влево от точки
+    # и обрезалась левым краем картинки, а «Флаг CRM» стояла под точкой и
+    # ложилась на пунктирную изолинию равной интегральной оценки.
+    s.append(_txt(px(14) + 16, py(105) - 14, "Витрина DWH: лучшая интегральная оценка", 12, "700", DEEP))
+    s.append(_txt(px(67), py(70) - 16, "Флаг CRM: дёшево, но решение ждёт", 12, "700", DEEP, anchor="middle"))
     return _svg(360, ''.join(s))
 
 
