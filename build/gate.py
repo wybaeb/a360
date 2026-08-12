@@ -72,8 +72,13 @@ button:hover{{filter:brightness(1.07)}}
    После первого ввода он сохраняется в браузере — остальные материалы откроются сами.</div>
 </div>
 <script>
-const DATA={{salt:"{salt}",iv:"{iv}",ct:"{ct}",iter:{iter}}};
 (function(){{
+// Всё, что объявляет гейт, живёт внутри этой функции. Верхний уровень не трогаем
+// намеренно: после document.write страница исполняется в той же глобальной
+// лексической области, и любое совпадение имён убивает её JS целиком
+// (SyntaxError: Identifier has already been declared). На этом уже горели —
+// см. build/check_gate_pages.cjs, он проверяет все страницы через ввод пароля.
+const DATA={{salt:"{salt}",iv:"{iv}",ct:"{ct}",iter:{iter}}};
 const KEY="{storage}";
 const dec=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 async function unlock(pw){{

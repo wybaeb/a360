@@ -91,9 +91,17 @@ def _slide_fig(sid, caption):
 
 # ── Фигуры раздела «Минимум статистики: гистограмма, медиана, перцентиль» ───
 def hist_bimodal():
-    """Гистограмма с двумя максимумами: один показатель — два разных процесса."""
+    """Гистограмма с двумя максимумами: один показатель — два разных процесса.
+
+    Подписи групп раньше стояли внутри поля графика и ложились прямо на
+    столбцы: у обоих горбов столбец доходит почти до верха поля, свободного
+    места внутри нет. Поэтому под подписи отведена отдельная полоса над
+    графиком (BAND1/BAND2), столбцы в неё не заходят (их потолок — BARTOP),
+    а с группой подпись связывает скоба над её столбцами.
+    """
     s = []
-    X0, Y0, X1, Y1 = 60, 34, 880, 300
+    X0, Y0, X1, Y1 = 60, 34, 880, 336
+    BAND1, BAND2, BRACE, BARTOP = 96, 116, 128, 146
     s.append(_axes(X0, Y0, X1, Y1))
     s.append(_txt(X1, Y1 + 22, "срок обработки, дни →", 12, None, DARK, op=0.6, anchor="end"))
     s.append(_txt(X0 - 8, Y0 - 12, "число заявок", 12, None, DARK, op=0.6))
@@ -102,7 +110,7 @@ def hist_bimodal():
     bw = (X1 - X0 - 40) / n
     for i, h in enumerate(H):
         x = X0 + 20 + i * bw
-        hh = h / hmax * (Y1 - Y0 - 40)
+        hh = h / hmax * (Y1 - BARTOP)
         s.append(f'<rect x="{x:.1f}" y="{Y1 - hh:.1f}" width="{bw - 4:.1f}" '
                  f'height="{hh:.1f}" rx="3" fill="{ACC}" fill-opacity="0.85"/>')
     gx = lambda i: X0 + 20 + (i + 0.5) * bw
@@ -111,11 +119,17 @@ def hist_bimodal():
     s.append(f'<line x1="{xm:.0f}" y1="{Y0 + 4}" x2="{xm:.0f}" y2="{Y1}" '
              f'stroke="{WARN}" stroke-width="2" stroke-dasharray="6 5"/>')
     s.append(_txt(xm, Y0 - 2, "среднее — там, где заявок почти нет", 13, "700", WARN, anchor="middle"))
-    s.append(_txt(gx(3), 96, "процесс 1", 13.5, "800", DEEP, anchor="middle"))
-    s.append(_txt(gx(3), 114, "автоматический маршрут", 13, None, DARK, op=0.78, anchor="middle"))
-    s.append(_txt(gx(12), 110, "процесс 2", 13.5, "800", DEEP, anchor="middle"))
-    s.append(_txt(gx(12), 128, "ручная проверка", 13, None, DARK, op=0.78, anchor="middle"))
-    return _svg(330, ''.join(s))
+    # Скоба над группой столбцов + подпись над скобой: два горба — два процесса.
+    for i0, i1, name, sub in ((0, 6, "процесс 1", "автоматический маршрут"),
+                              (9, 15, "процесс 2", "ручная проверка")):
+        xa, xb = X0 + 20 + i0 * bw, X0 + 20 + i1 * bw + bw - 4
+        s.append(f'<polyline points="{xa:.1f},{BRACE + 7} {xa:.1f},{BRACE} '
+                 f'{xb:.1f},{BRACE} {xb:.1f},{BRACE + 7}" fill="none" stroke="{DEEP}" '
+                 f'stroke-width="1.4" stroke-opacity="0.45" stroke-linejoin="round"/>')
+        xc = (xa + xb) / 2
+        s.append(_txt(xc, BAND1, name, 13.5, "800", DEEP, anchor="middle"))
+        s.append(_txt(xc, BAND2, sub, 13, None, DARK, op=0.78, anchor="middle"))
+    return _svg(366, ''.join(s))
 
 
 def mean_vs_median():
@@ -132,7 +146,9 @@ def mean_vs_median():
         (238, "те же значения и один выброс", vals + [OUT], med2, mean2, OUT),
     ]
     for y, title, vv, med, mean, out in ROWS:
-        s.append(_txt(X0, y - 46, title, 13, "700", DARK))
+        # Заголовок ряда — выше подписи «медиана» (она стоит на y − 38 и
+        # приходится ровно на левую треть строки, где кончается заголовок).
+        s.append(_txt(X0, y - 64, title, 13, "700", DARK))
         s.append(f'<line x1="{X0 - 10}" y1="{y}" x2="{X1 + 10}" y2="{y}" '
                  f'stroke="{DARK}" stroke-opacity="0.3" stroke-width="1.5"/>')
         for v in vv:
@@ -297,10 +313,15 @@ EXAMPLES_CSS = """<style>
 /* Подписи внутри графиков заданы в координатах SVG шириной 920. На узком
    экране график сжимается втрое, и подписи становятся нечитаемыми (около
    четырёх пикселей). Ниже 640 px график сохраняет минимальную ширину и
-   прокручивается внутри своей рамки — как таблицы примеров. */
+   прокручивается внутри своей рамки — как таблицы примеров.
+   Минимум — 800 px: при нём подпись 13 в координатах SVG выходит на экране
+   в 11,3 px, то есть не мельче, чем та же подпись на широком экране (колонка
+   там 778 px). Прежние 680 px давали 9,6 px — мельче десктопа. Измерено
+   getBBox/getBoundingClientRect в headless-Chrome на 390 и 1440 px:
+   на глаз кегль в SVG не оценивается, он зависит от масштаба viewBox. */
 @media(max-width:640px){
   .figbox{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  .figbox svg{min-width:680px}
+  .figbox svg{min-width:800px}
 }
 @media(max-width:640px){
   .exm{overflow-x:visible}

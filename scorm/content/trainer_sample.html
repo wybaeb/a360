@@ -92,6 +92,13 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent-mid);b
 .hint-err{background:var(--err-soft);color:var(--err)}
 .hint-info{background:var(--info-soft);color:var(--info)}
 .hint .dot{flex-shrink:0;width:5px;height:5px;border-radius:50%;background:currentColor;margin-top:6px}
+.narrow-hint{display:none}
+.narrow-hint+.sect-title{margin-top:0}
+@media (max-width:640px){
+  .header{flex-wrap:wrap}
+  .header-sub{display:none}
+  .narrow-hint{display:flex;margin:0 0 14px}
+}
 
 .toggle-row{display:flex;gap:6px;margin-top:6px}
 .toggle{padding:7px 10px;background:var(--bg-elevated);border-radius:var(--radius-sm);font-size:12px;cursor:pointer;flex:1;text-align:center;font-weight:500;color:var(--text-sec);transition:.15s}
@@ -155,6 +162,7 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent-mid);b
 
 <!-- ============ LEFT: parameters ============ -->
 <aside class="left">
+  <div class="hint hint-info narrow-hint"><span class="dot"></span>Двигайте ползунки — формула пересчитывается мгновенно</div>
   <div class="sect-title">Тип теста</div>
   <div class="tabs">
     <div class="tab active" data-test="prop">Пропорции<small>CR, CTR, retention</small></div>

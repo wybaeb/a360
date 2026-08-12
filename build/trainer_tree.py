@@ -28,12 +28,14 @@
 
 Запуск:  python3 build/trainer_tree.py
 """
+import itertools
 import json
 import pathlib
 import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import scorm_engagement
 import theme
 from metrics_data import metric
 
@@ -109,9 +111,10 @@ CASES = [
   "grp": "Розница · кредитная карта", "opt": "Уровень 2 · выберите источники данных",
   "desc": ("Уровень 2. Та же розничная воронка, но активацию можно взять из двух источников: "
            "витрина DWH считает первую операцию за 30 дней, флаг CRM отмечает выпуск карты и "
-           "доступен онлайн. Дерево верно при обоих вариантах, а экономика конфигураций разная: "
-           "быстрый флаг тянет за собой накопительную сверку на сочленении. Соберите дерево — "
-           "тренажёр сравнит вашу конфигурацию с лучшей и покажет, что заменить."),
+           "доступен в реальном времени. Дерево верно при обоих вариантах, а экономика "
+           "конфигураций разная: быстрый флаг требует накопительной сверки на стыке с "
+           "расчётом активных клиентов. Соберите дерево — тренажёр сравнит вашу конфигурацию "
+           "с лучшей и покажет, что заменить."),
   "horizon": 3, "decision": "alive",
   "ideal": ["app", "appr", "err", "actA", "iss", "alive", "churn", "rev", "pnl"],
   # путь app/appr(7)→iss(7)=14; actA 14 → alive 14+max(14,14)=28;
@@ -133,8 +136,9 @@ CASES = [
   },
   "quality": [
     {"target": "alive", "slot": "Источник активации", "options": ["actA", "actB"], "best": "actA",
-     "okNote": ("Активация взята из витрины DWH: первая операция за 30 дней, расчёт "
-                "прослеживается до транзакций, master-source зафиксирован.")},
+     "okNote": ("Активация взята из витрины DWH: считается первая операция за 30 дней, "
+                "расчёт прослеживается до транзакций, и витрина закреплена регламентом "
+                "как официальный источник.")},
   ],
   "calc": {
     "iss": {"lbl": "Заявки + Одобрение → Выдачи", "formula": "Выдачи = Заявки × Одобрение",
@@ -229,10 +233,10 @@ CASES = [
 {
   "id": "corporate", "title": "Подключение юрлиц · уровень 2 — конфигурация данных",
   "grp": "Корпоративный блок · подключение юрлиц", "opt": "Уровень 2 · выберите источники данных",
-  "desc": ("Уровень 2. Дерево проще, но появляется развилка данных: след процесса — из журнала "
-           "workflow или ручной выборкой кейсов. Дерево верно при обоих вариантах, а вот "
-           "экономика конфигураций разная: сравните CAPEX, OPEX, время ансамбля и интегральную "
-           "оценку качества данных — тренажёр покажет, что заменить."),
+  "desc": ("Уровень 2. Дерево проще, но появляется выбор источника: след процесса можно взять "
+           "из журнала workflow или собрать ручной выборкой кейсов. Дерево верно при обоих "
+           "вариантах, а экономика конфигураций разная: сравните расходы на подключение и "
+           "поддержание, время до решения и качество данных — тренажёр покажет, что заменить."),
   "horizon": 3, "decision": "t2a",
   "ideal": ["ts", "rw", "t2a", "actv", "fee"],
   # путь: ts 21 → t2a 21+21=42; TCO = (180+30+60+40+20) + 3×(45+8+15+10+5) = 330+249 = 579.
@@ -301,8 +305,8 @@ CASES = [
            "прибыльность и месяц окупаемости) можно взять из витрины финансовых моделей или из заявок "
            "менеджеров, а ход портфеля контролировать план-фактом из учёта или статус-отчётами. "
            "Из паспортов считаются NPV-кривые, кривые складываются в кривую портфеля. Быстрый "
-           "источник на первом уровне может стоить недель на сочленении — соберите конфигурацию, "
-           "и тренажёр разберёт, в чём ограничение именно вашего выбора."),
+           "источник на первом уровне может стоить недель на стыке с расчётом — соберите "
+           "конфигурацию, и тренажёр разберёт, в чём ограничение именно вашего выбора."),
   "horizon": 3, "decision": "prio",
   "ideal": ["fmv", "npvi", "npvsum", "factp", "prio"],
   # путь fmv→npvi→npvsum→prio: 21+14+7+30 = 72 дн (factp→prio: 60 — не критич.);
@@ -311,7 +315,15 @@ CASES = [
   # Подвох сочленения: паспорта из заявок менеджеров быстры сами по себе
   # (TTE 10 дн), но посчитаны по разным методикам — перед сложением кривых
   # нужна ручная нормализация: +45 дн на сочленении mreq → NPV-кривая.
-  # Анти-конфигурация: 10+45+14+7+30 = 106 дн, TCO 419 т₽.
+  # Анти-конфигурация: 10+45+14+7+30 = 106 дн, TCO 479 т₽.
+  # Вторая развилка учит другому: статус-отчёты не стоят на критическом пути
+  # (вклад в срок — 3 дн при витрине и ноль при заявках менеджеров), зато вход
+  # за 5 т₽ тянет за собой ручное содержание 45 т₽/мес — уже на 3-м месяце,
+  # то есть внутри горизонта пилота, «дешёвый» контроль перестаёт быть дешевле
+  # план-факта. До правки содержание статус-отчётов стоило 25 т₽/мес, и в паре
+  # с заявками менеджеров эталонный источник проигрывал по критерию 13,932
+  # против 13,960: подсказка не предлагала правильную замену, а разбор при этом
+  # называл статус-отчёты подвохом.
   "lags": [
     {"target": "npvi", "source": "mreq", "extra": 45},
   ],
@@ -403,6 +415,20 @@ def _eval(case, ids, edges=None):
     return tte, tco, q
 
 
+def _eff(case, ids):
+    """Тот же критерий сравнения конфигураций, что считает страница:
+    интегральная оценка качества данных, отнесённая к TTE и TCO (CD3)."""
+    _t, _co, _q = _eval(case, ids)
+    return _q / 100.0 * 1e6 / (_t * _co)
+
+
+# Запас эталона над ближайшей конфигурацией. Порог не косметический: разбор на
+# странице показывает экономический шаг только при выигрыше больше 0,1 %
+# (sim.e > cur.e*1.001), а участнику урок должен быть виден числами, а не
+# четвёртым знаком. Конфигурация, выигрывающая на доли процента, — не урок,
+# а совпадение округлений: такие кейсы сборка не пропускает.
+_EFF_MARGIN = 1.05
+
 for _c in CASES:
     if not _c.get("rules"):
         continue
@@ -410,19 +436,49 @@ for _c in CASES:
     assert (_tte, _tco) == (_c["idealEco"]["tte"], _c["idealEco"]["tco"]), (
         f'кейс {_c["id"]}: расчёт эталона {(_tte, _tco)} разошёлся с idealEco {_c["idealEco"]}')
     _c["idealEco"]["q"] = _q
-    # у каждой развилки лучший вариант обязан быть лучшим и по расчёту
-    for _g in _c.get("quality", []):
-        _best_e = None
-        for _o in _g["options"]:
-            _ids = [m for m in _c["ideal"] if m not in _g["options"]] + [_o]
-            _t, _co, _qq = _eval(_c, _ids)
-            _e = _qq / 100.0 * 1e6 / (_t * _co)
-            if _o == _g["best"]:
-                _best_e = _e
-            else:
-                assert _best_e is None or _e < _best_e, (
-                    f'кейс {_c["id"]}, развилка {_g["slot"]}: вариант {_o} '
-                    f'выигрывает у объявленного лучшего {_g["best"]}')
+    # Эталон обязан быть лучшим не «при прочих эталонных», а при любых прочих:
+    # перебираем все сочетания развилок кейса. Прежняя проверка сравнивала
+    # варианты развилки только при эталонных остальных и пропускала случай,
+    # когда лучший источник проигрывает в паре с неверным выбором на соседней
+    # развилке: участник, выбравший правильный источник, не получал ни
+    # подтверждения, ни подсказки — замена отсекалась порогом в разборе.
+    _forks = _c.get("quality", [])
+    if not _forks:
+        continue
+    _opts = [o for _g in _forks for o in _g["options"]]
+    for _g in _forks:
+        assert _g["best"] in _c["ideal"], (
+            f'кейс {_c["id"]}, развилка {_g["slot"]}: лучший вариант {_g["best"]} '
+            f'не входит в эталон кейса')
+    _base = [m for m in _c["ideal"] if m not in _opts]
+    _ideal_combo = tuple(_g["best"] for _g in _forks)
+    for _combo in itertools.product(*[_g["options"] for _g in _forks]):
+        _e = _eff(_c, _base + list(_combo))
+        # 1) шаг к эталонному источнику по каждой развилке обязан улучшать
+        #    критерий — при любом выборе на соседних развилках;
+        for _i, _g in enumerate(_forks):
+            if _combo[_i] == _g["best"]:
+                continue
+            _fix = list(_combo)
+            _fix[_i] = _g["best"]
+            _ef = _eff(_c, _base + _fix)
+            _t, _co, _qq = _eval(_c, _base + list(_combo))
+            _tf, _cof, _qf = _eval(_c, _base + _fix)
+            assert _e * _EFF_MARGIN < _ef, (
+                f'кейс {_c["id"]}, развилка {_g["slot"]}: при выборе '
+                f'{_combo} замена {_combo[_i]} на эталонный {_g["best"]} даёт '
+                f'{_ef:.4f} (TTE {_tf} дн, TCO {_cof} т₽, качество {_qf}) против '
+                f'{_e:.4f} (TTE {_t} дн, TCO {_co} т₽, качество {_qq}) — '
+                f'эталонный источник не выигрывает с запасом {_EFF_MARGIN:.2f}, '
+                f'и разбор не предложит эту замену')
+        # 2) и сам эталон обязан быть максимумом критерия по всем сочетаниям.
+        if _combo != _ideal_combo:
+            _t, _co, _qq = _eval(_c, _base + list(_combo))
+            assert _e * _EFF_MARGIN < _eff(_c, _base + list(_ideal_combo)), (
+                f'кейс {_c["id"]}: конфигурация {_combo} даёт {_e:.4f} '
+                f'(TTE {_t} дн, TCO {_co} т₽, качество {_qq}) против '
+                f'{_eff(_c, _base + list(_ideal_combo)):.4f} у объявленного эталона '
+                f'{_ideal_combo} — эталон не выигрывает с запасом {_EFF_MARGIN:.2f}')
 
 # анти-конфигурации, зафиксированные в дизайне кейсов
 assert _eval(_case("retail_data"),
@@ -431,7 +487,7 @@ assert _eval(_case("process_data"),
              ["pc_smp", "pc_stp", "pc_docret", "pc_tat", "pc_sla", "pc_out", "pc_cost"])[:2] == (66, 577)
 assert _eval(_case("corporate"), ["mn", "rw", "t2a", "actv", "fee"])[:2] == (71, 414)
 assert _eval(_case("portfolio2"),
-             ["mreq", "npvi", "npvsum", "statr", "prio"])[:2] == (106, 419)
+             ["mreq", "npvi", "npvsum", "statr", "prio"])[:2] == (106, 479)
 
 # гомогенность терминов: внутренний жаргон в кейсы не просачивается
 _all_texts = json.dumps(CASES, ensure_ascii=False)
@@ -530,12 +586,13 @@ swap('<div class="header-brand">',
      '<a class="back-link" href="index.html">&larr; Материалы</a>\n'
      '    <div class="header-brand">', "back-link anchor")
 
-# ── 3. Счётчик связей: обязательные + предсказывающие ──
-swap("const total=Object.values(c.rules).reduce((s,rl)=>s+rl.req.length,0);",
-     "const total=Object.values(c.rules).reduce((s,rl)=>s+rl.req.length+(rl.opt||[]).length,0);",
-     "total edges")
-swap("Верных связей: ${corr} из ${total} необходимых",
-     "Верных связей: ${corr} из ${total} возможных", "edges label")
+# ── 3. Счётчик связей ──
+# Исходный счётчик считал только верные связи и сравнивал их с суммой всех
+# правил кейса, включая оба варианта выбора источника. Получалось «7 из 9»
+# рядом с вердиктом «есть замечания»: число противоречило вердикту и молчало
+# о неверно проведённых связях. Шапку разбора вместе со счётчиком собирает
+# заново раздел 8 — за образец берётся число связей правильного дерева кейса,
+# а неверно проведённые связи называются отдельным предложением.
 
 # ── 3b. Гомогенные термины в сообщениях: полные названия метрик, а не подписи-единицы ──
 swap("msg:`${met(fn.metricId)?.abbr} не влияет на ${met(tn.metricId)?.abbr}`",
@@ -545,8 +602,9 @@ swap("const mNames=(ri.miss||[]).map(m=>met(m)?.abbr||m).join(', ');",
      "const mNames=(ri.miss||[]).map(m=>met(m)?.name||m).join(', ');",
      "calc miss: name вместо abbr")
 swap("'Несвязанные метрики: '+orph.map(n=>met(n.metricId)?.abbr).join(', ')",
-     "'Несвязанные метрики: '+orph.map(n=>met(n.metricId)?.name).join(', ')",
-     "orphan list: name вместо abbr")
+     "'Метрики без единой связи: '+orph.map(n=>met(n.metricId)?.name).join(', ')+"
+     "'. Соедините их с деревом или уберите с холста.'",
+     "orphan list: полное название метрики и фраза вместо перечня сокращений")
 swap("m:`${m.abbr} — опережающая, обычно не имеет входящих связей`",
      "m:`«${m.name}» — опережающая, обычно не имеет входящих связей`",
      "sandbox leading-in: name")
@@ -615,8 +673,9 @@ EXTRA_CSS = """
 .pal-card{position:relative}
 .pal-card .help-btn{position:absolute;top:6px;right:6px}
 .help-btn-node{position:absolute;top:4px;right:4px}
+/* z-index выше оверлея результатов: «как это считается» открывается прямо из разбора */
 .q-modal-back{position:fixed;inset:0;background:rgba(10,30,20,.45);display:none;
-  align-items:center;justify-content:center;z-index:60}
+  align-items:center;justify-content:center;z-index:120}
 .q-modal-back.open{display:flex}
 .q-modal{background:#fff;color:#10281c;max-width:490px;width:92%;border-radius:14px;
   padding:20px 22px;box-shadow:0 18px 50px rgba(10,30,20,.35);font-size:13.5px;line-height:1.55;
@@ -653,6 +712,28 @@ EXTRA_CSS = """
 .eco-badge .eco-i:hover{opacity:1;border-color:var(--accent)}
 .overlay{background:rgba(10,30,20,.4)}
 .results{background:#fff;box-shadow:0 24px 60px rgba(10,30,20,.35)}
+/* Следующий шаг — главный элемент разбора: один поступок и объяснение, зачем он */
+.next-step{border:1px solid rgba(32,186,114,.38);background:rgba(32,186,114,.09);
+  border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.next-step.calm{border-color:rgba(46,107,184,.32);background:rgba(46,107,184,.08)}
+.ns-t{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  color:#0f7a46;margin-bottom:6px}
+.next-step.calm .ns-t{color:#2E6BB8}
+.ns-do{font-size:14px;font-weight:600;line-height:1.45}
+.ns-why{font-size:13px;line-height:1.55;color:var(--text-sec);margin-top:7px}
+.ns-why a.q-link{color:#0f7a46}
+/* остальные замечания — свёрнуты, чтобы не забивать внимание */
+.res-more{margin-top:12px;border-top:1px solid rgba(16,40,28,.10);padding-top:10px}
+.res-more>summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--text-sec);
+  list-style:none;display:flex;align-items:baseline;gap:7px;padding:2px 0}
+.res-more>summary::-webkit-details-marker{display:none}
+.res-more>summary::before{content:'\\25B8';font-size:10px;color:var(--text-muted)}
+.res-more[open]>summary::before{content:'\\25BE'}
+.res-more>summary:hover{color:var(--text)}
+.res-more-body{margin-top:9px}
+.eco-how{color:#0f7a46;font-weight:600;cursor:pointer;white-space:nowrap;
+  border-bottom:1px solid rgba(15,122,70,.35)}
+.eco-how:hover{border-bottom-color:#0f7a46}
 """
 swap("</style>", EXTRA_CSS + "</style>", "css")
 
@@ -683,10 +764,14 @@ EXTRA_BODY = """
 
   /* ── мелкие помощники разметки ────────────────────────────────────────── */
   function L(mid){var m=met(mid);return {text:'«'+m.name+'»',link:m.link}}
+  /* название метрики без ссылки: во фразе «что сделать сейчас» ссылки уводят
+     от действия, поэтому там метрики называются простым текстом */
+  function N(mid){var m=met(mid);return m?'«'+m.name+'»':mid}
   function put(el,parts){
     parts.forEach(function(p){
       if(p==null)return;
       if(typeof p==='string'){el.appendChild(document.createTextNode(p));return}
+      if(p.el){el.appendChild(p.el);return}
       if(p.link){
         var a=document.createElement('a');a.className='q-link';a.href=p.link;
         a.target='_blank';a.rel='noopener';a.textContent=p.text;el.appendChild(a);return;
@@ -752,7 +837,7 @@ EXTRA_BODY = """
   }
   var CRIT_TEXT='Конфигурация оценивается по трём величинам. TTE ансамбля — время до '+
     'проверенного решения по критическому пути дерева: у каждой метрики свой срок сбора, '+
-    'расчётные уровни наследуют максимум входов, а накопительные сверки в сочленениях '+
+    'расчётные уровни наследуют максимум входов, а накопительные сверки на стыках '+
     'добавляют время. Поэтому быстрая метрика на первом уровне не гарантирует быстрого '+
     'решения — выигрывает ансамбль в целом. TCO за горизонт пилота = сумма CAPEX + месяцы × '+
     'сумма OPEX по всем метрикам дерева. Интегральная оценка качества данных — свёртка шести '+
@@ -769,13 +854,14 @@ EXTRA_BODY = """
 
   ['mousedown','dblclick'].forEach(function(ev){
     document.addEventListener(ev,function(e){
-      if(e.target.closest&&(e.target.closest('.help-btn')||e.target.closest('.eco-i')))e.stopPropagation();
+      if(e.target.closest&&(e.target.closest('.help-btn')||e.target.closest('.eco-i')||
+        e.target.closest('.eco-how')))e.stopPropagation();
     },true);
   });
   document.addEventListener('click',function(e){
     var b=e.target.closest&&e.target.closest('.help-btn');
     if(b){e.stopPropagation();openHelp(b.dataset.mid);return}
-    if(e.target.closest&&e.target.closest('.eco-i')){
+    if(e.target.closest&&(e.target.closest('.eco-i')||e.target.closest('.eco-how'))){
       e.stopPropagation();
       openModal('Как считается эффективность конфигурации',CRIT_TEXT,null,'',
         'longread_metrics.html#eco');return}
@@ -904,6 +990,24 @@ EXTRA_BODY = """
   }
   function pct(v){return Math.round(v*100)+' %'}
 
+  /* Дерево собрано: все связи верны, все метрики дерева на месте и соединены,
+     источник на каждом выборе подведён. Лишняя метрика, лежащая на холсте без
+     связей, сборке не мешает — она не входит в дерево кейса, о ней разбор
+     говорит отдельно. А вот метрика самого дерева без связей — это несобранное
+     дерево: её данные в расчёт решения не попадают.
+     Пока дерево не собрано, ни срок, ни стоимость, ни качество конфигурации
+     ещё ничего не значат: у половины дерева критический путь короче не потому,
+     что решение придёт быстрее, а потому, что ветки не проведены. */
+  function treeReady(v){
+    if(!v||v.sandbox)return true;
+    if(v.ok)return true;
+    var c=cas(),ideal=(c&&c.ideal)||[];
+    return (v.edges||[]).every(function(e){return e.s==='ok'})&&
+           (v.metrics||[]).every(function(m){return m.s==='ok'})&&
+           (v.qmsgs||[]).every(function(q){return q.t!=='err'})&&
+           (v.iso||[]).every(function(m){return ideal.indexOf(m)<0});
+  }
+
   /* ═══ живой замер в тулбаре ═══ */
   var tb=document.querySelector('.toolbar');
   var eb=document.createElement('span');eb.className='eco-badge';eb.style.display='none';
@@ -915,6 +1019,12 @@ EXTRA_BODY = """
     var eco=S.nodes.length?evalGraph(graphOf()):null;
     if(!eco){eb.style.display='none';return}
     eb.style.display='';
+    if(!treeReady(validate())){
+      eb.innerHTML='Срок, стоимость и качество данных замер покажет, '+
+        'когда дерево будет собрано'+
+        ' <span class="eco-i" title="как это считается">i</span>';
+      return;
+    }
     eb.innerHTML='TTE ансамбля <b>'+(eco.tte||'—')+(eco.tte?' дн':'')+'</b> · TCO('+eco.H+
       ' мес) <b>'+eco.tco+' т₽</b> · качество данных <b>'+eco.q+'</b>'+
       ' <span class="eco-i" title="как это считается">i</span>';
@@ -924,13 +1034,9 @@ EXTRA_BODY = """
   var _validate=validate;
   validate=function(){
     var r=_validate();
-    if(r.sandbox){
-      var isoS=S.nodes.filter(function(n){
-        return !S.edges.some(function(e){return e.from===n.id||e.to===n.id})});
-      if(isoS.length&&r.msgs)r.msgs.push({t:'warn',m:'Изолированные метрики (без единой связи): '+
-        isoS.map(function(n){return met(n.metricId).name}).join(', ')});
-      return r;
-    }
+    /* в свободном режиме о метриках без связей уже сказано в самой проверке —
+       второй раз теми же словами не повторяем */
+    if(r.sandbox)return r;
     var c=cas();r.qmsgs=[];r.forks=[];
     var absentAllowed=[];
     (c.quality||[]).forEach(function(g){
@@ -943,8 +1049,11 @@ EXTRA_BODY = """
          оба источника нельзя, об этом говорит отдельное сообщение о развилке */
       g.options.forEach(function(o){if(chosen.indexOf(o)<0)absentAllowed.push(o)});
       if(!tn||!chosen.length){
-        r.qmsgs.push({t:'err',m:'Развилка «'+g.slot+'»: для «'+met(g.target).name+
-          '» нужен один из источников — '+g.options.map(function(o){return met(o).name}).join(' или ')});
+        /* g кладётся в сообщение, чтобы разбор написал этот выбор словами:
+           термина «развилка» участник нигде не встречал */
+        r.qmsgs.push({t:'err',g:g,m:'Источник для метрики «'+met(g.target).name+
+          '» ещё не выбран: подойдёт '+
+          g.options.map(function(o){return '«'+met(o).name+'»'}).join(' или ')+'.'});
       }else{
         r.forks.push({g:g,chosen:chosen});
         if(chosen.length===1&&chosen[0]===g.best)r.qmsgs.push({t:'ok',m:g.okNote});
@@ -962,21 +1071,40 @@ EXTRA_BODY = """
     return r;
   };
 
+  /* Роль метрики в дереве кейса, сказанная фразой: на что влияет, из чего
+     считается и по какому источнику её собирают на выбор. Варианты выбора
+     перечисляются отдельно — иначе они читаются как обязательные входы. */
   function connectHint(mid){
-    var c=cas(),to=[],from=[];
-    function q(x){return '«'+met(x).name+'»'}
+    var c=cas(),to=[],req=[],opt=[],forks=[],inFork={};
+    function q(x){var m=met(x);return '«'+(m?m.name:x)+'»'}
+    function list(a,sep){
+      if(a.length<2)return a.join('');
+      return a.slice(0,-1).join(', ')+(sep||' и ')+a[a.length-1];
+    }
     for(var k in (c.rules||{})){
       var rl=c.rules[k];
-      if((rl.req||[]).indexOf(mid)>=0||(rl.opt||[]).indexOf(mid)>=0)to.push(q(k));
+      if((rl.req||[]).concat(rl.opt||[]).indexOf(mid)>=0)to.push(q(k));
     }
-    if(c.rules&&c.rules[mid]){
-      var rl2=c.rules[mid];
-      from=(rl2.req||[]).concat(rl2.opt||[]).map(q);
+    (c.quality||[]).forEach(function(g){
+      if(g.target!==mid)return;
+      forks.push(g);g.options.forEach(function(o){inFork[o]=1});
+    });
+    var rl2=(c.rules||{})[mid];
+    if(rl2){
+      req=(rl2.req||[]).filter(function(x){return !inFork[x]}).map(q);
+      opt=(rl2.opt||[]).filter(function(x){return !inFork[x]}).map(q);
     }
-    var parts=[];
-    if(to.length)parts.push('влияет на '+to.join(', '));
-    if(from.length)parts.push('рассчитывается из '+from.join(', '));
-    return parts.join(' и ')||'её место — в дереве кейса';
+    var main=[];
+    if(to.length)main.push('влияет на '+list(to));
+    if(req.length)main.push('рассчитывается из '+list(req));
+    else if(opt.length)main.push('учитывает '+list(opt));
+    if(req.length&&opt.length)main.push('учитывает '+list(opt));
+    var s=list(main,' и ');
+    forks.forEach(function(g){
+      s+=(s?', а ':'')+g.slot.toLowerCase()+' для неё выбирается из двух: '+
+        list(g.options.map(q),' или ');
+    });
+    return s||'её место — в дереве кейса';
   }
 
   /* ═══ разбор конфигурации ══════════════════════════════════════════════
@@ -1003,68 +1131,131 @@ EXTRA_BODY = """
         if(f.chosen.indexOf(g.best)>=0){
           /* оба источника развилки подключены разом */
           var wo=n?evalGraph(graphOf({drop:[n.id]})):null;
-          var ln=['Развилка «'+g.slot+'»: к ',L(g.target),' подведены сразу оба источника — ',
-                  L(g.best),' и ',L(o),'. Один и тот же вход собирается дважды: ',
-                  {b:'+'+(cur.tco-(wo?wo.tco:cur.tco))+' т₽'},
-                  ' к совокупной стоимости владения за ',{b:cur.H+' мес'}];
-          if(wo&&wo.tte<cur.tte)ln=ln.concat([' и ',{b:'+'+dn(cur.tte-wo.tte)},
-            ' к сроку решения — второй источник тянет за собой сверку на сочленении.']);
-          else ln.push(', а срок решения от этого не сокращается.');
+          var ln=['К метрике ',L(g.target),' подведены сразу оба источника — ',
+                  L(g.best),' и ',L(o),'. Один и тот же вход собирается дважды, '+
+                  'и второй сбор добавляет ',
+                  {b:(cur.tco-(wo?wo.tco:cur.tco))+' т₽'},
+                  ' к стоимости владения за ',{b:cur.H+' мес'}];
+          /* откуда взялись лишние дни, говорим по факту расчёта: накопительная
+             сверка на стыке бывает не у каждого источника, а решение в любом
+             случае ждёт более медленную из двух веток */
+          var hit0=cur.hits.filter(function(h){return h.lag.source===o})[0];
+          if(wo&&wo.tte<cur.tte)ln=ln.concat([' и ещё ',{b:dn(cur.tte-wo.tte)},
+            ' к сроку до решения: '+(hit0
+              ? 'расчёт на стыке с этим источником требует накопительной сверки, '+
+                'и решение ждёт её.'
+              : 'решение ждёт более медленный из двух источников.')]);
+          else ln.push(', а срок до решения от этого не сокращается.');
           traps.push(ln);
           if(n)cands.push({kind:'drop',node:n.id,mid:o});
           return;
         }
         /* выбран только неудачный источник */
-        var line1=['Развилка «'+g.slot+'»: выбран источник ',L(o),'.'];
-        if(badM.flaw)line1.push(' Подвох: '+badM.flaw+'.');
+        var line1=['Для метрики ',L(g.target),' вы выбрали источник ',L(o),'.'];
+        if(badM.flaw)line1.push(' Его ограничение в том, что '+badM.flaw+'.');
         traps.push(line1);
         var hit=cur.hits.filter(function(h){return h.lag.source===o})[0];
-        var vs=ideal?[' против ',{b:dn(ideal.tte)},' у лучшей конфигурации кейса']:[];
+        /* Во что этот выбор обходится по сроку, считаем как разницу между
+           конфигурациями — этой и той же с лучшим источником, — а не как
+           разницу паспортов источников: собственный срок сбора попадает в срок
+           до решения только тогда, когда источник стоит на самой длинной ветке
+           дерева. Источник вне критического пути не добавляет решению ни дня. */
+        var placed=nodeByMet(g.best),swpMod=null;
+        if(n){
+          if(placed)swpMod={drop:[n.id],
+            addEdges:implEdges(graphOf({drop:[n.id]}).nodes,placed.id,g.best)};
+          else{swpMod={ov:{}};swpMod.ov[n.id]=g.best}
+        }
+        var swp=swpMod?evalGraph(graphOf(swpMod)):null;
+        var dT=swp?cur.tte-swp.tte:null;
+        function tteTail(){
+          if(dT===null)return[];
+          if(dT>0)return['По самой длинной ветке дерева решение'+
+            (dec?' по метрике «'+dec+'»':'')+' приходит через ',{b:dn(cur.tte)},' — на ',
+            {b:dn(dT)},' позже, чем с источником ',L(g.best),', с которым оно приходит через ',
+            {b:dn(swp.tte)},'.'];
+          if(dT===0)return['На срок до решения этот выбор при этом не влияет: источник '+
+            'не стоит на самой длинной ветке дерева, и решение'+
+            (dec?' по метрике «'+dec+'»':'')+' приходит через ',{b:dn(cur.tte)},
+            ' с любым из двух источников. Разница между ними — в стоимости владения '+
+            'и в качестве данных.'];
+          return['Решение'+(dec?' по метрике «'+dec+'»':'')+' с ним приходит даже раньше — '+
+            'через ',{b:dn(cur.tte)},' против ',{b:dn(swp.tte)},' у источника ',L(g.best),
+            '; цена этой скорости — стоимость владения и качество данных.'];
+        }
         if(hit){
           traps.push([
-            'Сам по себе он быстрее: проверенный сигнал за ',{b:dn(badM.tte)},' против ',
-            {b:dn(bestM.tte)},' у ',L(g.best),
-            '. Но на сочленении с ',L(hit.lag.target),
-            ' каждый расчёт требует накопительной сверки — ',{b:'+'+dn(hit.lag.extra)},
-            '. По критическому пути до решения'+(dec?' «'+dec+'»':'')+' это ',
-            {b:dn(cur.tte)}].concat(vs).concat([
-            '. Быстрая метрика не даёт быстрого решения.']));
-        }else if(badM.tte>bestM.tte){
+            'Сам по себе этот источник быстрее: проверенный сигнал приходит за ',
+            {b:dn(badM.tte)},' против ',{b:dn(bestM.tte)},' у источника ',L(g.best),
+            '. Но на стыке с метрикой ',L(hit.lag.target),
+            ' каждый расчёт требует накопительной сверки, а это ещё ',{b:dn(hit.lag.extra)},
+            '. '].concat(tteTail()).concat(
+            dT>0?[' Быстрый источник не даёт быстрого решения.']:[]));
+        }else if(badM.tte!==bestM.tte||dT){
           traps.push([
             'Проверенную картину он отдаёт за ',{b:dn(badM.tte)},' против ',
-            {b:dn(bestM.tte)},' у ',L(g.best),
-            ' — эти ',{b:dn(badM.tte-bestM.tte)},
-            ' целиком ложатся на критический путь: до решения'+
-            (dec?' «'+dec+'»':'')+' ',{b:dn(cur.tte)}].concat(vs).concat(['.']));
+            {b:dn(bestM.tte)},' у источника ',L(g.best),'. '].concat(tteTail()).concat(
+            (dT>0&&dT<badM.tte-bestM.tte)
+              ? [' На срок до решения переносится не вся разница сроков сбора, '+
+                 'а только та её часть, которая попадает на самую длинную ветку.']
+              : []));
         }
         var be=breakEven(badM,bestM);
         if(be!==null){
           traps.push([
-            'На входе он дешевле на ',{b:(bestM.capex-badM.capex)+' т₽'},
+            'На подключении он дешевле на ',{b:(bestM.capex-badM.capex)+' т₽'},
             ', но в обслуживании дороже на ',{b:(badM.opex-bestM.opex)+' т₽/мес'},
-            ': экономия исчерпывается на ',{b:be+'-м месяце'},' эксплуатации.'
+            ': экономия исчерпывается на ',{b:be+'-м месяце'},' работы.'
           ]);
         }else if(badM.capex<bestM.capex){
           var save=(bestM.capex-badM.capex)+cur.H*(bestM.opex-badM.opex);
           traps.push([
-            'На входе он дешевле на ',{b:(bestM.capex-badM.capex)+' т₽'},
+            'На подключении он дешевле на ',{b:(bestM.capex-badM.capex)+' т₽'},
             (badM.opex===bestM.opex
               ? ', а в обслуживании стоит столько же — '+badM.opex+' т₽/мес'
               : ', и в обслуживании дешевле на '+(bestM.opex-badM.opex)+' т₽/мес'),
             '. Вся экономия — ',{b:save+' т₽'},' за ',{b:cur.H+' мес'},
-            ': это и есть цена вопроса, за которую покупается задержка решения и '+
+            ': это и есть цена, за которую покупается задержка решения и '+
             'потеря в качестве данных.'
           ]);
         }
         var wd=worstDim(badM,bestM);
         traps.push([
-          'Интегральная оценка качества данных источника: ',{b:badM.dqi+' из 100'},
-          ' против ',{b:bestM.dqi},' у ',L(g.best),
-          (wd?', сильнее всего расходится измерение «'+wd.name+'» ('+pct(wd.a)+' против '+
-            pct(wd.b)+')':''),'.'
+          'Качество данных этого источника — ',{b:badM.dqi+' из 100'},
+          ' против ',{b:bestM.dqi},' у источника ',L(g.best),
+          (wd?'; сильнее всего расходится измерение «'+wd.name+'»: '+pct(wd.a)+' против '+
+            pct(wd.b):''),'.'
         ]);
+        /* Оценка конфигурации идёт по самому слабому источнику, поэтому выигрыш
+           от замены упирается в следующее по слабости звено: без этой фразы
+           числа читаются как несогласованные — «81 против 95», а замена даёт
+           один пункт. */
+        if(n){
+          var capQ=null,capMid=null;
+          graphOf().nodes.forEach(function(nd){
+            if(nd.id===n.id)return;
+            var m2=met(nd.mid);if(!m2||m2.capex==null)return;
+            if(capQ===null||m2.dqi<capQ){capQ=m2.dqi;capMid=nd.mid}
+          });
+          if(capQ!==null){
+            var q0=Math.min(capQ,badM.dqi),q1=Math.min(capQ,bestM.dqi),ln2;
+            if(q1>q0){
+              ln2=['Качество данных всей конфигурации считается по самому слабому источнику, '+
+                   'поэтому замена поднимет его с ',{b:q0+' из 100'},' до ',{b:q1+' из 100'}];
+              ln2=ln2.concat(capQ<bestM.dqi
+                ? [': выше не пускает ',L(capMid),' со своими ',{b:capQ+' из 100'},
+                   ' — насколько поможет замена одного источника, задаёт следующее '+
+                   'по слабости звено.']
+                : ['.']);
+            }else{
+              ln2=['Качество данных всей конфигурации считается по самому слабому источнику, '+
+                   'и от этой замены оно не изменится: оценку держит ',L(capMid),' со своими ',
+                   {b:capQ+' из 100'},' — улучшение одного звена ограничено другим.'];
+            }
+            traps.push(ln2);
+          }
+        }
         if(!n)return;
-        var placed=nodeByMet(g.best);
         if(placed){
           /* лучший источник уже на холсте, но не подведён к развилке: менять
              метрику в узле нельзя — иначе он окажется на холсте дважды */
@@ -1083,10 +1274,9 @@ EXTRA_BODY = """
       var m=met(mid),n=nodeByMet(mid);
       var own=m.capex+cur.H*m.opex;
       traps.push([
-        L(mid),' лежит на холсте, но не связана ни с одной метрикой. Сбор при этом '+
-        'оплачивается — ',{b:own+' т₽'},' за ',{b:cur.H+' мес'},
-        ', — а в решение данные не попадают: несобранные данные не работают. По дереву кейса '+
-        'она '+connectHint(mid)+'.'
+        'Метрика ',L(mid),' лежит на холсте, но не соединена ни с одной другой. '+
+        'Её сбор при этом оплачивается — ',{b:own+' т₽'},' за ',{b:cur.H+' мес'},
+        ', — а в решение данные не попадают. По дереву кейса она '+connectHint(mid)+'.'
       ]);
       if(n&&!covered[mid]){
         if((c.ideal||[]).indexOf(mid)>=0){
@@ -1105,9 +1295,9 @@ EXTRA_BODY = """
         if(cands.some(function(x){return x.node===n.id}))return;
         var m=met(n.metricId),own=m.capex+cur.H*m.opex;
         traps.push([
-          L(n.metricId),' не входит в путь до решения'+(dec?' «'+dec+'»':'')+
-          ', но добавляет ',{b:own+' т₽'},' к совокупной стоимости владения за ',
-          {b:cur.H+' мес'},'.'
+          'Метрика ',L(n.metricId),' не влияет на решение'+
+          (dec?' по метрике «'+dec+'»':'')+', но добавляет ',{b:own+' т₽'},
+          ' к стоимости владения за ',{b:cur.H+' мес'},'.'
         ]);
         cands.push({kind:'drop',node:n.id,mid:n.metricId});
       });
@@ -1119,10 +1309,10 @@ EXTRA_BODY = """
       var low=(wm.dq||[]).slice().sort(function(a,b){return a[2]-b[2]}).slice(0,2)
         .map(function(x){return x[0].toLowerCase()+' '+pct(x[2])}).join(', ');
       traps.push([
-        'Интегральная оценка качества данных конфигурации — ',{b:cur.q+' из 100'},
-        ' против ',{b:ideal.q},' у лучшей конфигурации кейса. Её задаёт ',L(cur.weak),
-        ' ('+low+'). По правилу блокирующих проверок ансамбль не бывает точнее '+
-        'своего худшего входа.'
+        'Качество данных всей конфигурации — ',{b:cur.q+' из 100'},
+        ' против ',{b:ideal.q},' у лучшей сборки кейса. Эту оценку задаёт источник ',
+        L(cur.weak),' ('+low+'): собранное дерево не бывает точнее самого слабого '+
+        'из своих входов.'
       ]);
     }
 
@@ -1182,135 +1372,387 @@ EXTRA_BODY = """
     }).slice(0,2);
 
     return {cur:cur,ideal:ideal,traps:traps,recs:recs,dec:dec,
+            need:ig?ig.edges.length:null,   /* связей в правильном дереве кейса */
             eff:effPct(cur,ideal)};
   }
 
-  function recLine(rc,cur){
-    var x=rc.x,s=rc.sim,parts=[];
-    if(x.kind==='swap')parts=['⟳ Замените ',L(x.mid),' на ',L(x.to),
-      ' на входе ',L(x.target),': '];
-    else if(x.kind==='replace')parts=['⟳ Уберите ',L(x.mid),' и подведите к ',L(x.target),
-      ' уже размещённый источник ',L(x.to),': '];
-    else if(x.kind==='drop')parts=['⟳ Уберите ',L(x.mid),' с холста: '];
-    else if(x.kind==='link')parts=['⟳ Соедините ',L(x.mid),' с деревом — '+
-      connectHint(x.mid)+': '];
-    else if(x.kind==='wire')parts=['⟳ Подведите к ',L(x.mid),' недостающие входы — ',
-      x.miss.map(function(m){return '«'+met(m).name+'»'}).join(', '),': '];
-    else parts=['⟳ Разместите ',L(x.mid),' на холсте и свяжите по дереву — '+
-      connectHint(x.mid)+': '];
-    var dT=s.tte-cur.tte,dC=s.tco-cur.tco,dQ=s.q-cur.q;
-    if(!dT&&!dC&&!dQ){
-      /* связь ничего не добавляет к паспорту сбора: метрика уже оплачена,
-         но без связи её данные не участвуют в решении */
-      parts.push('сбор этой метрики уже оплачен, TTE ансамбля и TCO не изменятся — '+
-        'изменится то, что данные наконец попадут в расчёт решения.');
-      return parts;
+  /* ═══════════════════════════════════════════════════════════════════════
+     Разбор для участника.
+
+     Главный элемент — следующий шаг: одна фраза, что сделать прямо сейчас,
+     и одна, почему это улучшит результат. Всё остальное уходит ниже, под
+     свёрнутые заголовки, чтобы не забивать внимание. Экономика показывается
+     только тогда, когда дерево собрано: у половины дерева три числа ничего
+     не значат.
+     ═══════════════════════════════════════════════════════════════════════ */
+
+  /* Понятие «одну метрику можно взять из разных источников» объясняется
+     в момент первого появления: отдельного термина участник нигде не
+     встречал и запоминать его не должен. */
+  var CHOICE_INTRO='Одну и ту же метрику иногда можно собрать из разных источников, '+
+    'и выбрать нужно ровно один: дерево останется верным при любом выборе, а срок, '+
+    'стоимость и качество данных — разными. ';
+
+  function plu(n,f){
+    var a=n%10,b=n%100;
+    if(a===1&&b!==11)return f[0];
+    if(a>=2&&a<=4&&(b<10||b>=20))return f[1];
+    return f[2];
+  }
+  /* роль метрики в дереве кейса словами; null — метрики в дереве нет */
+  function roleOf(mid){
+    var c=cas(),known=!!(c.rules||{})[mid];
+    for(var k in (c.rules||{})){
+      var r2=c.rules[k];
+      if((r2.req||[]).concat(r2.opt||[]).indexOf(mid)>=0)known=true;
     }
-    parts.push('TTE ансамбля ');parts.push({b:cur.tte+' → '+s.tte+' дн'});
-    if(dT)parts.push(' ('+signed(dT,'дн')+')');
-    parts.push(', TCO за '+cur.H+' мес ');parts.push({b:cur.tco+' → '+s.tco+' т₽'});
-    if(dC)parts.push(' ('+signed(dC,'т₽')+')');
-    parts.push(', интегральная оценка качества данных ');
-    parts.push({b:cur.q+' → '+s.q});
-    if(dQ)parts.push(' ('+signed(dQ,'п.')+')');
-    parts.push('.');
-    return parts;
+    return known?connectHint(mid):null;
+  }
+  function edgeEnds(eid){
+    var e=S.edges.filter(function(x){return x.id===eid})[0];if(!e)return null;
+    var f=S.nodes.filter(function(n){return n.id===e.from})[0];
+    var t=S.nodes.filter(function(n){return n.id===e.to})[0];
+    return (f&&t)?{from:f.metricId,to:t.metricId}:null;
+  }
+  /* метрика, с которой разумно начать сборку: верх дерева, не вариант выбора */
+  function firstMetric(c){
+    var forkOpt={};
+    (c.quality||[]).forEach(function(g){g.options.forEach(function(o){forkOpt[o]=1})});
+    var ids=(c.ideal||[]).filter(function(m){return !forkOpt[m]});
+    var lead=ids.filter(function(m){var mm=met(m);return mm&&mm.type==='leading'})[0];
+    return lead||ids[0]||(c.ideal||[])[0];
+  }
+
+  /* Что мешает дереву быть собранным — в том порядке, в котором это разумно
+     делать: убрать неверную связь, донести метрику, соединить, выбрать
+     источник. Первый пункт становится следующим шагом. */
+  function structSteps(r){
+    var c=cas(),out=[],introUsed=false,covered={};
+    function ord(mid){var i=(c.ideal||[]).indexOf(mid);return i<0?99:i}
+
+    (r.edges||[]).forEach(function(e){
+      if(e.s!=='invalid')return;
+      var p=edgeEnds(e.eid);if(!p)return;
+      out.push({sort:[0,ord(p.to)],
+        do:['Уберите связь от '+N(p.from)+' к '+N(p.to)+': щёлкните по ней на схеме '+
+            'и нажмите клавишу Delete.'],
+        why:(c.rules||{})[p.to]
+          ? ['Значение метрики ',L(p.to),' не рассчитывается из метрики ',L(p.from),
+             ', поэтому такая связь ведёт расчёт по несуществующему правилу. '+
+             'На схеме она отмечена красным.']
+          : ['Метрика ',L(p.to),' — опережающая: она ни из чего не рассчитывается, '+
+             'и входящих связей у неё не бывает. На схеме связь отмечена красным.']});
+    });
+
+    (r.metrics||[]).forEach(function(m){
+      if(m.s!=='missing'&&m.s!=='not_on_canvas')return;
+      var role=roleOf(m.mid);
+      out.push({sort:[1,ord(m.mid)],
+        do:['Перенесите на холст метрику '+N(m.mid)+' — её карточка лежит на левой панели.'],
+        why:['Пока метрики нет на холсте, эту часть дерева не из чего собрать'+
+             (role?': по дереву кейса она '+role:'')+'.']});
+    });
+
+    (r.metrics||[]).forEach(function(m){
+      if(m.s!=='partial')return;
+      (m.miss||[]).forEach(function(src){
+        if(!nodeByMet(src))return;     /* сначала эту метрику надо поставить на холст */
+        covered[src]=1;covered[m.mid]=1;
+        out.push({sort:[2,ord(m.mid)],
+          do:['Проведите связь от '+N(src)+' к '+N(m.mid)+': потяните от нижнего порта '+
+              'карточки '+N(src)+' к верхнему порту карточки '+N(m.mid)+'.'],
+          why:['Метрика ',L(m.mid),' рассчитывается из метрики ',L(src),
+               ', и пока этой связи нет, расчёт в дереве не замкнут.']});
+      });
+    });
+
+    (r.qmsgs||[]).forEach(function(q){
+      if(q.t!=='err'||!q.g)return;
+      var g=q.g,intro=introUsed?'':CHOICE_INTRO;introUsed=true;
+      covered[g.target]=1;g.options.forEach(function(o){covered[o]=1});
+      out.push({sort:[3,ord(g.target)],
+        do:['Подведите к метрике '+N(g.target)+' один из двух источников: '+
+            g.options.map(N).join(' или ')+'.'],
+        why:[intro+'Здесь такой выбор называется «'+g.slot.toLowerCase()+
+             '»; что стоит за каждым источником, описано в справочнике: ',
+             L(g.options[0]),' и ',L(g.options[1]),
+             '. Разбор покажет, чего этот выбор стоит по сроку, деньгам '+
+             'и качеству данных.']});
+    });
+
+    (r.iso||[]).forEach(function(mid){
+      var n=nodeByMet(mid);if(!n)return;
+      var role=roleOf(mid);
+      /* метрика лучшей сборки этого кейса — её надо соединить; всё остальное
+         (например, невыбранный источник) в дерево не входит: советовать
+         «соедините» тут нельзя, иначе один и тот же вход соберётся дважды */
+      var need=(c.ideal||[]).indexOf(mid)>=0;
+      /* соединять пока не с чем: нужные соседи ещё не на холсте — шаг придёт позже */
+      if(need&&!implEdges(graphOf().nodes,n.id,mid).length)return;
+      /* про эту метрику уже сказано конкретнее — «проведите связь от … к …» */
+      if(covered[mid])return;
+      out.push({sort:[4,ord(mid)],
+        do:[need?'Соедините метрику '+N(mid)+' с деревом.'
+                :'Уберите метрику '+N(mid)+' с холста.'],
+        why:need?['По дереву кейса она '+role+', но ни одной связи у неё сейчас нет: '+
+                  'данные собираются, а в расчёт решения не попадают.']
+                :[(role?'В лучшей сборке этого кейса она не участвует':
+                         'В дереве этого кейса она не участвует')+
+                  ', а её сбор всё равно оплачивается: данные собираются, '+
+                  'а в расчёт решения не попадают.']});
+    });
+
+    out.sort(function(a,b){return (a.sort[0]-b.sort[0])||(a.sort[1]-b.sort[1])});
+    return out;
+  }
+
+  /* Следующий шаг по экономике конфигурации: что заменить и что от этого
+     изменится. Числа берутся из той же симуляции, что и раньше. */
+  function recStep(rc,a,r){
+    var x=rc.x,s=rc.sim,cur=a.cur,d,ph=[];
+    if(x.kind==='swap')d='Замените на входе метрики '+N(x.target)+' источник '+
+      N(x.mid)+' на '+N(x.to)+'.';
+    else if(x.kind==='replace')d='Уберите с холста '+N(x.mid)+' и подведите к метрике '+
+      N(x.target)+' уже размещённый источник '+N(x.to)+'.';
+    else if(x.kind==='drop')d='Уберите метрику '+N(x.mid)+' с холста.';
+    else if(x.kind==='link')d='Соедините метрику '+N(x.mid)+' с деревом.';
+    else if(x.kind==='wire')d='Подведите к метрике '+N(x.mid)+' недостающие входы: '+
+      x.miss.map(N).join(', ')+'.';
+    else d='Разместите метрику '+N(x.mid)+' на холсте и свяжите её по дереву.';
+    var dT=s.tte-cur.tte,dC=s.tco-cur.tco,dQ=s.q-cur.q;
+    if(dT<0)ph.push(['Решение придёт через ',{b:dn(s.tte)},' вместо ',{b:dn(cur.tte)},'.']);
+    else if(dT>0)ph.push(['Срок до решения вырастет с ',{b:dn(cur.tte)},' до ',
+      {b:dn(s.tte)},'.']);
+    if(dQ>0)ph.push(['Качество данных вырастет с ',{b:cur.q},' до ',{b:s.q+' из 100'},'.']);
+    else if(dQ<0)ph.push(['Качество данных снизится с ',{b:cur.q},' до ',
+      {b:s.q+' из 100'},'.']);
+    if(dC>0)ph.push(['Владение подорожает с ',{b:cur.tco+' т₽'},' до ',{b:s.tco+' т₽'},
+      ' за '+cur.H+' мес.']);
+    else if(dC<0)ph.push(['Владение подешевеет с ',{b:cur.tco+' т₽'},' до ',
+      {b:s.tco+' т₽'},' за '+cur.H+' мес.']);
+    if(!ph.length)ph.push(['Срок и стоимость не изменятся: сбор этой метрики уже '+
+      'оплачен — изменится то, что её данные наконец попадут в расчёт решения.']);
+    var e2=effPct(s,a.ideal);
+    if(e2!=null&&a.eff!=null&&r.ok)ph.push(['Эффективность конфигурации '+
+      (e2>a.eff?'поднимется':'изменится')+' с ',{b:a.eff+' %'},' до ',{b:e2+' %'},
+      ' от лучшей сборки кейса.']);
+    var why=[];ph.forEach(function(pp,i){if(i)why.push(' ');why=why.concat(pp)});
+    return {do:[d],why:why};
+  }
+
+  /* ── блоки разметки разбора ──────────────────────────────────────────── */
+  function head(ico,title,sub){
+    var h=document.createElement('div');h.className='res-head';
+    var i=document.createElement('span');i.className='res-icon';i.innerHTML=ico;
+    var box=document.createElement('div');
+    var t1=document.createElement('div');t1.className='res-title';t1.textContent=title;
+    var t2=document.createElement('div');t2.className='res-sub';t2.textContent=sub;
+    box.appendChild(t1);box.appendChild(t2);h.appendChild(i);h.appendChild(box);
+    return h;
+  }
+  function stepBlock(item,title,calm){
+    var d=document.createElement('div');d.className='next-step'+(calm?' calm':'');
+    var t=document.createElement('div');t.className='ns-t';t.textContent=title;
+    var a1=document.createElement('div');a1.className='ns-do';put(a1,item.do);
+    var w=document.createElement('div');w.className='ns-why';put(w,item.why);
+    d.appendChild(t);d.appendChild(a1);d.appendChild(w);return d;
+  }
+  function more(title,open){
+    var d=document.createElement('details');d.className='res-more';if(open)d.open=true;
+    var s=document.createElement('summary');s.textContent=title;d.appendChild(s);
+    var b=document.createElement('div');b.className='res-more-body';d.appendChild(b);
+    d.body=b;return d;
+  }
+  function ecoHow(){
+    var s=document.createElement('span');s.className='eco-how';
+    s.textContent='Как считается эффективность';return s;
+  }
+  function ecoLines(a){
+    var out=[],p=(a.cur.path||[]).filter(function(m){return met(m)});
+    var pathTxt=p.length>1?p.map(function(m){return '«'+met(m).name+'»'}).join(' → '):null;
+    out.push(['Решение'+(a.dec?' по метрике «'+a.dec+'»':'')+' станет доступно через ',
+      {b:dn(a.cur.tte)},' после начала сбора данных: столько занимает самая длинная '+
+      'ветка дерева'+(pathTxt?' — '+pathTxt:'')+'. Более короткие ветки ждут её.']);
+    out.push(['Владение этими данными обойдётся в ',{b:a.cur.tco+' т₽'},' за '+a.cur.H+
+      ' мес: ',{b:a.cur.capex+' т₽'},' единоразово на подключение источников и по ',
+      {b:a.cur.opex+' т₽'},' в месяц на их поддержание.']);
+    var ql=['Качество данных конфигурации — ',{b:a.cur.q+' из 100'}];
+    if(a.cur.weak)ql=ql.concat(['. Эту оценку задаёт источник ',L(a.cur.weak),
+      ': собранное дерево не бывает точнее самого слабого из своих входов.']);
+    else ql.push('.');
+    out.push(ql);
+    if(a.eff!=null)out.push(['Эффективность конфигурации — ',{b:a.eff+' %'},
+      ' от лучшей сборки этого кейса. Она сравнивает конфигурации по качеству данных, '+
+      'отнесённому к сроку и стоимости: чем раньше и дешевле приходит решение при том '+
+      'же качестве данных, тем оценка выше. ',{el:ecoHow()}]);
+    return out;
+  }
+  function calcCards(r){
+    var c=cas(),box=document.createElement('div');
+    Object.keys(c.calc||{}).forEach(function(mid){
+      var cl=c.calc[mid],ri=(r.calcs||[]).filter(function(x){return x.mid===mid})[0];
+      var d=document.createElement('div');d.className='calc-card';
+      var hd=document.createElement('div');hd.className='calc-head';
+      var dot=document.createElement('span');
+      var lb=document.createElement('span');lb.className='calc-label';lb.textContent=cl.lbl;
+      hd.appendChild(dot);hd.appendChild(lb);d.appendChild(hd);
+      var fm=document.createElement('div');fm.className='calc-formula';
+      fm.textContent=cl.formula;d.appendChild(fm);
+      if(ri&&ri.s==='ok'){
+        dot.className='calc-dot ok';dot.innerHTML='&#10003;';
+        var st1=document.createElement('div');st1.className='calc-formula';
+        st1.textContent='В вашем дереве этот расчёт собран.';d.appendChild(st1);
+        var ex=document.createElement('div');ex.className='calc-example';
+        ex.textContent=cl.example;d.appendChild(ex);
+      }else if(ri&&ri.s==='partial'){
+        dot.className='calc-dot warn';dot.textContent='!';
+        var w=document.createElement('div');w.className='calc-warn';
+        w.textContent=(ri.miss||[]).length
+          ? 'Чтобы этот расчёт заработал, подведите к метрике '+N(mid)+' ещё '+
+            ri.miss.map(N).join(' и ')+'.'
+          : 'К метрике '+N(mid)+' подведена лишняя связь: расчёт заработает, когда '+
+            'вы её уберёте.';
+        d.appendChild(w);
+      }else{
+        dot.className='calc-dot err';dot.innerHTML='&#10007;';
+        var er=document.createElement('div');er.className='calc-err';
+        er.textContent='Метрики '+N(mid)+' ещё нет на холсте, поэтому расчёт '+
+          'не выполняется.';
+        d.appendChild(er);
+      }
+      box.appendChild(d);
+    });
+    return box;
   }
 
   /* ═══ вывод разбора ═══ */
   var _showRes=showRes;
   showRes=function(r){
-    _showRes(r);
+    _showRes(r);                        /* SCORM, оверлей, подсветка связей */
     if(!r||r.sandbox)return;
-    var a=analyze(r);
-    if(!a)return;
-    var c=cas();
-
-    /* дерево может быть верным, а конфигурация — не лучшей: заголовок должен
-       говорить об этом прямо, иначе разбор ниже читается как придирка */
-    if(r.ok&&a.eff!=null&&a.eff<100){
-      var ti=resP.querySelector('.res-title'),su=resP.querySelector('.res-sub');
-      if(ti)ti.textContent='Дерево верное, но конфигурация не лучшая';
-      if(su)su.textContent='Связи и расчётная цепочка в порядке. Эффективность '+
-        'конфигурации — '+a.eff+' % от лучшей в кейсе: разбор ниже.';
-    }
-
-    /* блокирующие замечания по развилкам */
-    var errs=(r.qmsgs||[]).filter(function(q){return q.t==='err'});
-    if(errs.length){
-      var se=section('Развилка источников не закрыта','var(--err)');
-      errs.forEach(function(q){se.appendChild(note('err',[['✕ '+q.m+'.']]))});
-      resP.appendChild(se);
-    }
-
-    /* экономика и качество конфигурации */
-    var s1=section('Экономика и качество конфигурации');
-    var lines=[];
-    lines.push(['Время до проверенного решения'+(a.dec?' «'+a.dec+'»':'')+' (TTE ансамбля): ',
-      {b:dn(a.cur.tte)},
-      a.cur.path.length>1?' — критический путь: '+a.cur.path.map(function(m){
-        return met(m).name}).join(' → ')+'.':'.']);
-    lines.push(['Совокупная стоимость владения (TCO) за '+a.cur.H+' мес: ',
-      {b:a.cur.tco+' т₽'},' — CAPEX ',{b:a.cur.capex+' т₽'},' плюс '+a.cur.H+' × ',
-      {b:a.cur.opex+' т₽/мес'},'.']);
-    lines.push(['Интегральная оценка качества данных: ',{b:a.cur.q+' из 100'},
-      a.cur.weak?[' — по самому слабому источнику ',''].join(''):'.']);
-    if(a.cur.weak)lines[lines.length-1]=lines[lines.length-1].concat([L(a.cur.weak),'.']);
-    /* эффективность имеет смысл только у собранного дерева: у половины дерева
-       и путь короче, и метрик меньше — число получилось бы красивым и пустым */
-    if(a.eff!=null&&r.ok){
-      lines.push(['Эффективность конфигурации (Cost of Delay / CD3): ',
-        {b:a.eff+' %'},' от лучшей конфигурации кейса.']);
-    }else if(a.ideal){
-      lines.push(['Эффективность конфигурации сравнивается с лучшей, когда дерево '+
-        'собрано целиком: пока в нём есть замечания, эти три величины посчитаны '+
-        'по той части, которую вы уже собрали.']);
-    }
-    s1.appendChild(note(a.eff!=null&&a.eff>=100&&r.ok?'ok':'info',lines));
-    resP.appendChild(s1);
-
-    /* конфигурация лучшая — коротко подтверждаем и не грузим разбором */
-    if(r.ok&&a.eff!=null&&a.eff>=100&&!a.traps.length&&!a.recs.length){
-      var sb=section('Лучшая конфигурация кейса','var(--ok)');
-      var okn=(r.qmsgs||[]).filter(function(q){return q.t==='ok'});
-      if(okn.length)okn.forEach(function(q){sb.appendChild(note('ok',[['✓ '+q.m]]))});
-      sb.appendChild(note('ok',[['✓ Быстрее и дешевле при этом качестве данных кейс собрать '+
-        'нельзя: любая замена источника либо удлиняет критический путь, либо снижает '+
-        'интегральную оценку качества данных.']]));
-      resP.appendChild(sb);
-    }else{
-      /* подтверждаем то, что уже выбрано верно */
-      var oks=(r.qmsgs||[]).filter(function(q){return q.t==='ok'});
-      if(oks.length){
-        var so=section('Выбрано верно','var(--ok)');
-        oks.forEach(function(q){so.appendChild(note('ok',[['✓ '+q.m]]))});
-        resP.appendChild(so);
-      }
-      if(a.traps.length){
-        var st=section('В чём ограничение вашей конфигурации','var(--warn)');
-        st.appendChild(note('warn',a.traps));
-        resP.appendChild(st);
-      }
-      if(a.recs.length){
-        var sr=section('Как пересобрать эффективнее');
-        a.recs.forEach(function(rc){
-          var ln=[recLine(rc,a.cur)];
-          var e2=effPct(rc.sim,a.ideal);
-          /* проценты сравнимы только между собранными деревьями */
-          if(e2!=null&&a.eff!=null&&r.ok)ln.push(['Эффективность конфигурации: ',
-            {b:a.eff+' % → '+e2+' %'},'.']);
-          sr.appendChild(note('warn',ln));
-        });
-        sr.appendChild(note('info',[[
-          'Принцип: источник выбирают не по цене входа, а по времени до проверенного решения '+
-          'и по интегральной оценке качества данных — сколько дней и рублей стоит задержка '+
-          'решения, столько и стоит «дешёвый» источник. Пересоберите конфигурацию и проверьте '+
-          'ещё раз.']]));
-        resP.appendChild(sr);
-      }
-    }
-
     var closeBtn=resP.querySelector('button');
+    resP.textContent='';                /* разбор собирается заново, полными фразами */
+    var c=cas(),a=analyze(r),steps=structSteps(r);
+    var eff=(a&&r.ok)?a.eff:null;
+    var st=!S.nodes.length?'empty':(!r.ok?'build':((eff!=null&&eff<100)?'better':'best'));
+
+    /* — счётчик связей: за образец берётся правильное дерево кейса, а неверно
+         проведённые связи называются отдельным предложением — */
+    var corr=(r.edges||[]).filter(function(e){return e.s==='ok'}).length;
+    var wrong=(r.edges||[]).filter(function(e){return e.s==='invalid'}).length;
+    var need=a?a.need:null,cnt;
+    /* согласование по числу: «проведена 1 связь», но «проведено 2 связи» */
+    function corrTxt(k){
+      return plu(k,['Верно проведена ','Верно проведено ','Верно проведено '])+k+' '+
+        plu(k,['связь','связи','связей']);
+    }
+    if(need==null)cnt=corrTxt(corr)+'.';
+    else if(!corr)cnt='Пока не проведено ни одной из '+need+' '+
+      plu(need,['связи','связей','связей'])+' этого дерева.';
+    else if(corr<need)cnt=corrTxt(corr)+' из '+need+', нужных в этом дереве.';
+    else if(corr===need)cnt=need===1?'Единственная связь этого дерева проведена верно.'
+      :('Все '+need+' '+plu(need,['связь','связи','связей'])+' этого дерева проведены верно.');
+    else cnt='Все нужные связи проведены, и есть лишние: верных связей '+corr+' при '+
+      need+' необходимых.';
+    if(wrong)cnt+=' Ещё '+wrong+' '+plu(wrong,['связь','связи','связей'])+' '+
+      plu(wrong,['проведена','проведены','проведены'])+' неверно.';
+
+    /* — вердикт — */
+    var ttl,sub,ico;
+    if(st==='empty'){
+      ico='&#8505;&#65039;';ttl='Дерево ещё не собрано';
+      sub='На холсте нет ни одной метрики.';
+    }else if(st==='build'){
+      ico='&#9888;&#65039;';
+      var k0=steps.length?steps[0].sort[0]:1;
+      /* дерево кейса собрано целиком, а на холсте осталась метрика вне дерева:
+         это то же состояние, что и «подведены оба источника», — и называется
+         оно так же, а не «дерево собрано ещё не полностью» */
+      ttl=treeReady(r)
+         ?'Дерево собрано верно, но на холсте есть лишнее'
+         :(k0===0?(wrong>1?'В дереве есть неверные связи':'В дереве есть неверная связь')
+                 :(k0===3?'Осталось выбрать источник данных':'Дерево собрано ещё не полностью'));
+      sub=cnt;
+    }else if(st==='better'){
+      ico='&#9989;';
+      var k1=a.recs.length?a.recs[0].x.kind:'';
+      ttl=(k1==='swap'||k1==='replace')
+        ?'Дерево собрано верно, а источники можно выбрать лучше'
+        :(k1==='drop'?'Дерево собрано верно, но на холсте есть лишнее'
+                     :'Дерево собрано верно, а конфигурацию можно улучшить');
+      sub=cnt+' По сроку, стоимости и качеству данных эта конфигурация даёт '+eff+
+        ' % от лучшей сборки кейса.';
+    }else{
+      ico='&#9989;';ttl='Дерево собрано верно, и конфигурация — лучшая в кейсе';
+      sub=cnt;
+    }
+    resP.appendChild(head(ico,ttl,sub));
+
+    /* — следующий шаг: главный элемент разбора — */
+    var item=null,nsTitle='Следующий шаг',calm=false;
+    if(st==='empty'){
+      var f=firstMetric(c),role=f?roleOf(f):null;
+      if(f)item={do:['Перенесите на холст метрику '+N(f)+
+                     ' — её карточка лежит на левой панели.'],
+                 why:['Дерево собирают сверху вниз: сначала показатели, которые '+
+                      'собираются напрямую, затем те, что из них рассчитываются'+
+                      (role?'. По дереву кейса '+N(f)+' '+role:'')+'.']};
+    }else if(st==='build'){
+      item=steps.length?steps[0]:{
+        do:['Сверьте дерево с цепочкой расчётов ниже.'],
+        why:['В ней отмечено, какой расчёт пока не собран и какой метрики ему '+
+             'не хватает.']};
+    }else if(st==='better'&&a.recs.length){
+      item=recStep(a.recs[0],a,r);
+    }else if(st==='best'){
+      nsTitle='Результат';calm=true;
+      item={do:['Улучшать больше нечего: это лучшая конфигурация кейса.'],
+            why:a?['Решение приходит через ',{b:dn(a.cur.tte)},', владение стоит ',
+                   {b:a.cur.tco+' т₽'},' за '+a.cur.H+' мес, качество данных — ',
+                   {b:a.cur.q+' из 100'},'. Быстрее и дешевле при таком качестве данных '+
+                   'дерево не собирается: любая замена источника либо удлиняет самую '+
+                   'длинную ветку, либо снижает качество данных.']
+                 :['Быстрее и дешевле при таком качестве данных дерево не собирается.']};
+    }
+    if(item)resP.appendChild(stepBlock(item,nsTitle,calm));
+
+    /* — то, что уже выбрано верно: короткая похвала за сборку — */
+    var oks=(r.qmsgs||[]).filter(function(q){return q.t==='ok'});
+    if(r.ok&&oks.length)oks.forEach(function(q){
+      resP.appendChild(note('ok',[['Выбрано верно. '+q.m]]));
+    });
+
+    /* — остальное: ниже и свёрнутым — */
+    if(st==='build'&&steps.length>1){
+      var d1=more('Остальные замечания — '+(steps.length-1)+' '+
+        plu(steps.length-1,['пункт','пункта','пунктов']));
+      steps.slice(1).forEach(function(s){d1.body.appendChild(note('warn',[s.do,s.why]))});
+      resP.appendChild(d1);
+    }
+    if(r.ok&&a&&a.traps.length){
+      var d2=more(st==='best'?'Разбор конфигурации':'Почему эта конфигурация не лучшая');
+      d2.body.appendChild(note('warn',a.traps));
+      resP.appendChild(d2);
+    }
+    if(r.ok&&a&&a.recs.length>1){
+      var d3=more('Что ещё можно улучшить');
+      a.recs.slice(1).forEach(function(rc){
+        var it=recStep(rc,a,r);d3.body.appendChild(note('warn',[it.do,it.why]));
+      });
+      resP.appendChild(d3);
+    }
+    /* экономика показывается там, где она осмысленна: у собранного дерева */
+    if(r.ok&&a){
+      var d4=more('Что получилось: срок, стоимость и качество данных');
+      d4.body.appendChild(note('info',ecoLines(a)));
+      resP.appendChild(d4);
+    }
+    if(c.calc){
+      var d5=more('Цепочка расчётов: по каким формулам считается дерево');
+      d5.body.appendChild(calcCards(r));
+      resP.appendChild(d5);
+    }
+
     if(closeBtn)resP.appendChild(closeBtn);
   };
 })();
@@ -1360,6 +1802,39 @@ NARROW_CSS = """
 }
 """
 swap("</style>", NARROW_CSS + "</style>", "css узкого экрана")
+
+# ── SCORM: статус «пройдено» по факту работы участника ──
+# У этой страницы обвязка SCORM своя (const SCORM в исходнике), поэтому
+# build/build_scorm.py в неё ничего не внедряет: второй LMSInitialize по
+# SCORM 1.2 — ошибка 101. Условие прохождения при этом должно быть общим для
+# курса, и берётся оно из того же модуля, что и у остальных страниц.
+#
+# Путей к статусу два, и оба честные:
+#   * дерево собрано правильно — проверка кейса прошла (SCORM.done() в showRes);
+#   * участник работал со страницей — общее условие a360Engagement.
+# Второй путь нужен потому, что кейсов несколько и разбор ошибок здесь — тоже
+# работа: собирать конструктор полчаса и уйти без зачёта из-за одной неверной
+# связи участник не должен. Открытие страницы по-прежнему не даёт ничего,
+# кроме статуса «начат».
+swap("const SCORM={api:null,",
+     scorm_engagement.JS.strip() + "\nconst SCORM={api:null,",
+     "общее условие вовлечённости перед обвязкой SCORM")
+swap("SCORM.init();\nwindow.addEventListener('beforeunload',()=>SCORM.finish());",
+     "SCORM.init();\n"
+     "SCORM.start=function(){\n"
+     "  if(!this.api)return;\n"
+     "  try{\n"
+     "    var st=this.api.LMSGetValue('cmi.core.lesson_status');\n"
+     "    if(st==='completed'||st==='passed')return;   /* зачёт не снимаем */\n"
+     "    if(!st||st==='not attempted')"
+     "this.api.LMSSetValue('cmi.core.lesson_status','incomplete');\n"
+     "    this.api.LMSCommit('');\n"
+     "  }catch(e){}\n"
+     "  a360Engagement(function(){SCORM.done()});\n"
+     "};\n"
+     "SCORM.start();\n"
+     "window.addEventListener('beforeunload',()=>SCORM.finish());",
+     "статус «начат» при открытии и «пройдено» по работе участника")
 
 swap('  <div class="workspace">',
      '  <div class="narrow-note" id="narrowNote">\n'
