@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Тренажёр: расчёт выборки · Аналитика 360</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg:           #f2f7f4;
@@ -30,8 +27,8 @@
   --info-soft:    rgba(29,78,216,.08);
   --radius:       12px;
   --radius-sm:    8px;
-  --font:         'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  --font-mono:    'JetBrains Mono','SF Mono',Consolas,monospace;
+  --font:         'SB Sans Text','Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  --font-mono:    ui-monospace,'SFMono-Regular',Consolas,'Liberation Mono',monospace;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;-webkit-font-smoothing:antialiased}
@@ -205,7 +202,7 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent-mid);b
         <span class="field-label">Базовая конверсия p₀</span>
         <span class="field-val"><span id="p0Val">5.0</span>%</span>
       </div>
-      <input type="range" id="p0" min="0.1" max="50" step="0.1" value="5">
+      <input type="range" id="p0" min="0.1" max="95" step="0.1" value="5">
       <div class="hint" id="p0Hint"></div>
     </div>
     <div class="field">
@@ -481,7 +478,7 @@ function updateHints(){
     if(p0<0.01){p0Box.className='hint hint-err';p0Box.innerHTML=hintBox('Конверсия &lt; 1% — выборка вырастет до сотен тысяч наблюдений. Проверьте, нет ли метрики уровнем выше в воронке.');}
     else if(p0<0.05){p0Box.className='hint hint-warn';p0Box.innerHTML=hintBox('Низкая конверсия — нужен большой трафик. Каждое снижение p₀ вдвое = удвоение выборки.');}
     else if(p0<=0.30){p0Box.className='hint hint-ok';p0Box.innerHTML=hintBox('Рабочий диапазон для CR/CTR/retention.');}
-    else {p0Box.className='hint hint-info';p0Box.innerHTML=hintBox('Высокая базовая конверсия — выборка небольшая. Проверьте, что метрика сохраняет чувствительность: значение выше 50% часто означает неудачно выбранное измерение.');}
+    else {p0Box.className='hint hint-info';p0Box.innerHTML=hintBox('Высокая базовая конверсия — выборка небольшая. У обязательного шага воронки это нормально; у необязательного проверьте, что метрика сохраняет чувствительность.');}
 
     const mdeBox=$('#mdeRelHint');
     if(mde<0.03){mdeBox.className='hint hint-err';mdeBox.innerHTML=hintBox('MDE &lt; 3% (относительно) почти неотличим от шума. Достижимо только при очень большом трафике.');}
@@ -504,6 +501,10 @@ function calcProp(){
   const a=state.alpha, p=state.power, sides=state.sides;
   const p0=state.p0/100, lift=state.mdeRel/100;
   const p1=p0*(1+lift);
+  if(p1>=1) return {n:Infinity,za:0,zb:0,impossible:true,
+    formula:`p₁ = p₀ × (1 + MDE) = ${(p1*100).toFixed(1)}%
+  Доля не может быть больше 100%, поэтому такой прирост недостижим.`,
+    explain:`При базовой конверсии <strong>p₀ = ${(p0*100).toFixed(1)}%</strong> относительный прирост <strong>+${(lift*100).toFixed(0)}%</strong> даёт ожидаемую конверсию выше 100%. Уменьшите базовую конверсию или минимальный эффект.`};
   const za=inverseNormalCDF(1 - a/sides);
   const zb=inverseNormalCDF(p);
   const delta=p1-p0;
@@ -615,6 +616,12 @@ function render(){
     $('#nTotal').textContent=fmt(total);
     const days = total/Math.max(1,dauEff);
     $('#duration').textContent=human(days);
+  } else if(r.impossible){
+    $('#heroLabel').textContent='Расчёт невозможен';
+    $('#nPerGroup').textContent='—';
+    $('#heroSub').textContent='Ожидаемая конверсия p₁ = p₀ × (1 + MDE) выходит за 100%. Уменьшите базовую конверсию p₀ или минимальный эффект MDE.';
+    $('#nTotal').textContent='—';
+    $('#duration').textContent='—';
   } else {
     $('#heroLabel').textContent='Размер выборки на группу';
     $('#nPerGroup').textContent=fmt(perGroup);
@@ -634,9 +641,11 @@ function render(){
 }
 
 // ===== bindings =====
+const RANGE_FMT={};
 function bindRange(id,key,fmtfn){
   const el=document.getElementById(id);
   if(!el) return;
+  if(fmtfn) RANGE_FMT[key]=fmtfn;
   const lab=document.getElementById(id+'Val');
   const update=()=>{ const v=parseFloat(el.value); state[key]=v; if(lab) lab.textContent = fmtfn?fmtfn(v):v; render(); };
   el.addEventListener('input',update); update();
@@ -694,7 +703,20 @@ function applyPreset(id){
     $$('.type-block').forEach(b=>b.classList.toggle('show',b.dataset.type===p.test));
     state.test=p.test;
   }
-  for(const k in p){ if(k==='test') continue; state[k]=p[k]; const el=document.getElementById(k); if(el){ el.value=p[k]; const lab=document.getElementById(k+'Val'); if(lab) lab.textContent=p[k]; }}
+  for(const k in p){
+    if(k==='test') continue;
+    const el=document.getElementById(k);
+    if(!el){ state[k]=p[k]; continue; }
+    el.value=p[k];
+    // Браузер зажимает value контрола в его границы min/max/step. В состояние
+    // берём то, что после присвоения реально стоит на контроле: иначе расчёт
+    // пойдёт по одному числу, ползунок будет стоять на другом, и первое же
+    // касание ползунка изменит результат без действия участника.
+    const v=parseFloat(el.value);
+    state[k]=isFinite(v)?v:p[k];
+    const lab=document.getElementById(k+'Val');
+    if(lab) lab.textContent=RANGE_FMT[k]?RANGE_FMT[k](state[k]):state[k];
+  }
   render();
 }
 $$('.preset').forEach(el=>el.addEventListener('click',()=>applyPreset(el.dataset.preset)));

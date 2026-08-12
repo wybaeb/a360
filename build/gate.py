@@ -73,6 +73,7 @@ button:hover{{filter:brightness(1.07)}}
 </div>
 <script>
 const DATA={{salt:"{salt}",iv:"{iv}",ct:"{ct}",iter:{iter}}};
+(function(){{
 const KEY="{storage}";
 const dec=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 async function unlock(pw){{
@@ -102,6 +103,7 @@ const frag=location.hash.match(/^#k=(.+)$/);
 if(frag){{try{{history.replaceState(null,"",location.pathname+location.search);}}catch(_e){{}}
   attempt(decodeURIComponent(frag[1]),true);}}
 else{{const cached=localStorage.getItem(KEY); if(cached) attempt(cached,true);}}
+}})();
 </script>
 </body></html>
 """
