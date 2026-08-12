@@ -167,7 +167,7 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent-mid);b
   <div class="tabs">
     <div class="tab active" data-test="prop">Пропорции<small>CR, CTR, retention</small></div>
     <div class="tab" data-test="mean">Средние<small>ARPU, время, AOV</small></div>
-    <div class="tab" data-test="mab">MAB<small>многорукий бандит</small></div>
+    <div class="tab" data-test="mab">MAB<small>тест с несколькими вариантами</small></div>
     <div class="tab" data-test="sprt">SPRT<small>последовательный тест</small></div>
   </div>
 
@@ -415,7 +415,7 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent-mid);b
   <div class="foot">
     Формулы: <code style="color:var(--text)">n = (z<sub>α/2</sub>+z<sub>β</sub>)² · σ²/δ²</code> для средних,
     аналог для пропорций. SPRT — границы Вальда.<br><br>
-    MAB — приблизительный горизонт показов до уровня потерь от исследования 5%, формула UCB1.<br><br>
+    MAB — тест с несколькими вариантами: сколько всего показов нужно, чтобы определить лучший вариант, теряя на проверке не больше 5 %.<br><br>
     Определения метрик и правила эксперимента — в <a href="longread_metrics.html#experiment">справочнике</a>.
   </div>
 </aside>

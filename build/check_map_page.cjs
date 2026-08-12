@@ -116,7 +116,7 @@ async function open(b, file, gated, seed) {
       URL.createObjectURL = oldCreate;
       return { md: md, name: name, msg: document.getElementById('expMsg').textContent };
     });
-    say(exp.name === 'A1_карта_источников.md', label + ' · имя файла экспорта: ' + exp.name);
+    say(exp.name === 'карта_источников.md', label + ' · имя файла экспорта: ' + exp.name);
     say(exp.md && /## 6. Действия/.test(exp.md) && /Отток клиентов РКО/.test(exp.md),
       label + ' · markdown экспорта (' + ((exp.md || '').length) + ' симв.)');
 
