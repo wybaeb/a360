@@ -30,6 +30,7 @@ import practice
 import theme
 import trainer_accum
 import trainer_map
+import trainer_sample
 import trainer_tree
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -199,8 +200,9 @@ PAGES = [
      "Предчтение к следующей встрече."),
 ]
 
-# Страницы, собранные не здесь: их HTML авторский, целиком лежит в scorm/content
-# и приходит из отдельного генератора. Через build_pages они проходят только
+# Страницы, собранные не темой сайта: их HTML авторский, целиком лежит в
+# scorm/content и приходит из отдельного генератора (build/trainer_tree.py,
+# build/trainer_sample.py — вызовы ниже). Через этот цикл они проходят только
 # ради гейта — иначе в корень попадает открытый текст. Источник — открытая
 # копия в scorm/content, содержимое не трогаем.
 STATIC_PAGES = [
@@ -249,16 +251,18 @@ def main():
         print(f"  {name:15} открытая {len(html) // 1024:>4} КБ · "
               f"зашифрованная {len(( ROOT / name).read_text(encoding='utf-8')) // 1024:>4} КБ")
 
-    # Тренажёр дерева метрик собирается своим генератором прямо в scorm/content:
-    # это не тема сайта, а конструктор со своим HTML. Гейт ниже забирает его
-    # оттуда наравне с остальными внешними страницами.
+    # Тренажёры дерева метрик и расчёта выборки собираются своими генераторами
+    # прямо в scorm/content: это не темы сайта, а отдельные страницы со своим
+    # HTML. Гейт ниже забирает их оттуда наравне с остальными внешними
+    # страницами.
     trainer_tree.main()
+    trainer_sample.main()
 
     for name, title, heading, intro in STATIC_PAGES:
         src = scorm / name
         if not src.exists():
-            sys.exit(f"нет открытой копии {src} — страницу собирает внешний "
-                     f"генератор, положите её в scorm/content и повторите")
+            sys.exit(f"нет открытой копии {src} — страницу собирает отдельный "
+                     f"генератор в build/, проверьте его вызов выше")
         html = src.read_text(encoding="utf-8")
         (ROOT / name).write_text(
             gate.wrap(html, a.password, title, heading, intro), encoding="utf-8")

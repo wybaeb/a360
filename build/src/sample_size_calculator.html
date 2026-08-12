@@ -3,31 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Тренажёр: расчёт выборки · Аналитика 360</title>
+<title>Калькулятор выборки для A/B-тестов · DDDM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:           #f2f7f4;
-  --bg-surface:   #ffffff;
-  --bg-elevated:  #eef5f1;
-  --bg-hover:     #e3efe8;
-  --text:         #14281d;
-  --text-sec:     rgba(16,40,28,.68);
-  --text-muted:   rgba(16,40,28,.44);
-  --accent:       #0e8a50;
-  --accent-hover: #20ba72;
-  --accent-soft:  rgba(32,186,114,.12);
-  --accent-mid:   rgba(32,186,114,.32);
-  --ok:           #15803d;
-  --ok-soft:      rgba(21,128,61,.10);
-  --warn:         #a16207;
-  --warn-soft:    rgba(161,98,7,.10);
-  --err:          #dc2626;
-  --err-soft:     rgba(220,38,38,.08);
-  --info:         #1d4ed8;
-  --info-soft:    rgba(29,78,216,.08);
+  --bg:           #1e2027;
+  --bg-surface:   #282a31;
+  --bg-elevated:  #32343c;
+  --bg-hover:     #3a3c45;
+  --text:         #ffffff;
+  --text-sec:     rgba(255,255,255,.6);
+  --text-muted:   rgba(255,255,255,.32);
+  --accent:       #ff5533;
+  --accent-hover: #ff6b4a;
+  --accent-soft:  rgba(255,85,51,.10);
+  --accent-mid:   rgba(255,85,51,.25);
+  --ok:           #22c55e;
+  --ok-soft:      rgba(34,197,94,.10);
+  --warn:         #eab308;
+  --warn-soft:    rgba(234,179,8,.10);
+  --err:          #ef4444;
+  --err-soft:     rgba(239,68,68,.08);
+  --info:         #3b82f6;
+  --info-soft:    rgba(59,130,246,.08);
   --radius:       12px;
   --radius-sm:    8px;
   --font:         'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
@@ -37,22 +37,19 @@
 html{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;-webkit-font-smoothing:antialiased}
 body{min-height:100%;display:flex;flex-direction:column}
 
-.header{display:flex;align-items:center;gap:16px;padding:14px 24px;background:var(--bg-surface);border-bottom:1px solid rgba(16,40,28,.10);position:sticky;top:0;z-index:50}
+.header{display:flex;align-items:center;gap:16px;padding:14px 24px;background:var(--bg-surface);border-bottom:1px solid rgba(255,255,255,.06);position:sticky;top:0;z-index:50}
 .brand{display:flex;align-items:center;gap:10px}
 .brand-dot{width:10px;height:10px;border-radius:50%;background:var(--accent)}
 .brand-title{font-size:17px;font-weight:700}
 .brand-tag{font-size:11px;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
 .header-sub{margin-left:auto;font-size:12px;color:var(--text-muted)}
-.back-link{font-size:12px;font-weight:600;color:var(--accent);text-decoration:none;
-  white-space:nowrap;border:1px solid var(--accent-mid);border-radius:8px;padding:4px 10px}
-.back-link:hover{background:var(--accent-soft);color:var(--accent-hover)}
 
 .shell{flex:1;display:grid;grid-template-columns:330px 1fr 380px;gap:0;min-height:0}
 @media (max-width:1280px){.shell{grid-template-columns:300px 1fr}}
 @media (max-width:980px){.shell{grid-template-columns:1fr}}
 
-aside.left,aside.right{background:var(--bg-surface);padding:18px 18px 28px;overflow-y:auto;max-height:calc(100vh - 50px);border-right:1px solid rgba(16,40,28,.08)}
-aside.right{border-right:none;border-left:1px solid rgba(16,40,28,.08)}
+aside.left,aside.right{background:var(--bg-surface);padding:18px 18px 28px;overflow-y:auto;max-height:calc(100vh - 50px);border-right:1px solid rgba(255,255,255,.05)}
+aside.right{border-right:none;border-left:1px solid rgba(255,255,255,.05)}
 main{padding:24px 28px 60px;overflow-y:auto;max-height:calc(100vh - 50px)}
 
 .sect-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin:18px 0 10px}
@@ -78,10 +75,10 @@ input[type=range]{
 }
 input[type=range]::-webkit-slider-thumb{
   -webkit-appearance:none;appearance:none;width:16px;height:16px;background:var(--accent);border-radius:50%;cursor:pointer;
-  box-shadow:0 0 0 4px rgba(32,186,114,.22);transition:.1s;
+  box-shadow:0 0 0 4px rgba(255,85,51,.18);transition:.1s;
 }
-input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);box-shadow:0 0 0 6px rgba(32,186,114,.30)}
-input[type=range]::-moz-range-thumb{width:16px;height:16px;background:var(--accent);border-radius:50%;cursor:pointer;border:none;box-shadow:0 0 0 4px rgba(32,186,114,.22)}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);box-shadow:0 0 0 6px rgba(255,85,51,.25)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;background:var(--accent);border-radius:50%;cursor:pointer;border:none;box-shadow:0 0 0 4px rgba(255,85,51,.18)}
 
 input[type=number],input[type=text]{
   width:100%;padding:8px 10px;background:var(--bg-elevated);border:1px solid transparent;border-radius:var(--radius-sm);
@@ -112,12 +109,12 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent-mid);b
 .hero-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
 .hero-value{font-size:48px;font-weight:700;font-family:var(--font-mono);color:var(--text);line-height:1;margin-bottom:8px}
 .hero-sub{font-size:13px;color:var(--text-sec)}
-.hero-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-top:20px;padding-top:20px;border-top:1px solid rgba(16,40,28,.12)}
+.hero-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,.08)}
 .hero-cell{display:flex;flex-direction:column;gap:3px}
 .hero-cell-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
 .hero-cell-val{font-size:18px;font-family:var(--font-mono);font-weight:600}
 
-.card{background:var(--bg-surface);padding:18px;border-radius:var(--radius);margin-bottom:14px;border:1px solid rgba(16,40,28,.08)}
+.card{background:var(--bg-surface);padding:18px;border-radius:var(--radius);margin-bottom:14px;border:1px solid rgba(255,255,255,.04)}
 .card-title{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .card-title svg{color:var(--accent)}
 .card-body{font-size:13px;line-height:1.6;color:var(--text-sec)}
@@ -125,13 +122,13 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent-mid);b
 .card-body code{font-family:var(--font-mono);background:var(--bg-elevated);padding:1px 6px;border-radius:4px;color:var(--accent);font-size:12px}
 .formula{font-family:var(--font-mono);font-size:13px;background:var(--bg-elevated);padding:12px 14px;border-radius:var(--radius-sm);margin:10px 0;color:var(--text);white-space:pre;overflow-x:auto}
 
-.warn-banner{background:var(--warn-soft);border:1px solid rgba(161,98,7,.3);padding:12px 14px;border-radius:var(--radius-sm);font-size:13px;color:var(--warn);margin-bottom:14px;display:flex;gap:10px;align-items:flex-start}
+.warn-banner{background:var(--warn-soft);border:1px solid rgba(234,179,8,.3);padding:12px 14px;border-radius:var(--radius-sm);font-size:13px;color:var(--warn);margin-bottom:14px;display:flex;gap:10px;align-items:flex-start}
 
 /* tooltip pill */
 .pill{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;background:var(--accent-soft);color:var(--accent);border-radius:99px;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
 
 /* footer */
-.foot{margin-top:24px;padding-top:18px;border-top:1px solid rgba(16,40,28,.10);font-size:11px;color:var(--text-muted);line-height:1.6}
+.foot{margin-top:24px;padding-top:18px;border-top:1px solid rgba(255,255,255,.06);font-size:11px;color:var(--text-muted);line-height:1.6}
 .foot a{color:var(--accent);text-decoration:none}
 .foot a:hover{text-decoration:underline}
 
@@ -143,15 +140,14 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent-mid);b
 <body>
 
 <header class="header">
-  <a class="back-link" href="index.html">&larr; Материалы</a>
   <div class="brand">
     <div class="brand-dot"></div>
     <div>
       <div class="brand-title">Калькулятор выборки</div>
-      <div class="brand-tag">Аналитика 360 · сколько данных нужно для вывода</div>
+      <div class="brand-tag">DDDM · A/B-тесты для цифровых продуктов</div>
     </div>
   </div>
-  <div class="header-sub">Двигайте ползунки — формула пересчитывается мгновенно</div>
+  <div class="header-sub">Двигай бегунки — формула пересчитывается на лету</div>
 </header>
 
 <div class="shell">
@@ -161,9 +157,9 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent-mid);b
   <div class="sect-title">Тип теста</div>
   <div class="tabs">
     <div class="tab active" data-test="prop">Пропорции<small>CR, CTR, retention</small></div>
-    <div class="tab" data-test="mean">Средние<small>ARPU, время, AOV</small></div>
-    <div class="tab" data-test="mab">MAB<small>многорукий бандит</small></div>
-    <div class="tab" data-test="sprt">SPRT<small>последовательный тест</small></div>
+    <div class="tab" data-test="mean">Средние<small>ARPU, time, AOV</small></div>
+    <div class="tab" data-test="mab">MAB<small>multi-armed bandit</small></div>
+    <div class="tab" data-test="sprt">SPRT<small>sequential</small></div>
   </div>
 
   <div class="sect-title">Базовые параметры</div>
@@ -194,7 +190,7 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent-mid);b
       <div class="toggle active" data-sides="2">двусторонняя</div>
       <div class="toggle" data-sides="1">односторонняя</div>
     </div>
-    <div class="field-help">Двусторонняя гипотеза — стандартный выбор. Односторонняя уместна, только если эффект возможен в одну сторону; на практике это редкий случай.</div>
+    <div class="field-help">Двусторонняя — стандарт. Односторонняя только если эффект может быть только в одну сторону (редко на самом деле).</div>
   </div>
 
   <!-- prop block -->
@@ -215,7 +211,7 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent-mid);b
       </div>
       <input type="range" id="mdeRel" min="1" max="100" step="1" value="10">
       <div class="hint" id="mdeRelHint"></div>
-      <div class="field-help">Относительный прирост от p₀. Например, при p₀=5% и MDE=+10% обнаруживаем p₁=5.5%.</div>
+      <div class="field-help">Относительный прирост от p₀. Например, при p₀=5% и MDE=+10% детектируем p₁=5.5%.</div>
     </div>
   </div>
 
@@ -241,7 +237,7 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent-mid);b
         <span class="field-label">Минимальный эффект δ (абс)</span>
       </div>
       <input type="number" id="mdeAbs" value="10" step="any">
-      <div class="field-help">Абсолютная разница, которую требуется обнаружить.</div>
+      <div class="field-help">Абсолютная разница, которую хотим уловить.</div>
     </div>
   </div>
 
@@ -254,7 +250,7 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent-mid);b
         <span class="field-val" id="kArmsVal">3</span>
       </div>
       <input type="range" id="kArms" min="2" max="10" step="1" value="3">
-      <div class="field-help">Сколько вариантов сравнивается одновременно. Чем их больше, тем дольше сходимость.</div>
+      <div class="field-help">Сколько одновременно сравниваемых вариантов. Чем больше — тем дольше схождение.</div>
     </div>
     <div class="field">
       <div class="field-head">
@@ -307,7 +303,7 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent-mid);b
       <span class="field-val"><span id="splitVal">100</span>%</span>
     </div>
     <input type="range" id="split" min="10" max="100" step="5" value="100">
-    <div class="field-help">Например, 30% — если параллельно идут другие тесты или действует ограничение по риску.</div>
+    <div class="field-help">Например, 30% — если параллельно бегут другие тесты или есть ограничение по риску.</div>
   </div>
 
 </aside>
@@ -318,7 +314,7 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent-mid);b
   <div class="hero">
     <div class="hero-label" id="heroLabel">Размер выборки на каждую группу</div>
     <div class="hero-value" id="nPerGroup">—</div>
-    <div class="hero-sub" id="heroSub">Задайте параметры слева — расчёт обновится автоматически</div>
+    <div class="hero-sub" id="heroSub">Задай параметры слева, расчёт обновится автоматически</div>
     <div class="hero-grid">
       <div class="hero-cell"><div class="hero-cell-label">Всего наблюдений</div><div class="hero-cell-val" id="nTotal">—</div></div>
       <div class="hero-cell"><div class="hero-cell-label">Длительность</div><div class="hero-cell-val" id="duration">—</div></div>
@@ -344,9 +340,9 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent-mid);b
       Когда расчёт не имеет смысла
     </div>
     <div class="card-body">
-      <strong>Слишком малый MDE</strong> — если эффект меньше шума измерений или меньше достижимого улучшения в бизнесе, тест будет длительным и не даст вывода.<br>
-      <strong>p₀ &lt; 1%</strong> — низкая конверсия даёт огромные выборки. Часто разумнее выбрать другое событие — выше по воронке.<br>
-      <strong>Длительность &gt; 4 недель</strong> — за это время изменятся сезонность и поведение клиентов, а оценка эффекта потеряет точность. Разумнее выбрать страницу с большим трафиком, смягчить требования к α и мощности либо перейти на MAB или SPRT.<br>
+      <strong>Слишком малый MDE</strong> — если эффект меньше шума измерений или меньше реалистичного бизнес-улучшения, тест будет долгим и бесполезным.<br>
+      <strong>p₀ &lt; 1%</strong> — низкая конверсия даёт огромные выборки. Часто разумнее изменить event (двигаться выше по воронке).<br>
+      <strong>Длительность &gt; 4 недель</strong> — за это время изменится сезонность, поведение, и эффект «расплывётся». Лучше выбрать большую страницу, либо смягчить требования к α/power, либо использовать MAB / sequential.<br>
       <strong>Несколько метрик</strong> — если решение принимается по N метрикам, делите α на N (поправка Бонферрони) или используйте FDR.
     </div>
   </div>
@@ -358,9 +354,9 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent-mid);b
     </div>
     <div class="card-body">
       <strong>α (значимость)</strong> — допустимая вероятность ложноположительного результата. <code>0.05</code> = 1 из 20 тестов «обнаружит» эффект, которого нет.<br>
-      <strong>1−β (мощность)</strong> — вероятность обнаружить эффект, если он действительно существует. <code>0.80</code> = в 1 из 5 случаев пропустим существующий эффект.<br>
-      <strong>p₀ / μ₀</strong> — текущий уровень метрики, база для сравнения.<br>
-      <strong>MDE</strong> — минимальный эффект, который имеет значение для бизнеса. Завышенный MDE экономит выборку, но рискует пропустить умеренные, но полезные улучшения.<br>
+      <strong>1−β (мощность)</strong> — вероятность обнаружить эффект, если он на самом деле есть. <code>0.80</code> = в 1 из 5 случаев пропустим реальный эффект.<br>
+      <strong>p₀ / μ₀</strong> — текущий уровень метрики, ваша «база».<br>
+      <strong>MDE</strong> — минимальный эффект, который для бизнеса вообще интересен. Завышенный MDE экономит выборку, но рискует пропустить умеренные, но полезные улучшения.<br>
       <strong>Двусторонняя гипотеза</strong> — мы заранее не знаем, в плюс или в минус изменится метрика. По умолчанию используйте её. Односторонняя оправдана только в редких случаях (например, проверка на «не хуже»).
     </div>
   </div>
@@ -369,49 +365,49 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent-mid);b
 
 <!-- ============ RIGHT: presets + info ============ -->
 <aside class="right">
-  <div class="sect-title">Готовые наборы параметров</div>
+  <div class="sect-title">Пресеты под цифровые продукты</div>
   <div class="preset" data-preset="ecom_cta">
-    <div class="preset-name">Кнопка действия в интернет-магазине</div>
-    <div class="preset-meta">p₀=3% · MDE=+10% отн. · 5000 в сутки</div>
+    <div class="preset-name">E-commerce CTA-кнопка</div>
+    <div class="preset-meta">p₀=3% · MDE=+10% rel · 5000/day</div>
   </div>
   <div class="preset" data-preset="email">
-    <div class="preset-name">Тема письма в рассылке</div>
-    <div class="preset-meta">открытия=25% · MDE=+8% отн. · 20000 в сутки</div>
+    <div class="preset-name">Email subject line</div>
+    <div class="preset-meta">open=25% · MDE=+8% rel · 20000/day</div>
   </div>
   <div class="preset" data-preset="onboarding">
-    <div class="preset-name">Завершение регистрации</div>
-    <div class="preset-meta">доля=60% · MDE=+5% отн. · 2000 в сутки</div>
+    <div class="preset-name">Онбординг завершённость</div>
+    <div class="preset-meta">rate=60% · MDE=+5% rel · 2000/day</div>
   </div>
   <div class="preset" data-preset="pricing">
-    <div class="preset-name">Страница с тарифами</div>
-    <div class="preset-meta">CR=8% · MDE=+20% отн. · 800 в сутки</div>
+    <div class="preset-name">Pricing-страница</div>
+    <div class="preset-meta">CR=8% · MDE=+20% rel · 800/day</div>
   </div>
   <div class="preset" data-preset="mobile_checkout">
-    <div class="preset-name">Время оформления в мобильном приложении</div>
-    <div class="preset-meta">μ=180 с · σ=120 · δ=10 с · 3000 в сутки</div>
+    <div class="preset-name">Время оформления (mobile)</div>
+    <div class="preset-meta">μ=180s · σ=120 · δ=10s · 3000/day</div>
   </div>
   <div class="preset" data-preset="mab_homepage">
-    <div class="preset-name">Главная страница: три варианта (MAB)</div>
-    <div class="preset-meta">K=3 · p₀=4% · Δ=1.0 п.п. · 4000 в сутки</div>
+    <div class="preset-name">Главная: 3 варианта (MAB)</div>
+    <div class="preset-meta">K=3 · p₀=4% · Δ=1.0 п.п. · 4000/day</div>
   </div>
   <div class="preset" data-preset="sprt_signup">
-    <div class="preset-name">Регистрация, SPRT (ранняя остановка)</div>
-    <div class="preset-meta">p₀=10% · p₁=12% · 6000 в сутки</div>
+    <div class="preset-name">Sign-up SPRT (быстрая остановка)</div>
+    <div class="preset-meta">p₀=10% · p₁=12% · 6000/day</div>
   </div>
 
-  <div class="sect-title">Как выбрать тип теста</div>
+  <div class="sect-title">Шпаргалка по выбору теста</div>
   <div class="card" style="background:var(--bg-elevated);padding:14px;font-size:12px;line-height:1.7">
     <strong style="color:var(--accent)">Пропорции:</strong> бинарная метрика (купил/не купил, кликнул/нет).<br>
     <strong style="color:var(--accent)">Средние:</strong> непрерывная метрика (ARPU, время сессии, AOV).<br>
     <strong style="color:var(--accent)">MAB:</strong> много вариантов одновременно, важно минимизировать потери при тесте.<br>
-    <strong style="color:var(--accent)">SPRT:</strong> тест останавливается, как только эффект подтверждён.
+    <strong style="color:var(--accent)">SPRT:</strong> хочешь остановить тест, как только эффект подтверждён.
   </div>
 
   <div class="foot">
     Формулы: <code style="color:var(--text)">n = (z<sub>α/2</sub>+z<sub>β</sub>)² · σ²/δ²</code> для средних,
-    аналог для пропорций. SPRT — границы Вальда.<br><br>
-    MAB — приблизительный горизонт показов до уровня потерь от исследования 5%, формула UCB1.<br><br>
-    Тренажёр из курса «Принятие решений на основе данных» (<a href="https://karpov.courses" target="_blank">Karpov.Courses</a>), оформлен под поток «Аналитика 360». Определения метрик и правила эксперимента — в <a href="longread_metrics.html#experiment">справочнике</a>.
+    аналог для пропорций. SPRT — Wald boundaries.<br><br>
+    MAB — приблизительный horizon до уровня регрета 5%, формула UCB1.<br><br>
+    Тренажёр сделан для курса <a href="https://karpov.courses" target="_blank">Karpov.Courses · DDDM</a>.
   </div>
 </aside>
 
@@ -467,33 +463,33 @@ function updateHints(){
   const a=state.alpha, p=state.power, p0=state.p0/100, mde=state.mdeRel/100, sd=state.sd, mean0=state.mean0;
 
   const aBox=$('#alphaHint');
-  if(a<=0.01){aBox.className='hint hint-warn';aBox.innerHTML=hintBox('Строже стандарта — выборка вырастет в 1,5–2 раза. Такой уровень оправдан в медицинских и финансовых решениях.');}
+  if(a<=0.01){aBox.className='hint hint-warn';aBox.innerHTML=hintBox('Строже стандарта — выборка вырастет в ~1.5–2×. Оправдано только в медицинских/финансовых решениях.');}
   else if(a<=0.05){aBox.className='hint hint-ok';aBox.innerHTML=hintBox('Стандартный уровень для продуктовых тестов. Допускаем 5% ложноположительных.');}
-  else {aBox.className='hint hint-warn';aBox.innerHTML=hintBox('α > 0.05: 1 из ~15 тестов покажет эффект там, где его нет. Такой уровень допустим только для предварительной проверки.');}
+  else {aBox.className='hint hint-warn';aBox.innerHTML=hintBox('α > 0.05: 1 из ~15 тестов покажет эффект там, где его нет. Использовать только для разведки.');}
 
   const pBox=$('#powerHint');
-  if(p<0.70){pBox.className='hint hint-err';pBox.innerHTML=hintBox('Мощность < 70%: существующий эффект будет пропущен в трети случаев. Не рекомендуется.');}
+  if(p<0.70){pBox.className='hint hint-err';pBox.innerHTML=hintBox('Мощность < 70%: пропустишь реальный эффект в трети случаев. Не рекомендуется.');}
   else if(p<=0.85){pBox.className='hint hint-ok';pBox.innerHTML=hintBox('Стандарт: 80–85%. Баланс между «не пропустить эффект» и размером выборки.');}
-  else {pBox.className='hint hint-info';pBox.innerHTML=hintBox('Мощность 90% и выше применяется для критичных решений. Выборка вырастет на ~35–60%.');}
+  else {pBox.className='hint hint-info';pBox.innerHTML=hintBox('90%+ — для критичных решений. Выборка вырастет на ~35–60%.');}
 
   if(state.test==='prop'){
     const p0Box=$('#p0Hint');
-    if(p0<0.01){p0Box.className='hint hint-err';p0Box.innerHTML=hintBox('Конверсия &lt; 1% — выборка вырастет до сотен тысяч наблюдений. Проверьте, нет ли метрики уровнем выше в воронке.');}
+    if(p0<0.01){p0Box.className='hint hint-err';p0Box.innerHTML=hintBox('Конверсия &lt; 1% — выборка взлетит до сотен тысяч. Подумай, нет ли метрики «уровнем выше» в воронке.');}
     else if(p0<0.05){p0Box.className='hint hint-warn';p0Box.innerHTML=hintBox('Низкая конверсия — нужен большой трафик. Каждое снижение p₀ вдвое = удвоение выборки.');}
-    else if(p0<=0.30){p0Box.className='hint hint-ok';p0Box.innerHTML=hintBox('Рабочий диапазон для CR/CTR/retention.');}
-    else {p0Box.className='hint hint-info';p0Box.innerHTML=hintBox('Высокая базовая конверсия — выборка небольшая. Проверьте, что метрика сохраняет чувствительность: значение выше 50% часто означает неудачно выбранное измерение.');}
+    else if(p0<=0.30){p0Box.className='hint hint-ok';p0Box.innerHTML=hintBox('Здоровый рабочий диапазон для CR/CTR/retention.');}
+    else {p0Box.className='hint hint-info';p0Box.innerHTML=hintBox('Высокая базовая — выборка маленькая. Проверь, что метрика всё ещё чувствительна (часто > 50% = плохо измеряем).');}
 
     const mdeBox=$('#mdeRelHint');
-    if(mde<0.03){mdeBox.className='hint hint-err';mdeBox.innerHTML=hintBox('MDE &lt; 3% (относительно) почти неотличим от шума. Достижимо только при очень большом трафике.');}
+    if(mde<0.03){mdeBox.className='hint hint-err';mdeBox.innerHTML=hintBox('MDE &lt; 3% (относительно) почти не отличим от шума. Реалистично только при огромном трафике.');}
     else if(mde<=0.20){mdeBox.className='hint hint-ok';mdeBox.innerHTML=hintBox('Типичный продуктовый диапазон: 5–20%. Эффект чувствителен и достижим.');}
-    else if(mde<=0.50){mdeBox.className='hint hint-info';mdeBox.innerHTML=hintBox('Большой эффект — выборка небольшая, но проверьте, насколько обоснованно рассчитывать на такой прирост.');}
-    else {mdeBox.className='hint hint-warn';mdeBox.innerHTML=hintBox('+50% и больше — почти всегда недостижимо для зрелого продукта. Проверьте, верно ли рассчитан относительный прирост.');}
+    else if(mde<=0.50){mdeBox.className='hint hint-info';mdeBox.innerHTML=hintBox('Большой эффект — выборка маленькая, но проверь, насколько реалистично рассчитывать на такой прирост.');}
+    else {mdeBox.className='hint hint-warn';mdeBox.innerHTML=hintBox('+50% и больше — почти всегда нереалистично для зрелого продукта. Может, считаешь относительный неправильно?');}
   }
 
   if(state.test==='mean'){
     const sdBox=$('#sdHint');
     const cv=sd/Math.max(1e-9,mean0);
-    if(cv>1.5){sdBox.className='hint hint-err';sdBox.innerHTML=hintBox('Коэффициент вариации σ/μ &gt; 1.5 — данные очень шумные. Рассмотрите усечение выбросов или преобразование метрики либо увеличьте выборку.');}
+    if(cv>1.5){sdBox.className='hint hint-err';sdBox.innerHTML=hintBox('Коэффициент вариации σ/μ &gt; 1.5 — данные очень шумные. Подумай про winsorize/transform или большую выборку.');}
     else if(cv>0.8){sdBox.className='hint hint-warn';sdBox.innerHTML=hintBox('Шумные данные (σ/μ ≈ 1). Выборка будет большой.');}
     else {sdBox.className='hint hint-ok';sdBox.innerHTML=hintBox('Шум в норме (σ/μ &lt; 0.8).');}
   }
@@ -537,7 +533,7 @@ function calcMab(){
   return {n,total,za:0,zb:0,formula:`UCB1: на каждый «не лучший» вариант нужно ≈ 8·ln(T)/Δ² показов.
   n ≈ 8·ln(${fmt(total)}) / ${gap.toFixed(4)}² = ${fmt(n)} на вариант
   Всего показов T ≈ ${fmt(total)}`,
-  explain:`Multi-Armed Bandit (UCB1) распределяет трафик динамически: чем хуже вариант, тем меньше ему показов. Поэтому фиксированной выборки нет, есть <strong>горизонт</strong> — сколько в сумме показов нужно, чтобы определить лучший вариант с малыми потерями от исследования.`,
+  explain:`Multi-Armed Bandit (UCB1) распределяет трафик динамически: чем хуже вариант, тем меньше ему показов. Поэтому фиксированной выборки нет, есть <strong>горизонт</strong> — сколько в сумме показов нужно, чтобы определить лучший с малым «регретом» (потерями от исследования).`,
   noPerGroup:true};
 }
 function calcSprt(){
@@ -550,7 +546,7 @@ function calcSprt(){
   const ll1=p1*Math.log(p1/p0)+(1-p1)*Math.log((1-p1)/(1-p0));
   const ll0=p0*Math.log(p1/p0)+(1-p0)*Math.log((1-p1)/(1-p0));
   const ASN_H1 = ((1-b)*A + b*B) / Math.max(ll1,1e-9);
-  const ASN_H0 = (a*A + (1-a)*B) / Math.min(ll0,-1e-9);  // ll0 < 0 при p1 > p0; клампим ОТ нуля
+  const ASN_H0 = (a*A + (1-a)*B) / Math.max(ll0,-1e-9);  // could be negative
   return {n:ASN_H1, asnH0:Math.abs(ASN_H0), za:A, zb:B,
     formula:`Границы Вальда:
   A = ln((1−β)/α) = ${A.toFixed(3)}     ← если log-likelihood ≥ A, принимаем H₁
@@ -559,7 +555,7 @@ function calcSprt(){
 Среднее число наблюдений до решения:
   ASN(H₁) ≈ ${fmt(ASN_H1)} наблюдений
   ASN(H₀) ≈ ${fmt(Math.abs(ASN_H0))} наблюдений`,
-    explain:`SPRT (Wald's Sequential Probability Ratio Test) — последовательный тест: на каждом наблюдении пересчитываем лог-отношение вероятностей H₁/H₀ и останавливаемся, как только пересекли границу. <strong>В среднем требует на 30–50% меньше наблюдений</strong>, чем фиксированный план.`,
+    explain:`SPRT (Wald's Sequential Probability Ratio Test) — последовательный тест: на каждом наблюдении пересчитываем лог-отношение вероятностей H₁/H₀ и останавливаемся, как только пересекли границу. <strong>В среднем требует на 30–50% меньше выборки</strong>, чем фиксированный план.`,
     noPerGroup:true};
 }
 
@@ -607,9 +603,9 @@ function render(){
 
     // warnings
     const warns=[];
-    if(days>28) warns.push('Длительность теста &gt; 4 недель — сезонность исказит оценку эффекта. Смягчите требования (выше α или ниже мощность), увеличьте долю трафика в эксперименте либо перейдите на SPRT или MAB.');
-    if(perGroup<200) warns.push('Очень маленькая выборка (&lt;200). Z-аппроксимация может быть неточной — проверьте результат точным критерием Фишера или имитационным моделированием.');
-    if(state.alpha<0.01 && days>14) warns.push('Слишком строгий α при ограниченном трафике даёт недостижимую длительность. Оцените, необходим ли такой уровень значимости.');
+    if(days>28) warns.push('Длительность теста &gt; 4 недель — сезонность исказит эффект. Уменьши требования (выше α или ниже power), увеличь трафик в эксперимент, либо переходи на SPRT/MAB.');
+    if(perGroup<200) warns.push('Очень маленькая выборка (&lt;200). Z-аппроксимация может быть неточной — проверь точным критерием Фишера или симуляцией.');
+    if(state.alpha<0.01 && days>14) warns.push('Слишком строгий α при ограниченном трафике даёт нереалистичную длительность. Подумай, нужен ли такой уровень.');
     $('#warnArea').innerHTML = warns.map(w=>`<div class="warn-banner"><span style="font-size:16px">⚠</span><div>${w}</div></div>`).join('');
   }
 }
