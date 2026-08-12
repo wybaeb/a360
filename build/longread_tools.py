@@ -7,14 +7,49 @@ Excel / BI / Python / GigaChat»). По заданию владельца (11.08
 разведочный анализ, быстрая оценка качества данных, гистограмма и типы
 визуализаций — всё, что нужно, чтобы прийти на кейсы Шага 2 подготовленным.
 Терминология — та же, что будет на слайдах Шага 2.
+
+Помимо своих фигур, переиспользуется готовый SVG слайда деки Шага 1
+(decks/step1_data_landscape.json) — участник видит ту же картинку, что на
+встрече.
 """
+import json as _json
+import os as _os
+
 from sources import SOURCES_TOOLS, ref_tools
 from longread_figs import fig, _txt, _svg, _axes, DARK, ACC, DEEP, WARN
 
 READ_MIN = 12
 
+# ── Переиспользование готовых слайдов деки Шага 1 ───────────────────────────
+_DECK_PATH = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)),
+                           "..", "..", "kk_sber_a360", "decks",
+                           "step1_data_landscape.json")
 
-# ── Фигуры раздела 7 «Минимум статистики» ───────────────────────────────────
+
+def _slide_svg(sid):
+    """SVG готового слайда (960×540) без внешних зависимостей: слайды со
+    ссылками на внешние файлы (/illustrations/, /icons/) пропускаем."""
+    try:
+        with open(_DECK_PATH, encoding="utf-8") as f:
+            deck = _json.load(f)
+    except OSError:
+        return ""
+    slides = deck.get("slides", []) if isinstance(deck, dict) else deck
+    for s in slides:
+        if s.get("id") == sid:
+            svg = s.get("diagram") or ""
+            if 'href="/' in svg or "/illustrations/" in svg or "/icons/" in svg:
+                return ""
+            return svg.replace(' height="100%"', '', 1)
+    return ""
+
+
+def _slide_fig(sid, caption):
+    svg = _slide_svg(sid)
+    return fig(svg, caption) if svg else ""
+
+
+# ── Фигуры раздела «Минимум статистики: гистограмма, медиана, перцентиль» ───
 def hist_bimodal():
     """Гистограмма с двумя горбами: один показатель — два разных процесса."""
     s = []
@@ -35,11 +70,11 @@ def hist_bimodal():
     xm = gx(mean_i - 0.5) + 0.5 * bw
     s.append(f'<line x1="{xm:.0f}" y1="{Y0 + 4}" x2="{xm:.0f}" y2="{Y1}" '
              f'stroke="{WARN}" stroke-width="2" stroke-dasharray="6 5"/>')
-    s.append(_txt(xm, Y0 - 2, "среднее — там, где заявок почти нет", 12, "700", WARN, anchor="middle"))
-    s.append(_txt(gx(3), 96, "процесс 1", 12.5, "800", DEEP, anchor="middle"))
-    s.append(_txt(gx(3), 113, "автоматический маршрут", 11.5, None, DARK, op=0.75, anchor="middle"))
-    s.append(_txt(gx(12), 110, "процесс 2", 12.5, "800", DEEP, anchor="middle"))
-    s.append(_txt(gx(12), 127, "ручная проверка", 11.5, None, DARK, op=0.75, anchor="middle"))
+    s.append(_txt(xm, Y0 - 2, "среднее — там, где заявок почти нет", 13, "700", WARN, anchor="middle"))
+    s.append(_txt(gx(3), 96, "процесс 1", 13.5, "800", DEEP, anchor="middle"))
+    s.append(_txt(gx(3), 114, "автоматический маршрут", 13, None, DARK, op=0.78, anchor="middle"))
+    s.append(_txt(gx(12), 110, "процесс 2", 13.5, "800", DEEP, anchor="middle"))
+    s.append(_txt(gx(12), 128, "ручная проверка", 13, None, DARK, op=0.78, anchor="middle"))
     return _svg(330, ''.join(s))
 
 
@@ -66,16 +101,16 @@ def mean_vs_median():
         xd, xn = px(med), px(mean)
         s.append(f'<line x1="{xd:.1f}" y1="{y - 30}" x2="{xd:.1f}" y2="{y + 8}" '
                  f'stroke="{DEEP}" stroke-width="2.5"/>')
-        s.append(_txt(xd, y - 38, "медиана", 12, "800", DEEP, anchor="middle"))
+        s.append(_txt(xd, y - 38, "медиана", 13, "800", DEEP, anchor="middle"))
         s.append(f'<line x1="{xn:.1f}" y1="{y - 8}" x2="{xn:.1f}" y2="{y + 30}" '
                  f'stroke="{WARN}" stroke-width="2.5" stroke-dasharray="5 4"/>')
-        s.append(_txt(xn + 8, y + 30, "среднее", 12, "800", WARN))
-    s.append(_txt(px(OUT), 238 - 20, "выброс", 12, "700", WARN, anchor="middle"))
+        s.append(_txt(xn + 8, y + 30, "среднее", 13, "800", WARN))
+    s.append(_txt(px(OUT), 238 - 20, "выброс", 13, "700", WARN, anchor="middle"))
     x1s, x2s = px(mean1), px(mean2)
     s.append(f'<line x1="{x1s:.1f}" y1="286" x2="{x2s - 8:.1f}" y2="286" '
              f'stroke="{WARN}" stroke-width="2"/>')
     s.append(f'<polygon points="{x2s:.1f},286 {x2s - 10:.1f},281 {x2s - 10:.1f},291" fill="{WARN}"/>')
-    s.append(_txt(x2s + 12, 290, "среднее сдвинулось; медиана — нет", 12, "700", WARN))
+    s.append(_txt(x2s + 12, 290, "среднее сдвинулось; медиана — нет", 13, "700", WARN))
     return _svg(310, ''.join(s))
 
 
@@ -105,13 +140,13 @@ def percentile_dist():
     xm = X0 + 20 + (mean_i + 0.5) * bw
     s.append(f'<line x1="{xm:.0f}" y1="{Y0 + 30}" x2="{xm:.0f}" y2="{Y1}" '
              f'stroke="{DARK}" stroke-width="1.8" stroke-dasharray="4 4" stroke-opacity="0.6"/>')
-    s.append(_txt(xm, Y0 + 22, "среднее", 12, "700", DARK, op=0.7, anchor="middle"))
+    s.append(_txt(xm, Y0 + 22, "среднее", 13, "700", DARK, op=0.7, anchor="middle"))
     xp = X0 + 20 + p90i * bw - 2
     s.append(f'<line x1="{xp:.0f}" y1="{Y0 + 4}" x2="{xp:.0f}" y2="{Y1}" '
              f'stroke="{DEEP}" stroke-width="2.5" stroke-dasharray="7 5"/>')
-    s.append(_txt(xp - 8, Y0 - 2, "90-й перцентиль → норматив", 12.5, "800", DEEP, anchor="end"))
-    s.append(_txt(xp + 12, Y0 + 52, "хвост: каждый десятый случай —", 12, "700", WARN))
-    s.append(_txt(xp + 12, Y0 + 69, "здесь живёт клиентский опыт", 12, "700", WARN))
+    s.append(_txt(xp - 8, Y0 - 2, "90-й перцентиль → норматив", 13.5, "800", DEEP, anchor="end"))
+    s.append(_txt(xp + 12, Y0 + 52, "хвост: каждый десятый случай —", 13, "700", WARN))
+    s.append(_txt(xp + 12, Y0 + 70, "здесь живёт клиентский опыт", 13, "700", WARN))
     return _svg(330, ''.join(s))
 
 BODY = f"""
@@ -188,6 +223,9 @@ BODY = f"""
 кейсов это и не нужно: работаем на синтетических выгрузках и названиях
 метрик.</p>
 </div>
+<p>Потренировать такие запросы на разобранных примерах можно заранее —
+в <a href="practice.html">самостоятельной практике GigaChat</a>: там пять
+готовых промптов по ошибкам вывода.</p>
 </div></section>
 
 <section id="t3"><div class="wrap">
@@ -239,7 +277,14 @@ BODY = f"""
       действие следует из увиденного.</li>
 </ol>
 <p>Первые три шага — это и есть быстрая оценка качества данных: десять минут
-профилирования до любого вывода экономят недели споров после него.</p>
+профилирования до любого вывода экономят недели споров после него. Что именно
+ловится на этих шагах — пять типовых дефектов от пропусков до справочников —
+разобрано в разделе <a href="longread_metrics.html#defects">«Пять типовых
+дефектов данных»</a> справочника «Метрики и качество данных».</p>
+{_slide_fig("s1b1_def_types",
+            "Слайд Шага 1: «текст, притворившийся числом». Дефект типов, который "
+            "ловят шаги 2–3 разведочного анализа: привести типы один раз при "
+            "загрузке — и ошибки не копятся.")}
 </div></section>
 
 <section id="t7"><div class="wrap">
@@ -251,12 +296,17 @@ BODY = f"""
      "попадает в провал между ними и не описывает ни один из двух.")}
 <p><b>Медиана</b> устойчива к выбросам, среднее — нет{ref_tools("median")}.
 Рядом с любым средним запрашивайте медиану: если они разошлись — в данных
-выброс или перекос.</p>
+выброс или перекос. Как один выброс переворачивает квартальный вывод — в
+разделе <a href="longread.html#e1">«Выброс: несколько дней решают за весь
+квартал»</a> лонгрида «Пять ошибок вывода».</p>
 {fig(mean_vs_median(),
      "Одно экстремальное значение утянуло среднее вправо; медиана осталась "
      "на месте — она и описывает типичный случай.")}
 <p><b>Перцентиль</b> отвечает за хвост распределения{ref_tools("percentile")}:
-норматив на срок процесса задаётся по 90-му перцентилю, а не по среднему.</p>
+норматив на срок процесса задаётся по 90-му перцентилю, а не по среднему —
+управленческий разбор этой ловушки есть в разделе
+<a href="longread.html#e5">«Среднее: норматив выполнен, клиент ждёт
+неделю»</a> лонгрида «Пять ошибок вывода».</p>
 {fig(percentile_dist(),
      "Среднее обещает быстрый срок, но каждый десятый случай живёт в хвосте. "
      "Норматив по 90-му перцентилю отвечает и за него.")}
@@ -284,9 +334,10 @@ BODY = f"""
 <section id="todo"><div class="wrap">
 <h2>Что сделать до встречи</h2>
 <ol class="steps">
-  <li><b>Принесите карту источников (A1).</b> Шаг 2 начинается с разбора
-      двух-трёх принесённых карт, и на неё ляжет выбор инструмента:
-      показатель → Excel / BI / Python.</li>
+  <li><b>Принесите карту источников (A1).</b> Черновик собирается в
+      <a href="trainer_map.html">тренажёре «Карта источников данных»</a>.
+      Шаг 2 начинается с разбора двух-трёх принесённых карт, и на неё ляжет
+      выбор инструмента: показатель → Excel / BI / Python.</li>
   <li><b>Выберите один показатель из своей карты,</b> по которому вы сейчас
       смотрите в отчёт чаще всего, — на встрече примерите на него рамку
       инструментов.</li>

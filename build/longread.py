@@ -36,21 +36,21 @@ def _fig_outlier():
     s.append(_poly(pts, DEEP, 2))
     for d, v in SPIKES.items():
         s.append(f'<circle cx="{px(d):.0f}" cy="{py(v):.0f}" r="5" fill="{WARN}"/>')
-        s.append(_txt(px(d), py(v) - 12, f"{v}", 11, "700", WARN, anchor="middle"))
-    s.append(_txt(px(74.5), Y0 + 12, "остановки интеграции — 4 дня из 90", 12, "700", WARN, anchor="middle"))
+        s.append(_txt(px(d), py(v) - 12, f"{v}", 13, "700", WARN, anchor="middle"))
+    s.append(_txt(px(74.5), Y0 + 12, "остановки интеграции — 4 дня из 90", 13, "700", WARN, anchor="middle"))
     # порог медиана + 3,5·MAD
     s.append(f'<line x1="{X0 + 10}" y1="{py(54.3):.0f}" x2="{X1 - 10}" y2="{py(54.3):.0f}" '
              f'stroke="{WARN}" stroke-width="1.8" stroke-dasharray="7 5"/>')
-    s.append(_txt(X0 + 16, py(54.3) - 10, "порог выброса: медиана + 3,5·MAD = 54,3 мин", 12, "700", WARN))
+    s.append(_txt(X0 + 16, py(54.3) - 10, "порог выброса: медиана + 3,5·MAD = 54,3 мин", 13, "700", WARN))
     # средние по окнам
     s.append(f'<line x1="{px(0):.0f}" y1="{py(41):.0f}" x2="{px(29):.0f}" y2="{py(41):.0f}" '
              f'stroke="{DARK}" stroke-width="1.4" stroke-dasharray="3 4" stroke-opacity="0.6"/>')
-    s.append(_txt(px(29), py(41) + 20, "среднее окна: 41 мин", 11.5, "700", DARK, op=0.7, anchor="end"))
+    s.append(_txt(px(29), py(41) + 20, "среднее окна: 41 мин", 13, "700", DARK, op=0.8, anchor="end"))
     s.append(f'<line x1="{px(60):.0f}" y1="{py(72):.0f}" x2="{px(89):.0f}" y2="{py(72):.0f}" '
              f'stroke="{DARK}" stroke-width="1.4" stroke-dasharray="3 4" stroke-opacity="0.6"/>')
-    s.append(_txt(px(60) - 8, py(72) + 4, "среднее окна: 72 мин", 11.5, "700", DARK, op=0.7, anchor="end"))
-    s.append(_txt(px(2), Y1 - 8, "первые 30 дней", 11.5, "700", DEEP))
-    s.append(_txt(px(62), Y1 - 8, "последние 30 дней", 11.5, "700", WARN))
+    s.append(_txt(px(60) - 8, py(72) + 4, "среднее окна: 72 мин", 13, "700", DARK, op=0.8, anchor="end"))
+    s.append(_txt(px(2), Y1 - 8, "первые 30 дней", 13, "700", DEEP))
+    s.append(_txt(px(62), Y1 - 8, "последние 30 дней", 13, "700", WARN))
     return _svg(330, ''.join(s))
 
 
@@ -74,16 +74,16 @@ def _fig_confounder():
     s.append(_poly([(px(w), py(churn(w))) for w in ws], DEEP, 2.2))
     s.append(f'<line x1="{px(13):.0f}" y1="{Y0 + 12}" x2="{px(13):.0f}" y2="{Y1}" '
              f'stroke="{DARK}" stroke-width="1.4" stroke-dasharray="5 5" stroke-opacity="0.55"/>')
-    s.append(_txt(px(13) - 8, Y0 + 8, "релиз приложения", 11.5, "700", DARK, op=0.7, anchor="end"))
+    s.append(_txt(px(13) - 8, Y0 + 8, "релиз приложения", 13, "700", DARK, op=0.8, anchor="end"))
     for j, (col, name) in enumerate(((ACC, "обращения в контакт-центр"),
                                      (DEEP, "отток по дебетовым картам"),
                                      (WARN, "доля сессий с ошибкой в приложении"))):
         yl = 58 + j * 26
         s.append(f'<rect x="86" y="{yl - 11}" width="14" height="14" rx="4" fill="{col}"/>')
-        s.append(_txt(108, yl, name, 12, "700", col))
+        s.append(_txt(108, yl, name, 13, "700", col))
     s.append(_plate(612, 56, 254, 66, "#fbfdfc", bar=4))
-    s.append(_txt(636, 82, "обращения ↔ отток: r = 0,84", 12.5, "700"))
-    s.append(_txt(636, 104, "при фиксации ошибок: r = 0,07", 12.5, "800", DEEP))
+    s.append(_txt(636, 82, "обращения ↔ отток: r = 0,84", 13, "700"))
+    s.append(_txt(636, 104, "при фиксации ошибок: r = 0,07", 13, "800", DEEP))
     return _svg(330, ''.join(s))
 
 
@@ -103,17 +103,26 @@ def _fig_seasonality():
         s.append(_txt(bx(i) + 23, Y1 + 18, Q[i % 4], 11, None, DARK, op=0.55, anchor="middle"))
     for g, year in enumerate(("2023", "2024", "2025")):
         s.append(_txt(bx(4 * g) + 116, Y1 + 38, year, 12.5, "700", DARK, op=0.75, anchor="middle"))
-    # соблазн: III'25 → IV'25, +36 %
-    x_a, y_a = bx(10) + 40, py(VALS[10]) - 10
-    x_b, y_b = bx(11) + 12, py(VALS[11]) - 10
-    s.append(f'<line x1="{x_a}" y1="{y_a}" x2="{x_b}" y2="{y_b}" stroke="{WARN}" stroke-width="2"/>')
-    s.append(f'<polygon points="{x_b},{y_b} {x_b - 11},{y_b + 1} {x_b - 6},{y_b + 9}" fill="{WARN}"/>')
-    s.append(_txt(bx(10) - 10, py(VALS[10]) - 24, "сосед к соседу: «+36 %»", 12.5, "800", WARN, anchor="end"))
-    s.append(_txt(bx(11) + 23, py(VALS[11]) + 22, "+36 %", 12.5, "800", "#ffffff", anchor="middle"))
+    # соблазн: III'25 → IV'25, +36 %. Наконечник строится по направлению линии:
+    # треугольник из единичного вектора вдоль стрелки и перпендикуляра к нему,
+    # линия укорачивается до основания наконечника — остриё лежит ровно на оси.
+    x_a, y_a = bx(10) + 40, py(VALS[10]) - 14
+    x_b, y_b = bx(11) + 10, py(VALS[11]) - 12
+    L = math.hypot(x_b - x_a, y_b - y_a)
+    ux, uy = (x_b - x_a) / L, (y_b - y_a) / L
+    AH, AW = 11, 5.5  # длина наконечника и его полуширина
+    xb_, yb_ = x_b - ux * AH, y_b - uy * AH
+    s.append(f'<line x1="{x_a:.1f}" y1="{y_a:.1f}" x2="{xb_:.1f}" y2="{yb_:.1f}" stroke="{WARN}" stroke-width="2"/>')
+    s.append(f'<polygon points="{x_b:.1f},{y_b:.1f} {xb_ - uy * AW:.1f},{yb_ + ux * AW:.1f} '
+             f'{xb_ + uy * AW:.1f},{yb_ - ux * AW:.1f}" fill="{WARN}"/>')
+    # подпись поднята над вершинами столбцов и сдвинута к началу стрелки,
+    # чтобы не упираться в край столбца III'25
+    s.append(_txt(x_a - 6, py(VALS[10]) - 34, "сосед к соседу: «+36 %»", 13, "800", WARN, anchor="end"))
+    s.append(_txt(bx(11) + 23, py(VALS[11]) + 22, "+36 %", 13, "800", "#ffffff", anchor="middle"))
     # честное сравнение: IV'24 → IV'25, −7 %
     s.append(f'<line x1="{bx(7) + 23}" y1="{py(VALS[7]):.0f}" x2="{bx(11) + 23}" y2="{py(VALS[7]):.0f}" '
              f'stroke="{DEEP}" stroke-width="1.8" stroke-dasharray="6 5"/>')
-    s.append(_txt(bx(7) + 34, py(VALS[7]) - 10, "тот же квартал год назад: −7 %", 12.5, "800", DEEP))
+    s.append(_txt(bx(7) + 34, py(VALS[7]) - 10, "тот же квартал год назад: −7 %", 13, "800", DEEP))
     return _svg(350, ''.join(s))
 
 
@@ -129,15 +138,15 @@ def _fig_low_base():
         for r, (name, p, a) in enumerate(ROWS):
             y = 62 + r * 52
             we = (name == "Мы")
-            s.append(_txt(x_name, y + 19, name, 12.5, "800" if we else None, DEEP if we else DARK,
+            s.append(_txt(x_name, y + 19, name, 13, "800" if we else None, DEEP if we else DARK,
                           op=None if we else 0.8))
             w = width(p, a)
             s.append(f'<rect x="{x_bar}" y="{y}" width="{w:.0f}" height="28" rx="4" '
                      f'fill="{DEEP if we else DARK}" fill-opacity="{0.95 if we else 0.3}"/>')
-            s.append(_txt(x_bar + w + 8, y + 19, label(p, a), 12.5, "700", DEEP if we else DARK,
-                          op=None if we else 0.75))
+            s.append(_txt(x_bar + w + 8, y + 19, label(p, a), 13, "700", DEEP if we else DARK,
+                          op=None if we else 0.8))
     s.append(_txt(40, 296, "По темпам впереди банк Б, по деньгам — мы: его «+60 %» — это 4,1 млрд ₽, наши «+18 %» — 26 млрд ₽.",
-                  12.5, "700", DARK, op=0.85))
+                  13, "700", DARK, op=0.85))
     return _svg(312, ''.join(s))
 
 
@@ -157,8 +166,8 @@ def _fig_bimodal():
     s.append(_poly(curve, DEEP, 2.4))
     s.append(_axes(X0, Y0, X1, Y1))
     s.append(_txt(X1, Y1 + 22, "срок рассмотрения, дней →", 12, None, DARK, op=0.6, anchor="end"))
-    s.append(_txt(px(0.22) + 20, 70, "72 % — автоскоринг, часы", 12, "700", DEEP))
-    s.append(_txt(px(6.4), py(0.55) - 16, "28 % — ручной андеррайтинг, дни", 12, "700", DEEP, anchor="middle"))
+    s.append(_txt(px(0.22) + 20, 70, "72 % — автоскоринг, часы", 13, "700", DEEP))
+    s.append(_txt(px(6.4), py(0.55) - 16, "28 % — ручной андеррайтинг, дни", 13, "700", DEEP, anchor="middle"))
     marks = [(0.20, "медиана 0,20 дня", DEEP, None, 178),
              (2.08, "среднее 2,08 дня — здесь почти нет заявок", WARN, None, 104),
              (3.0, "норматив 3 дня · правее — 25 % заявок", DARK, "6 5", 140),
@@ -167,8 +176,21 @@ def _fig_bimodal():
         d = f' stroke-dasharray="{dash}"' if dash else ''
         s.append(f'<line x1="{px(t):.0f}" y1="{ytxt + 8}" x2="{px(t):.0f}" y2="{Y1}" '
                  f'stroke="{col}" stroke-width="1.8"{d}/>')
-        s.append(_txt(px(t) + 8, ytxt, name, 12, "700", col))
+        s.append(_txt(px(t) + 8, ytxt, name, 13, "700", col))
     return _svg(330, ''.join(s))
+
+def _to_practice(slug, name):
+    """Заметная ссылка из секции ошибки на её разбор в практике.
+
+    Якоря — slug'и разборов из prompts.PRACTICES (id секций в practice.py);
+    в тексте ссылки всегда название разбора, не номер: нумерацию мы меняем,
+    названия остаются.
+    """
+    return (f'<div class="card acc"><p><b>Повторить самому:</b> эта ошибка разобрана '
+            f'на данных до готовой страницы с числами — выгрузка, промпт для GigaChat '
+            f'и эталон с занятия. <a href="practice.html#{slug}">Разбор «{name}» '
+            f'в практике →</a></p></div>')
+
 
 BODY = f"""
 <header><div class="wrap">
@@ -254,6 +276,7 @@ BODY = f"""
 <p class="sub" style="margin:8px 0 0">Разница в цене решения: «ускорять конвейер» — это
 программа на квартал и команда. «Починить интеграцию с бюро» — это задача на неделю.</p>
 </div>
+{_to_practice("01_vybrosy", "Выброс: четыре дня сбоя")}
 </div></section>
 
 <section id="e2"><div class="wrap">
@@ -292,6 +315,7 @@ BODY = f"""
 <p class="sub" style="margin:8px 0 0">Расширение контакт-центра сняло бы симптом
 и не тронуло причину: те же деньги в исправление релиза дают эффект на обоих показателях.</p>
 </div>
+{_to_practice("02_korrelyaciya", "Общая причина: виноват релиз, а не контакт-центр")}
 </div></section>
 
 <section id="e3"><div class="wrap">
@@ -328,6 +352,7 @@ BODY = f"""
 <p class="sub" style="margin:8px 0 0">Один вопрос переворачивает решение:
 масштабировать падающий канал — худшее, что можно сделать с бюджетом.</p>
 </div>
+{_to_practice("03_sezonnost", "Сезонность: рост, которого нет")}
 </div></section>
 
 <section id="e4"><div class="wrap">
@@ -374,6 +399,7 @@ BODY = f"""
 <h4>Что спросить</h4>
 <p>«От какой базы этот процент и сколько это в деньгах?»</p>
 </div>
+{_to_practice("04_nizkaya_baza", "Низкая база: проценты без базы ничего не значат")}
 </div></section>
 
 <section id="e5"><div class="wrap">
@@ -413,12 +439,14 @@ BODY = f"""
 <p>Деньги: если бы медленные корзины конвертировались как быстрая, выдач было бы
 примерно на 1 570 больше за квартал — порядка 6,6 млрд ₽ при среднем чеке 4,2 млн ₽.
 Это <b>верхняя</b> оценка: связь «дольше ждал → не взял» сама нуждается в проверке
-из раздела 2.</p>
+на общую причину — как в разделе <a href="#e2">«Общая причина: два показателя,
+которые не двигают друг друга»</a>.</p>
 
 <div class="card">
 <h4>Что спросить</h4>
 <p>«Покажите распределение и 90-й перцентиль. Какой доле клиентов норматив нарушен?»</p>
 </div>
+{_to_practice("05_srednee", "Среднее: норматив выполнен, клиент ждёт неделю")}
 </div></section>
 
 <section id="check"><div class="wrap">
