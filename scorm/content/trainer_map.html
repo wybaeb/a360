@@ -439,7 +439,7 @@ if(curPreset&&!EPRESETS[curPreset])curPreset=null;
 
 function renderPresetSelect(){
   var s=$("epSel");if(!s)return;
-  var h='<option value="">— выберите эталон —</option>';
+  var h='<option value="">— начать с нуля: пустая карта —</option>';
   GORDER.forEach(function(g){
     var keys=Object.keys(EPRESETS).filter(function(k){return EPRESETS[k].group===g});
     if(!keys.length)return;
@@ -468,7 +468,17 @@ function ownHasContent(){
 }
 function applyPreset(k){
   var p=EPRESETS[k];
-  if(!p){curPreset=null;try{localStorage.removeItem(PKEY)}catch(e){}markGroup();return}
+  // Пустой пункт списка — это не «ничего не делать», а осознанный старт с нуля:
+  // участник, который не хочет эталона, чистит карту тем же контролом, которым её выбирал.
+  if(!p){
+    if(ownHasContent()&&!confirm("Начать с нуля? Заполненная карта будет стёрта.")){
+      $("epSel").value=curPreset||"";markGroup();return}
+    localStorage.removeItem(key());
+    curPreset=null;try{localStorage.removeItem(PKEY)}catch(e){}
+    renderAll();
+    var m=$("preMsg");if(m){m.textContent="Карта очищена — заполняйте с нуля";
+      setTimeout(function(){m.textContent=""},2600)}
+    return}
   if(ownHasContent()&&!confirm("Заполненная карта будет заменена эталоном «"+p.name+"». Продолжить?")){
     $("epSel").value=curPreset||"";markGroup();return}
   var d=blank();
