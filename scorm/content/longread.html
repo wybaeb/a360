@@ -18,7 +18,12 @@ html{overflow-x:clip;scroll-behavior:smooth}
 body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--font);
   font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
 .wrap{max-width:860px;margin:0 auto;padding:0 22px}
-a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line)}
+/* overflow-wrap нужен ссылкам-адресам в списках источников: у длинного URL нет
+   точек переноса, на узком экране он уходит за край, а html/body{overflow-x:clip}
+   выше не даёт его прокрутить — текст пропадал совсем. break-word рвёт только
+   слово, которое иначе не помещается, и не влияет на расчёт min-content. */
+a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line);
+  overflow-wrap:break-word}
 a:hover{border-bottom-color:var(--acc)}
 
 header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
@@ -156,6 +161,13 @@ a.fn:hover{border:0;text-decoration:underline}
 <p>Пять разбираемых ошибок взяты не из учебника, а из того, что фактически
 происходит в управленческой отчётности банка: сравнение периодов, «одно тянет другое»,
 рост квартала, темпы конкурентов, средний срок.</p>
+<p>Ошибку вывода важно отличать от дефекта выгрузки. <b>Дефект выгрузки —
+неверны сами данные; ошибка вывода — данные верны, а вывод из них неверен.</b>
+Пропуски, дубликаты, неправильные типы и справочники портят выгрузку, и чинятся
+они в данных; здесь же разбираются случаи, когда выгрузка в порядке и
+арифметика сходится. Четыре дефекта выгрузки разобраны в разделе
+<a href="longread_metrics.html#defects">«Четыре дефекта выгрузки: расчёт
+проходит, результат неверен»</a> справочника «Метрики и качество данных».</p>
 <div class="card acc">
 <h4>Рамка, к которой всё привязано</h4>
 <p>Любой разбор в программе идёт по одной цепочке: <b>данные → инструмент → метод →
@@ -215,7 +227,7 @@ a.fn:hover{border:0;text-decoration:underline}
 <p class="sub" style="margin:8px 0 0">Разница в цене решения: «ускорять конвейер» — это
 программа на квартал и команда. «Восстановить интеграцию с бюро» — это задача на неделю.</p>
 </div>
-<div class="card acc"><p><b>Повторить самому:</b> эта ошибка разобрана на данных до готовой страницы с числами — выгрузка, промпт для GigaChat и эталон с занятия. <a href="practice.html#01_vybrosy">Разбор «Выброс: четыре дня сбоя» в практике →</a></p></div>
+<div class="card acc"><p><b>Повторить самому:</b> эта ошибка разобрана на данных до готовой страницы с числами — выгрузка, промпт для GigaChat и эталон с занятия. <a href="practice.html#01_vybrosy">Разбор «Выброс: четыре дня сбоя вместо „конвейер замедлился“» в практике →</a></p></div>
 </div></section>
 
 <section id="e2"><div class="wrap">
@@ -329,7 +341,7 @@ a.fn:hover{border:0;text-decoration:underline}
 <tr><td>Банк В</td><td class="num">58,0</td><td class="num">63,2</td><td class="num">+9 %</td>
     <td class="num">+5,2</td><td class="num">−0,9 п.п.</td></tr>
 <tr><td>Прочие</td><td class="num">61,0</td><td class="num">58,0</td><td class="num">−5 %</td>
-    <td class="num">−3,0</td><td class="num">−3,5 п.п.</td></tr>
+    <td class="num">−3,0</td><td class="num">−3,6 п.п.</td></tr>
 </table></div>
 <p>Доля рынка растёт у трёх игроков, и сильнее всех — у нас: +2,1 п.п. Правильный вывод
 противоположен озвученному.</p>

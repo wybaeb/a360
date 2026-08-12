@@ -18,7 +18,12 @@ html{overflow-x:clip;scroll-behavior:smooth}
 body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--font);
   font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
 .wrap{max-width:860px;margin:0 auto;padding:0 22px}
-a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line)}
+/* overflow-wrap нужен ссылкам-адресам в списках источников: у длинного URL нет
+   точек переноса, на узком экране он уходит за край, а html/body{overflow-x:clip}
+   выше не даёт его прокрутить — текст пропадал совсем. break-word рвёт только
+   слово, которое иначе не помещается, и не влияет на расчёт min-content. */
+a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line);
+  overflow-wrap:break-word}
 a:hover{border-bottom-color:var(--acc)}
 
 header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
@@ -190,7 +195,7 @@ master-source. Тот язык, на котором пойдёт работа с
 
 <div class="card acc">
 <h4><a href="trainer_tree.html">5 · Тренажёр: дерево метрик</a></h4>
-<p>Конструктор дерева метрик из курса: перетащите метрики на холст и соедините
+<p>Конструктор дерева метрик: перетащите метрики на холст и соедините
 от опережающих сигналов к финансовому результату. Семь банковских кейсов двух
 уровней — розница, кредитный конвейер, подключение юрлиц, портфель инициатив —
 и свободный режим со всеми метриками. У каждой метрики свой паспорт сбора: CAPEX,
@@ -230,8 +235,8 @@ time-to-evidence), дерево метрик и ансамбль, пять ти�
 </div>
 
 <div class="card acc">
-<h4><a href="longread_tools.html">9 · Лонгрид к Шагу 2: инструменты анализа</a></h4>
-<p>Предчтение ко второй встрече: какой инструмент под какую задачу —
+<h4><a href="longread_tools.html">9 · Лонгрид: инструменты анализа</a></h4>
+<p>Предварительный материал к следующей встрече: какой инструмент под какую задачу —
 Excel, BI или Python, что в каждом из них делает GigaChat, семь шагов разведочного
 анализа, минимум статистики и какой график под какой вопрос.</p>
 <p class="sub" style="margin:0">Чтение 12 минут. Писать код не понадобится.</p>
@@ -247,7 +252,7 @@ Excel, BI или Python, что в каждом из них делает GigaCha
 </div></section>
 
 <section><div class="wrap">
-<h2>Что сделать до первой рабочей встречи</h2>
+<h2>Что сделать до встречи</h2>
 <ol class="steps">
   <li><b>Прочитайте оба лонгрида.</b> На встречах теорию не читаем — она вынесена
       сюда сознательно, и без предварительного чтения встреча теряет значительную

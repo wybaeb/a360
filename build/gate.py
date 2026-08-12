@@ -62,13 +62,13 @@ button:hover{{filter:brightness(1.07)}}
 <body>
 <div class="card">
  <div class="mark">360</div>
- <div class="eyebrow">Карпов Курсы × Сбер</div>
+ <div class="eyebrow">Аналитика 360</div>
  <h1>{heading}</h1>
  <p>{intro}</p>
  <input id="pw" type="password" placeholder="Пароль" autocomplete="current-password" autofocus>
  <button id="go">Открыть</button>
  <div class="err" id="err"></div>
- <div class="foot">Пароль назывался на вводной встрече и напечатан на слайде с QR-кодом.
+ <div class="foot">Пароль назывался на встрече и напечатан на слайде с QR-кодом.
    После первого ввода он сохраняется в браузере — остальные материалы откроются сами.</div>
 </div>
 <script>
