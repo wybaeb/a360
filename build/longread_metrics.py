@@ -21,7 +21,7 @@ import os as _os
 
 from metrics_data import M
 from sources import SOURCES_METRICS, ref_metrics
-from longread_figs import (fig, npv_curve, ci_funnel, accumulation,
+from longread_figs import (fig, npv_curve, ci_funnel,
                            _txt, _plate, _poly, _svg, _axes, DARK, ACC, DEEP, WARN)
 
 READ_MIN = 14
@@ -95,17 +95,66 @@ def ci_funnel_lg():
     ])
 
 
-def accumulation_lg():
-    return _enlarge(accumulation(), [
-        (f'font-size="11.5" fill="{DARK}" font-weight="700"',
-         f'font-size="13" fill="{DARK}" font-weight="700"'),
-        (f'font-size="11.5" fill="{DARK}" fill-opacity="0.75"',
-         f'font-size="12.5" fill="{DARK}" fill-opacity="0.75"'),
-        (f'font-size="12" fill="#ffffff" font-weight="700"',
-         f'font-size="13" fill="#ffffff" font-weight="700"'),
-        (f'font-size="12" fill="{DEEP}" font-weight="700"',
-         f'font-size="13" fill="{DEEP}" font-weight="700"'),
-    ])
+def accumulation2_lg():
+    """Две фазы накопления — математическая модель (не эскиз).
+
+    Та же модель, что в PNG слайда r4_a2 (kk_sber_a360/build/review_r4/
+    fig_accum2.py): фаза 1 — приток RATE = 40 клиентов в день до целевого
+    объёма N = 969 ≈ 970 из формулы выборки (p = 0.23, E = 2,65 п.п.) —
+    набор завершается в день N/RATE ≈ 24; фаза 2 — по каждому клиенту метрика
+    зреет горизонт H = 90 дней, поэтому кривая «клиенты с полным горизонтом»
+    — кривая набора, сдвинутая вправо ровно на H (финиш — день ≈ 114).
+    GST завершает досрочно только набор (n = 600, день 15 → финиш 105).
+    """
+    RATE, N, H_DAYS = 40, 969, 90
+    T_FSS = N / RATE                     # 24.2
+    T_GST, T_DONE = 15.0, N / RATE + H_DAYS   # 15 · 114.2
+    T_MAX = 128
+    X0, Y0, X1, Y1 = 60, 34, 880, 300
+    gx = lambda d: X0 + d / T_MAX * (X1 - X0 - 16)
+    gy = lambda c: Y1 - c / 1180 * (Y1 - Y0 - 10)
+
+    s = []
+    s.append(_axes(X0, Y0, X1, Y1))
+    s.append(_txt(X1, 316, "день эксперимента →", 12, None, DARK, op=0.6, anchor="end"))
+    s.append(_txt(X0 - 8, Y0 - 12, "клиентов накоплено", 12, None, DARK, op=0.6))
+    for d in (0, 15, 24, 90):
+        s.append(_txt(gx(d), 316, str(d), 12, None, DARK, op=0.6, anchor="middle"))
+    # целевой объём — отметка на оси y
+    s.append(f'<line x1="{X0}" y1="{gy(N):.1f}" x2="{gx(T_FSS):.1f}" y2="{gy(N):.1f}" '
+             f'stroke="{DARK}" stroke-opacity="0.4" stroke-width="1.3" stroke-dasharray="5 5"/>')
+    s.append(_txt(X0 - 8, gy(N) + 4, "n ≈ 970", 12, "700", DARK, op=0.7, anchor="end"))
+    # фаза 2: клиенты с полным горизонтом (кривая набора, сдвинутая на 90 дней)
+    s.append(f'<polygon points="{gx(H_DAYS):.1f},{Y1} {gx(T_DONE):.1f},{gy(N):.1f} '
+             f'{gx(T_MAX):.1f},{gy(N):.1f} {gx(T_MAX):.1f},{Y1}" fill="{ACC}" fill-opacity="0.14"/>')
+    s.append(_poly([(gx(H_DAYS), Y1), (gx(T_DONE), gy(N)), (gx(T_MAX), gy(N))], ACC, 2.6))
+    # фаза 1: набор 40 клиентов в день до плато n ≈ 970
+    s.append(_poly([(gx(0), Y1), (gx(T_FSS), gy(N)), (gx(T_MAX), gy(N))], DEEP, 2.6))
+    # GST и FSS — вертикали с ярлыками и расшифровкой
+    for d, name in ((T_GST, "GST"), (T_FSS, "FSS")):
+        s.append(f'<line x1="{gx(d):.1f}" y1="52" x2="{gx(d):.1f}" y2="{Y1}" '
+                 f'stroke="{DEEP}" stroke-width="1.6" stroke-dasharray="6 5"/>')
+        s.append(_txt(gx(d), 46, name, 13, "800", DEEP, anchor="middle"))
+    s.append(_txt(240, 50, "GST · участников достаточно, набор закрыт досрочно (день 15)", 13, "700"))
+    s.append(_txt(240, 70, "FSS · плановое завершение набора — n ≈ 970 (день ≈ 24)", 13, "700"))
+    # подписи кривых
+    s.append(_txt(240, 103, "клиентов набрано (40 в день)", 13, "700", DEEP))
+    s.append(_txt(680, 200, "клиенты с полным горизонтом 90 дней", 13, "700", ACC, anchor="end"))
+    # финиш: данные по всей выборке
+    s.append(f'<line x1="{gx(T_DONE):.1f}" y1="90" x2="{gx(T_DONE):.1f}" y2="{Y1}" '
+             f'stroke="{DARK}" stroke-opacity="0.55" stroke-width="1.4" stroke-dasharray="3 4"/>')
+    s.append(f'<circle cx="{gx(T_DONE):.1f}" cy="{gy(N):.1f}" r="6" fill="{ACC}" '
+             f'stroke="#ffffff" stroke-width="2"/>')
+    s.append(_txt(735, 130, "данные по всей выборке — день ≈ 114 (24 + 90)", 13, "700", anchor="end"))
+    # главный вывод модели
+    s.append(_txt(240, 152, "GST сокращает только фазу 1: финиш — день 105 вместо ≈ 114.", 13, "700", WARN))
+    s.append(_txt(240, 172, "Горизонт 90 дней не сжимается", 13, "700", WARN))
+    # ленты фаз
+    s.append(f'<rect x="{X0}" y="328" width="{gx(T_FSS) - X0:.1f}" height="24" rx="7" fill="{ACC}" fill-opacity="0.8"/>')
+    s.append(f'<rect x="{gx(T_FSS) + 3:.1f}" y="328" width="{gx(T_DONE) - gx(T_FSS) - 3:.1f}" height="24" rx="7" fill="{DEEP}" fill-opacity="0.25"/>')
+    s.append(_txt((X0 + gx(T_FSS)) / 2, 345, "фаза 1", 13, "700", "#ffffff", anchor="middle"))
+    s.append(_txt((gx(T_FSS) + gx(T_DONE)) / 2, 345, "фаза 2 · накапливаются данные (горизонт 90 дней)", 13, "700", DEEP, anchor="middle"))
+    return _svg(368, ''.join(s))
 
 
 def tradeoff_scatter_lg():
@@ -463,7 +512,14 @@ ISO/IEC 25012 описывает пятнадцать характеристик
 фазы: сначала накапливаются участники до целевого объёма, затем — сами данные,
 пока не пройдёт горизонт метрики. Досрочно завершить можно только первую фазу,
 и только если участников уже достаточно; горизонт второй фазы не сжимается.</p>
-{fig(accumulation_lg(), "Две фазы накопления: до GST можно завершить набор досрочно, FSS — плановое завершение; горизонт метрики деньгами не ускоряется.")}
+{fig(accumulation2_lg(), "Две фазы накопления (модель: приток 40 клиентов в день до n ≈ 970 из формулы выборки, затем горизонт метрики 90 дней): GST завершает досрочно только набор — финиш в день 105 вместо ≈ 114, горизонт второй фазы деньгами не ускоряется.")}
+<div class="card acc">
+<p><b>Сколько продлится ваш эксперимент?</b> Обе фазы считает
+<a href="trainer_accum.html">тренажёр «Срок эксперимента»</a>: выбираете метрику
+кейса — от активации за 30 дней до LTV за полгода — и двигаете бегунок притока
+участников. Таймлайн двух фаз перестраивается на лету и показывает, какую часть
+срока приток сжимает, а какую — нет.</p>
+</div>
 <div class="card acc">
 <p><b>Нужен точный расчёт выборки?</b> В материалах есть
 <a href="trainer_sample.html">тренажёр «Расчёт выборки»</a>: задаёте базовую

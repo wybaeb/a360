@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Тренажёр: срок эксперимента · Аналитика 360</title>
+<style>
+:root{
+  --acc:#20BA72; --acc-soft:rgba(32,186,114,.10); --acc-line:rgba(32,186,114,.30);
+  --bg:#ffffff; --surf:#f4f8f6; --elev:#e9f3ee; --line:rgba(46,54,65,.13);
+  --ink:#2E3641; --ink2:rgba(46,54,65,.74); --ink3:rgba(46,54,65,.48);
+  --warn:#E4572E; --warn-soft:rgba(228,87,46,.09);
+  --font:'SB Sans Text','Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'SFMono-Regular',Consolas,'Liberation Mono',monospace;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth}
+body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 22px}
+a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line)}
+a:hover{border-bottom-color:var(--acc)}
+
+header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
+  border-bottom:1px solid var(--line)}
+
+/* Хлебная крошка: лёгкая строка над шапкой. Фон тот же, что у верха градиента
+   шапки, поэтому крошка визуально сливается с ней в один блок. */
+.crumbs{background:var(--elev);font-size:13.5px;color:var(--ink3)}
+.crumbs .wrap{padding-top:14px;padding-bottom:2px;display:flex;align-items:baseline;gap:8px}
+.crumbs a{color:#128a53;border-bottom:1px solid transparent;font-weight:600}
+.crumbs a:hover{border-bottom-color:var(--acc)}
+.crumbs .sep{color:var(--ink3);font-size:11px}
+.crumbs .here{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eyebrow{color:var(--acc);font-weight:800;font-size:12.5px;letter-spacing:.14em;
+  text-transform:uppercase;margin-bottom:14px}
+h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 16px}
+.lead{font-size:clamp(16.5px,2vw,19px);color:var(--ink2);margin:0 0 22px}
+.meta{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;
+  font-size:13.5px;color:var(--ink2)}
+.chip b{color:var(--ink)}
+
+section{padding:44px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-size:clamp(22px,3vw,30px);font-weight:800;margin:0 0 8px;line-height:1.18}
+h2 .num{color:var(--acc);margin-right:.4em;font-variant-numeric:tabular-nums}
+h3{font-size:19px;font-weight:800;margin:30px 0 10px}
+h4{font-size:16px;font-weight:800;margin:22px 0 8px;color:var(--ink2)}
+p{margin:0 0 15px}
+ul,ol{margin:0 0 15px;padding-left:22px}
+li{margin-bottom:7px}
+.sub{color:var(--ink3);margin:0 0 22px;font-size:15.5px}
+
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:20px 22px;margin:0 0 18px}
+.card.acc{background:var(--acc-soft);border-color:var(--acc-line)}
+.card.warn{background:var(--warn-soft);border-color:rgba(228,87,46,.28)}
+.card h4{margin-top:0}
+.card p:last-child,.card ul:last-child,.card ol:last-child{margin-bottom:0}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0 0 15px;font-size:15.5px}
+.kv dt{color:var(--ink3)}
+.kv dd{margin:0;font-weight:600}
+
+table{border-collapse:collapse;width:100%;font-size:15px;margin:0 0 15px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{font-weight:800;color:var(--ink2);font-size:13.5px;text-transform:uppercase;
+  letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 15px}
+.scroll table{margin:0}
+
+pre{background:#20262e;color:#e7edf3;border-radius:12px;padding:16px 18px;overflow-x:auto;
+  font-family:var(--mono);font-size:13.5px;line-height:1.55;margin:0 0 15px}
+code{font-family:var(--mono);font-size:.9em;background:var(--elev);padding:2px 6px;
+  border-radius:5px}
+pre code{background:none;padding:0;font-size:1em}
+
+.prompt{position:relative;background:#20262e;color:#e7edf3;border-radius:12px;
+  padding:16px 18px;margin:0 0 14px}
+/* Промпт должен быть виден целиком: участник его читает, а не только копирует.
+   pre-wrap переносит длинные строки, но сохраняет переводы строк — innerText
+   в кнопке копирования отдаёт ровно исходный текст. */
+.prompt pre{margin:0;padding:0;background:none;max-height:none;
+  white-space:pre-wrap;overflow-wrap:anywhere}
+.prompt{padding-top:46px}
+.copy{position:absolute;top:10px;right:10px;background:var(--acc);color:#fff;border:0;
+  border-radius:8px;padding:7px 13px;font:600 13px var(--font);cursor:pointer}
+.copy:hover{filter:brightness(1.08)}
+.copy.done{background:#0f7a46}
+
+figure{margin:0 0 18px}
+figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+figure.fig{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:18px 18px 12px;margin:22px 0}
+figure.fig svg{max-width:100%;height:auto}
+figure.fig figcaption{padding-top:6px;border-top:1px solid var(--line);margin-top:12px}
+
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;
+  border-radius:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;
+  display:flex;align-items:center;justify-content:center}
+
+/* Раскрывающийся блок: три вспомогательных промпта не должны спорить за внимание
+   с главным, но и прятать их насовсем нельзя — по ним разбирают проверку. */
+details.more{border:1px solid var(--line);border-radius:14px;padding:0 22px;
+  margin:0 0 18px;background:var(--surf)}
+details.more>summary{cursor:pointer;font-weight:800;padding:16px 0;list-style:none;
+  color:var(--ink2)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸";color:var(--acc);margin-right:8px}
+details.more[open]>summary::before{content:"▾"}
+details.more[open]{padding-bottom:14px}
+details.more>summary:hover{color:var(--ink)}
+
+.toc{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+  margin:0 0 8px}
+.toc ol{margin:0;padding-left:20px}
+.toc a{border:0}
+.toc a:hover{border-bottom:1px solid var(--acc)}
+
+footer{padding:36px 0 60px;color:var(--ink3);font-size:14.5px}
+/* Сноска на источник: верхний индекс, чтобы номер не читался как часть текста */
+a.fn{border:0;font-size:.72em;vertical-align:super;font-weight:700;padding-left:2px}
+a.fn:hover{border:0;text-decoration:underline}
+.tag{display:inline-block;background:var(--elev);border-radius:6px;padding:1px 8px;
+  font-size:13px;color:var(--ink2);font-weight:600}
+@media(max-width:600px){
+  body{font-size:16px}
+  .kv{grid-template-columns:1fr}
+}
+</style>
+</head><body>
+<nav class="crumbs" aria-label="Навигация"><div class="wrap"><a href="index.html">Материалы</a><span class="sep">▸</span><span class="here">Тренажёр: срок эксперимента</span></div></nav>
+
+<header><div class="wrap">
+  <div class="eyebrow">Карпов Курсы × Сбер · Аналитика 360</div>
+  <h1>Тренажёр: срок эксперимента</h1>
+  <p class="lead">Рассчитанный объём выборки — ещё не срок. Эксперимент живёт
+     две фазы: сначала набираются участники до целевого объёма, затем — данные,
+     пока не пройдёт горизонт метрики. Выберите метрику кейса и двигайте бегунок
+     притока — таймлайн покажет, какая часть срока сжимается, а какая нет.</p>
+  <div class="meta">
+    <span class="chip">Метрики <b>из кейсов курса</b></span>
+    <span class="chip">Формула объёма <b>одна</b></span>
+    <span class="chip">Расчёт <b>в вашем браузере</b></span>
+  </div>
+</div></header>
+
+<section><div class="wrap">
+<style>
+.exp-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px}
+.exp-tab{border:1.5px solid var(--acc);background:#fff;color:var(--acc);border-radius:20px;
+  padding:7px 14px;cursor:pointer;font:inherit;font-size:14.5px}
+.exp-tab.on{background:var(--acc);color:#fff}
+.exp-slider{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:14px 0 6px}
+.exp-slider input[type=range]{flex:1 1 260px;accent-color:var(--acc);height:28px}
+.exp-slider .val{font-weight:800;font-size:19px;min-width:64px;text-align:right;
+  font-variant-numeric:tabular-nums}
+.exp-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0 6px}
+.exp-stat{background:var(--surf);border:1px solid var(--line);border-radius:12px;
+  padding:12px 14px}
+.exp-stat b{display:block;font-size:24px;line-height:1.15;font-variant-numeric:tabular-nums}
+.exp-stat span{font-size:13.5px;color:var(--ink3)}
+.exp-stat.hot{background:var(--acc-soft);border-color:var(--acc-line)}
+.exp-tl{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:16px 14px 8px;margin:14px 0 6px}
+.exp-tl svg{width:100%;height:auto;display:block}
+.exp-concl{font-size:15px;color:var(--ink2);margin:8px 2px 0}
+.exp-fml{font-size:16px}
+@media(max-width:700px){.exp-stats{grid-template-columns:repeat(2,1fr)}}
+</style>
+
+<h2>Две фазы одного эксперимента</h2>
+<p>Целевой объём выборки считается до старта — по формуле из
+<a href="longread_metrics.html#sample-formula">раздела «Формула объёма выборки»</a>
+справочника. Дальше срок складывается из двух частей: <b>фаза 1</b> — участники
+накапливаются до целевого объёма со скоростью притока; <b>фаза 2</b> — участники
+набраны, но по каждому ещё должен пройти горизонт метрики. Досрочно завершить
+можно только набор — и только когда участников уже достаточно.</p>
+
+<div class="exp-tabs" id="expTabs"></div>
+<div class="card acc"><b id="mName"></b><p id="mNote" style="margin:6px 0 0"></p></div>
+
+<div class="exp-slider">
+  <span id="flowLab" style="font-weight:700"></span>
+  <input type="range" id="flow" min="20" max="1000" step="20" value="100">
+  <span class="val" id="flowVal">100</span>
+</div>
+
+<div class="exp-stats">
+  <div class="exp-stat"><b id="sN"></b><span id="sNu"></span></div>
+  <div class="exp-stat"><b id="sP1"></b><span>фаза 1 · набор участников</span></div>
+  <div class="exp-stat"><b id="sP2"></b><span>фаза 2 · горизонт метрики</span></div>
+  <div class="exp-stat hot"><b id="sTot"></b><span>срок эксперимента</span></div>
+</div>
+
+<div class="exp-tl"><div id="tl"></div></div>
+<p class="exp-concl" id="concl"></p>
+
+<div class="card">
+<h4>Расчёт этого таймлайна</h4>
+<p class="exp-fml" style="margin-bottom:8px"><b id="fml"></b> <span id="fmlU"></span></p>
+<p style="margin:0" id="fml2" class="sub"></p>
+</div>
+
+<div class="card acc">
+<h4>Бегунок сжимает только фазу 1</h4>
+<p style="margin:0">Приток участников сокращает набор до целевого объёма, но горизонт
+второй фазы — свойство самой метрики, а не бюджета: отток за 90 дней требует прожить
+90 дней, а LTV за полгода не ускоряется никаким потоком. Эксперимент, закрытый до
+горизонта, меряет нетерпение, а не эффект.</p>
+</div>
+
+<p>Точный расчёт размера групп под минимальный детектируемый эффект — в
+<a href="trainer_sample.html">тренажёре «Расчёт выборки»</a>; из его результата
+и складывается фаза 1. Все параметры пресетов учебные.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2>Источник</h2>
+<div class="card">
+<h4>Netflix Technology Blog</h4>
+<p>Практика, из которой выросла механика тренажёра: каждая функция сервиса
+запускается как эксперимент, а срок теста определяется числом участников
+и горизонтом метрики, а не желаемой датой отчёта.</p>
+<p style="margin:0">
+<a href="https://netflixtechblog.com/interpreting-a-b-test-results-false-negatives-and-power-6943995cf3a8"
+   target="_blank" rel="noopener">Interpreting A/B test results: false negatives and power</a>
+— почему малому эффекту нужно больше участников и почему тест не завершают
+раньше запланированного объёма.<br>
+<a href="https://netflixtechblog.com/its-all-a-bout-testing-the-netflix-experimentation-platform-4e1ca458c15"
+   target="_blank" rel="noopener">It’s All A/Bout Testing: The Netflix Experimentation Platform</a>
+— как устроена платформа экспериментов Netflix.</p>
+</div>
+</div></section>
+
+<footer><div class="wrap">
+  Аналитика 360 · практическая часть, Шаги 1–4 · Карпов Курсы для Сбера.<br>
+  Параметры метрик учебные; расчёт выполняется в вашем браузере, наружу ничего
+  не отправляется.
+</div></footer>
+
+<script>
+var MS=[{"id": "act", "tab": "Розница · активация", "name": "Розница: активация за 30 дней", "n": 1040, "formula": "n = Z²·p(1−p) / E² = 1,96² × 0,58 × 0,42 / 0,03² ≈ 1 040", "unitN": "клиентов", "horizon": 30, "note": "Доля карт с первой операцией в 30 дней после выдачи — метрика кейса розницы. Учебные параметры: базовая доля 58 %, допустимая погрешность ±3 п.п. Горизонт метрики — 30 дней наблюдения за каждым участником.", "linkText": "определение метрики «Активация за 30 дней» — в справочнике", "linkHref": "longread_metrics.html#m-act", "flowLabel": "Клиентов в эксперименте в день", "fmin": 20, "fmax": 1000, "fstep": 20, "fdef": 100}, {"id": "churn", "tab": "Розница · отток", "name": "Розница: отток за 90 дней", "n": 1015, "formula": "n = Z²·p(1−p) / E² = 1,96² × 0,12 × 0,88 / 0,02² ≈ 1 015", "unitN": "клиентов", "horizon": 90, "note": "Доля клиентов без операций за 90 дней. Учебные параметры: базовая доля 12 %, допустимая погрешность ±2 п.п. Горизонт — 90 дней: отток быстрее не измеряется по построению.", "linkText": "определение метрики «Отток за 90 дней» — в справочнике", "linkHref": "longread_metrics.html#m-churn", "flowLabel": "Клиентов в эксперименте в день", "fmin": 20, "fmax": 1000, "fstep": 20, "fdef": 100}, {"id": "corp", "tab": "Корпоративный блок", "name": "Корпоративный блок: конверсия встречи в сделку", "n": 289, "formula": "n = Z²·p(1−p) / E² = 1,96² × 0,25 × 0,75 / 0,05² ≈ 289", "unitN": "встреч", "horizon": 60, "note": "Конверсия встречи в сделку в корпоративном блоке. Учебные параметры: базовая конверсия 25 %, допустимая погрешность ±5 п.п. Поток встреч мал по природе кейса, а цикл сделки — 60 дней: даже набранные участники дают результат только после завершения цикла.", "linkText": "определение метрики «Конверсия этапа» — в справочнике", "linkHref": "longread_metrics.html#m-u_conv", "flowLabel": "Встреч с клиентами в день", "fmin": 1, "fmax": 30, "fstep": 1, "fdef": 6}, {"id": "tat", "tab": "Внутренние процессы", "name": "Внутренние процессы: срок обработки (TAT)", "n": 62, "formula": "n = (Z·σ / E)² = (1,96 × 2 / 0,5)² ≈ 62", "unitN": "заявок", "horizon": 14, "note": "Средний срок обработки заявки во внутреннем процессе. Учебные параметры: разброс σ = 2 дня, допустимая погрешность ±0,5 дня. Горизонт наблюдения — 14 дней: заявка должна пройти процесс целиком, включая хвост долгих случаев.", "linkText": "определение метрики «Время процесса» — в справочнике", "linkHref": "longread_metrics.html#m-u_tat", "flowLabel": "Заявок в эксперименте в день", "fmin": 5, "fmax": 200, "fstep": 5, "fdef": 20}, {"id": "ltv", "tab": "Портфель · LTV", "name": "Портфель: LTV и удержание за 180 дней", "n": 385, "formula": "n = (Z·σ / E)² = (1,96 × 40 / 4)² ≈ 385", "unitN": "клиентов", "horizon": 180, "note": "Ценность клиента и удержание в портфельном управлении. Учебные параметры: разброс σ = 40 т₽ на клиента, допустимая погрешность ±4 т₽. Горизонт метрики — 180 дней: ценность накапливается полгода, и приток участников этот срок не сокращает.", "linkText": "определение метрики «Ценность клиента (LTV)» — в справочнике", "linkHref": "longread_metrics.html#m-u_ltv", "flowLabel": "Клиентов в эксперименте в день", "fmin": 20, "fmax": 1000, "fstep": 20, "fdef": 100}];
+var cur=MS[0];
+var flows={};                      // выбранный приток запоминается на метрику
+var $=function(id){return document.getElementById(id)};
+var NB="\u202F";
+function fi(x){return String(Math.round(x)).replace(/\B(?=(\d{3})+(?!\d))/g,NB)}
+
+function tx(x,y,t,fs,w,f,a,o){
+  return '<text x="'+x+'" y="'+y+'" font-size="'+fs+'"'+(w?' font-weight="'+w+'"':'')
+    +' fill="'+f+'"'+(a?' text-anchor="'+a+'"':'')+(o?' fill-opacity="'+o+'"':'')+'>'+t+'</text>';
+}
+
+function tickStep(total){
+  var c=[1,2,5,7,14,30,60,90,180];
+  for(var i=0;i<c.length;i++){if(total/c[i]<=13)return c[i]}
+  return 360;
+}
+
+// SVG-таймлайн двух фаз: зелёная плашка — набор участников, светлая — горизонт
+// метрики. Шкала — дни с начала эксперимента; масштаб подстраивается под итог.
+function timeline(p1,p2){
+  var total=p1+p2,X0=40,X1=896,BY=32,BH=46,AX=116,H=170;
+  var sc=(X1-X0)/total,xb=X0+p1*sc;
+  var s='<svg viewBox="0 0 920 '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" '
+    +'aria-label="Таймлайн эксперимента: фаза набора участников и горизонт метрики" '
+    +'style="font-family:var(--font)">';
+  s+='<rect x="'+X0+'" y="'+BY+'" width="'+(X1-X0)+'" height="'+BH+'" rx="10" fill="#159A5C" fill-opacity="0.16"/>';
+  s+='<rect x="'+X0+'" y="'+BY+'" width="'+Math.max(6,xb-X0).toFixed(1)+'" height="'+BH+'" rx="10" fill="#20BA72"/>';
+  s+='<line x1="'+xb.toFixed(1)+'" y1="10" x2="'+xb.toFixed(1)+'" y2="'+AX+'" stroke="#159A5C" stroke-width="1.6" stroke-dasharray="6 5"/>';
+  s+='<line x1="'+X1+'" y1="10" x2="'+X1+'" y2="'+AX+'" stroke="#2E3641" stroke-opacity="0.35" stroke-width="1.4" stroke-dasharray="4 5"/>';
+  s+=tx(X0,20,'фаза 1 · набор участников — '+fi(p1)+' дн',13.5,'700','#2E3641');
+  s+=tx(X1,20,'итог ≈ '+fi(total)+' дн',14,'800','#2E3641','end');
+  if(xb-X0>=70)s+=tx(((X0+xb)/2).toFixed(1),BY+BH/2+5,fi(p1)+' дн',14,'700','#ffffff','middle');
+  if(X1-xb>=70)s+=tx(((xb+X1)/2).toFixed(1),BY+BH/2+5,fi(p2)+' дн',14,'700','#159A5C','middle');
+  var c2=Math.min(Math.max((xb+X1)/2,X0+195),X1-175);
+  s+=tx(c2.toFixed(1),BY+BH+22,'фаза 2 · горизонт метрики — '+fi(p2)+' дн',13.5,'700','#159A5C','middle');
+  s+='<line x1="'+X0+'" y1="'+AX+'" x2="'+X1+'" y2="'+AX+'" stroke="#2E3641" stroke-opacity="0.3" stroke-width="1.2"/>';
+  var st=tickStep(total);
+  for(var d=0;d<=total;d+=st){
+    var x=X0+d*sc;
+    s+='<line x1="'+x.toFixed(1)+'" y1="'+AX+'" x2="'+x.toFixed(1)+'" y2="'+(AX+6)+'" stroke="#2E3641" stroke-opacity="0.3" stroke-width="1.2"/>';
+    if(x<X1-26)s+=tx(x.toFixed(1),AX+24,d,12.5,null,'#2E3641','middle',0.6);
+  }
+  s+=tx(X1,AX+24,fi(total),12.5,'700','#2E3641','middle');
+  s+=tx(X1,AX+46,'дни с начала эксперимента →',12.5,null,'#2E3641','end',0.6);
+  return s+'</svg>';
+}
+
+function renderTabs(){
+  $('expTabs').innerHTML=MS.map(function(m){
+    return '<button type="button" class="exp-tab'+(m.id===cur.id?' on':'')
+      +'" data-m="'+m.id+'">'+m.tab+'</button>';
+  }).join('');
+}
+
+function select(id){
+  cur=MS.filter(function(m){return m.id===id})[0]||MS[0];
+  var f=$('flow');
+  f.min=cur.fmin;f.max=cur.fmax;f.step=cur.fstep;
+  f.value=flows[cur.id]||cur.fdef;
+  renderTabs();update();
+}
+
+function update(){
+  var flow=+$('flow').value;flows[cur.id]=flow;
+  var p1=Math.max(1,Math.ceil(cur.n/flow)),p2=cur.horizon,total=p1+p2;
+  $('flowLab').textContent=cur.flowLabel;
+  $('flowVal').textContent=fi(flow);
+  $('mName').textContent=cur.name;
+  $('mNote').innerHTML=cur.note+' Подробнее: <a href="'+cur.linkHref+'">'+cur.linkText+'</a>.';
+  $('sN').textContent=fi(cur.n);
+  $('sNu').textContent='целевой объём, '+cur.unitN;
+  $('sP1').textContent=fi(p1)+' дн';
+  $('sP2').textContent=fi(p2)+' дн';
+  $('sTot').textContent='≈ '+fi(total)+' дн';
+  $('tl').innerHTML=timeline(p1,p2);
+  $('fml').textContent=cur.formula;
+  $('fmlU').textContent=cur.unitN+' (Z = 1,96 — доверие 95\u202F%)';
+  $('fml2').textContent='Фаза 1 = n / приток = '+fi(cur.n)+' / '+fi(flow)+' ≈ '
+    +fi(p1)+' дн · фаза 2 = горизонт метрики = '+fi(p2)+' дн · итог ≈ '+fi(total)+' дн.';
+  var share=Math.round(100*p2/total);
+  $('concl').textContent=(p1<=2
+    ? 'Набор уже не узкое место: срок почти целиком — горизонт метрики ('+fi(p2)
+      +' дн из '+fi(total)+', '+share+'\u202F%). Дальше двигать бегунок бесполезно.'
+    : 'Фаза 2 — '+fi(p2)+' дн из '+fi(total)+' ('+share+'\u202F% срока): её не сжимает '
+      +'никакой приток — горизонт метрики можно только прожить.');
+}
+
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.exp-tab');
+  if(b)select(b.getAttribute('data-m'));
+});
+$('flow').addEventListener('input',update);
+select(cur.id);
+</script>
+
+<script>
+// Кнопка «скопировать промпт»: сначала пробуем Clipboard API, при отказе —
+// старый execCommand. В LMS страница часто открыта в iframe без разрешения
+// на буфер обмена, и без запасного пути кнопка молча ничего не делает.
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.copy'); if(!b) return;
+  var t=b.parentNode.querySelector('pre').innerText;
+  function done(){b.textContent='Скопировано';b.classList.add('done');
+    setTimeout(function(){b.textContent='Копировать';b.classList.remove('done')},1800);}
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(done,fallback);
+  } else { fallback(); }
+  function fallback(){
+    var a=document.createElement('textarea');a.value=t;a.style.position='fixed';
+    a.style.opacity=0;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');done();}catch(_e){b.textContent='Выделите вручную';}
+    document.body.removeChild(a);
+  }
+});
+</script>
+</body></html>
