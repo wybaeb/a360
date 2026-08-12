@@ -159,13 +159,17 @@ if (!window.DATA || !Array.isArray(window.DATA)) {
   
   const drawRects = () => {
     const rectsMarkup = histogramBins.map(bin => {
-      const xPos = leftMargin + (bin.start / 14) * chartWidth;
+      // Последняя корзина «14+» начинается ровно на правой границе поля:
+      // без сдвига её столбец наполовину обрезается краем графика.
+      const barWidth = chartWidth / 28;
+      const xPos = Math.min(leftMargin + (bin.start / 14) * chartWidth,
+                            leftMargin + chartWidth - barWidth);
       const barHeight = (bin.count / maxBinCount) * chartHeight;
       const barY = 250 - barHeight;
       const barColor = bin.end > 3 ? '#E4572E' : '#20BA72';
       
       return `
-        <rect x="${Math.round(xPos)}" y="${Math.round(barY)}" width="${chartWidth / 28}" height="${Math.round(barHeight)}" fill="${barColor}" />
+        <rect x="${Math.round(xPos)}" y="${Math.round(barY)}" width="${barWidth}" height="${Math.round(barHeight)}" fill="${barColor}" />
       `;
     }).join('');
     
@@ -175,10 +179,10 @@ if (!window.DATA || !Array.isArray(window.DATA)) {
       <line x1="${leftMargin}" y1="133" x2="${leftMargin + chartWidth}" y2="133" stroke="#e6ecf1"/>
       <line x1="${leftMargin}" y1="191.5" x2="${leftMargin + chartWidth}" y2="191.5" stroke="#e6ecf1"/>
       <line x1="${leftMargin}" y1="250" x2="${leftMargin + chartWidth}" y2="250" stroke="#e6ecf1"/>
-      <text x="46" y="14" text-anchor="end" font-size="11" fill="#8a94a0">Максимум</text>
-      <text x="46" y="254" text-anchor="end" font-size="11" fill="#8a94a0">Минимум</text>
+      <text x="0" y="14" font-size="11" fill="#8a94a0">Максимум</text>
+      <text x="0" y="254" font-size="11" fill="#8a94a0">Минимум</text>
       <text x="${leftMargin}" y="266" font-size="11" fill="#8a94a0">0 дней</text>
-      <text x="${leftMargin + chartWidth}" y="266" font-size="11" fill="#8a94a0">14+ дней</text>
+      <text x="${leftMargin + chartWidth}" y="266" text-anchor="end" font-size="11" fill="#8a94a0">14+ дней</text>
       <line x1="196" y1="16" x2="196" y2="250" stroke="#E4572E" stroke-dasharray="4,4"/>
       <text x="196" y="266" font-size="11" fill="#E4572E">Норматив: 3 дня</text>
       ${rectsMarkup}

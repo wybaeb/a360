@@ -31,6 +31,9 @@
       border-radius: 14px;
       padding: 16px;
       margin-bottom: 20px;
+      /* Широкая таблица прокручивается внутри карточки, а не уводит
+         за правый край всю страницу. */
+      overflow-x: auto;
     }
     .kpi {
       display: inline-flex;
@@ -178,15 +181,18 @@ if (!window.DATA || !Array.isArray(window.DATA)) {
   });
   let minValue = 0;
   let maxValue = Math.max(...sortedValuesBefore.concat(sortedValuesAfter));
-  let barWidth = 732 / data.length * 0.8;
-  let xStep = 732 / (Math.max(data.length - 1, 1));
+  // Шаг считаем на число банков, а не на промежутки между ними: иначе последний
+  // столбец начинается ровно на правой границе поля и наполовину обрезается
+  // вместе со своей подписью.
+  let xStep = 732 / data.length;
+  let barWidth = xStep * 0.8;
 
   function y(val) {
     return val === minValue ? 250 : 250 - (val - minValue) * 234 / (maxValue - minValue)
   }
 
   data.forEach((row, idx) => {
-    let xPosBefore = 52 + idx * xStep;
+    let xPosBefore = 52 + idx * xStep + (xStep - barWidth) / 2;
     let beforeHeight = 250 - y(row.was_bn_rub);
     let afterHeight = 250 - y(row.now_bn_rub);
     chartSvg += `

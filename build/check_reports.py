@@ -11,7 +11,13 @@
   2. график нарисован: в svg есть фигуры и он имеет ненулевую ширину;
   3. в атрибутах svg нет NaN, undefined и Infinity — от них фигуры молча исчезают;
   4. полосы нарисованы и их длина пропорциональна числам;
-  5. в тексте страницы есть все ключевые числа разбора — те же, что на слайдах.
+  5. в тексте страницы есть все ключевые числа разбора — те же, что на слайдах;
+  6. страница никуда не уезжает по горизонтали — ни на широком экране, ни на
+     узком: scrollWidth равен clientWidth и ни один блок не выходит за правый
+     край. Проверка заведена после отчёта по выбросам, где глобальное правило
+     .card{display:flex} выстроило четыре строки полос в один ряд: на 1440 px
+     страница расползлась до 2116 px, и обе полосы «После очистки» оказались
+     за краем — из разбора пропадала ровно та половина, ради которой он сделан.
 
 Проходит только та версия, которая выполнила все условия. Её и кладём
 в reports/ — участник открывает готовую ссылку, а не «пример кода».
@@ -76,6 +82,54 @@ CONCLUSION = {
     "baza": r"низк\w+ баз|эффект баз|небольш\w+ баз|мал\w+ баз|сильнее всех|"
             r"больше всех|наибольш\w+ прирост|2[.,]1\s*п",
 }
+
+
+# Ширины, на которых смотрим страницу: рабочий монитор и телефон. Отчёт
+# открывают и с того, и с другого, а вёрстка ломается обычно на одной из двух.
+WIDTHS = (1280, 390)
+
+# Что считается переполнением. Страница не должна прокручиваться вбок, и ни один
+# блок не должен оказаться правее её края. Блоки внутри своего прокручиваемого
+# контейнера (overflow-x: auto у карточки с широкой таблицей) — это норма:
+# прокручивается таблица, а не вся страница, поэтому такие блоки пропускаем.
+OVERFLOW_JS = """
+var de = document.documentElement, vw = de.clientWidth, out = [];
+function scrollable(el){
+  for (var p = el.parentElement; p && p !== document.body; p = p.parentElement){
+    var ox = getComputedStyle(p).overflowX;
+    if (ox === 'auto' || ox === 'scroll' || ox === 'hidden') return true;
+  }
+  return false;
+}
+document.querySelectorAll('body *').forEach(function(el){
+  if (el.ownerSVGElement) return;          // внутри svg координаты режет viewBox
+  var r = el.getBoundingClientRect();
+  if (!r.width && !r.height) return;
+  if ((r.right > vw + 1 || r.left < -1) && !scrollable(el))
+    out.push(el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') +
+             (typeof el.className === 'string' && el.className.trim()
+              ? '.' + el.className.trim().split(/\\s+/).join('.') : '') +
+             ' «' + (el.textContent || '').trim().slice(0, 24) + '»');
+});
+return {scroll: de.scrollWidth, client: vw, out: out.slice(0, 5), n: out.length};
+"""
+
+
+def overflow(d):
+    """Горизонтальное переполнение на обеих ширинах: список замечаний."""
+    bad = []
+    for w in WIDTHS:
+        d.set_window_size(w, 1000)
+        time.sleep(0.6)                    # даём странице перерисоваться
+        r = d.execute_script(OVERFLOW_JS)
+        if r["scroll"] > r["client"] + 1:
+            bad.append(f"на {w} px страница шире экрана: "
+                       f"scrollWidth {r['scroll']} против {r['client']}")
+        if r["n"]:
+            bad.append(f"на {w} px за правым краем блоков: {r['n']} — {r['out']}")
+    d.set_window_size(WIDTHS[0], 1000)
+    time.sleep(0.4)
+    return bad
 
 
 def browser():
@@ -165,6 +219,9 @@ def verify(d, url, key):
         ".filter(function(w){return w>0})")
     ratio = (min(widths) / max(widths)) if widths else 1.0
     bar_ok = ratio <= BAR_RATIO.get(key, BAR_RATIO_DEFAULT)
+    # Переполнение меряем последним: проверка меняет размер окна, и измерения
+    # ширин, сделанные выше, после неё были бы не про тот экран.
+    over = overflow(d)
     return {
         "js_errors": errs[:3],
         "bars": bars,
@@ -174,8 +231,9 @@ def verify(d, url, key):
         "svg_width": svg_w,
         "svg_bad_attrs": svg_bad,
         "missing_numbers": missing,
+        "overflow": over,
         "ok": (not errs and bars[1] >= 3 and not missing and bar_ok
-               and marks >= 8 and svg_w > 300 and not svg_bad),
+               and marks >= 8 and svg_w > 300 and not svg_bad and not over),
         "text": text[:1500],
     }
 
@@ -202,6 +260,7 @@ def main():
                 print(f"  {p['key']:10} {'ok' if v['ok'] else 'НЕ ПРОХОДИТ'} · "
                       f"полос {v['bars']} · фигур в svg {v['svg_marks']} "
                       f"шириной {v['svg_width']} · ошибок JS {len(v['js_errors'])} · "
+                      f"переполнение: {v['overflow'] or 'нет'} · "
                       f"замечания: {v['missing_numbers'] or '—'}", flush=True)
         finally:
             d.quit()
@@ -249,6 +308,7 @@ def main():
                       f"ошибок JS {len(v['js_errors'])} · "
                       f"масштаб полос {'ok' if v.get('bar_scale_ok', True) else 'СБИТ'} · "
                       f"мусор в svg: {v['svg_bad_attrs'] or '—'} · "
+                      f"переполнение: {v['overflow'] or 'нет'} · "
                       f"не нашлось чисел: {v['missing_numbers'] or '—'}", flush=True)
                 (RUNS / "html").mkdir(parents=True, exist_ok=True)
                 (RUNS / "html" / f"{p['slug']}_{n}.json").write_text(
