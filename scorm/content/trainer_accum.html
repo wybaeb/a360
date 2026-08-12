@@ -140,13 +140,13 @@ a.fn:hover{border:0;text-decoration:underline}
   <div class="eyebrow">Карпов Курсы × Сбер · Аналитика 360</div>
   <h1>Тренажёр: срок эксперимента</h1>
   <p class="lead">Рассчитанный объём выборки — ещё не срок. Здесь эксперимент
-     проживается вживую: случайные наблюдения накапливаются, бегущая оценка
-     метрики идёт в коридоре 95 % доверия, коридор сужается, и в какой-то день
-     светофор переключается на зелёный — гипотеза подтверждена или опровергнута.
-     Выберите метрику кейса и двигайте бегунок притока: тот же ряд наблюдений
-     будет прожит быстрее или медленнее.</p>
+     проживается вживую: участники входят в бакет по мере активации, коридор
+     95 % доверия сужается ровно так, как растёт фактическое число наблюдений,
+     и в какой-то день светофор переключается на зелёный. Три бегунка —
+     пропускная способность, лаг активации, горизонт наблюдения — меняют не
+     подписи оси, а саму форму воронки и день решения.</p>
   <div class="meta">
-    <span class="chip">Метрики <b>из кейсов курса</b></span>
+    <span class="chip">Кейсы <b>розницы, процесса и портфеля</b></span>
     <span class="chip">Формула объёма <b>n = (Z·σ/E)²</b></span>
     <span class="chip">Расчёт <b>в вашем браузере</b></span>
   </div>
@@ -158,10 +158,23 @@ a.fn:hover{border:0;text-decoration:underline}
 .exp-tab{border:1.5px solid var(--acc);background:#fff;color:var(--acc);border-radius:20px;
   padding:7px 14px;cursor:pointer;font:inherit;font-size:14.5px}
 .exp-tab.on{background:var(--acc);color:#fff}
-.exp-slider{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:14px 0 6px}
-.exp-slider input[type=range]{flex:1 1 260px;accent-color:var(--acc);height:28px}
-.exp-slider .val{font-weight:800;font-size:19px;min-width:64px;text-align:right;
-  font-variant-numeric:tabular-nums}
+.exp-knobs{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:6px 16px 14px;margin:14px 0 6px}
+.exp-knob{display:grid;grid-template-columns:230px 1fr 150px;gap:6px 16px;align-items:center;
+  padding:12px 0;border-bottom:1px solid var(--line)}
+.exp-knob:last-child{border-bottom:0}
+.exp-knob .kn{font-weight:700;font-size:15.5px}
+.exp-knob .kh{grid-column:1/-1;margin:0;font-size:13.5px;color:var(--ink3);
+  padding-top:2px}
+.exp-knob input[type=range]{width:100%;accent-color:var(--acc);height:28px}
+.exp-knob .val{font-weight:800;font-size:19px;text-align:right;
+  font-variant-numeric:tabular-nums;line-height:1.15}
+.exp-knob .val small{display:block;font-size:12.5px;font-weight:600;color:var(--ink3)}
+.exp-corners{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 4px;
+  font-size:13.5px;color:var(--ink3)}
+.exp-corner{border:1px solid var(--line);background:#fff;color:var(--ink2);border-radius:16px;
+  padding:5px 12px;cursor:pointer;font:inherit;font-size:13.5px}
+.exp-corner:hover{border-color:var(--acc);color:var(--acc)}
 .exp-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0 6px}
 .exp-stat{background:var(--surf);border:1px solid var(--line);border-radius:12px;
   padding:12px 14px}
@@ -171,7 +184,6 @@ a.fn:hover{border:0;text-decoration:underline}
 .exp-tl{background:var(--surf);border:1px solid var(--line);border-radius:14px;
   padding:16px 14px 8px;margin:14px 0 6px}
 .exp-tl svg{width:100%;height:auto;display:block}
-.exp-tl h4{margin:4px 2px 10px}
 .exp-light{display:flex;gap:14px;align-items:center;border:1px solid var(--line);
   border-radius:14px;padding:12px 16px;margin:14px 0 6px;background:var(--surf)}
 .exp-light.st-red{background:rgba(196,69,59,.07);border-color:rgba(196,69,59,.3)}
@@ -190,6 +202,8 @@ a.fn:hover{border:0;text-decoration:underline}
   background:rgba(32,186,114,.22)}
 .exp-concl{font-size:15px;color:var(--ink2);margin:8px 2px 0}
 .exp-fml{font-size:16px}
+@media(max-width:820px){.exp-knob{grid-template-columns:1fr 96px}
+  .exp-knob input[type=range]{grid-column:1/-1;order:3}}
 @media(max-width:700px){.exp-stats{grid-template-columns:repeat(2,1fr)}}
 </style>
 
@@ -197,19 +211,25 @@ a.fn:hover{border:0;text-decoration:underline}
 <p>Целевой объём выборки считается до старта — по формуле
 <b>n = (Z·σ/E)²</b> из <a href="longread_metrics.html#sample-formula">раздела
 «Формула объёма выборки»</a> справочника. Каждая буква видна на графике:
-<b>n</b> — сколько наблюдений накоплено (ось дней, умноженная на приток),
-<b>Z</b> — уровень доверия (Z = 1,96 для 95 %), <b>σ</b> — разброс наблюдений,
-<b>E</b> — допустимая погрешность, то есть целевая полуширина коридора.
-Когда коридор сузился до ±E, объём n набран; когда коридор устойчиво лёг по
-одну сторону порога — решение принято.</p>
+<b>n</b> — сколько наблюдений накоплено (это <b>n(t)</b>: участники, которые уже
+активировались и попали в бакет), <b>Z</b> — уровень доверия (Z = 1,96 для
+95 %), <b>σ</b> — разброс наблюдений, <b>E</b> — допустимая погрешность, то есть
+целевая полуширина коридора. Коридор в каждый день равен <b>x̄ ± Z·σ/√n(t)</b>
+и сжимается до ±E ровно тогда, когда n(t) достигает (Z·σ/E)².</p>
 
 <div class="exp-tabs" id="expTabs"></div>
-<div class="card acc"><b id="mName"></b><p id="mNote" style="margin:6px 0 0"></p></div>
+<div class="card acc"><b id="mName"></b><p id="mNote" style="margin:6px 0 0"></p>
+  <p id="mLinks" class="sub" style="margin:8px 0 0"></p></div>
 
-<div class="exp-slider">
-  <span id="flowLab" style="font-weight:700"></span>
-  <input type="range" id="flow" min="20" max="1000" step="20" value="100">
-  <span class="val" id="flowVal">100</span>
+<div class="exp-knobs" id="knobs"></div>
+
+<div class="exp-corners">
+  <span>Четыре угла из разбора:</span>
+  <button type="button" class="exp-corner" data-corner="sn">медленная метрика + узкий вход</button>
+  <button type="button" class="exp-corner" data-corner="sw">медленная метрика + широкий вход</button>
+  <button type="button" class="exp-corner" data-corner="fn">быстрая метрика + узкий вход</button>
+  <button type="button" class="exp-corner" data-corner="fw">быстрая метрика + широкий вход</button>
+  <button type="button" class="exp-corner" data-corner="reset">вернуть пресет кейса</button>
 </div>
 
 <div class="exp-light" id="light">
@@ -224,28 +244,29 @@ a.fn:hover{border:0;text-decoration:underline}
 <div class="exp-tl">
   <div id="sim"></div>
   <div class="exp-leg">
-    <span><i style="border-color:#159A5C"></i>бегущая оценка метрики x̄ по n наблюдениям</span>
-    <span><i class="band"></i>коридор 95 % доверия: x̄ ± Z·σ/√n (Z = 1,96)</span>
+    <span><i style="border-color:#159A5C"></i>бегущая оценка метрики x̄ по n(t) наблюдениям</span>
+    <span><i class="band"></i>коридор 95 % доверия: x̄ ± Z·σ/√n(t) (Z = 1,96)</span>
     <span><i style="border-color:#C4453B;border-top-style:dashed"></i>порог принятия решения</span>
     <span><b style="color:#159A5C">⇕ E</b> — допустимая погрешность (полуширина коридора), <span id="legE"></span></span>
   </div>
   <p class="exp-concl" id="legS"></p>
 </div>
 
-<div class="exp-stats">
-  <div class="exp-stat"><b id="sN"></b><span id="sNu"></span></div>
-  <div class="exp-stat"><b id="sG"></b><span>зелёный сигнал · решение по коридору</span></div>
-  <div class="exp-stat"><b id="sP2"></b><span>фаза 2 · горизонт метрики</span></div>
-  <div class="exp-stat hot"><b id="sTot"></b><span>срок эксперимента</span></div>
-</div>
-
-<h4 style="margin-top:20px">Две фазы под графиком</h4>
-<p style="margin:6px 0 0">Даже когда светофор зелёный, срок эксперимента не
-закончился: по каждому участнику должен пройти горизонт метрики. <b>Фаза 1</b> —
-набор участников до целевого объёма n со скоростью притока; <b>фаза 2</b> —
-участники набраны, данные ещё копятся до горизонта.</p>
+<h4 style="margin-top:20px">Откуда берётся форма воронки: n(t) и две фазы</h4>
+<p style="margin:6px 0 0">Ширина коридора — это не рисунок, а
+<b>Z·σ/√n(t)</b>. Значит, форму воронки задаёт нижний график: как быстро
+участники набираются в бакет. Пропускная способность — наклон этой кривой,
+лаг активации — её сдвиг вправо (первые дни бакет пуст), горизонт наблюдения
+на набор не влияет вовсе: он двигает только момент, когда метрика проявилась.</p>
 <div class="exp-tl"><div id="tl"></div></div>
 <p class="exp-concl" id="concl"></p>
+
+<div class="exp-stats">
+  <div class="exp-stat"><b id="sN"></b><span id="sNu"></span></div>
+  <div class="exp-stat"><b id="sF"></b><span>набор закрыт · коридор сузился до ±E</span></div>
+  <div class="exp-stat"><b id="sH"></b><span>горизонт метрики по каждому участнику</span></div>
+  <div class="exp-stat hot"><b id="sD"></b><span>решение · зелёный сигнал</span></div>
+</div>
 
 <div class="card">
 <h4>Расчёт под этим графиком</h4>
@@ -256,40 +277,68 @@ a.fn:hover{border:0;text-decoration:underline}
 
 <div class="card acc">
 <h4>Что означают буквы формулы n = (Z·σ/E)²</h4>
-<p style="margin:0"><b>n</b> — объём выборки: сколько наблюдений нужно накопить.
+<p style="margin:0"><b>n</b> — объём выборки: сколько наблюдений нужно накопить;
+<b>n(t)</b> — сколько их уже накоплено к дню t.
 <b>Z</b> — множитель уровня доверия: для 95 % доверия Z = 1,96.
 <b>σ</b> — разброс отдельных наблюдений: чем разнороднее клиенты, тем шире
 коридор при том же n. <b>E</b> — допустимая погрешность: полуширина коридора,
 с которой согласны жить при принятии решения. На графике коридор равен
-x̄ ± Z·σ/√n и сжимается до ±E ровно в тот момент, когда n достигает
+x̄ ± Z·σ/√n(t) и сжимается до ±E ровно в тот момент, когда n(t) достигает
 (Z·σ/E)².</p>
 </div>
 
 <div class="card acc">
-<h4>Бегунок сжимает только набор данных</h4>
-<p style="margin:0">Приток участников ускоряет накопление наблюдений — зелёный
-сигнал наступает раньше по календарю, хотя требует того же числа наблюдений.
-Горизонт второй фазы — свойство самой метрики, а не бюджета: отток за 90 дней
-требует прожить 90 дней, а LTV за полгода не ускоряется никаким потоком.
-Эксперимент, закрытый до горизонта, меряет нетерпение, а не эффект.</p>
+<h4>Что делает каждый бегунок</h4>
+<p style="margin:0 0 8px"><b>Пропускная способность</b> — сколько участников
+в день вы физически можете провести через эксперимент. Это наклон кривой n(t),
+а значит скорость, с которой сужается воронка. Контакт-центр переваривает
+15 клиентов в день на новой функции — воронка будет сужаться неделями.</p>
+<p style="margin:0 0 8px"><b>Лаг активации</b> — через сколько дней после
+попадания в выборку участник совершает действие и реально попадает в бакет.
+Пока лаг не прошёл, бакет пуст: воронка не начинает сужаться вовсе, весь
+график просто сдвигается вправо.</p>
+<p style="margin:0"><b>Горизонт наблюдения</b> — сколько времени должно пройти
+по участнику, чтобы метрика проявилась. На ширину коридора он не влияет
+никак — он двигает момент, когда оценка отходит от порога, то есть день
+решения. Именно поэтому при широком входе воронка схлопывается за пару дней,
+а решение всё равно ждёт горизонта.</p>
 </div>
 
-<details class="more"><summary>Как устроена симуляция и почему ряд не меняется</summary>
-<p>Наблюдения в симуляции случайны, но ряд у каждой метрики зафиксирован:
-генератор случайных чисел стартует с одного и того же начального состояния,
-зависящего от метрики. Поэтому движение бегунка — честное сравнение: меняется
-не удача, а только скорость, с которой тот же поток наблюдений набирается по
-календарю. Бегущая оценка x̄ — накопленное среднее наблюдений; коридор —
-x̄ ± Z·σ/√n с σ из планирования. Светофор считается по правилам из легенды:
-красный, пока полуширина коридора больше E; жёлтый, когда коридор уже сузился
-до E, но порог остаётся внутри него; зелёный — когда коридор устойчиво, до
-конца окна наблюдения, лежит по одну сторону порога.</p>
+<div class="card">
+<h4>Четыре угла разбора — что происходит с формой</h4>
+<p style="margin:0 0 8px"><b>Медленная метрика + узкий вход.</b> Долго-долго
+набираем участников, воронка сужается медленно, её узкая часть далеко справа —
+и только потом начинается ожидание горизонта. Самый дорогой случай.</p>
+<p style="margin:0 0 8px"><b>Медленная метрика + широкий вход.</b> Воронка
+резко сужается в первые дни и дальше идёт почти плоским коридором шириной ±E.
+Объём набран давно, а решения нет: срок целиком съедает горизонт.</p>
+<p style="margin:0 0 8px"><b>Быстрая метрика + узкий вход.</b> Горизонт короткий,
+и срок разгоняется именно набором: день решения почти совпадает с днём, когда
+воронка сузилась до ±E.</p>
+<p style="margin:0"><b>Быстрая метрика + широкий вход.</b> Результат почти
+сразу: воронка схлопывается в первые часы, горизонт короткий, решение —
+на первой неделе.</p>
+</div>
+
+<details class="more"><summary>Как устроена симуляция и почему ряд наблюдений не меняется</summary>
+<p>Наблюдения случайны, но ряд у каждого кейса зафиксирован: генератор
+стартует с одного и того же начального состояния, зависящего от кейса, а
+наблюдения раздаются участникам по рангу активации — первый активировавшийся
+получает первое наблюдение ряда, второй — второе. Поэтому движение бегунков
+не меняет удачу: тот же поток наблюдений проживается быстрее или медленнее.
+Ряд дополнительно нормирован (среднее 0 и единичный разброс для величин,
+равномерная сетка в случайном порядке для долей), поэтому оценка сходится
+к истинному значению, а не к случайному смещению. Индивидуальный лаг
+активации разбросан вокруг заданного значения (логнормально, медиана равна
+положению бегунка): участники активируются не строго в один день. Набор
+закрывается, когда активировались n участников. Общий дневной сдвиг
+(сезонность операций) задан на календарь и не зависит от бегунков.</p>
 </details>
 
 <p style="margin-top:16px">Точный расчёт размера групп под минимальный
 детектируемый эффект — в <a href="trainer_sample.html">тренажёре «Расчёт
-выборки»</a>; из его результата и складывается фаза 1. Все параметры пресетов
-учебные.</p>
+выборки»</a>; из его результата и берётся целевой объём n. Все параметры
+пресетов учебные.</p>
 </div></section>
 
 <section><div class="wrap">
@@ -312,32 +361,46 @@ x̄ ± Z·σ/√n с σ из планирования. Светофор счит
 
 <footer><div class="wrap">
   Аналитика 360 · практическая часть, Шаги 1–4 · Карпов Курсы для Сбера.<br>
-  Параметры метрик учебные; расчёт выполняется в вашем браузере, наружу ничего
+  Параметры кейсов учебные; расчёт выполняется в вашем браузере, наружу ничего
   не отправляется.
 </div></footer>
 
 <script>
-var MS=[{"id": "act", "tab": "Розница · активация", "name": "Розница: активация за 30 дней", "n": 1040, "formula": "n = Z²·p(1−p) / E² = 1,96² × 0,58 × 0,42 / 0,03² ≈ 1 040", "unitN": "клиентов", "horizon": 30, "note": "Доля карт с первой операцией в 30 дней после выдачи — метрика кейса розницы. Учебный эксперимент: новый онбординг должен поднять активацию выше базовых 58 % (порог решения). Планирование: σ = √(0,58 × 0,42) ≈ 0,49, допустимая погрешность E = ±3 п.п. Горизонт метрики — 30 дней наблюдения за каждым участником.", "linkText": "определение метрики «Активация за 30 дней» — в справочнике", "linkHref": "longread_metrics.html#m-act", "flowLabel": "Клиентов в эксперименте в день", "fmin": 20, "fmax": 1000, "fstep": 20, "fdef": 100, "sim": {"mu": 0.615, "thr": 0.58, "sigma": 0.4936, "E": 0.03, "good": "above", "scale": 100, "dec": 1, "unitY": "активация, %", "sigmaTxt": "σ ≈ 0,49 (разброс наблюдения «активировался / нет»)", "ETxt": "E = 3 п.п.", "thrTxt": "порог 58 %"}}, {"id": "churn", "tab": "Розница · отток", "name": "Розница: отток за 90 дней", "n": 1015, "formula": "n = Z²·p(1−p) / E² = 1,96² × 0,12 × 0,88 / 0,02² ≈ 1 015", "unitN": "клиентов", "horizon": 90, "note": "Доля клиентов без операций за 90 дней. Учебный эксперимент: программа удержания должна опустить отток ниже базовых 12 % (порог решения). Планирование: σ = √(0,12 × 0,88) ≈ 0,33, допустимая погрешность E = ±2 п.п. Горизонт — 90 дней: отток быстрее не измеряется по построению.", "linkText": "определение метрики «Отток за 90 дней» — в справочнике", "linkHref": "longread_metrics.html#m-churn", "flowLabel": "Клиентов в эксперименте в день", "fmin": 20, "fmax": 1000, "fstep": 20, "fdef": 100, "sim": {"mu": 0.095, "thr": 0.12, "sigma": 0.325, "E": 0.02, "good": "below", "scale": 100, "dec": 1, "unitY": "отток, %", "sigmaTxt": "σ ≈ 0,33 (разброс наблюдения «ушёл / остался»)", "ETxt": "E = 2 п.п.", "thrTxt": "порог 12 %"}}, {"id": "corp", "tab": "Корпоративный блок", "name": "Корпоративный блок: конверсия встречи в сделку", "n": 289, "formula": "n = Z²·p(1−p) / E² = 1,96² × 0,25 × 0,75 / 0,05² ≈ 289", "unitN": "встреч", "horizon": 60, "note": "Конверсия встречи в сделку в корпоративном блоке. Учебный эксперимент: новый формат подготовки встреч должен поднять конверсию выше базовых 25 % (порог решения). Планирование: σ = √(0,25 × 0,75) ≈ 0,43, допустимая погрешность E = ±5 п.п. Поток встреч мал по природе кейса, а цикл сделки — 60 дней.", "linkText": "определение метрики «Конверсия этапа» — в справочнике", "linkHref": "longread_metrics.html#m-u_conv", "flowLabel": "Встреч с клиентами в день", "fmin": 1, "fmax": 30, "fstep": 1, "fdef": 6, "sim": {"mu": 0.315, "thr": 0.25, "sigma": 0.433, "E": 0.05, "good": "above", "seed": "corp-a", "scale": 100, "dec": 1, "unitY": "конверсия, %", "sigmaTxt": "σ ≈ 0,43 (разброс наблюдения «сделка / нет»)", "ETxt": "E = 5 п.п.", "thrTxt": "порог 25 %"}}, {"id": "tat", "tab": "Внутренние процессы", "name": "Внутренние процессы: срок обработки (TAT)", "n": 62, "formula": "n = (Z·σ / E)² = (1,96 × 2 / 0,5)² ≈ 62", "unitN": "заявок", "horizon": 14, "note": "Средний срок обработки заявки во внутреннем процессе. Учебный эксперимент: упрощённый маршрут согласования должен опустить средний срок ниже порога 5 дней. Планирование: разброс σ = 2 дня, допустимая погрешность E = ±0,5 дня. Горизонт наблюдения — 14 дней: заявка должна пройти процесс целиком, включая хвост долгих случаев.", "linkText": "определение метрики «Время процесса» — в справочнике", "linkHref": "longread_metrics.html#m-u_tat", "flowLabel": "Заявок в эксперименте в день", "fmin": 5, "fmax": 200, "fstep": 5, "fdef": 20, "sim": {"mu": 4.4, "thr": 5.0, "sigma": 2.0, "E": 0.5, "good": "below", "scale": 1, "dec": 1, "unitY": "срок обработки, дн", "sigmaTxt": "σ = 2 дня (разброс срока одной заявки)", "ETxt": "E = 0,5 дня", "thrTxt": "порог 5 дней"}}, {"id": "ltv", "tab": "Портфель · LTV", "name": "Портфель: LTV и удержание за 180 дней", "n": 385, "formula": "n = (Z·σ / E)² = (1,96 × 40 / 4)² ≈ 385", "unitN": "клиентов", "horizon": 180, "note": "Ценность клиента и удержание в портфельном управлении. Учебный эксперимент: новая сервисная модель должна поднять LTV выше порога 40 т₽ на клиента. Планирование: разброс σ = 40 т₽, допустимая погрешность E = ±4 т₽. Горизонт метрики — 180 дней: ценность накапливается полгода, и приток участников этот срок не сокращает.", "linkText": "определение метрики «Ценность клиента (LTV)» — в справочнике", "linkHref": "longread_metrics.html#m-u_ltv", "flowLabel": "Клиентов в эксперименте в день", "fmin": 20, "fmax": 1000, "fstep": 20, "fdef": 100, "sim": {"mu": 44.5, "thr": 40.0, "sigma": 40.0, "E": 4.0, "good": "above", "scale": 1, "dec": 0, "unitY": "LTV, т₽ на клиента", "sigmaTxt": "σ = 40 т₽ (разброс ценности одного клиента)", "ETxt": "E = 4 т₽", "thrTxt": "порог 40 т₽"}}];
+var CS=[{"id": "retail", "tab": "Розница · новая карта", "name": "Розница: новый карточный продукт — средние траты по карте", "n": 683, "formula": "n = (Z·σ / E)² = (1,96 × 12 / 0,9)² ≈ 683", "unitN": "клиентов", "note": "Пилот нового карточного продукта. Карту выдают ровно столько клиентов в день, сколько переваривает контакт-центр на новой функции, — это <b>пропускная способность</b>. Клиент попадает в бакет не в день выдачи, а когда совершит первую операцию: это <b>лаг активации</b>. Дальше меряем средние траты по карте, и на то, чтобы они вышли на свой уровень, уходит около полугода — это <b>горизонт наблюдения</b>. Порог решения — 18,0 т₽ в месяц, средние траты по действующей карте; новая карта должна дать больше.", "links": [["определение метрики «Средний чек» — в справочнике", "longread_metrics.html#m-u_aov"], ["условие активации — метрика «Активация за 30 дн.»", "longread_metrics.html#m-act"]], "sim": {"kind": "mean", "thr": 18.0, "delta": 1.5, "sigma": 12.0, "E": 0.9, "good": "above", "shock": 0.09, "scale": 1, "dec": 1, "unitY": "средние траты по карте, т₽ в месяц", "sigmaTxt": "σ = 12 т₽ (разброс трат одного клиента)", "ETxt": "E = 0,9 т₽", "thrTxt": "порог 18,0 т₽"}, "sliders": {"cap": {"label": "Пропускная способность", "unit": "клиентов в день", "hint": "Сколько клиентов в день контакт-центр проводит через пилот новой карты.", "min": 5, "max": 200, "step": 5, "val": 15}, "lag": {"label": "Лаг активации", "unit": "дней", "hint": "Через сколько дней после выдачи клиент делает первую операцию и попадает в бакет.", "min": 0, "max": 45, "step": 1, "val": 14}, "hor": {"label": "Горизонт наблюдения", "unit": "дней", "hint": "Сколько времени по клиенту должно пройти, чтобы траты вышли на свой уровень.", "min": 30, "max": 270, "step": 10, "val": 180}}}, {"id": "proc", "tab": "Процессный бизнес · конвейер", "name": "Процессный бизнес: срок принятия решения в кредитном конвейере", "n": 177, "formula": "n = (Z·σ / E)² = (1,96 × 9,5 / 1,4)² ≈ 177", "unitN": "заявок", "note": "Пилот нового маршрута согласования в кредитном конвейере. Вход широкий: заявки идут потоком, и <b>пропускная способность</b> измеряется сотнями в день. <b>Лаг активации</b> короткий — заявка попадает в эксперимент после автопроверки, на следующий день. Метрика быстрая: <b>горизонт наблюдения</b> — те несколько дней, за которые заявка проходит конвейер целиком, включая хвост долгих случаев. Порог решения — 26 часов, текущий срок; новый маршрут должен уложиться быстрее.", "links": [["определение метрики «Срок принятия решения (TAT)» — в справочнике", "longread_metrics.html#m-pc_tat"], ["норматив — метрика «Доля решений в срок (SLA)»", "longread_metrics.html#m-pc_sla"]], "sim": {"kind": "mean", "thr": 26.0, "delta": -2.8, "sigma": 9.5, "E": 1.4, "good": "below", "shock": 0.14, "scale": 1, "dec": 1, "unitY": "срок принятия решения, часов", "sigmaTxt": "σ = 9,5 ч (разброс срока одной заявки)", "ETxt": "E = 1,4 ч", "thrTxt": "порог 26,0 ч"}, "sliders": {"cap": {"label": "Пропускная способность", "unit": "заявок в день", "hint": "Сколько заявок в день пускаем по новому маршруту.", "min": 20, "max": 600, "step": 10, "val": 250}, "lag": {"label": "Лаг активации", "unit": "дней", "hint": "Через сколько дней после подачи заявка проходит автопроверку и попадает в эксперимент.", "min": 0, "max": 10, "step": 1, "val": 1}, "hor": {"label": "Горизонт наблюдения", "unit": "дней", "hint": "За сколько дней заявка проходит конвейер целиком — только тогда её срок известен.", "min": 1, "max": 30, "step": 1, "val": 7}}}, {"id": "portf", "tab": "Управление портфелем · редкое событие", "name": "Управление портфелем: редкое событие в премиальном сегменте", "n": 542, "formula": "n = Z²·p(1−p) / E² = 1,96² × 0,06 × 0,94 / 0,02² ≈ 542", "unitN": "клиентов", "note": "Новая сервисная модель в премиальном сегменте портфеля. Событие редкое: закрытие основного счёта случается у 6 % клиентов сегмента. Вход узкий по природе кейса — под условие пилота в день подходит несколько клиентов, это <b>пропускная способность</b>. <b>Лаг активации</b> длинный: клиент попадает в бакет только после планового контакта с менеджером. <b>Горизонт наблюдения</b> — полгода: редкое событие иначе просто не успевает случиться. Порог решения — 6 %, текущий уровень; новая модель должна опустить его ниже.", "links": [["определение метрики «Отток» — в справочнике", "longread_metrics.html#m-u_churn"], ["сопоставимость определений в портфеле — метрика «Словарь определений»", "longread_metrics.html#m-dict"]], "sim": {"kind": "share", "thr": 0.06, "delta": -0.033, "sigma": 0.23748684174075832, "E": 0.02, "good": "below", "shock": 0.002, "scale": 100, "dec": 1, "unitY": "доля клиентов с событием, %", "sigmaTxt": "σ = √(0,06 × 0,94) ≈ 0,24 (разброс наблюдения «событие / нет»)", "ETxt": "E = 2 п.п.", "thrTxt": "порог 6,0 %"}, "sliders": {"cap": {"label": "Пропускная способность", "unit": "клиентов в день", "hint": "Сколько клиентов сегмента в день подходит под условие пилота.", "min": 2, "max": 40, "step": 1, "val": 6}, "lag": {"label": "Лаг активации", "unit": "дней", "hint": "Через сколько дней после отбора клиент проходит плановый контакт и попадает в бакет.", "min": 0, "max": 90, "step": 5, "val": 45}, "hor": {"label": "Горизонт наблюдения", "unit": "дней", "hint": "Сколько времени по клиенту должно пройти, чтобы редкое событие успело случиться.", "min": 60, "max": 365, "step": 5, "val": 180}}}];
 var Zc=1.96;
-var cur=MS[0];
-var flows={};                      // выбранный приток запоминается на метрику
+var cur=CS[0];
+var pos={};                        // положение бегунков запоминается на кейс
 var $=function(id){return document.getElementById(id)};
 var NB="\u202F";
 function fi(x){return String(Math.round(x)).replace(/\B(?=(\d{3})+(?!\d))/g,NB)}
-function fv(v,m){return (v*m.sim.scale).toFixed(m.sim.dec).replace('.',',')}
+function fv(v,c){return (v*c.sim.scale).toFixed(c.sim.dec).replace('.',',')}
+function fd(x){return (Math.round(x*10)/10).toString().replace('.',',')}
+// сроки: до 20 дней — с десятыми, дальше целые дни (планируют всё равно в днях)
+function fday(x){return x<20?fd(x):fi(x)}
 
 function tx(x,y,t,fs,w,f,a,o){
   return '<text x="'+x+'" y="'+y+'" font-size="'+fs+'"'+(w?' font-weight="'+w+'"':'')
     +' fill="'+f+'"'+(a?' text-anchor="'+a+'"':'')+(o?' fill-opacity="'+o+'"':'')+'>'+t+'</text>';
 }
-
-function tickStep(total){
-  var c=[1,2,5,7,14,30,60,90,180];
-  for(var i=0;i<c.length;i++){if(total/c[i]<=13)return c[i]}
-  return 360;
+// подпись на белой подложке: не сливается с коридором и зонами светофора
+function plate(x,y,t,fs,w,col,a,X0,X1){
+  var wd=t.length*fs*0.6+14,x0;
+  if(a==='end')x0=x-wd+7;else if(a==='middle')x0=x-wd/2;else x0=x-7;
+  if(X0!=null){if(x0<X0+2)x0=X0+2;if(x0+wd>X1-2)x0=X1-2-wd;}
+  var xt=(a==='end')?x0+wd-7:(a==='middle')?x0+wd/2:x0+7;
+  return '<rect x="'+x0.toFixed(1)+'" y="'+(y-fs-2).toFixed(1)+'" width="'+wd.toFixed(1)
+    +'" height="'+(fs+8).toFixed(1)+'" rx="6" fill="#ffffff" fill-opacity="0.9"/>'
+    +tx(xt.toFixed(1),y,t,fs,w,col,a);
 }
+function tickStep(total){
+  var c=[0.5,1,2,5,7,10,14,20,30,60,90,120,180,360];
+  for(var i=0;i<c.length;i++){if(total/c[i]<=12)return c[i]}
+  return 720;
+}
+var LADDER=[3,5,7,10,14,20,30,45,60,90,120,150,200,250,300,400,500,650,800,1000,1300,1600,2000,2600];
+function niceCeil(v){for(var i=0;i<LADDER.length;i++){if(LADDER[i]>=v)return LADDER[i]}return v}
 
-// ── Детерминированный генератор: ряд наблюдений фиксирован на метрику ──────
+// ── Детерминированный ряд наблюдений: фиксирован на кейс ────────────────────
 function seedOf(s){var h=5381;s=s+'a360';for(var i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return h}
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;
   var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;
@@ -345,221 +408,333 @@ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;
 function gauss(rnd){var u=0,v=0;while(u===0)u=rnd();while(v===0)v=rnd();
   return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
 
-// Симуляция: броуновская сумма W(k) по числу наблюдений k; бегущая оценка
-// x̄(k) = μ + σ·W(k)/k, полуширина коридора h(k) = Z·σ/√k. Сетка не зависит
-// от притока — бегунок лишь пересчитывает «день ↔ наблюдения».
+var drawCache={};
+function draws(c){
+  if(drawCache[c.id])return drawCache[c.id];
+  var rnd=mulberry32(seedOf(c.id)),N=c.n,M=N+Math.ceil(0.6*N)+40,i;
+  // склонности участников раздаются по РАНГУ активации — ряд наблюдений один
+  var u=new Float64Array(N),z=new Float64Array(N),uu=new Float64Array(N);
+  for(i=0;i<N;i++)u[i]=rnd();
+  var ord=[];for(i=0;i<N;i++)ord.push(i);
+  ord.sort(function(a,b){return u[a]-u[b]});
+  for(i=0;i<N;i++)uu[ord[i]]=(i+0.5)/N;          // равномерная сетка в случайном порядке
+  var s1=0,s2=0;
+  for(i=0;i<N;i++){z[i]=gauss(rnd);s1+=z[i]}
+  s1/=N;for(i=0;i<N;i++){z[i]-=s1;s2+=z[i]*z[i]}
+  s2=Math.sqrt(s2/N)||1;for(i=0;i<N;i++)z[i]/=s2; // среднее 0, s.d. 1
+  var lg=new Float64Array(M);                     // множитель лага, медиана 1
+  for(i=0;i<M;i++)lg[i]=Math.exp(0.45*gauss(rnd)-0.101);
+  var sh=new Float64Array(3000);                  // общий дневной сдвиг
+  for(i=0;i<3000;i++)sh[i]=gauss(rnd);
+  var o={u:uu,z:z,lg:lg,sh:sh,M:M};drawCache[c.id]=o;return o;
+}
+function upperBound(A,t,len){var lo=0,hi=len;while(lo<hi){var m=(lo+hi)>>1;
+  if(A[m]<=t)lo=m+1;else hi=m}return lo}
+// вертикальный размах поля: чтобы «горло» воронки входило в кадр, а полоса ±E
+// оставалась хорошо различимой
+function spanOf(s){return Math.max(6.4*s.E,Math.abs(s.delta)+4.2*s.E)}
+// с какого n коридор целиком входит в кадр — с него и начинаем рисовать воронку
+function nMinOf(s){return Math.max(8,Math.ceil(Math.pow(Zc*s.sigma/(0.55*spanOf(s)),2)))}
+
+// ── Симуляция: n(t) из пропускной способности и лага, коридор Z·σ/√n(t) ─────
 var simCache={};
-function simOf(m){
-  if(simCache[m.id])return simCache[m.id];
-  var s=m.sim,G=280,kMax=Math.ceil(2.6*m.n),rnd=mulberry32(seedOf(s.seed||m.id));
-  var k=[],W=[],est=[],h=[],w=0,prev=0;
-  for(var i=1;i<=G;i++){
-    var ki=kMax*i/G;
-    w+=Math.sqrt(ki-prev)*gauss(rnd);prev=ki;
-    k.push(ki);W.push(w);
-    est.push(s.mu+s.sigma*w/ki);
-    h.push(Zc*s.sigma/Math.sqrt(ki));
+function simulate(c,cap,lag,H){
+  var key=c.id+'|'+cap+'|'+lag+'|'+H;
+  if(simCache[key])return simCache[key];
+  var D=draws(c),N=c.n,s=c.sim,i;
+  var a=new Float64Array(D.M);
+  for(i=0;i<D.M;i++)a[i]=(i+1)/cap+lag*D.lg[i];
+  a.sort();                                   // первые N активаций = набранная выборка
+  var tFill=a[N-1],tStart=a[0];
+  var tEnd=tFill+H*1.15+Math.max(3,0.06*(tFill+H));
+  var G=400,MINN=nMinOf(s);
+  var t=new Float64Array(G+1),est=new Float64Array(G+1),half=new Float64Array(G+1),
+      nn=new Int32Array(G+1),ok=new Uint8Array(G+1),vis=new Uint8Array(G+1);
+  for(var j=0;j<=G;j++){
+    var ti=tEnd*j/G,n=upperBound(a,ti,N);
+    t[j]=ti;nn[j]=n;
+    if(n<MINN)continue;
+    // общий дневной сдвиг: задан на календарь, между днями сглажен
+    var d0=Math.floor(ti)%3000,fr=ti-Math.floor(ti);
+    var ct=s.shock*(D.sh[d0]*(1-fr)+D.sh[(d0+1)%3000]*fr),e,m;
+    if(s.kind==='share'){
+      var cnt=0;
+      for(i=0;i<n;i++){m=(ti-a[i])/H;if(m>1)m=1;else if(m<0)m=0;
+        if(D.u[i]<s.thr+s.delta*m+ct)cnt++}
+      e=cnt/n;
+    }else{
+      var sm=0,sz=0;
+      for(i=0;i<n;i++){m=(ti-a[i])/H;if(m>1)m=1;else if(m<0)m=0;sm+=m;sz+=D.z[i]}
+      e=s.thr+s.delta*(sm/n)+s.sigma*(sz/n)+ct;
+    }
+    var h=Zc*s.sigma/Math.sqrt(n);
+    est[j]=e;half[j]=h;vis[j]=1;
+    ok[j]=(h<=s.E*1.000001&&(s.good==='above'?(e-h>s.thr):(e+h<s.thr)))?1:0;
   }
-  // зелёный: коридор устойчиво (до конца окна) по одну сторону порога, и n набран
-  var stable=G;
-  for(var j=G-1;j>=0;j--){
-    var out=(s.thr<est[j]-h[j])||(s.thr>est[j]+h[j]);
-    if(out)stable=j;else break;
-  }
-  var kE=Math.pow(Zc*s.sigma/s.E,2);
-  var greenK=Math.max(kE,stable<G?k[stable]:kMax);
-  var side=est[G-1]>s.thr?'above':'below';
-  var o={k:k,est:est,h:h,kMax:kMax,kE:kE,greenK:greenK,reached:stable<G,side:side};
-  simCache[m.id]=o;return o;
+  var stop=-1;
+  for(j=G;j>=0;j--){if(ok[j])stop=j;else break}
+  var o={t:t,est:est,half:half,n:nn,vis:vis,G:G,tFill:tFill,tStart:tStart,tEnd:tEnd,
+         tDec:stop>=0?t[stop]:null,iDec:stop,reached:stop>=0};
+  o.tAxis=Math.min(tEnd,niceCeil((o.reached?o.tDec:tFill)*1.22));
+  simCache[key]=o;return o;
 }
 
-// ── Живой график: ряд, коридор, порог, светофорные зоны ────────────────────
-function simChart(m,flow){
-  var s=m.sim,d=simOf(m);
-  var kShow=Math.min(d.kMax,Math.max(d.greenK*1.3,d.kE*1.35));
-  var X0=64,X1=880,Y0=30,Y1=300,H=368;
-  var span=Math.max(s.E*4.4,Math.abs(s.mu-s.thr)+2.4*s.E);
-  var mid=(Math.min(s.mu,s.thr)+Math.max(s.mu,s.thr))/2;
-  var yLo=mid-span/2,yHi=mid+span/2;
-  var xx=function(k){return X0+(k/kShow)*(X1-X0)};
+// ── Главный график: коридор из n(t), порог, светофорные зоны ────────────────
+function chart(c,r){
+  var s=c.sim,X0=64,X1=884,Y0=34,Y1=298,HT=372,TA=r.tAxis;
+  var span=spanOf(s);
+  var mid=s.thr+s.delta/2,yLo=mid-span/2;
+  if(s.kind==='share'&&yLo<0)yLo=0;
+  var yHi=yLo+span;
+  var xx=function(t){return X0+(t/TA)*(X1-X0)};
   var yy=function(v){return Y1-(v-yLo)/(yHi-yLo)*(Y1-Y0)};
-  var out='<svg viewBox="0 0 920 '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" '
-    +'aria-label="Симуляция эксперимента: бегущая оценка метрики, коридор 95 % доверия, '
-    +'порог решения и светофорные зоны" style="font-family:var(--font)">';
-  out+='<clipPath id="simClip"><rect x="'+X0+'" y="'+Y0+'" width="'+(X1-X0)+'" height="'+(Y1-Y0)+'"/></clipPath>';
-  // светофорные зоны состояния
-  var xE=xx(Math.min(d.kE,kShow)),xG=xx(Math.min(d.greenK,kShow));
+  var o='<svg viewBox="0 0 920 '+HT+'" xmlns="http://www.w3.org/2000/svg" role="img" '
+    +'aria-label="Накопление достоверности: бегущая оценка метрики, коридор 95 % доверия '
+    +'шириной Z·σ/√n(t), порог решения и светофорные зоны" style="font-family:var(--font)">';
+  o+='<clipPath id="simClip"><rect x="'+X0+'" y="'+Y0+'" width="'+(X1-X0)+'" height="'+(Y1-Y0)+'"/></clipPath>';
+  var xF=Math.min(xx(r.tFill),X1),xD=r.reached?Math.min(xx(r.tDec),X1):X1;
+  var caps='';
   var zone=function(xa,xb,fill,lab,col){
-    if(xb-xa<1)return '';
-    var r='<rect x="'+xa.toFixed(1)+'" y="'+Y0+'" width="'+(xb-xa).toFixed(1)+'" height="'+(Y1-Y0)+'" fill="'+fill+'"/>';
-    if(xb-xa>=120)r+=tx(((xa+xb)/2).toFixed(1),Y0+16,lab,12,'700',col,'middle');
-    return r;
+    if(xb-xa<0.6)return '';
+    if(xb-xa>=lab.length*7.2+18)
+      caps+=plate(((xa+xb)/2).toFixed(1),Y0+16,lab,12,'700',col,'middle',X0,X1);
+    return '<rect x="'+xa.toFixed(1)+'" y="'+Y0+'" width="'+(xb-xa).toFixed(1)+'" height="'
+      +(Y1-Y0)+'" fill="'+fill+'"/>';
   };
-  out+=zone(X0,xE,'rgba(196,69,59,0.06)','данных мало: коридор шире E','#C4453B');
-  out+=zone(xE,xG,'rgba(217,164,0,0.10)','порог внутри коридора','#8a6d00');
-  out+=zone(xG,X1,'rgba(32,186,114,0.09)',
-    d.side===s.good?'гипотеза подтверждена':'гипотеза опровергнута','#159A5C');
-  // коридор и бегущая оценка (в клипе)
+  o+=zone(X0,xF,'rgba(196,69,59,0.06)','красный · коридор шире E','#C4453B');
+  o+=zone(xF,xD,'rgba(217,164,0,0.11)','жёлтый · объём набран, порог внутри','#8a6d00');
+  o+=zone(xD,X1,'rgba(32,186,114,0.09)','зелёный · решение принято','#159A5C');
+  // коридор и бегущая оценка
   var up=[],lo=[],ce=[];
-  for(var i=0;i<d.k.length;i++){
-    if(d.k[i]>kShow)break;
-    var x=xx(d.k[i]).toFixed(1);
-    up.push(x+','+yy(d.est[i]+d.h[i]).toFixed(1));
-    lo.push(x+','+yy(d.est[i]-d.h[i]).toFixed(1));
-    ce.push(x+','+yy(d.est[i]).toFixed(1));
+  for(var i=0;i<=r.G;i++){
+    if(r.t[i]>TA)break;
+    if(!r.vis[i])continue;
+    var x=xx(r.t[i]).toFixed(1);
+    up.push(x+','+yy(r.est[i]+r.half[i]).toFixed(1));
+    lo.push(x+','+yy(r.est[i]-r.half[i]).toFixed(1));
+    ce.push(x+','+yy(r.est[i]).toFixed(1));
   }
-  out+='<g clip-path="url(#simClip)">';
-  out+='<polygon points="'+up.join(' ')+' '+lo.slice().reverse().join(' ')+'" fill="#20BA72" fill-opacity="0.14"/>';
-  out+='<polyline points="'+up.join(' ')+'" fill="none" stroke="#20BA72" stroke-width="1.7"/>';
-  out+='<polyline points="'+lo.join(' ')+'" fill="none" stroke="#20BA72" stroke-width="1.7"/>';
-  out+='<polyline points="'+ce.join(' ')+'" fill="none" stroke="#159A5C" stroke-width="2.6"/>';
-  out+='</g>';
+  o+='<g clip-path="url(#simClip)">';
+  if(up.length>1){
+    o+='<polygon points="'+up.join(' ')+' '+lo.slice().reverse().join(' ')+'" fill="#20BA72" fill-opacity="0.15"/>';
+    o+='<polyline points="'+up.join(' ')+'" fill="none" stroke="#20BA72" stroke-width="1.7"/>';
+    o+='<polyline points="'+lo.join(' ')+'" fill="none" stroke="#20BA72" stroke-width="1.7"/>';
+    o+='<polyline points="'+ce.join(' ')+'" fill="none" stroke="#159A5C" stroke-width="2.6"/>';
+  }
+  o+='</g>'+caps;
   // порог решения
   var yT=yy(s.thr);
-  out+='<line x1="'+X0+'" y1="'+yT.toFixed(1)+'" x2="'+X1+'" y2="'+yT.toFixed(1)
+  o+='<line x1="'+X0+'" y1="'+yT.toFixed(1)+'" x2="'+X1+'" y2="'+yT.toFixed(1)
     +'" stroke="#C4453B" stroke-width="2" stroke-dasharray="7 5"/>';
-  out+=tx(X1-6,yT+(s.good==='above'?18:-8),'порог решения — '+fv(s.thr,m),12.5,'800','#C4453B','end');
-  // вертикаль «n набран»: коридор сузился до ±E
-  out+='<line x1="'+xE.toFixed(1)+'" y1="'+Y0+'" x2="'+xE.toFixed(1)+'" y2="'+(Y1+8)
-    +'" stroke="#2E3641" stroke-opacity="0.45" stroke-width="1.6" stroke-dasharray="4 5"/>';
-  out+=tx(xE.toFixed(1),Y1+24,'n = (Z·σ/E)² набрано',12,'700','#2E3641','middle',0.75);
-  // вертикаль «зелёный сигнал»
-  out+='<line x1="'+xG.toFixed(1)+'" y1="'+Y0+'" x2="'+xG.toFixed(1)+'" y2="'+(Y1+8)
-    +'" stroke="#159A5C" stroke-width="2" stroke-dasharray="3 4"/>';
-  out+=tx(Math.min(xG+8,X1-160).toFixed(1),Y0+34,'зелёный: ≈ '+fi(Math.ceil(d.greenK/flow))+'-й день',12.5,'800','#159A5C');
-  // скобка E у момента набора n: полуширина коридора равна E
-  var iE=0;while(iE<d.k.length-1&&d.k[iE]<d.kE)iE++;
-  var yA=yy(d.est[iE]),yB=yy(d.est[iE]+d.h[iE]),xBr=Math.min(xE+10,X1-16);
-  out+='<line x1="'+xBr.toFixed(1)+'" y1="'+yA.toFixed(1)+'" x2="'+xBr.toFixed(1)+'" y2="'+yB.toFixed(1)
-    +'" stroke="#159A5C" stroke-width="2"/>';
-  out+='<line x1="'+(xBr-4).toFixed(1)+'" y1="'+yA.toFixed(1)+'" x2="'+(xBr+4).toFixed(1)+'" y2="'+yA.toFixed(1)+'" stroke="#159A5C" stroke-width="2"/>';
-  out+='<line x1="'+(xBr-4).toFixed(1)+'" y1="'+yB.toFixed(1)+'" x2="'+(xBr+4).toFixed(1)+'" y2="'+yB.toFixed(1)+'" stroke="#159A5C" stroke-width="2"/>';
-  out+=tx((xBr+8).toFixed(1),((yA+yB)/2+4).toFixed(1),'E',13,'800','#159A5C');
+  o+=plate(X1-4,yT+(s.good==='above'?17:-7),'порог решения — '+fv(s.thr,c),12.5,'800','#C4453B','end',X0,X1);
+  // вертикали: набор закрыт и день решения
+  o+='<line x1="'+xF.toFixed(1)+'" y1="'+Y0+'" x2="'+xF.toFixed(1)+'" y2="'+Y1
+    +'" stroke="#2E3641" stroke-opacity="0.5" stroke-width="1.6" stroke-dasharray="5 4"/>';
+  if(r.reached&&xD<X1-1)
+    o+='<line x1="'+xD.toFixed(1)+'" y1="'+Y0+'" x2="'+xD.toFixed(1)+'" y2="'+Y1
+      +'" stroke="#159A5C" stroke-width="2" stroke-dasharray="3 4"/>';
+  // подписи вертикалей — в свободной половине поля (там, где нет кривой)
+  var yA=(s.good==='above')?Y1-38:Y0+40,yB=(s.good==='above')?Y1-14:Y0+62;
+  o+=plate(xF+7,yA,'набор закрыт: n = (Z·σ/E)² = '+fi(c.n)+' · день '+fday(r.tFill),12,'700','#2E3641',null,X0,X1);
+  if(r.reached)
+    o+=plate(xD+7,yB,'решение: '+fday(r.tDec)+'-й день',12.5,'800','#159A5C',null,X0,X1);
+  // скобка E в момент, когда коридор сузился до допустимой погрешности
+  var iF=0;while(iF<r.G&&(r.t[iF]<r.tFill||!r.vis[iF]))iF++;
+  if(r.vis[iF]){
+    var ya=yy(r.est[iF]),yb=yy(r.est[iF]+r.half[iF]),xb=Math.min(xF+11,X1-30);
+    o+='<line x1="'+xb.toFixed(1)+'" y1="'+ya.toFixed(1)+'" x2="'+xb.toFixed(1)+'" y2="'+yb.toFixed(1)+'" stroke="#159A5C" stroke-width="2"/>';
+    o+='<line x1="'+(xb-4).toFixed(1)+'" y1="'+ya.toFixed(1)+'" x2="'+(xb+4).toFixed(1)+'" y2="'+ya.toFixed(1)+'" stroke="#159A5C" stroke-width="2"/>';
+    o+='<line x1="'+(xb-4).toFixed(1)+'" y1="'+yb.toFixed(1)+'" x2="'+(xb+4).toFixed(1)+'" y2="'+yb.toFixed(1)+'" stroke="#159A5C" stroke-width="2"/>';
+    o+=tx((xb+7).toFixed(1),((ya+yb)/2+4).toFixed(1),'E',13,'800','#159A5C');
+  }
   // оси
-  out+='<line x1="'+X0+'" y1="'+Y0+'" x2="'+X0+'" y2="'+Y1+'" stroke="#2E3641" stroke-opacity="0.3" stroke-width="1.2"/>';
-  out+='<line x1="'+X0+'" y1="'+Y1+'" x2="'+X1+'" y2="'+Y1+'" stroke="#2E3641" stroke-opacity="0.3" stroke-width="1.2"/>';
-  for(var t=0;t<=4;t++){
-    var v=yLo+(yHi-yLo)*t/4,y=yy(v);
-    out+='<line x1="'+(X0-5)+'" y1="'+y.toFixed(1)+'" x2="'+X0+'" y2="'+y.toFixed(1)+'" stroke="#2E3641" stroke-opacity="0.3" stroke-width="1.2"/>';
-    out+=tx(X0-9,y+4,fv(v,m),11.5,null,'#2E3641','end',0.65);
+  o+='<line x1="'+X0+'" y1="'+Y0+'" x2="'+X0+'" y2="'+Y1+'" stroke="#2E3641" stroke-opacity="0.3" stroke-width="1.2"/>';
+  o+='<line x1="'+X0+'" y1="'+Y1+'" x2="'+X1+'" y2="'+Y1+'" stroke="#2E3641" stroke-opacity="0.3" stroke-width="1.2"/>';
+  for(var k=0;k<=4;k++){
+    var v=yLo+(yHi-yLo)*k/4,y=yy(v);
+    o+='<line x1="'+(X0-5)+'" y1="'+y.toFixed(1)+'" x2="'+X0+'" y2="'+y.toFixed(1)+'" stroke="#2E3641" stroke-opacity="0.3" stroke-width="1.2"/>';
+    o+=tx(X0-9,y+4,fv(v,c),11.5,null,'#2E3641','end',0.65);
   }
-  out+=tx(X0-8,Y0-12,s.unitY+' — бегущая оценка x̄',12,null,'#2E3641',null,0.65);
-  var Dx=kShow/flow,st=Dx<3?(Dx<1?0.1:0.5):tickStep(Dx);
-  for(var dd=0;dd<=Dx;dd+=st){
-    var xd=xx(dd*flow);
-    out+='<line x1="'+xd.toFixed(1)+'" y1="'+Y1+'" x2="'+xd.toFixed(1)+'" y2="'+(Y1+6)+'" stroke="#2E3641" stroke-opacity="0.3" stroke-width="1.2"/>';
-    if(xd<X1-30&&Math.abs(xd-xE)>88)
-      out+=tx(xd.toFixed(1),Y1+24,String(Math.round(dd*10)/10).replace('.',','),12,null,'#2E3641','middle',0.6);
+  o+=tx(X0-8,Y0-13,s.unitY+' — бегущая оценка x̄',12,null,'#2E3641',null,0.65);
+  var st=tickStep(TA);
+  for(var d=0;d<=TA+1e-9;d+=st){
+    var xd=xx(d);
+    o+='<line x1="'+xd.toFixed(1)+'" y1="'+Y1+'" x2="'+xd.toFixed(1)+'" y2="'+(Y1+6)+'" stroke="#2E3641" stroke-opacity="0.3" stroke-width="1.2"/>';
+    o+=tx(xd.toFixed(1),Y1+21,fd(d),12,null,'#2E3641','middle',0.6);
   }
-  out+=tx(X1,Y1+44,'дни с начала эксперимента → · n (объём) = приток × дни',12.5,null,'#2E3641','end',0.65);
-  out+=tx(X0,Y1+44,'коридор: x̄ ± Z·σ/√n · Z = 1,96 (доверие 95'+NB+'%)',12.5,null,'#2E3641',null,0.65);
-  return out+'</svg>';
+  o+=tx(X0,Y1+44,'коридор: x̄ ± Z·σ/√n(t) · Z = 1,96 (доверие 95'+NB+'%) · '+s.ETxt,12.5,null,'#2E3641',null,0.65);
+  o+=tx(X1,Y1+44,'дни с начала эксперимента →',12.5,null,'#2E3641','end',0.65);
+  return o+'</svg>';
 }
 
-// ── Полоса двух фаз под графиком: набор участников и горизонт метрики ──────
-function timeline(p1,p2){
-  var total=p1+p2,X0=40,X1=896,BY=32,BH=46,AX=116,H=170;
-  var sc=(X1-X0)/total,xb=X0+p1*sc;
-  var s='<svg viewBox="0 0 920 '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" '
-    +'aria-label="Таймлайн эксперимента: фаза набора участников и горизонт метрики" '
+// ── Нижний график: n(t) и две фазы на той же оси дней ──────────────────────
+function accum(c,r,cap,lag,H){
+  var X0=64,X1=884,Y0=24,Y1=112,BY=128,BH=26,AX=166,HT=214,TA=r.tAxis,N=c.n;
+  var xx=function(t){return X0+(t/TA)*(X1-X0)};
+  var yy=function(v){return Y1-(v/N)*(Y1-Y0)};
+  var o='<svg viewBox="0 0 920 '+HT+'" xmlns="http://www.w3.org/2000/svg" role="img" '
+    +'aria-label="Кривая набора n(t): участники, попавшие в бакет, и две фазы эксперимента" '
     +'style="font-family:var(--font)">';
-  s+='<rect x="'+X0+'" y="'+BY+'" width="'+(X1-X0)+'" height="'+BH+'" rx="10" fill="#159A5C" fill-opacity="0.16"/>';
-  s+='<rect x="'+X0+'" y="'+BY+'" width="'+Math.max(6,xb-X0).toFixed(1)+'" height="'+BH+'" rx="10" fill="#20BA72"/>';
-  s+='<line x1="'+xb.toFixed(1)+'" y1="10" x2="'+xb.toFixed(1)+'" y2="'+AX+'" stroke="#159A5C" stroke-width="1.6" stroke-dasharray="6 5"/>';
-  s+='<line x1="'+X1+'" y1="10" x2="'+X1+'" y2="'+AX+'" stroke="#2E3641" stroke-opacity="0.35" stroke-width="1.4" stroke-dasharray="4 5"/>';
-  s+=tx(X0,20,'фаза 1 · набор n участников — '+fi(p1)+' дн',13.5,'700','#2E3641');
-  s+=tx(X1,20,'итог ≈ '+fi(total)+' дн',14,'800','#2E3641','end');
-  if(xb-X0>=70)s+=tx(((X0+xb)/2).toFixed(1),BY+BH/2+5,fi(p1)+' дн',14,'700','#ffffff','middle');
-  if(X1-xb>=70)s+=tx(((xb+X1)/2).toFixed(1),BY+BH/2+5,fi(p2)+' дн',14,'700','#159A5C','middle');
-  var c2=Math.min(Math.max((xb+X1)/2,X0+195),X1-175);
-  s+=tx(c2.toFixed(1),BY+BH+22,'фаза 2 · горизонт метрики — '+fi(p2)+' дн',13.5,'700','#159A5C','middle');
-  s+='<line x1="'+X0+'" y1="'+AX+'" x2="'+X1+'" y2="'+AX+'" stroke="#2E3641" stroke-opacity="0.3" stroke-width="1.2"/>';
-  var st=tickStep(total);
-  for(var d=0;d<=total;d+=st){
-    var x=X0+d*sc;
-    s+='<line x1="'+x.toFixed(1)+'" y1="'+AX+'" x2="'+x.toFixed(1)+'" y2="'+(AX+6)+'" stroke="#2E3641" stroke-opacity="0.3" stroke-width="1.2"/>';
-    if(x<X1-26)s+=tx(x.toFixed(1),AX+24,d,12.5,null,'#2E3641','middle',0.6);
+  // кривая набора
+  var pts=[X0.toFixed(1)+','+Y1.toFixed(1)];
+  for(var i=0;i<=r.G;i++){
+    if(r.t[i]>TA)break;
+    pts.push(xx(r.t[i]).toFixed(1)+','+yy(r.n[i]).toFixed(1));
   }
-  s+=tx(X1,AX+24,fi(total),12.5,'700','#2E3641','middle');
-  s+=tx(X1,AX+46,'дни с начала эксперимента →',12.5,null,'#2E3641','end',0.6);
-  return s+'</svg>';
+  if(r.tFill<=TA)pts.push(X1.toFixed(1)+','+yy(N).toFixed(1));
+  var last=pts[pts.length-1].split(',');
+  o+='<polygon points="'+pts.join(' ')+' '+last[0]+','+Y1.toFixed(1)+'" fill="#20BA72" fill-opacity="0.18"/>';
+  o+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="#159A5C" stroke-width="2.4"/>';
+  // целевой объём
+  o+='<line x1="'+X0+'" y1="'+yy(N).toFixed(1)+'" x2="'+X1+'" y2="'+yy(N).toFixed(1)
+    +'" stroke="#2E3641" stroke-opacity="0.4" stroke-width="1.4" stroke-dasharray="5 5"/>';
+  o+=plate(X1-4,yy(N)-7,'n = '+fi(N)+' — целевой объём',12,'700','#2E3641','end',X0,X1);
+  // лаг активации: бакет пуст
+  var xS=Math.min(xx(r.tStart),X1);
+  if(xS-X0>4){
+    o+='<rect x="'+X0+'" y="'+Y0+'" width="'+(xS-X0).toFixed(1)+'" height="'+(Y1-Y0)
+      +'" fill="#2E3641" fill-opacity="0.05"/>';
+    if(xS-X0>=118)o+=tx(((X0+xS)/2).toFixed(1),Y1-8,'лаг: бакет пуст',11.5,'700','#2E3641','middle',0.6);
+  }
+  o+=tx(X0-8,Y0-9,'n(t) — участников уже в бакете',12,null,'#2E3641',null,0.65);
+  o+='<line x1="'+X0+'" y1="'+Y0+'" x2="'+X0+'" y2="'+Y1+'" stroke="#2E3641" stroke-opacity="0.3" stroke-width="1.2"/>';
+  o+='<line x1="'+X0+'" y1="'+Y1+'" x2="'+X1+'" y2="'+Y1+'" stroke="#2E3641" stroke-opacity="0.3" stroke-width="1.2"/>';
+  // полоса фаз
+  var xF=Math.min(xx(r.tFill),X1),xD=r.reached?Math.min(xx(r.tDec),X1):X1;
+  o+='<rect x="'+X0+'" y="'+BY+'" width="'+(X1-X0)+'" height="'+BH+'" rx="8" fill="#159A5C" fill-opacity="0.1"/>';
+  o+='<rect x="'+X0+'" y="'+BY+'" width="'+Math.max(3,xF-X0).toFixed(1)+'" height="'+BH+'" rx="8" fill="#20BA72"/>';
+  if(xD-xF>3)o+='<rect x="'+xF.toFixed(1)+'" y="'+BY+'" width="'+(xD-xF).toFixed(1)+'" height="'+BH+'" fill="#D9A400" fill-opacity="0.5"/>';
+  var yL=BY+BH/2+5;
+  var l1='фаза 1 · набор и активация — '+fday(r.tFill)+' дн';
+  var l2='фаза 2 · ждём горизонт метрики ('+fi(H)+' дн) — '+(r.reached?fday(r.tDec-r.tFill):'—')+' дн';
+  var w1=l1.length*7.2+14,w2=l2.length*7.2+14;
+  var in1=(xF-X0>=w1),in2=(xD-xF>=w2);
+  if(in1)o+=tx(((X0+xF)/2).toFixed(1),yL,l1,12,'700','#ffffff','middle');
+  else o+=plate(X0+4,yL,l1,12,'700','#159A5C',null,X0,X1);
+  // подпись фазы 2 не должна наехать на выносную подпись фазы 1
+  if(in2&&(in1||(xF+xD)/2-w2/2>X0+8+w1))o+=tx(((xF+xD)/2).toFixed(1),yL,l2,12,'700','#6b5400','middle');
+  else o+=plate(X1-4,yL,l2,12,'700','#6b5400','end',X0,X1);
+  // ось дней
+  o+='<line x1="'+X0+'" y1="'+AX+'" x2="'+X1+'" y2="'+AX+'" stroke="#2E3641" stroke-opacity="0.3" stroke-width="1.2"/>';
+  var st=tickStep(TA);
+  for(var d=0;d<=TA+1e-9;d+=st){
+    var x=xx(d);
+    o+='<line x1="'+x.toFixed(1)+'" y1="'+AX+'" x2="'+x.toFixed(1)+'" y2="'+(AX+6)+'" stroke="#2E3641" stroke-opacity="0.3" stroke-width="1.2"/>';
+    o+=tx(x.toFixed(1),AX+21,fd(d),12,null,'#2E3641','middle',0.6);
+  }
+  o+=tx(X0,AX+42,'наклон = '+fi(cap)+NB+'/'+NB+'день · сдвиг вправо = лаг '+fi(lag)+' дн',
+    12.5,null,'#2E3641',null,0.65);
+  o+=tx(X1,AX+42,'дни с начала эксперимента →',12.5,null,'#2E3641','end',0.65);
+  return o+'</svg>';
 }
 
 function renderTabs(){
-  $('expTabs').innerHTML=MS.map(function(m){
-    return '<button type="button" class="exp-tab'+(m.id===cur.id?' on':'')
-      +'" data-m="'+m.id+'">'+m.tab+'</button>';
+  $('expTabs').innerHTML=CS.map(function(c){
+    return '<button type="button" class="exp-tab'+(c.id===cur.id?' on':'')
+      +'" data-c="'+c.id+'">'+c.tab+'</button>';
   }).join('');
 }
+var KEYS=['cap','lag','hor'];
+function renderKnobs(){
+  $('knobs').innerHTML=KEYS.map(function(k){
+    var s=cur.sliders[k],v=pos[cur.id][k];
+    return '<div class="exp-knob"><span class="kn">'+s.label+'</span>'
+      +'<input type="range" id="k_'+k+'" min="'+s.min+'" max="'+s.max+'" step="'+s.step+'" value="'+v+'">'
+      +'<span class="val" id="v_'+k+'">'+fi(v)+'<small>'+s.unit+'</small></span>'
+      +'<p class="kh">'+s.hint+'</p></div>';
+  }).join('');
+  KEYS.forEach(function(k){$('k_'+k).addEventListener('input',function(){
+    pos[cur.id][k]=+this.value;update()})});
+}
+function preset(c){return {cap:c.sliders.cap.val,lag:c.sliders.lag.val,hor:c.sliders.hor.val}}
 
 function select(id){
-  cur=MS.filter(function(m){return m.id===id})[0]||MS[0];
-  var f=$('flow');
-  f.min=cur.fmin;f.max=cur.fmax;f.step=cur.fstep;
-  f.value=flows[cur.id]||cur.fdef;
-  renderTabs();update();
+  cur=CS.filter(function(c){return c.id===id})[0]||CS[0];
+  if(!pos[cur.id])pos[cur.id]=preset(cur);
+  renderTabs();renderKnobs();update();
+}
+function corner(kind){
+  var s=cur.sliders,p=pos[cur.id];
+  if(kind==='reset'){pos[cur.id]=preset(cur)}
+  else{
+    p.cap=(kind==='sn'||kind==='fn')?s.cap.min:s.cap.max;
+    p.hor=(kind==='sn'||kind==='sw')?s.hor.max:s.hor.min;
+    p.lag=s.lag.val;
+  }
+  renderKnobs();update();
 }
 
 function setLight(state,txt){
   var box=$('light');
   box.className='exp-light st-'+state;
-  ['R','Y','G'].forEach(function(c){
-    var on=(state==='red'&&c==='R')||(state==='yellow'&&c==='Y')||(state==='green'&&c==='G');
-    $('lamp'+c).className=$('lamp'+c).className.replace(' on','')+(on?' on':'');
+  ['R','Y','G'].forEach(function(ch){
+    var on=(state==='red'&&ch==='R')||(state==='yellow'&&ch==='Y')||(state==='green'&&ch==='G');
+    $('lamp'+ch).className='exp-lamp '+ch.toLowerCase()+(on?' on':'');
   });
   $('lightTxt').innerHTML=txt;
 }
 
 function update(){
-  var flow=+$('flow').value;flows[cur.id]=flow;
-  var s=cur.sim,d=simOf(cur);
-  var p1=Math.max(1,Math.ceil(cur.n/flow)),p2=cur.horizon,total=p1+p2;
-  var dE=Math.max(1,Math.ceil(d.kE/flow)),dG=Math.max(1,Math.ceil(d.greenK/flow));
-  $('flowLab').textContent=cur.flowLabel;
-  $('flowVal').textContent=fi(flow);
-  $('mName').textContent=cur.name;
-  $('mNote').innerHTML=cur.note+' Подробнее: <a href="'+cur.linkHref+'">'+cur.linkText+'</a>.';
-  $('sN').textContent=fi(cur.n);
-  $('sNu').textContent='целевой объём n, '+cur.unitN;
-  $('sG').textContent='≈ '+fi(dG)+'-й день';
-  $('sP2').textContent=fi(p2)+' дн';
-  $('sTot').textContent='≈ '+fi(total)+' дн';
-  $('sim').innerHTML=simChart(cur,flow);
-  $('tl').innerHTML=timeline(p1,p2);
-  var verdict=d.side===s.good?'гипотеза подтверждена':'гипотеза опровергнута';
-  if(d.reached){
-    setLight('green','<b>Зелёный с ≈ '+fi(dG)+'-го дня: '+verdict+'</b> — коридор устойчиво '
-      +(d.side==='above'?'выше':'ниже')+' порога ('+s.thrTxt+'). До этого: красный '
-      +'до ≈ '+fi(dE)+'-го дня (коридор шире E), затем жёлтый — коридор сузился до ±'
-      +s.ETxt.replace('E = ','')+', но порог оставался внутри.');
+  var p=pos[cur.id],c=cur,s=c.sim;
+  var r=simulate(c,p.cap,p.lag,p.hor);
+  KEYS.forEach(function(k){
+    var el=$('v_'+k);if(el)el.innerHTML=fi(p[k])+'<small>'+c.sliders[k].unit+'</small>';
+  });
+  $('mName').textContent=c.name;
+  $('mNote').innerHTML=c.note;
+  $('mLinks').innerHTML='Подробнее: '+c.links.map(function(l){
+    return '<a href="'+l[1]+'">'+l[0]+'</a>'}).join(' · ')+'.';
+  $('sim').innerHTML=chart(c,r);
+  $('tl').innerHTML=accum(c,r,p.cap,p.lag,p.hor);
+  $('sN').textContent=fi(c.n);
+  $('sNu').textContent='целевой объём n, '+c.unitN;
+  $('sF').textContent=fday(r.tFill)+' дн';
+  $('sH').textContent=fi(p.hor)+' дн';
+  $('sD').textContent=r.reached?('≈ '+fday(r.tDec)+'-й день'):'не достигнут';
+  var verdict=(s.good==='above')===(s.delta>0)?'гипотеза подтверждена':'гипотеза опровергнута';
+  if(r.reached){
+    setLight('green','<b>Зелёный с ≈ '+fday(r.tDec)+'-го дня: '+verdict+'</b> — коридор устойчиво '
+      +(s.delta>0?'выше':'ниже')+' порога ('+s.thrTxt+'). До этого: красный до '+fday(r.tFill)
+      +'-го дня, пока коридор шире E; затем жёлтый '+fday(r.tDec-r.tFill)
+      +' дн — объём n набран, коридор сузился до ±'+s.ETxt.replace('E = ','')
+      +', но порог оставался внутри него.');
   }else{
-    setLight('yellow','<b>Жёлтый:</b> коридор сузился до ±E, но порог остаётся внутри '
-      +'коридора — в окне наблюдения решение не принято. Красный закончился '
-      +'≈ на '+fi(dE)+'-й день.');
+    setLight('yellow','<b>Жёлтый:</b> объём n набран на '+fday(r.tFill)+'-й день, коридор сузился '
+      +'до ±E, но в окне наблюдения порог остаётся внутри коридора — решение не принято.');
   }
   $('legE').textContent=s.ETxt+' · '+s.sigmaTxt;
-  $('legS').textContent='Светофор: красный — данных мало, полуширина коридора больше E; '
-    +'жёлтый — коридор сузился до E, но порог внутри; зелёный — коридор устойчиво '
-    +'по одну сторону порога, гипотеза подтверждена или опровергнута.';
-  $('fml').textContent=cur.formula;
-  $('fmlU').textContent=cur.unitN+' (Z = 1,96 — доверие 95\u202F%)';
-  $('fml2').textContent='День ↔ наблюдения: n = приток × дни, поэтому зелёный сигнал ≈ '
-    +fi(Math.ceil(d.greenK))+' наблюдений / '+fi(flow)+' в день ≈ '+fi(dG)+'-й день.';
-  $('fml3').textContent='Фаза 1 = n / приток = '+fi(cur.n)+' / '+fi(flow)+' ≈ '
-    +fi(p1)+' дн · фаза 2 = горизонт метрики = '+fi(p2)+' дн · итог ≈ '+fi(total)+' дн.';
-  var share=Math.round(100*p2/total);
-  $('concl').textContent=(p1<=2
-    ? 'Набор уже не узкое место: срок почти целиком — горизонт метрики ('+fi(p2)
-      +' дн из '+fi(total)+', '+share+'\u202F%). Дальше двигать бегунок бесполезно.'
-    : 'Фаза 2 — '+fi(p2)+' дн из '+fi(total)+' ('+share+'\u202F% срока): её не сжимает '
-      +'никакой приток — горизонт метрики можно только прожить.');
+  $('legS').textContent='Светофор: красный — коридор шире E, данных мало; жёлтый — объём n '
+    +'набран, коридор сузился до ±E, но порог внутри; зелёный — коридор устойчиво по одну '
+    +'сторону порога, гипотеза подтверждена или опровергнута.';
+  $('fml').textContent=c.formula;
+  $('fmlU').textContent=c.unitN+' (Z = 1,96 — доверие 95\u202F%)';
+  $('fml2').textContent='Набор: n(t) = сколько участников уже активировалось. При '
+    +fi(p.cap)+' '+c.sliders.cap.unit+' и лаге '+fi(p.lag)+' дн объём n = '+fi(c.n)
+    +' набран на '+fday(r.tFill)+'-й день — тогда полуширина коридора Z·σ/√n(t) равна ровно E.';
+  $('fml3').textContent=r.reached
+    ? ('Решение: ' +fday(r.tDec)+'-й день. Из них '+fday(r.tFill)+' дн — набор и активация, '
+       +fday(r.tDec-r.tFill)+' дн — ожидание горизонта метрики ('+fi(p.hor)+' дн по каждому участнику).')
+    : 'В окне наблюдения решение не принято: эффект меньше допустимой погрешности E.';
+  var wait=r.reached?(r.tDec-r.tFill):0,tot=r.reached?r.tDec:r.tFill;
+  var share=tot>0?Math.round(100*wait/tot):0;
+  $('concl').textContent=!r.reached
+    ? 'Решение в окне не принято — двигайте бегунки: горизонт наблюдения и пропускную способность.'
+    : (share>=60
+      ? 'Набор уже не узкое место: '+share+'\u202F% срока — ожидание горизонта метрики ('
+        +fday(wait)+' дн из '+fday(tot)+'). Дальше расширять вход бесполезно, горизонт можно только прожить.'
+      : (share<=15
+        ? 'Срок держит набор: '+fday(r.tFill)+' дн из '+fday(tot)+' уходит на то, чтобы участники '
+          +'просто попали в бакет. Здесь помогает пропускная способность и сокращение лага активации.'
+        : 'Срок делится примерно поровну: '+fday(r.tFill)+' дн — набор и активация, '+fday(wait)
+          +' дн — ожидание горизонта метрики. Бегунок пропускной способности сжимает только первую часть.'));
 }
 
 document.addEventListener('click',function(e){
   var b=e.target.closest('.exp-tab');
-  if(b)select(b.getAttribute('data-m'));
+  if(b){select(b.getAttribute('data-c'));return}
+  var k=e.target.closest('.exp-corner');
+  if(k)corner(k.getAttribute('data-corner'));
 });
-$('flow').addEventListener('input',update);
 select(cur.id);
 </script>
 
