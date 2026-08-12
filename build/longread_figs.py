@@ -172,7 +172,7 @@ def tradeoff_scatter():
         s.append(f'<circle cx="{px(t):.0f}" cy="{py(c):.0f}" r="7" fill="{col}" fill-opacity="0.9"/>')
     s.append(_txt(px(5) + 12, py(700) - 4, "Готовый отчёт подрядчика: быстро, но дорого", 12, "700", DEEP))
     s.append(_txt(px(55), py(420) - 14, "Ручная выгрузка: за фронтом, проигрывает всегда", 12, "700", WARN, anchor="middle"))
-    s.append(_txt(px(14) - 10, py(105) - 14, "Витрина DWH: лучший балл", 12, "700", DEEP, anchor="end"))
+    s.append(_txt(px(14) - 10, py(105) - 14, "Витрина DWH: лучшая интегральная оценка", 12, "700", DEEP, anchor="end"))
     s.append(_txt(px(67), py(70) + 26, "Флаг CRM: дёшево, но решение ждёт", 12, "700", DEEP, anchor="middle"))
     return _svg(360, ''.join(s))
 

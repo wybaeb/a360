@@ -21,7 +21,7 @@ import os as _os
 
 from metrics_data import M
 from sources import SOURCES_METRICS, ref_metrics
-from longread_figs import (fig, npv_curve, ci_funnel,
+from longread_figs import (fig, npv_curve,
                            _txt, _plate, _poly, _svg, _axes, DARK, ACC, DEEP, WARN)
 
 READ_MIN = 14
@@ -85,14 +85,104 @@ def npv_curve_lg():
 
 
 def ci_funnel_lg():
-    return _enlarge(ci_funnel(), [
-        (f'font-size="12.5" fill="{WARN}" font-weight="800"',
-         f'font-size="13.5" fill="{WARN}" font-weight="800"'),
-        (f'font-size="12" fill="{DEEP}" font-weight="700"',
-         f'font-size="13" fill="{DEEP}" font-weight="700"'),
-        (f'font-size="11.5" fill="{ACC}" font-weight="700"',
-         f'font-size="13" fill="{ACC}" font-weight="700"'),
-    ])
+    """Последовательное наблюдение метрики — та же модель, что PNG слайда
+    r4_a3 (kk_sber_a360/build/review_r4/fig_ci_real.py, график согласован
+    владельцем в р4): поток Бернулли с истинной конверсией p = 0.23 при
+    пороге решения 0.20 (seed 15), бегущая оценка и 95 % интервал Вильсона;
+    наблюдение закрывается, когда нижняя граница продержалась выше порога
+    30 наблюдений подряд, — n = 869, график обрывается ровно в этой точке.
+    Точки пересчитываются здесь той же симуляцией (numpy), композиция
+    повторяет PNG: подписи линий справа от края данных, плашка события
+    остановки со стрелкой к точке.
+    """
+    import numpy as np
+    P_TRUE, THR, SEED = 0.23, 0.20, 15
+    Z = 1.959963984540054
+    STABLE, N_MAX, N_MIN = 30, 5000, 20
+
+    rng = np.random.default_rng(SEED)
+    hits = rng.random(N_MAX) < P_TRUE
+    k = np.cumsum(hits)
+    n = np.arange(1, N_MAX + 1).astype(float)
+    p = k / n
+    denom = 1 + Z * Z / n
+    centre = (p + Z * Z / (2 * n)) / denom
+    halfw = (Z / denom) * np.sqrt(p * (1 - p) / n + Z * Z / (4 * n * n))
+    lo, hi = centre - halfw, centre + halfw
+    run, stop = 0, None
+    for i in range(N_MIN, N_MAX):
+        run = run + 1 if lo[i] >= THR else 0
+        if run >= STABLE:
+            stop = i
+            break
+    n_stop = int(n[stop])                       # 869 (сходится с PNG слайда)
+    idx = list(range(N_MIN - 1, stop + 1, 2))   # прореживание для веса SVG
+    if idx[-1] != stop:
+        idx.append(stop)
+
+    # геометрия: справа от края данных — свободная зона под подписи (как в PNG)
+    X0, Y0, X1, Y1 = 60, 24, 880, 330
+    YMIN, YMAX = 0.10, 0.40
+    NLIM = n_stop * 1.5
+    gx = lambda v: X0 + (v - N_MIN) / (NLIM - N_MIN) * (X1 - X0)
+    gy = lambda v: Y1 - (min(max(v, YMIN), YMAX) - YMIN) / (YMAX - YMIN) * (Y1 - Y0)
+
+    s = []
+    # сетка и оси
+    for yt in (0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40):
+        s.append(f'<line x1="{X0}" y1="{gy(yt):.1f}" x2="{X1}" y2="{gy(yt):.1f}" '
+                 f'stroke="#e7ece9" stroke-width="1"/>')
+        s.append(_txt(X0 - 8, gy(yt) + 4, f"{yt:.0%}".replace("%", " %"), 11.5,
+                      None, DARK, op=0.6, anchor="end"))
+    for xt in (200, 400, 600, 800, 1000, 1200):
+        s.append(f'<line x1="{gx(xt):.1f}" y1="{Y0}" x2="{gx(xt):.1f}" y2="{Y1}" '
+                 f'stroke="#e7ece9" stroke-width="1"/>')
+        s.append(_txt(gx(xt), Y1 + 18, str(xt), 11.5, None, DARK, op=0.6, anchor="middle"))
+    s.append(_axes(X0, Y0, X1, Y1))
+    s.append(_txt(X1, Y1 + 36, "наблюдений накоплено →", 12, None, DARK, op=0.6, anchor="end"))
+    s.append(_txt(X0 - 8, 12, "конверсия", 12, None, DARK, op=0.6))
+
+    # интервал Вильсона (полоса) + бегущая оценка; график обрывается в n_stop
+    band_up = [(gx(n[i]), gy(hi[i])) for i in idx]
+    band_lo = [(gx(n[i]), gy(lo[i])) for i in idx]
+    area = ' '.join(f'{x:.1f},{y:.1f}' for x, y in band_up) + ' ' + \
+           ' '.join(f'{x:.1f},{y:.1f}' for x, y in reversed(band_lo))
+    s.append(f'<polygon points="{area}" fill="{ACC}" fill-opacity="0.16"/>')
+    s.append(_poly(band_up, ACC, 1.7))
+    s.append(_poly(band_lo, ACC, 1.7))
+    s.append(_poly([(gx(n[i]), gy(p[i])) for i in idx], DEEP, 2.6))
+
+    # порог решения
+    s.append(f'<line x1="{X0}" y1="{gy(THR):.1f}" x2="{X1}" y2="{gy(THR):.1f}" '
+             f'stroke="{WARN}" stroke-width="2" stroke-dasharray="7 5"/>')
+
+    # точка остановки
+    xe = gx(n_stop)
+    s.append(f'<line x1="{xe:.1f}" y1="{Y0 + 4}" x2="{xe:.1f}" y2="{Y1}" '
+             f'stroke="{DARK}" stroke-opacity="0.55" stroke-width="1.4" stroke-dasharray="3 4"/>')
+    s.append(f'<circle cx="{xe:.1f}" cy="{gy(p[stop]):.1f}" r="6" fill="{DEEP}" '
+             f'stroke="#ffffff" stroke-width="2"/>')
+    s.append(f'<circle cx="{xe:.1f}" cy="{gy(lo[stop]):.1f}" r="5" fill="{ACC}" '
+             f'stroke="#ffffff" stroke-width="2"/>')
+
+    # подписи — однотипно, справа от края данных (как в PNG слайда)
+    s.append(_txt(xe + 16, gy(hi[stop]) + 4, "95 % доверительный интервал", 13, "700", ACC))
+    s.append(_txt(xe + 16, gy(p[stop]) + 4, "оценка конверсии", 13, "700", DEEP))
+    s.append(_txt(xe + 16, gy(THR) + 20, "порог решения 20 %", 13, "800", WARN))
+
+    # событие остановки: плашка в свободной зоне справа-снизу, стрелка к точке
+    bx, by, bw, bh = xe + 22, gy(THR) + 30, 250, 66
+    s.append(_plate(bx, by, bw, bh, "#f7fbf8", stroke=ACC))
+    s.append(_txt(bx + 14, by + 20, "наблюдение закрыто:", 13, "700"))
+    s.append(_txt(bx + 14, by + 38, f"n = {n_stop} — нижняя граница", 13, "700"))
+    s.append(_txt(bx + 14, by + 56, "устойчиво выше порога", 13, "700"))
+    ax0, ay0 = bx + 6, by + 6
+    ax1, ay1 = xe + 3, gy(lo[stop]) + 8
+    s.append(f'<path d="M {ax0:.1f} {ay0:.1f} Q {xe - 6:.1f} {by - 4:.1f} {ax1:.1f} {ay1:.1f}" '
+             f'fill="none" stroke="{DARK}" stroke-width="1.6"/>')
+    s.append(f'<polygon points="{ax1 - 5:.1f},{ay1 + 9:.1f} {ax1 + 4:.1f},{ay1 + 8:.1f} '
+             f'{ax1 - 1:.1f},{ay1 - 2:.1f}" fill="{DARK}"/>')
+    return _svg(374, ''.join(s))
 
 
 def accumulation2_lg():
@@ -176,7 +266,7 @@ def tradeoff_scatter_lg():
         s.append(f'<circle cx="{px(t):.0f}" cy="{py(c):.0f}" r="7" fill="{col}" fill-opacity="0.9"/>')
     s.append(_txt(px(5) + 12, py(700) - 4, "Готовый отчёт подрядчика: быстро, но дорого", 13, "700", DEEP))
     s.append(_txt(px(55), py(420) - 14, "Ручная выгрузка: за фронтом, проигрывает всегда", 13, "700", WARN, anchor="middle"))
-    s.append(_txt(px(14) - 10, py(105) - 14, "Витрина DWH: лучший балл", 13, "700", DEEP, anchor="end"))
+    s.append(_txt(px(14) - 10, py(105) - 14, "Витрина DWH: лучшая интегральная оценка", 13, "700", DEEP, anchor="end"))
     s.append(_txt(px(67), py(70) + 26, "Флаг CRM: дёшево, но решение ждёт", 13, "700", DEEP, anchor="middle"))
     return _svg(360, ''.join(s))
 
@@ -478,7 +568,7 @@ ISO/IEC 25012 описывает пятнадцать характеристик
 внутри такого коридора ничего не доказывает. По мере накопления данных коридор
 сужается, и вывод становится достоверным только тогда, когда весь коридор
 оказывается по одну сторону порога решения.</p>
-{fig(ci_funnel_lg(), "Доверительный интервал сужается с накоплением наблюдений; решение достоверно, когда нижняя граница интервала выше порога.")}
+{fig(ci_funnel_lg(), "Симуляция наблюдения (та же модель, что на слайде встречи): поток клиентов с истинной конверсией 23 % при пороге решения 20 %; 95 % интервал Вильсона сужается с накоплением данных. Наблюдение закрыто на n = 869 — нижняя граница устойчиво выше порога, дальше данные не собираются.")}
 <p>Контргипотеза — часть плана эксперимента: заранее сформулированное условие,
 при котором пилот останавливается, даже если целевая метрика выглядит хорошо
 (например, несколько случаев фрода). Отслеживается не только целевая метрика,
