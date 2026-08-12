@@ -9,9 +9,11 @@
 программы (plan/редакционный_стандарт.md).
 
 Математика калькулятора верифицирована по источникам и здесь не меняется:
-правки касаются палитры, навигации, брендинга и языка. Единственное
-исключение — клампинг ll0 в SPRT: в исходнике знак клампа давал ASN(H₀)
-в миллиарды наблюдений.
+правки касаются палитры, навигации, брендинга, языка и вывода результата.
+Исключение одно — клампинг ll0 в SPRT: в исходнике знак клампа давал ASN(H₀)
+в миллиарды наблюдений. Отдельно чинится вывод режима SPRT: исходник показывал
+в крупном результате, «Всего наблюдений» и «Длительности» прочерки, потому что
+брал обнулённый perGroup вместо посчитанного ASN (см. раздел ниже).
 
 Каждая подмена идёт под assert: изменится исходник — сборка упадёт, а не
 соберёт страницу без сообщения об ошибке.
@@ -107,6 +109,97 @@ swap('<header class="header">\n  <div class="brand">',
 # Math.max клампил его к -1e-9, и ASN(H0) показывал ~1.3 млрд вместо сотен/тысяч.
 swap("const ASN_H0 = (a*A + (1-a)*B) / Math.max(ll0,-1e-9);  // could be negative",
      "const ASN_H0 = (a*A + (1-a)*B) / Math.min(ll0,-1e-9);  // ll0 < 0 при p1 > p0; клампим ОТ нуля")
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Вывод результата в режиме SPRT (баг исходника)
+# ═══════════════════════════════════════════════════════════════════════════
+# Было: calcSprt() отдаёт noPerGroup:true, render() обнуляет perGroup в null,
+# и в ветке 'sprt' крупное значение, «Всего наблюдений» и «Длительность»
+# считались от null → fmt(null)='—', human(0)='—'. На экране три прочерка при
+# корректно посчитанном ASN (в карточке «Что считаем» числа были верные).
+#
+# Стало: крупное значение — ASN(H₁), ожидаемый объём наблюдений до остановки
+# при верной альтернативе; рядом в подписи — ASN(H₀). У последовательного
+# теста фиксированного объёма на группу нет, поэтому и подписи полей, и
+# пояснение прямо говорят, что число ожидаемое, а не гарантированное.
+# Сами расчёты (границы Вальда, ASN, Z-значения) не меняются.
+
+# Подписи двух полей крупного результата становятся управляемыми: в SPRT они
+# должны сообщать, что и объём, и срок — ожидаемые.
+swap('<div class="hero-cell"><div class="hero-cell-label">Всего наблюдений</div>'
+     '<div class="hero-cell-val" id="nTotal">—</div></div>\n'
+     '      <div class="hero-cell"><div class="hero-cell-label">Длительность</div>'
+     '<div class="hero-cell-val" id="duration">—</div></div>',
+     '<div class="hero-cell"><div class="hero-cell-label" id="nTotalLabel">Всего наблюдений</div>'
+     '<div class="hero-cell-val" id="nTotal">—</div></div>\n'
+     '      <div class="hero-cell"><div class="hero-cell-label" id="durationLabel">Длительность</div>'
+     '<div class="hero-cell-val" id="duration">—</div></div>')
+
+# В режиме SPRT в поля Z-значений выводятся границы Вальда A и B (r.za и r.zb),
+# а не квантили нормального распределения: подпись «Z_β» стояла над
+# отрицательным числом. Значения не трогаем, подписи делаем управляемыми.
+swap('<div class="hero-cell"><div class="hero-cell-label">Z<sub>α/2</sub></div>'
+     '<div class="hero-cell-val" id="zAlpha">—</div></div>\n'
+     '      <div class="hero-cell"><div class="hero-cell-label">Z<sub>β</sub></div>'
+     '<div class="hero-cell-val" id="zBeta">—</div></div>',
+     '<div class="hero-cell"><div class="hero-cell-label" id="zAlphaLabel">Z<sub>α/2</sub></div>'
+     '<div class="hero-cell-val" id="zAlpha">—</div></div>\n'
+     '      <div class="hero-cell"><div class="hero-cell-label" id="zBetaLabel">Z<sub>β</sub></div>'
+     '<div class="hero-cell-val" id="zBeta">—</div></div>')
+
+# Подписи полей и предупреждения задаются заново при каждом расчёте: иначе при
+# переключении режима на экране остаются подписи и предупреждения предыдущего
+# (предупреждения выставляются только в ветке фиксированного плана).
+swap("  // hero values\n  if(state.test==='mab'){",
+     "  // hero values\n"
+     "  $('#nTotalLabel').textContent='Всего наблюдений';\n"
+     "  $('#durationLabel').textContent='Длительность';\n"
+     "  $('#zAlphaLabel').innerHTML='Z<sub>α/2</sub>';\n"
+     "  $('#zBetaLabel').innerHTML='Z<sub>β</sub>';\n"
+     "  $('#warnArea').innerHTML='';\n"
+     "  if(state.test==='mab'){")
+
+swap("""  } else if(state.test==='sprt'){
+    $('#heroLabel').textContent='Среднее число наблюдений (на группу)';
+    $('#nPerGroup').textContent=fmt(perGroup);
+    $('#heroSub').textContent=`Если истинно H₁ — в среднем останавливаемся через ${fmt(perGroup)} наблюдений на каждую группу.`;
+    const total = perGroup*2;
+    $('#nTotal').textContent=fmt(total);
+    const days = total/Math.max(1,dauEff);
+    $('#duration').textContent=human(days);""",
+     """  } else if(state.test==='sprt'){
+    // У последовательного теста фиксированного объёма на группу нет: есть
+    // ожидаемый объём наблюдений до остановки (ASN), и он разный при верной
+    // H₀ и при верной H₁. Поэтому r.n (=ASN(H₁)) берётся напрямую, а не через
+    // perGroup, который обнулён флагом noPerGroup.
+    const asnH1=r.n, asnH0=r.asnH0;
+    if(isFinite(asnH1)){
+      $('#heroLabel').textContent='Ожидаемый объём до остановки, ASN(H₁)';
+      $('#heroSub').textContent=`Столько наблюдений на каждую группу потребуется в среднем, если верна альтернативная гипотеза. Это ожидаемое, а не гарантированное число: отдельный запуск теста останавливается раньше или позже. Если верна нулевая гипотеза, ожидаемый объём составит ${fmt(asnH0)} наблюдений на группу.`;
+    } else {
+      $('#heroLabel').textContent='Расчёт невозможен';
+      $('#heroSub').textContent='При p₀ = p₁ гипотезы неразличимы, и последовательный тест не останавливается. Задайте разные значения p₀ и p₁.';
+    }
+    $('#nPerGroup').textContent=fmt(asnH1);
+    $('#nTotalLabel').textContent='Ожидаемый объём, обе группы';
+    $('#durationLabel').textContent='Ожидаемый срок';
+    $('#zAlphaLabel').textContent='Граница Вальда A';
+    $('#zBetaLabel').textContent='Граница Вальда B';
+    const total = asnH1*2;
+    $('#nTotal').textContent=fmt(total);
+    const days = total/Math.max(1,dauEff);
+    $('#duration').textContent=human(days);""")
+
+# Разбор расчёта: то же уточнение в карточке «Что считаем».
+swap("""Среднее число наблюдений до решения:
+  ASN(H₁) ≈ ${fmt(ASN_H1)} наблюдений
+  ASN(H₀) ≈ ${fmt(Math.abs(ASN_H0))} наблюдений`,""",
+     """Ожидаемый объём наблюдений до остановки (ASN), на каждую группу:
+  при верной H₁: ≈ ${fmt(ASN_H1)} наблюдений
+  при верной H₀: ≈ ${fmt(Math.abs(ASN_H0))} наблюдений`,""")
+swap(", чем фиксированный план.`,",
+     ", чем фиксированный план. Объём наблюдений заранее не фиксирован, "
+     "поэтому расчёт даёт ожидаемое число наблюдений до остановки, а не гарантированное.`,")
 
 # ── брендинг: DDDM → Аналитика 360 ───────────────────────────────────────────
 swap("<title>Калькулятор выборки для A/B-тестов · DDDM</title>",

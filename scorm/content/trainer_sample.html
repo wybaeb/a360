@@ -320,10 +320,10 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent-mid);b
     <div class="hero-value" id="nPerGroup">—</div>
     <div class="hero-sub" id="heroSub">Задайте параметры слева — расчёт обновится автоматически</div>
     <div class="hero-grid">
-      <div class="hero-cell"><div class="hero-cell-label">Всего наблюдений</div><div class="hero-cell-val" id="nTotal">—</div></div>
-      <div class="hero-cell"><div class="hero-cell-label">Длительность</div><div class="hero-cell-val" id="duration">—</div></div>
-      <div class="hero-cell"><div class="hero-cell-label">Z<sub>α/2</sub></div><div class="hero-cell-val" id="zAlpha">—</div></div>
-      <div class="hero-cell"><div class="hero-cell-label">Z<sub>β</sub></div><div class="hero-cell-val" id="zBeta">—</div></div>
+      <div class="hero-cell"><div class="hero-cell-label" id="nTotalLabel">Всего наблюдений</div><div class="hero-cell-val" id="nTotal">—</div></div>
+      <div class="hero-cell"><div class="hero-cell-label" id="durationLabel">Длительность</div><div class="hero-cell-val" id="duration">—</div></div>
+      <div class="hero-cell"><div class="hero-cell-label" id="zAlphaLabel">Z<sub>α/2</sub></div><div class="hero-cell-val" id="zAlpha">—</div></div>
+      <div class="hero-cell"><div class="hero-cell-label" id="zBetaLabel">Z<sub>β</sub></div><div class="hero-cell-val" id="zBeta">—</div></div>
     </div>
   </div>
 
@@ -556,10 +556,10 @@ function calcSprt(){
   A = ln((1−β)/α) = ${A.toFixed(3)}     ← если log-likelihood ≥ A, принимаем H₁
   B = ln(β/(1−α)) = ${B.toFixed(3)}     ← если ≤ B, принимаем H₀
 
-Среднее число наблюдений до решения:
-  ASN(H₁) ≈ ${fmt(ASN_H1)} наблюдений
-  ASN(H₀) ≈ ${fmt(Math.abs(ASN_H0))} наблюдений`,
-    explain:`SPRT (Wald's Sequential Probability Ratio Test) — последовательный тест: на каждом наблюдении пересчитываем лог-отношение вероятностей H₁/H₀ и останавливаемся, как только пересекли границу. <strong>В среднем требует на 30–50% меньше наблюдений</strong>, чем фиксированный план.`,
+Ожидаемый объём наблюдений до остановки (ASN), на каждую группу:
+  при верной H₁: ≈ ${fmt(ASN_H1)} наблюдений
+  при верной H₀: ≈ ${fmt(Math.abs(ASN_H0))} наблюдений`,
+    explain:`SPRT (Wald's Sequential Probability Ratio Test) — последовательный тест: на каждом наблюдении пересчитываем лог-отношение вероятностей H₁/H₀ и останавливаемся, как только пересекли границу. <strong>В среднем требует на 30–50% меньше наблюдений</strong>, чем фиксированный план. Объём наблюдений заранее не фиксирован, поэтому расчёт даёт ожидаемое число наблюдений до остановки, а не гарантированное.`,
     noPerGroup:true};
 }
 
@@ -581,6 +581,11 @@ function render(){
   $('#zBeta').textContent=r.zb?r.zb.toFixed(3):'—';
 
   // hero values
+  $('#nTotalLabel').textContent='Всего наблюдений';
+  $('#durationLabel').textContent='Длительность';
+  $('#zAlphaLabel').innerHTML='Z<sub>α/2</sub>';
+  $('#zBetaLabel').innerHTML='Z<sub>β</sub>';
+  $('#warnArea').innerHTML='';
   if(state.test==='mab'){
     $('#heroLabel').textContent='Горизонт показов (всего)';
     $('#nPerGroup').textContent=fmt(r.total);
@@ -589,10 +594,24 @@ function render(){
     const days = r.total / Math.max(1,dauEff);
     $('#duration').textContent=human(days);
   } else if(state.test==='sprt'){
-    $('#heroLabel').textContent='Среднее число наблюдений (на группу)';
-    $('#nPerGroup').textContent=fmt(perGroup);
-    $('#heroSub').textContent=`Если истинно H₁ — в среднем останавливаемся через ${fmt(perGroup)} наблюдений на каждую группу.`;
-    const total = perGroup*2;
+    // У последовательного теста фиксированного объёма на группу нет: есть
+    // ожидаемый объём наблюдений до остановки (ASN), и он разный при верной
+    // H₀ и при верной H₁. Поэтому r.n (=ASN(H₁)) берётся напрямую, а не через
+    // perGroup, который обнулён флагом noPerGroup.
+    const asnH1=r.n, asnH0=r.asnH0;
+    if(isFinite(asnH1)){
+      $('#heroLabel').textContent='Ожидаемый объём до остановки, ASN(H₁)';
+      $('#heroSub').textContent=`Столько наблюдений на каждую группу потребуется в среднем, если верна альтернативная гипотеза. Это ожидаемое, а не гарантированное число: отдельный запуск теста останавливается раньше или позже. Если верна нулевая гипотеза, ожидаемый объём составит ${fmt(asnH0)} наблюдений на группу.`;
+    } else {
+      $('#heroLabel').textContent='Расчёт невозможен';
+      $('#heroSub').textContent='При p₀ = p₁ гипотезы неразличимы, и последовательный тест не останавливается. Задайте разные значения p₀ и p₁.';
+    }
+    $('#nPerGroup').textContent=fmt(asnH1);
+    $('#nTotalLabel').textContent='Ожидаемый объём, обе группы';
+    $('#durationLabel').textContent='Ожидаемый срок';
+    $('#zAlphaLabel').textContent='Граница Вальда A';
+    $('#zBetaLabel').textContent='Граница Вальда B';
+    const total = asnH1*2;
     $('#nTotal').textContent=fmt(total);
     const days = total/Math.max(1,dauEff);
     $('#duration').textContent=human(days);
