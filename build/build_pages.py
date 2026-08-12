@@ -193,6 +193,19 @@ PAGES = [
      "Предчтение к Шагу 2 (20 августа). Чтение — 12 минут."),
 ]
 
+# Страницы, собранные не здесь: их HTML авторский, целиком лежит в scorm/content
+# и приходит из отдельного генератора. Через build_pages они проходят только
+# ради гейта — иначе в корень попадает открытый текст. Источник — открытая
+# копия в scorm/content, содержимое не трогаем.
+STATIC_PAGES = [
+    ("trainer_tree.html", "Тренажёр: Дерево метрик · Аналитика 360",
+     "Тренажёр: дерево метрик",
+     "Конструктор дерева метрик: банковские кейсы, проверка с разбором ошибок."),
+    ("trainer_sample.html", "Тренажёр: расчёт выборки · Аналитика 360",
+     "Тренажёр: расчёт выборки",
+     "Сколько наблюдений нужно, чтобы доверять результату, и за сколько дней они накопятся."),
+]
+
 
 def make_txt():
     """TXT-копии выгрузок: веб-версия GigaChat принимает txt, но не csv."""
@@ -229,6 +242,30 @@ def main():
             gate.wrap(html, a.password, title, heading, intro), encoding="utf-8")
         print(f"  {name:15} открытая {len(html) // 1024:>4} КБ · "
               f"зашифрованная {len(( ROOT / name).read_text(encoding='utf-8')) // 1024:>4} КБ")
+
+    for name, title, heading, intro in STATIC_PAGES:
+        src = scorm / name
+        if not src.exists():
+            sys.exit(f"нет открытой копии {src} — страницу собирает внешний "
+                     f"генератор, положите её в scorm/content и повторите")
+        html = src.read_text(encoding="utf-8")
+        (ROOT / name).write_text(
+            gate.wrap(html, a.password, title, heading, intro), encoding="utf-8")
+        print(f"  {name:15} внешняя страница · зашифрована из scorm/content")
+
+    # Ни одна страница не должна попасть в корень открытой: в корне GitHub Pages
+    # лежит только шифротекст. Проверяем состав обеих версий на каждой сборке —
+    # раньше страницы внешних генераторов копировали в корень мимо гейта.
+    missing = sorted(p.name for p in scorm.glob("*.html")
+                     if not (ROOT / p.name).exists())
+    plain = sorted(p.name for p in scorm.glob("*.html")
+                   if (ROOT / p.name).exists()
+                   and "const DATA={salt:" not in (ROOT / p.name).read_text(
+                       encoding="utf-8", errors="replace"))
+    if missing or plain:
+        sys.exit(f"гейт не сошёлся: без зашифрованной версии {missing}; "
+                 f"в корне открытым текстом {plain}")
+    print(f"  гейт: {len(list(scorm.glob('*.html')))} страниц, все зашифрованы")
 
     # Ассеты, данные и готовые отчёты нужны обеим версиям: пути в HTML
     # относительные, поэтому внутри LMS всё работает так же, как на Pages.
