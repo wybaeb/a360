@@ -30,10 +30,19 @@
 """
 import json
 import pathlib
+import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import theme
 from metrics_data import metric
+
+
+def theme_font(name):
+    """Шрифтовой стек курса из build/theme.py (--font или --mono)."""
+    m = re.search(rf"--{name}:\s*([^;]+);", theme.CSS)
+    assert m, f"в theme.py не найден шрифтовой стек --{name}"
+    return m.group(1).strip()
 
 BUILD = pathlib.Path(__file__).resolve().parent
 ROOT = BUILD.parent
@@ -442,6 +451,24 @@ def swap(old, new, what):
     t = t.replace(old, new, 1)
 
 
+# ── 0. Шрифты: только системные, без обращений в сеть ──
+# Исходник тянул Inter из Google Fonts. В закрытом контуре банка этот запрос
+# не проходит: в консоли ошибка, шрифт всё равно откатывается на системный.
+# Вдобавок страница была набрана Inter, а остальные страницы курса — семейством
+# из build/theme.py, и в одном пакете оказывались две типографики. Стеки берём
+# оттуда же: в общей оболочке они системные по тому же соображению.
+swap('<link rel="preconnect" href="https://fonts.googleapis.com">\n'
+     '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
+     '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700'
+     '&display=swap" rel="stylesheet">\n', "", "google fonts links")
+swap(".calc-example{font-size:12px;color:var(--info);margin-top:6px;padding:6px 10px;"
+     "background:rgba(59,130,246,.08);border-radius:6px;"
+     "font-family:'SF Mono','Fira Code',monospace;line-height:1.5}",
+     ".calc-example{font-size:12px;color:var(--info);margin-top:6px;padding:6px 10px;"
+     "background:rgba(59,130,246,.08);border-radius:6px;"
+     f"font-family:{theme_font('mono')};line-height:1.5}}",
+     "calc-example mono font")
+
 # ── 1. Заголовки ──
 swap("<title>Тренажёр: Дерево метрик", "<title>Тренажёр: Дерево метрик · Аналитика 360", "title")
 swap('<span class="header-tag">тренажёр</span>',
@@ -478,6 +505,11 @@ t = t[:i0] + """:root {
   --radius-sm:      8px;
   --font:           'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 }""" + t[i1:]
+
+# Семейство курса вместо Inter (см. раздел 0 выше): подмена идёт после
+# переписывания :root, поэтому правится уже вставленная строка.
+swap("  --font:           'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;",
+     f"  --font:           {theme_font('font')};", "font stack")
 
 style_end = t.find("</style>")
 head_css = t[:style_end].replace("rgba(255,255,255", "rgba(16,40,28")
@@ -1285,6 +1317,65 @@ EXTRA_BODY = """
 </script>
 """
 swap("</body>", EXTRA_BODY + "</body>", "body extension")
+
+# ── 9. Узкий экран ──
+# Исходный конструктор свёрстан под фиксированную ширину: html,body{overflow:hidden}
+# и ни одного медиазапроса. На ширине 390 px содержимое шапки (переключатель кейса
+# и легенда) уходило за правый край и не прокручивалось — управление было физически
+# недостижимо. Правило: до 1024 px шапка и панель кнопок переносятся по строкам,
+# рабочее поле остаётся широким, но прокручивается внутри своего контейнера.
+# От 1024 px не применяется ничего из этого блока — десктоп остаётся прежним.
+NARROW_CSS = """
+/* ── A360: узкий экран ───────────────────────────────────────────────────
+   До 1024 px управление переносится по строкам, холст прокручивается внутри
+   рабочей области. От 1024 px правила ниже не действуют. */
+.narrow-note{display:none}
+@media (max-width:1023px){
+  #app{height:100vh;height:100dvh}
+  .header{flex-wrap:wrap;gap:8px 12px;padding:9px 14px}
+  .header-brand{flex:1 1 auto;min-width:0}
+  .header-title{font-size:15px}
+  .case-select{flex:1 1 100%;width:100%;min-width:0}
+  .legend{flex:1 1 100%;margin-left:0;flex-wrap:wrap;gap:6px 14px}
+  .case-bar{padding:6px 14px 8px}
+  /* палитра остаётся 260 px: у́же карточка метрики наезжает на кнопку «?» */
+  .workspace{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+  .canvas-wrap{flex:1 0 auto;min-width:600px}
+  .toolbar{flex-wrap:wrap;gap:8px;padding:9px 14px}
+  .toolbar .spacer{display:none}
+  .toolbar .btn{order:1;flex:1 1 auto;padding:8px 12px}
+  .toolbar .eco-badge{order:2;flex:1 1 100%;display:block;margin-right:0;
+    white-space:normal;line-height:1.5}
+  .toolbar-info{order:3;flex:1 1 100%}
+  .results{padding:20px 18px;max-height:88vh}
+}
+@media (max-width:767px){
+  .narrow-note{display:flex;align-items:flex-start;gap:9px;flex-shrink:0;
+    padding:9px 14px;font-size:12px;line-height:1.45;color:var(--text-sec);
+    background:var(--bg-elevated);border-bottom:1px solid rgba(16,40,28,.06);
+    border-left:3px solid var(--warn)}
+  .narrow-note-i{flex:none;width:16px;height:16px;margin-top:1px;border-radius:50%;
+    background:var(--warn);color:#fff;font-size:11px;font-weight:700;line-height:16px;
+    text-align:center}
+}
+"""
+swap("</style>", NARROW_CSS + "</style>", "css узкого экрана")
+
+swap('  <div class="workspace">',
+     '  <div class="narrow-note" id="narrowNote">\n'
+     '    <span class="narrow-note-i" aria-hidden="true">i</span>\n'
+     '    <span>Конструктор дерева рассчитан на работу за компьютером: карточки метрик '
+     'переносятся на холст мышью. С телефона доступны условие кейса, справочник метрик '
+     'и разбор конфигурации после проверки.</span>\n'
+     '  </div>\n'
+     '  <div class="workspace">',
+     "плашка узкого экрана")
+
+
+# Ни одного внешнего адреса на странице: в закрытом контуре банка такой запрос
+# не дойдёт, а ссылка на публичный сайт выкидывает участника из LMS.
+assert "//fonts.googleapis.com" not in t and "//fonts.gstatic.com" not in t
+assert "wybaeb.github.io" not in t
 
 
 def main():

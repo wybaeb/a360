@@ -21,9 +21,14 @@
 Запуск:  python3 build/trainer_sample.py
 """
 import pathlib
+import re
+import sys
 
 BUILD = pathlib.Path(__file__).resolve().parent
 ROOT = BUILD.parent
+sys.path.insert(0, str(BUILD))
+import theme  # noqa: E402  — общая типографика курса
+
 SRC = BUILD / "src" / "sample_size_calculator.html"
 # Открытая версия страницы кладётся только в scorm/content: в корень репозитория
 # её переносит build_pages.py, зашифровав парольным гейтом (STATIC_PAGES).
@@ -38,6 +43,30 @@ def swap(old, new, count=1):
     assert html.count(old) == count, (
         f"якорь не найден ({html.count(old)} вместо {count}): {old[:70]!r}")
     html = html.replace(old, new)
+
+
+def theme_font(name):
+    """Шрифтовой стек курса из build/theme.py (--font или --mono)."""
+    m = re.search(rf"--{name}:\s*([^;]+);", theme.CSS)
+    assert m, f"в theme.py не найден шрифтовой стек --{name}"
+    return m.group(1).strip()
+
+
+# ── шрифты: только системные, без обращений в сеть ──────────────────────────
+# Исходник тянул Inter и JetBrains Mono из Google Fonts. В закрытом контуре
+# банка такой запрос не проходит: в консоли ошибка, шрифт всё равно падает
+# на системный. Вдобавок две страницы тренажёров были набраны Inter, а
+# остальные восемь — семейством курса, и в одном пакете оказывались две
+# типографики. Берём стеки из общей оболочки (build/theme.py), где они
+# системные по тому же соображению.
+swap('<link rel="preconnect" href="https://fonts.googleapis.com">\n'
+     '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
+     '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700'
+     '&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">\n', "")
+swap("  --font:         'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;\n"
+     "  --font-mono:    'JetBrains Mono','SF Mono',Consolas,monospace;",
+     f"  --font:         {theme_font('font')};\n"
+     f"  --font-mono:    {theme_font('mono')};")
 
 
 # ── палитра: тёмная DDDM → светлая Сбер ──────────────────────────────────────
@@ -109,6 +138,88 @@ swap('<header class="header">\n  <div class="brand">',
 # Math.max клампил его к -1e-9, и ASN(H0) показывал ~1.3 млрд вместо сотен/тысяч.
 swap("const ASN_H0 = (a*A + (1-a)*B) / Math.max(ll0,-1e-9);  // could be negative",
      "const ASN_H0 = (a*A + (1-a)*B) / Math.min(ll0,-1e-9);  // ll0 < 0 при p1 > p0; клампим ОТ нуля")
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Набор параметров и ползунок: одно и то же число (баг исходника)
+# ═══════════════════════════════════════════════════════════════════════════
+# Было: набор «Завершение регистрации» кладёт p₀ = 60%, а у ползунка #p0
+# стоял max="50". applyPreset писал 60 в состояние и в подпись, браузер зажимал
+# ползунок до 50. Расчёт шёл по 60%, ползунок стоял на 50%, и первое же касание
+# ползунка молча меняло базу на 50% — результат прыгал без действий участника.
+#
+# Чиним по существу, в двух местах:
+#   1. диапазон ползунка. Базовая конверсия 60% для завершения регистрации —
+#      правдоподобная величина (обязательный шаг воронки), таких метрик в банке
+#      много: доля дошедших до конца анкеты, доля подтверждённых заявок,
+#      отклик на предодобренное предложение. Верхняя граница 50% отрезала
+#      целый класс метрик, и подсказка «выше 50% — проверьте измерение»
+#      висела над недостижимым значением. Ставим max = 95%;
+#   2. сам applyPreset: в состояние теперь идёт то, что после присвоения
+#      реально стоит на контроле. Если пресет когда-нибудь снова выйдет за
+#      границы, расчёт и ползунок всё равно покажут одно число.
+#
+# Проверка соответствия наборов и контролов вынесена в конец файла: сборка
+# падает, если хотя бы одно значение набора не попадает в диапазон контрола.
+swap('<input type="range" id="p0" min="0.1" max="50" step="0.1" value="5">',
+     '<input type="range" id="p0" min="0.1" max="95" step="0.1" value="5">')
+
+# Верхняя граница p₀ выросла, и стала достижима область, где p₁ = p₀ × (1+MDE)
+# выходит за 100%: дисперсия p₁(1−p₁) становится отрицательной, n — отрицательным,
+# а на экране появлялись прочерк и предупреждение «очень маленькая выборка».
+# Считать там нечего, поэтому расчёт останавливается и прямо говорит почему —
+# так же, как в SPRT при p₀ = p₁.
+swap("""  const p0=state.p0/100, lift=state.mdeRel/100;
+  const p1=p0*(1+lift);""",
+     """  const p0=state.p0/100, lift=state.mdeRel/100;
+  const p1=p0*(1+lift);
+  if(p1>=1) return {n:Infinity,za:0,zb:0,impossible:true,
+    formula:`p₁ = p₀ × (1 + MDE) = ${(p1*100).toFixed(1)}%
+  Доля не может быть больше 100%, поэтому такой прирост недостижим.`,
+    explain:`При базовой конверсии <strong>p₀ = ${(p0*100).toFixed(1)}%</strong> относительный прирост <strong>+${(lift*100).toFixed(0)}%</strong> даёт ожидаемую конверсию выше 100%. Уменьшите базовую конверсию или минимальный эффект.`};""")
+
+swap("""  } else {
+    $('#heroLabel').textContent='Размер выборки на группу';
+    $('#nPerGroup').textContent=fmt(perGroup);""",
+     """  } else if(r.impossible){
+    $('#heroLabel').textContent='Расчёт невозможен';
+    $('#nPerGroup').textContent='—';
+    $('#heroSub').textContent='Ожидаемая конверсия p₁ = p₀ × (1 + MDE) выходит за 100%. Уменьшите базовую конверсию p₀ или минимальный эффект MDE.';
+    $('#nTotal').textContent='—';
+    $('#duration').textContent='—';
+  } else {
+    $('#heroLabel').textContent='Размер выборки на группу';
+    $('#nPerGroup').textContent=fmt(perGroup);""")
+
+# Форматирование подписи у каждого ползунка своё (toFixed(1) для долей,
+# toFixed(0) для счётных величин). Набор параметров писал в подпись сырое
+# число из набора, минуя это форматирование, — подпись расходилась с той,
+# что появится после первого касания ползунка. Запоминаем форматтеры при
+# привязке и переиспользуем их в applyPreset.
+swap("""function bindRange(id,key,fmtfn){
+  const el=document.getElementById(id);
+  if(!el) return;""",
+     """const RANGE_FMT={};
+function bindRange(id,key,fmtfn){
+  const el=document.getElementById(id);
+  if(!el) return;
+  if(fmtfn) RANGE_FMT[key]=fmtfn;""")
+
+swap("  for(const k in p){ if(k==='test') continue; state[k]=p[k]; const el=document.getElementById(k); "
+     "if(el){ el.value=p[k]; const lab=document.getElementById(k+'Val'); if(lab) lab.textContent=p[k]; }}",
+     """  for(const k in p){
+    if(k==='test') continue;
+    const el=document.getElementById(k);
+    if(!el){ state[k]=p[k]; continue; }
+    el.value=p[k];
+    // Браузер зажимает value контрола в его границы min/max/step. В состояние
+    // берём то, что после присвоения реально стоит на контроле: иначе расчёт
+    // пойдёт по одному числу, ползунок будет стоять на другом, и первое же
+    // касание ползунка изменит результат без действия участника.
+    const v=parseFloat(el.value);
+    state[k]=isFinite(v)?v:p[k];
+    const lab=document.getElementById(k+'Val');
+    if(lab) lab.textContent=RANGE_FMT[k]?RANGE_FMT[k](state[k]):state[k];
+  }""")
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Вывод результата в режиме SPRT (баг исходника)
@@ -331,10 +442,16 @@ swap("Конверсия &lt; 1% — выборка взлетит до соте
      "метрики уровнем выше в воронке.")
 swap("Здоровый рабочий диапазон для CR/CTR/retention.",
      "Рабочий диапазон для CR/CTR/retention.")
+# Подсказка про высокую базовую конверсию раньше объявляла подозрительным любое
+# значение выше 50%. После расширения диапазона ползунка до 95% под неё попадает
+# и штатный набор «Завершение регистрации» (p₀ = 60%), где высокая доля —
+# нормальное свойство обязательного шага воронки. Оговорка остаётся, но
+# привязана к типу шага, а не к самому числу.
 swap("Высокая базовая — выборка маленькая. Проверь, что метрика всё ещё чувствительна "
      "(часто > 50% = плохо измеряем).",
-     "Высокая базовая конверсия — выборка небольшая. Проверьте, что метрика сохраняет "
-     "чувствительность: значение выше 50% часто означает неудачно выбранное измерение.")
+     "Высокая базовая конверсия — выборка небольшая. У обязательного шага воронки "
+     "это нормально; у необязательного проверьте, что метрика сохраняет "
+     "чувствительность.")
 swap("MDE &lt; 3% (относительно) почти не отличим от шума. Реалистично только при огромном трафике.",
      "MDE &lt; 3% (относительно) почти неотличим от шума. Достижимо только при очень "
      "большом трафике.")
@@ -370,6 +487,79 @@ swap("чтобы определить лучший с малым «регрет�
      "чтобы определить лучший вариант с малыми потерями от исследования.")
 swap("<strong>В среднем требует на 30–50% меньше выборки</strong>, чем фиксированный план.",
      "<strong>В среднем требует на 30–50% меньше наблюдений</strong>, чем фиксированный план.")
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Проверка: каждое значение каждого набора параметров попадает в свой контрол
+# ═══════════════════════════════════════════════════════════════════════════
+# Набор параметров и ползунок — два независимых места в исходнике, и разойтись
+# они могут молча: браузер зажмёт значение ползунка в его границы, а расчёт
+# пойдёт по числу из набора. Поэтому сборка сверяет их сама и падает, если
+# значение набора выходит за min/max контрола или не ложится на его шаг.
+
+def _controls(page):
+    """Диапазоны контролов страницы: {id: (min, max, step)} — None, если не задан."""
+    out = {}
+    for tag in re.findall(r"<input[^>]*>", page):
+        cid = re.search(r'id="([^"]+)"', tag)
+        if not cid:
+            continue
+        def _num(attr):
+            m = re.search(rf'{attr}="([^"]+)"', tag)
+            if not m:
+                return None
+            try:
+                return float(m.group(1))
+            except ValueError:      # step="any"
+                return None
+        out[cid.group(1)] = (_num("min"), _num("max"), _num("step"))
+    return out
+
+
+def _presets(page):
+    """Наборы параметров страницы: {id: {ключ: значение}} из объекта PRESETS."""
+    block = re.search(r"const PRESETS=\{(.*?)\n\};", page, re.S)
+    assert block, "в странице не найден объект PRESETS"
+    out = {}
+    for name, body in re.findall(r"(\w+):\{([^}]*)\}", block.group(1)):
+        vals = {}
+        for k, v in re.findall(r"(\w+):'?([-\w.]+)'?", body):
+            try:
+                vals[k] = float(v)
+            except ValueError:
+                vals[k] = v          # test:'prop' и подобное
+        out[name] = vals
+    return out
+
+
+def check_presets(page):
+    """Сверка наборов параметров с диапазонами контролов; список расхождений."""
+    controls, bad = _controls(page), []
+    for name, vals in _presets(page).items():
+        for key, val in vals.items():
+            if key == "test" or key not in controls:
+                continue
+            lo, hi, step = controls[key]
+            if lo is not None and val < lo:
+                bad.append(f"{name}.{key}={val:g} < min={lo:g}")
+            if hi is not None and val > hi:
+                bad.append(f"{name}.{key}={val:g} > max={hi:g}")
+            if step and lo is not None:
+                # значение обязано ложиться на шаг ползунка: иначе браузер
+                # округлит его к ближайшему допустимому и разойдётся с расчётом
+                steps = (val - lo) / step
+                if abs(steps - round(steps)) > 1e-6:
+                    bad.append(f"{name}.{key}={val:g} не ложится на шаг {step:g}")
+    return bad
+
+
+_BAD = check_presets(html)
+assert not _BAD, "наборы параметров разошлись с контролами: " + "; ".join(_BAD)
+
+# Ни одного внешнего адреса на странице: в закрытом контуре банка такой запрос
+# просто не дойдёт (см. подмену шрифтов выше).
+assert "//fonts.googleapis.com" not in html and "//fonts.gstatic.com" not in html
+assert "wybaeb.github.io" not in html
 
 
 def main():
