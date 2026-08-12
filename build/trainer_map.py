@@ -2,11 +2,16 @@
 """Тренажёр «Карта источников данных» (Шаг 1, T1_3).
 
 Конструктор карты по маршруту вопрос → метрики → источники → качество →
-master-source → действия. Три пресета — кейсы встречи (Продукт / Процесс /
-Бизнес), у каждого встроенный эталон (переключатель «Эталон» — для показа
-ведущим и самопроверки). Четвёртая вкладка — пустая карта своего
-подразделения: это и есть домашний артефакт A1, кнопка экспорта собирает
-его в Markdown по структуре template_data_source_map.md.
+master-source → действия. Три кейса встречи (Продукт / Процесс / Бизнес),
+у каждого встроенный эталон (переключатель «Эталон» — read-only разбор со
+встречи). Четвёртая вкладка — карта своего подразделения: домашний артефакт
+A1, кнопка экспорта собирает его в Markdown по структуре
+template_data_source_map.md. Пятнадцать эталонов-пресетов показаны галереей
+карточек на всех вкладках: выбор карточки сразу заполняет редактируемую
+форму A1. Промпт проверки карты — один блок с тумблером «Шаблон |
+Заполненный» и цветовым кодированием (контрол по образцу проекта Bricks,
+BR3_Launcher): шаблонные выражения в [скобках] — жёлтым, подставленные из
+карты значения — зелёным; кнопка копирует вариант, выбранный тумблером.
 
 Эталоны здесь — те же, что в sber-a360-materials (example_filled_map.md,
 example_filled_process.md, example_master_source.md): тренажёр их показывает,
@@ -627,8 +632,10 @@ def body():
   <div class="eyebrow">Карпов Курсы × Сбер · Аналитика 360 · Шаг 1</div>
   <h1>Тренажёр: карта источников данных</h1>
   <p class="lead">Конструктор карты по маршруту встречи: вопрос → метрики → источники →
-     проверка качества → master-source → действия. Три кейса с эталонами и четвёртая
-     вкладка — карта вашего подразделения, которая экспортируется в артефакт A1.</p>
+     проверка качества → master-source → действия. Три кейса с эталонами, галерея из
+     15 эталонов-пресетов, заполняющих карту одним нажатием, и вкладка «Моё
+     подразделение» — карта, которая экспортируется в артефакт A1 и проверяется
+     промптом в GigaChat.</p>
   <div class="meta">
     <span class="chip">Кейсы <b>3 + свой</b></span>
     <span class="chip">Эталоны-пресеты <b>15</b></span>
@@ -668,28 +675,45 @@ def body():
   padding:2px 8px;font-size:12.5px;margin-left:8px;vertical-align:middle}
 .dmz .cl label{display:block;margin:4px 0;font-size:14.5px}
 .dmz .okmsg{color:#0f7a46;font-size:13.5px;margin-left:8px}
-.dmz .preset-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0 2px}
-.dmz .preset-row select{flex:1 1 280px;width:auto;min-width:220px}
-.dmz .b-pre{border:0;border-radius:9px;padding:8px 15px;cursor:pointer;font:inherit;
-  font-size:14.5px;background:var(--acc);color:#fff}
-.dmz .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
-@media(max-width:860px){.dmz .pgrid{grid-template-columns:1fr}}
-.dmz .pgrid h4{margin:0 0 8px;font-size:15px}
+.dmz .egal{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:9px;margin:10px 0 2px}
+.dmz .ecard{border:1.5px solid var(--line);background:#fff;border-radius:11px;padding:9px 11px;
+  cursor:pointer;font:inherit;text-align:left;display:flex;flex-direction:column;gap:5px}
+.dmz .ecard:hover{border-color:var(--acc)}
+.dmz .ecard.on{border-color:var(--acc);background:var(--acc-soft)}
+.dmz .ecard b{font-size:14px;line-height:1.3}
+.dmz .egroup{align-self:flex-start;font-size:11px;font-weight:700;border-radius:5px;
+  padding:1px 7px;letter-spacing:.02em}
+.dmz .eg-p{background:#e3f2ea;color:#0f7a46}
+.dmz .eg-x{background:#e8e3f6;color:#6b41ad}
+.dmz .eg-k{background:#fdeee3;color:#b05c1c}
+.dmz .pctl{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:10px 0 6px}
+.dmz .pctl-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  flex-wrap:wrap;padding:8px 10px;background:#20262e}
+.dmz .psw{display:flex;border:1.5px solid #4a5462;border-radius:8px;overflow:hidden}
+.dmz .psw button{border:0;background:transparent;color:#aeb9c6;padding:6px 13px;cursor:pointer;
+  font:inherit;font-size:13.5px}
+.dmz .psw button.on{background:var(--acc);color:#fff}
+.dmz .b-cp{border:0;border-radius:8px;background:var(--acc);color:#fff;padding:7px 14px;
+  cursor:pointer;font:inherit;font-size:13.5px}
+.dmz .b-cp.done{background:#0f7a46}
+.dmz .pctl pre{margin:0;padding:14px 16px;background:#20262e;color:#e7edf3;
+  font:13px/1.7 var(--mono);white-space:pre-wrap;word-break:break-word;max-height:480px;overflow:auto}
+.dmz .phx{background:#ffedaa;color:#8a1c4a;border-radius:3px;padding:0 3px;font-weight:600}
+.dmz .phv{background:rgba(32,186,114,.18);color:#8ee7b8;border-radius:3px;padding:0 2px}
+.dmz .pstate{font-size:12.5px;color:#aeb9c6;padding:8px 16px 10px;background:#20262e;margin:0;
+  border-top:1px solid #313a46}
 </style>
 
 <div class="dmz">
   <div class="dmz-tabs" id="dmzTabs"></div>
   <div class="card acc"><p id="dmzLegend" style="margin:0"></p></div>
-  <div class="card" id="dmzPre" style="display:none">
-    <b>Эталоны-пресеты: начните с готовой карты</b>
-    <p class="hint" style="margin:6px 0 0">15 предзаполненных карт под типовые кейсы банка.
-    Выбор пресета заполняет форму этой вкладки целиком — дальше замените учебные
-    формулировки, источники и владельцев на свои. Числа в пресетах учебные.</p>
-    <div class="preset-row">
-      <select id="epSel"></select>
-      <button class="b-pre" id="bPreApply" type="button">Заполнить карту пресетом</button>
-      <span class="okmsg" id="preMsg"></span>
-    </div>
+  <div class="card" id="dmzPre">
+    <b>15 эталонов-пресетов: выберите похожий кейс — карта заполнится сразу</b>
+    <p class="hint" style="margin:6px 0 0">Эталон заполняет редактируемую карту на вкладке
+    «Моё подразделение · A1»: появляются строки таблиц с текстами, любое поле можно менять —
+    замените учебные формулировки, источники и владельцев на свои. Числа в эталонах учебные.
+    <span class="okmsg" id="preMsg"></span></p>
+    <div class="egal" id="epGal"></div>
   </div>
   <div class="dmz-mode" id="dmzMode">
     <button id="mMy" class="on" type="button">Моя карта</button>
@@ -707,8 +731,10 @@ def body():
   <div id="dmzChecks" class="card"></div>
 
   <h3>Проверка готовой карты промптом</h3>
-  <p class="hint">Когда карта заполнена, отдайте её на проверку GigaChat. Промпт справа
-  собирается из вашей карты автоматически и обновляется при каждом изменении формы.</p>
+  <p class="hint">Когда карта заполнена, отдайте её на проверку GigaChat: промпт ниже
+  собирается из вашей карты автоматически и обновляется при каждом изменении формы.
+  Переключатель показывает либо промпт-шаблон, либо промпт, заполненный вашей картой;
+  кнопка копирует тот вариант, который выбран.</p>
   <div class="card"><b>Что проверяет этот промпт:</b>
     <ol style="margin:6px 0 0;padding-left:22px">
       <li><b>Связность.</b> Ведёт ли цепочка вопрос → метрики → источники → действия
@@ -720,16 +746,20 @@ def body():
           master-source там, где источников два, где риск дублей и расхождения определений.</li>
     </ol>
   </div>
-  <div class="pgrid">
-    <div>
-      <h4>Промпт-шаблон (плейсхолдеры в скобках)</h4>
-      <div class="prompt"><button class="copy" type="button">Копировать</button><pre id="dmzTpl"></pre></div>
+  <div class="pctl">
+    <div class="pctl-head">
+      <div class="psw" role="group" aria-label="Режим промпта">
+        <button id="swTpl" type="button">Шаблон</button>
+        <button id="swFill" class="on" type="button">Заполненный</button>
+      </div>
+      <button class="b-cp" id="bCopyMode" type="button">Копировать заполненный промпт</button>
     </div>
-    <div>
-      <h4>Промпт, заполненный из вашей карты</h4>
-      <div class="prompt"><button class="copy" id="bCopyFilled" type="button">Копировать заполненный промпт</button><pre id="dmzFilled"></pre></div>
-    </div>
+    <pre id="dmzPview"></pre>
+    <p class="pstate" id="pState"></p>
   </div>
+  <p class="hint">Жёлтым выделены шаблонные выражения в [квадратных скобках], зелёным —
+  значения, подставленные из вашей карты. Заполненный промпт вставьте в GigaChat —
+  ассистент выполнит первичную эвристическую проверку карты по трём пунктам выше.</p>
 
   <h3>Чек-лист самопроверки</h3>
   <div class="cl" id="dmzCl"></div>
@@ -811,54 +841,75 @@ function renderForm(){
   fillPrompt();
 }
 
-// ---- Промпт проверки карты: шаблон и версия, заполненная из формы ----------
-function buildCheckPrompt(v){
-  return "Ты — придирчивый аналитик данных банка. Проверь мою карту источников данных и найди слабые места. Про наш ландшафт ничего не выдумывай: работай только с тем, что есть в карте; если данных для вывода не хватает — задай мне уточняющий вопрос.\\n\\nПроверь три вещи:\\n1) Связность: ведёт ли цепочка вопрос → метрики → источники → действия к решению. Назови метрики, которые не работают на управленческий вопрос, и действия, которые не следуют из найденных проблем.\\n2) Скорость: сравни частоту обновления каждого источника с горизонтом решения (горизонт оцени по формулировке вопроса и частоте наблюдения метрик). Назови источники, которые обновляются реже, чем принимается решение.\\n3) Полнота и однозначность: какие метрики не закрыты ни одним источником; выбран ли master-source там, где источников два; где риск дублей и расхождения определений.\\n\\nМоя карта.\\nУправленческий вопрос: "+v.q
-  +"\\n\\nМетрики (название · тип · единица · частота наблюдения):\\n"+v.metrics
-  +"\\n\\nИсточники (система · что даёт · владелец · частота обновления · доверие):\\n"+v.sources
-  +"\\n\\nПроверка качества:\\n"+v.quality
-  +"\\n\\nMaster-source: "+v.master
-  +"\\n\\nДействия (что · кому · срок):\\n"+v.actions
-  +"\\n\\nФормат ответа: по каждой из трёх проверок — короткий вердикт и конкретные строки карты, которые надо исправить; в конце — три самых важных исправления в порядке срочности.";
-}
+// ---- Промпт проверки карты: один блок, режимы «Шаблон | Заполненный» -------
+// Контрол повторяет инструмент проекта Bricks: текст шаблона обычным цветом,
+// шаблонные выражения в [скобках] — жёлтым, подставленные из карты значения —
+// зелёным; кнопка копирует то, что выбрано переключателем.
+var P_HEAD="Ты — придирчивый аналитик данных банка. Проверь мою карту источников данных и найди слабые места. Про наш ландшафт ничего не выдумывай: работай только с тем, что есть в карте; если данных для вывода не хватает — задай мне уточняющий вопрос.\\n\\nПроверь три вещи:\\n1) Связность: ведёт ли цепочка вопрос → метрики → источники → действия к решению. Назови метрики, которые не работают на управленческий вопрос, и действия, которые не следуют из найденных проблем.\\n2) Скорость: сравни частоту обновления каждого источника с горизонтом решения (горизонт оцени по формулировке вопроса и частоте наблюдения метрик). Назови источники, которые обновляются реже, чем принимается решение.\\n3) Полнота и однозначность: какие метрики не закрыты ни одним источником; выбран ли master-source там, где источников два; где риск дублей и расхождения определений.\\n\\nМоя карта.\\nУправленческий вопрос: ";
+var P_TAIL="\\n\\nФормат ответа: по каждой из трёх проверок — короткий вердикт и конкретные строки карты, которые надо исправить; в конце — три самых важных исправления в порядке срочности.";
+var PSEG=[{t:P_HEAD},{k:"q"},
+ {t:"\\n\\nМетрики (название · тип · единица · частота наблюдения):\\n"},{k:"metrics"},
+ {t:"\\n\\nИсточники (система · что даёт · владелец · частота обновления · доверие):\\n"},{k:"sources"},
+ {t:"\\n\\nПроверка качества:\\n"},{k:"quality"},
+ {t:"\\n\\nMaster-source: "},{k:"master"},
+ {t:"\\n\\nДействия (что · кому · срок):\\n"},{k:"actions"},
+ {t:P_TAIL}];
 var PH={q:"[управленческий вопрос — решение, ради которого строится карта]",
   metrics:"[строки таблицы метрик]",
   sources:"[строки таблицы источников]",
   quality:"[что нашли при проверке качества]",
   master:"[показатель со спором о цифрах, источники A и B, выбор]",
   actions:"[три действия из карты]"};
-function fmtRows(rows,keyIdx,f,empty){
+var PKEYS=["q","metrics","sources","quality","master","actions"];
+var pmode="fill",pctlTxt="";
+function fmtRows(rows,keyIdx,f){
   var out=(rows||[]).filter(function(r){return String(r[keyIdx]||"").trim()}).map(f);
-  return out.length?out.join("\\n"):empty;
+  return out.length?out.join("\\n"):null;
 }
-function fillPrompt(){
-  var el=$("dmzFilled");if(!el)return;
+function promptVals(){
   var d=collect();
-  var v={
-    q:(d.q||"").trim()||"— (не заполнен)",
-    metrics:fmtRows(d.metrics,0,function(r){return "- "+r[0]+" · "+(r[1]||"—")+" · "+(r[2]||"—")+" · наблюдаем "+(r[3]||"—")},"— (метрики не заполнены)"),
-    sources:fmtRows(d.sources,0,function(r){return "- "+r[0]+" · даёт: "+(r[1]||"—")+" · владелец: "+(r[2]||"—")+" · обновление: "+(r[3]||"—")+" · доверие: "+(r[4]||"—")},"— (источники не заполнены)"),
-    quality:fmtRows(d.quality,1,function(r){return "- "+(r[0]||"—")+": "+r[1]},"— (проверка качества не заполнена)"),
+  return {
+    q:(d.q||"").trim()||null,
+    metrics:fmtRows(d.metrics,0,function(r){return "- "+r[0]+" · "+(r[1]||"—")+" · "+(r[2]||"—")+" · наблюдаем "+(r[3]||"—")}),
+    sources:fmtRows(d.sources,0,function(r){return "- "+r[0]+" · даёт: "+(r[1]||"—")+" · владелец: "+(r[2]||"—")+" · обновление: "+(r[3]||"—")+" · доверие: "+(r[4]||"—")}),
+    quality:fmtRows(d.quality,1,function(r){return "- "+(r[0]||"—")+": "+r[1]}),
     master:((d.master.ind||"").trim()||(d.master.choice||"").trim())
       ?("показатель «"+(d.master.ind||"—")+"»; источник A: "+(d.master.a||"—")+" → "+(d.master.av||"—")+"; источник B: "+(d.master.b||"—")+" → "+(d.master.bv||"—")+"; выбор: "+(d.master.choice||"—"))
-      :"— (кандидат в master-source пока не выбран)",
-    actions:fmtRows(d.actions,0,function(r){return "- "+r[0]+" — "+(r[1]||"—")+", срок: "+(r[2]||"—")},"— (действия не заполнены)")
+      :null,
+    actions:fmtRows(d.actions,0,function(r){return "- "+r[0]+" — "+(r[1]||"—")+", срок: "+(r[2]||"—")})
   };
-  el.textContent=buildCheckPrompt(v);
+}
+function fillPrompt(){
+  var el=$("dmzPview");if(!el)return;
+  var v=promptVals(),h="",txt="";
+  PSEG.forEach(function(s){
+    if(s.t!==undefined){h+=esc(s.t);txt+=s.t;return}
+    var val=v[s.k];
+    if(pmode==="tpl"||val===null){h+='<span class="phx">'+esc(PH[s.k])+"</span>";txt+=PH[s.k]}
+    else{h+='<span class="phv">'+esc(val)+"</span>";txt+=val}
+  });
+  el.innerHTML=h;pctlTxt=txt;
+  var n=PKEYS.filter(function(k){return v[k]!==null}).length;
+  $("pState").textContent = pmode==="tpl"
+    ? "Показан шаблон: жёлтые выражения в [скобках] заменяются данными вашей карты."
+    : (n===PKEYS.length
+       ? "Все "+PKEYS.length+" блоков карты подставлены — промпт готов для GigaChat."
+       : "Подставлено "+n+" из "+PKEYS.length+" блоков карты; незаполненные скопируются шаблонными выражениями в [скобках].");
+  var b=$("bCopyMode");
+  if(b&&!b.classList.contains("done"))
+    b.textContent = pmode==="tpl" ? "Копировать шаблон" : "Копировать заполненный промпт";
 }
 
-// ---- Эталоны-пресеты: заполняют вкладку «Моё подразделение» ----------------
-function renderPresetSel(){
-  var sel=$("epSel");if(!sel)return;
-  var groups={},order=[];
-  Object.keys(EPRESETS).forEach(function(k){
-    var g=EPRESETS[k].group;
-    if(!groups[g]){groups[g]=[];order.push(g)}
-    groups[g].push(k);
-  });
-  sel.innerHTML=order.map(function(g){
-    return '<optgroup label="'+esc(g)+'">'+groups[g].map(function(k){
-      return '<option value="'+esc(k)+'">'+esc(EPRESETS[k].name)+"</option>"}).join("")+"</optgroup>"}).join("");
+// ---- Эталоны-пресеты: галерея карточек, заполняют вкладку «A1» -------------
+var GCLS={"Продукты":"eg-p","Процессы":"eg-x","Клиенты и портфель":"eg-k"};
+var curPreset=null;
+function renderPresetGal(){
+  var g=$("epGal");if(!g)return;
+  g.innerHTML=Object.keys(EPRESETS).map(function(k){
+    var p=EPRESETS[k];
+    return '<button class="ecard'+(k===curPreset?" on":"")+'" type="button" data-ep="'+esc(k)+'">'
+      +'<span class="egroup '+(GCLS[p.group]||"eg-p")+'">'+esc(p.group)+"</span><b>"+esc(p.name)+"</b></button>";
+  }).join("");
 }
 function ownHasContent(){
   try{
@@ -880,9 +931,9 @@ function applyPreset(k){
   d.master=JSON.parse(JSON.stringify(p.master));
   d.actions=JSON.parse(JSON.stringify(p.actions));
   try{localStorage.setItem("a360_dmz_own",JSON.stringify(d))}catch(e){}
-  cur="own";mode="my";renderAll();
+  cur="own";mode="my";curPreset=k;renderAll();renderPresetGal();
   var m=$("preMsg");
-  m.textContent="Пресет загружен — докрутите под своё подразделение";
+  m.textContent="Эталон «"+p.name+"» загружен — докрутите под своё подразделение";
   setTimeout(function(){m.textContent=""},3200);
 }
 
@@ -914,7 +965,6 @@ function renderMeta(){
     +p.checks.map(function(c){return "<li>"+esc(c)+"</li>"}).join("")+"</ul>";
   $("dmzCl").innerHTML=CL7.map(function(c,i){
     return '<label><input type="checkbox" data-cl="'+i+'"'+(d.cl&&d.cl.indexOf(i)>=0?" checked":"")+"> "+esc(c)+"</label>"}).join("");
-  $("dmzPre").style.display=cur==="own"?"":"none";
   var hasEt=!!p.etalon;
   $("mEt").style.display=hasEt?"":"none";
   $("mHint").textContent=hasEt?"«Эталон» — разбор со встречи; ваш черновик при просмотре не теряется.":"У своего кейса эталона нет — сверяйтесь с кейсами 1–3.";
@@ -952,19 +1002,25 @@ document.addEventListener("change",function(e){
 });
 document.addEventListener("click",function(e){
   var t=e.target;
-  if(t.id==="bCopyFilled"){
-    // свой обработчик вместо общего из темы: сохраняем длинную подпись кнопки
+  if(t.id==="bCopyMode"){
+    // свой обработчик вместо общего из темы: копируем то, что выбрано тумблером
     e.stopImmediatePropagation();
-    var txt=$("dmzFilled").innerText;
+    var txt=pctlTxt,lbl=pmode==="tpl"?"Копировать шаблон":"Копировать заполненный промпт";
     function done(){t.textContent="Скопировано";t.classList.add("done");
-      setTimeout(function(){t.textContent="Копировать заполненный промпт";t.classList.remove("done")},1800)}
+      setTimeout(function(){t.classList.remove("done");fillPrompt()},1800)}
     function fb(){var a=document.createElement("textarea");a.value=txt;a.style.position="fixed";
       a.style.opacity=0;document.body.appendChild(a);a.select();
       try{document.execCommand("copy");done()}catch(_e){t.textContent="Выделите вручную"}
       document.body.removeChild(a)}
     if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(txt).then(done,fb)}else{fb()}
     return}
-  if(t.id==="bPreApply"){applyPreset($("epSel").value);return}
+  if(t.id==="swTpl"||t.id==="swFill"){
+    pmode=t.id==="swTpl"?"tpl":"fill";
+    $("swTpl").className=pmode==="tpl"?"on":"";
+    $("swFill").className=pmode==="fill"?"on":"";
+    fillPrompt();return}
+  var ec=t.closest?t.closest("[data-ep]"):null;
+  if(ec){applyPreset(ec.dataset.ep);return}
   if(t.dataset&&t.dataset.case){save(collect());cur=t.dataset.case;mode="my";renderAll();return}
   if(t.id==="mMy"||t.id==="mEt"){save(collect());mode=t.id==="mEt"?"et":"my";renderMeta();return}
   if(t.dataset&&t.dataset.add){var d=collect();
@@ -1010,8 +1066,7 @@ function exportMd(){
   setTimeout(function(){$("expMsg").textContent=""},2600);
 }
 
-renderPresetSel();
-$("dmzTpl").textContent=buildCheckPrompt(PH);
+renderPresetGal();
 renderAll();
 </script>
 </div></section>

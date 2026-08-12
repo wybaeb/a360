@@ -1,25 +1,33 @@
 # -*- coding: utf-8 -*-
-"""Тренажёр «Срок эксперимента» (T2, задание владельца 12.08).
+"""Тренажёр «Срок эксперимента» (T2; правка владельца 12.08: живая симуляция).
 
 Интерактивная страница: участник выбирает метрику из кейсов курса и двигает
-бегунок «клиентов в эксперименте в день». Тренажёр считает целевой объём
-выборки по той же формуле, что разобрана в справочнике (n = (Z·σ/E)²,
-Z = 1,96), и раскладывает срок эксперимента на две фазы:
+бегунок «участников в день». Страница показывает ЖИВУЮ симуляцию накопления
+данных — как на графике доверительного интервала в деке Шага 1 (слайд A3,
+статичная версия — ci_funnel() в longread_figs.py):
 
-    фаза 1 — набор участников до целевого объёма (n / приток, дней);
-    фаза 2 — горизонт метрики (участники набраны, данные ещё копятся).
+    случайный ряд наблюдений (детерминированный генератор: у каждой метрики
+    свой фиксированный ряд, поэтому положения бегунка сравниваются честно);
+    бегущая оценка метрики x̄ и коридор 95 % доверия x̄ ± Z·σ/√n,
+    который сужается по мере накопления наблюдений;
+    порог принятия решения — линией;
+    светофорная подсветка состояния: красный «данных мало — коридор шире E»,
+    жёлтый «коридор сузился до E, но порог внутри», зелёный «гипотеза
+    подтверждена или опровергнута — коридор устойчиво по одну сторону порога».
 
-SVG-таймлайн перестраивается на каждом движении бегунка. Главный урок
-показан явно: бегунок сжимает только фазу 1 — горизонт метрики (отток за
-90 дней, LTV за полгода) не ускоряется никаким потоком участников.
+Все буквы формулы n = (Z·σ/E)² подписаны на осях и в легенде: n — объём
+наблюдений, Z — уровень доверия (1,96 для 95 %), σ — разброс наблюдений,
+E — допустимая погрешность, она же целевая полуширина коридора.
 
-Визуальная схема двух фаз — та же, что в статичной фигуре accumulation()
-из longread_figs.py (лонгрид-справочник, раздел «Эксперимент и накопление»):
-здесь она оживлена расчётом. Параметры метрик — учебные, согласованы
-с кейсами metrics_data.py: активация 30 дн (m-act), отток 90 дн (m-churn),
-конверсия корпоративного блока (m-u_conv), TAT процесса (m-u_tat),
-LTV портфеля (m-u_ltv). Наружу страница ничего не отправляет; внешних
-зависимостей нет.
+Бегунок притока меняет пересчёт «день ↔ наблюдения»: тот же ряд наблюдений
+проживается быстрее или медленнее, и зелёное состояние достигается за другое
+число дней. SVG перестраивается при каждом движении бегунка.
+
+Механика расчёта сохранена: целевой объём n считается по той же формуле, что
+в справочнике (n = (Z·σ/E)², Z = 1,96), срок раскладывается на две фазы:
+фаза 1 — набор участников (n / приток, дней), фаза 2 — горизонт метрики.
+Полоса двух фаз остаётся под графиком. Параметры метрик — учебные,
+согласованы с кейсами metrics_data.py. Наружу страница ничего не отправляет.
 
 Подключение к сборке (build_pages.py) делает оркестратор: модуль экспортирует
 BODY / TITLE / CRUMB в том же виде, что trainer_map.
@@ -30,7 +38,7 @@ import math
 
 Z = 1.96
 
-NBSP = " "  # узкий неразрывный пробел для тысяч
+NBSP = " "  # узкий неразрывный пробел для тысяч
 
 
 def _fi(n):
@@ -48,14 +56,20 @@ def _n_sigma(s, e):
 
 
 def _m(id_, tab, name, n, formula, unit_n, horizon, note, link_text, link_href,
-       flow_label, fmin, fmax, fstep, fdef):
+       flow_label, fmin, fmax, fstep, fdef, sim):
     return dict(id=id_, tab=tab, name=name, n=n,
                 formula=formula + " ≈ " + _fi(n),
                 unitN=unit_n, horizon=horizon, note=note,
                 linkText=link_text, linkHref=link_href,
-                flowLabel=flow_label, fmin=fmin, fmax=fmax, fstep=fstep, fdef=fdef)
+                flowLabel=flow_label, fmin=fmin, fmax=fmax, fstep=fstep,
+                fdef=fdef, sim=sim)
 
 
+# sim: параметры живой симуляции. mu — «истинное» значение метрики в учебном
+# эксперименте, thr — порог принятия решения, sigma — разброс одного
+# наблюдения (для долей σ = √(p·(1−p)) из планирования), E — допустимая
+# погрешность, good — с какой стороны порога гипотеза считается
+# подтверждённой, scale/dec — вывод значений (проценты или единицы).
 METRICS = [
     _m("act", "Розница · активация",
        "Розница: активация за 30 дней",
@@ -63,57 +77,83 @@ METRICS = [
        "n = Z²·p(1−p) / E² = 1,96² × 0,58 × 0,42 / 0,03²",
        "клиентов", 30,
        "Доля карт с первой операцией в 30 дней после выдачи — метрика кейса розницы. "
-       "Учебные параметры: базовая доля 58 %, допустимая погрешность ±3 п.п. "
-       "Горизонт метрики — 30 дней наблюдения за каждым участником.",
+       "Учебный эксперимент: новый онбординг должен поднять активацию выше базовых "
+       "58 % (порог решения). Планирование: σ = √(0,58 × 0,42) ≈ 0,49, допустимая "
+       "погрешность E = ±3 п.п. Горизонт метрики — 30 дней наблюдения за каждым "
+       "участником.",
        "определение метрики «Активация за 30 дней» — в справочнике",
        "longread_metrics.html#m-act",
-       "Клиентов в эксперименте в день", 20, 1000, 20, 100),
+       "Клиентов в эксперименте в день", 20, 1000, 20, 100,
+       dict(mu=0.615, thr=0.58, sigma=0.4936, E=0.03, good="above",
+            scale=100, dec=1, unitY="активация, %",
+            sigmaTxt="σ ≈ 0,49 (разброс наблюдения «активировался / нет»)",
+            ETxt="E = 3 п.п.", thrTxt="порог 58 %")),
     _m("churn", "Розница · отток",
        "Розница: отток за 90 дней",
        _n_share(0.12, 0.02),
        "n = Z²·p(1−p) / E² = 1,96² × 0,12 × 0,88 / 0,02²",
        "клиентов", 90,
-       "Доля клиентов без операций за 90 дней. Учебные параметры: базовая доля 12 %, "
-       "допустимая погрешность ±2 п.п. Горизонт — 90 дней: отток быстрее не измеряется "
-       "по построению.",
+       "Доля клиентов без операций за 90 дней. Учебный эксперимент: программа "
+       "удержания должна опустить отток ниже базовых 12 % (порог решения). "
+       "Планирование: σ = √(0,12 × 0,88) ≈ 0,33, допустимая погрешность E = ±2 п.п. "
+       "Горизонт — 90 дней: отток быстрее не измеряется по построению.",
        "определение метрики «Отток за 90 дней» — в справочнике",
        "longread_metrics.html#m-churn",
-       "Клиентов в эксперименте в день", 20, 1000, 20, 100),
+       "Клиентов в эксперименте в день", 20, 1000, 20, 100,
+       dict(mu=0.095, thr=0.12, sigma=0.3250, E=0.02, good="below",
+            scale=100, dec=1, unitY="отток, %",
+            sigmaTxt="σ ≈ 0,33 (разброс наблюдения «ушёл / остался»)",
+            ETxt="E = 2 п.п.", thrTxt="порог 12 %")),
     _m("corp", "Корпоративный блок",
        "Корпоративный блок: конверсия встречи в сделку",
        _n_share(0.25, 0.05),
        "n = Z²·p(1−p) / E² = 1,96² × 0,25 × 0,75 / 0,05²",
        "встреч", 60,
-       "Конверсия встречи в сделку в корпоративном блоке. Учебные параметры: базовая "
-       "конверсия 25 %, допустимая погрешность ±5 п.п. Поток встреч мал по природе кейса, "
-       "а цикл сделки — 60 дней: даже набранные участники дают результат только после "
-       "завершения цикла.",
+       "Конверсия встречи в сделку в корпоративном блоке. Учебный эксперимент: новый "
+       "формат подготовки встреч должен поднять конверсию выше базовых 25 % (порог "
+       "решения). Планирование: σ = √(0,25 × 0,75) ≈ 0,43, допустимая погрешность "
+       "E = ±5 п.п. Поток встреч мал по природе кейса, а цикл сделки — 60 дней.",
        "определение метрики «Конверсия этапа» — в справочнике",
        "longread_metrics.html#m-u_conv",
-       "Встреч с клиентами в день", 1, 30, 1, 6),
+       "Встреч с клиентами в день", 1, 30, 1, 6,
+       dict(mu=0.315, thr=0.25, sigma=0.4330, E=0.05, good="above", seed="corp-a",
+            scale=100, dec=1, unitY="конверсия, %",
+            sigmaTxt="σ ≈ 0,43 (разброс наблюдения «сделка / нет»)",
+            ETxt="E = 5 п.п.", thrTxt="порог 25 %")),
     _m("tat", "Внутренние процессы",
        "Внутренние процессы: срок обработки (TAT)",
        _n_sigma(2.0, 0.5),
        "n = (Z·σ / E)² = (1,96 × 2 / 0,5)²",
        "заявок", 14,
-       "Средний срок обработки заявки во внутреннем процессе. Учебные параметры: "
-       "разброс σ = 2 дня, допустимая погрешность ±0,5 дня. Горизонт наблюдения — "
-       "14 дней: заявка должна пройти процесс целиком, включая хвост долгих случаев.",
+       "Средний срок обработки заявки во внутреннем процессе. Учебный эксперимент: "
+       "упрощённый маршрут согласования должен опустить средний срок ниже порога "
+       "5 дней. Планирование: разброс σ = 2 дня, допустимая погрешность E = ±0,5 дня. "
+       "Горизонт наблюдения — 14 дней: заявка должна пройти процесс целиком, включая "
+       "хвост долгих случаев.",
        "определение метрики «Время процесса» — в справочнике",
        "longread_metrics.html#m-u_tat",
-       "Заявок в эксперименте в день", 5, 200, 5, 20),
+       "Заявок в эксперименте в день", 5, 200, 5, 20,
+       dict(mu=4.4, thr=5.0, sigma=2.0, E=0.5, good="below",
+            scale=1, dec=1, unitY="срок обработки, дн",
+            sigmaTxt="σ = 2 дня (разброс срока одной заявки)",
+            ETxt="E = 0,5 дня", thrTxt="порог 5 дней")),
     _m("ltv", "Портфель · LTV",
        "Портфель: LTV и удержание за 180 дней",
        _n_sigma(40, 4),
        "n = (Z·σ / E)² = (1,96 × 40 / 4)²",
        "клиентов", 180,
-       "Ценность клиента и удержание в портфельном управлении. Учебные параметры: "
-       "разброс σ = 40 т₽ на клиента, допустимая погрешность ±4 т₽. Горизонт метрики — "
-       "180 дней: ценность накапливается полгода, и приток участников этот срок "
-       "не сокращает.",
+       "Ценность клиента и удержание в портфельном управлении. Учебный эксперимент: "
+       "новая сервисная модель должна поднять LTV выше порога 40 т₽ на клиента. "
+       "Планирование: разброс σ = 40 т₽, допустимая погрешность E = ±4 т₽. Горизонт "
+       "метрики — 180 дней: ценность накапливается полгода, и приток участников этот "
+       "срок не сокращает.",
        "определение метрики «Ценность клиента (LTV)» — в справочнике",
        "longread_metrics.html#m-u_ltv",
-       "Клиентов в эксперименте в день", 20, 1000, 20, 100),
+       "Клиентов в эксперименте в день", 20, 1000, 20, 100,
+       dict(mu=44.5, thr=40.0, sigma=40.0, E=4.0, good="above",
+            scale=1, dec=0, unitY="LTV, т₽ на клиента",
+            sigmaTxt="σ = 40 т₽ (разброс ценности одного клиента)",
+            ETxt="E = 4 т₽", thrTxt="порог 40 т₽")),
 ]
 
 TITLE = "Тренажёр: срок эксперимента · Аналитика 360"
@@ -123,13 +163,15 @@ _BODY_TMPL = """
 <header><div class="wrap">
   <div class="eyebrow">Карпов Курсы × Сбер · Аналитика 360</div>
   <h1>Тренажёр: срок эксперимента</h1>
-  <p class="lead">Рассчитанный объём выборки — ещё не срок. Эксперимент живёт
-     две фазы: сначала набираются участники до целевого объёма, затем — данные,
-     пока не пройдёт горизонт метрики. Выберите метрику кейса и двигайте бегунок
-     притока — таймлайн покажет, какая часть срока сжимается, а какая нет.</p>
+  <p class="lead">Рассчитанный объём выборки — ещё не срок. Здесь эксперимент
+     проживается вживую: случайные наблюдения накапливаются, бегущая оценка
+     метрики идёт в коридоре 95 % доверия, коридор сужается, и в какой-то день
+     светофор переключается на зелёный — гипотеза подтверждена или опровергнута.
+     Выберите метрику кейса и двигайте бегунок притока: тот же ряд наблюдений
+     будет прожит быстрее или медленнее.</p>
   <div class="meta">
     <span class="chip">Метрики <b>из кейсов курса</b></span>
-    <span class="chip">Формула объёма <b>одна</b></span>
+    <span class="chip">Формула объёма <b>n = (Z·σ/E)²</b></span>
     <span class="chip">Расчёт <b>в вашем браузере</b></span>
   </div>
 </div></header>
@@ -153,18 +195,37 @@ _BODY_TMPL = """
 .exp-tl{background:var(--surf);border:1px solid var(--line);border-radius:14px;
   padding:16px 14px 8px;margin:14px 0 6px}
 .exp-tl svg{width:100%;height:auto;display:block}
+.exp-tl h4{margin:4px 2px 10px}
+.exp-light{display:flex;gap:14px;align-items:center;border:1px solid var(--line);
+  border-radius:14px;padding:12px 16px;margin:14px 0 6px;background:var(--surf)}
+.exp-light.st-red{background:rgba(196,69,59,.07);border-color:rgba(196,69,59,.3)}
+.exp-light.st-yellow{background:rgba(217,164,0,.09);border-color:rgba(217,164,0,.35)}
+.exp-light.st-green{background:var(--acc-soft);border-color:var(--acc-line)}
+.exp-lamps{display:flex;flex-direction:column;gap:5px;flex:0 0 auto}
+.exp-lamp{width:15px;height:15px;border-radius:50%;opacity:.18}
+.exp-lamp.r{background:#C4453B}.exp-lamp.y{background:#D9A400}.exp-lamp.g{background:#20BA72}
+.exp-lamp.on{opacity:1;box-shadow:0 0 0 3px rgba(46,54,65,.08)}
+.exp-light p{margin:0;font-size:15px}
+.exp-leg{display:flex;gap:8px 22px;flex-wrap:wrap;margin:10px 2px 0;font-size:13.5px;
+  color:var(--ink2)}
+.exp-leg span{display:inline-flex;align-items:center;gap:7px}
+.exp-leg i{display:inline-block;width:22px;height:0;border-top:3px solid;border-radius:2px}
+.exp-leg .band{width:22px;height:12px;border:0;border-radius:3px;
+  background:rgba(32,186,114,.22)}
 .exp-concl{font-size:15px;color:var(--ink2);margin:8px 2px 0}
 .exp-fml{font-size:16px}
 @media(max-width:700px){.exp-stats{grid-template-columns:repeat(2,1fr)}}
 </style>
 
-<h2>Две фазы одного эксперимента</h2>
-<p>Целевой объём выборки считается до старта — по формуле из
-<a href="longread_metrics.html#sample-formula">раздела «Формула объёма выборки»</a>
-справочника. Дальше срок складывается из двух частей: <b>фаза 1</b> — участники
-накапливаются до целевого объёма со скоростью притока; <b>фаза 2</b> — участники
-набраны, но по каждому ещё должен пройти горизонт метрики. Досрочно завершить
-можно только набор — и только когда участников уже достаточно.</p>
+<h2>Живая симуляция накопления</h2>
+<p>Целевой объём выборки считается до старта — по формуле
+<b>n = (Z·σ/E)²</b> из <a href="longread_metrics.html#sample-formula">раздела
+«Формула объёма выборки»</a> справочника. Каждая буква видна на графике:
+<b>n</b> — сколько наблюдений накоплено (ось дней, умноженная на приток),
+<b>Z</b> — уровень доверия (Z = 1,96 для 95 %), <b>σ</b> — разброс наблюдений,
+<b>E</b> — допустимая погрешность, то есть целевая полуширина коридора.
+Когда коридор сузился до ±E, объём n набран; когда коридор устойчиво лёг по
+одну сторону порога — решение принято.</p>
 
 <div class="exp-tabs" id="expTabs"></div>
 <div class="card acc"><b id="mName"></b><p id="mNote" style="margin:6px 0 0"></p></div>
@@ -175,33 +236,84 @@ _BODY_TMPL = """
   <span class="val" id="flowVal">100</span>
 </div>
 
+<div class="exp-light" id="light">
+  <span class="exp-lamps">
+    <span class="exp-lamp r" id="lampR"></span>
+    <span class="exp-lamp y" id="lampY"></span>
+    <span class="exp-lamp g" id="lampG"></span>
+  </span>
+  <p id="lightTxt"></p>
+</div>
+
+<div class="exp-tl">
+  <div id="sim"></div>
+  <div class="exp-leg">
+    <span><i style="border-color:#159A5C"></i>бегущая оценка метрики x̄ по n наблюдениям</span>
+    <span><i class="band"></i>коридор 95 % доверия: x̄ ± Z·σ/√n (Z = 1,96)</span>
+    <span><i style="border-color:#C4453B;border-top-style:dashed"></i>порог принятия решения</span>
+    <span><b style="color:#159A5C">⇕ E</b> — допустимая погрешность (полуширина коридора), <span id="legE"></span></span>
+  </div>
+  <p class="exp-concl" id="legS"></p>
+</div>
+
 <div class="exp-stats">
   <div class="exp-stat"><b id="sN"></b><span id="sNu"></span></div>
-  <div class="exp-stat"><b id="sP1"></b><span>фаза 1 · набор участников</span></div>
+  <div class="exp-stat"><b id="sG"></b><span>зелёный сигнал · решение по коридору</span></div>
   <div class="exp-stat"><b id="sP2"></b><span>фаза 2 · горизонт метрики</span></div>
   <div class="exp-stat hot"><b id="sTot"></b><span>срок эксперимента</span></div>
 </div>
 
+<h4 style="margin-top:20px">Две фазы под графиком</h4>
+<p style="margin:6px 0 0">Даже когда светофор зелёный, срок эксперимента не
+закончился: по каждому участнику должен пройти горизонт метрики. <b>Фаза 1</b> —
+набор участников до целевого объёма n со скоростью притока; <b>фаза 2</b> —
+участники набраны, данные ещё копятся до горизонта.</p>
 <div class="exp-tl"><div id="tl"></div></div>
 <p class="exp-concl" id="concl"></p>
 
 <div class="card">
-<h4>Расчёт этого таймлайна</h4>
+<h4>Расчёт под этим графиком</h4>
 <p class="exp-fml" style="margin-bottom:8px"><b id="fml"></b> <span id="fmlU"></span></p>
-<p style="margin:0" id="fml2" class="sub"></p>
+<p style="margin:0 0 8px" id="fml2" class="sub"></p>
+<p style="margin:0" class="sub" id="fml3"></p>
 </div>
 
 <div class="card acc">
-<h4>Бегунок сжимает только фазу 1</h4>
-<p style="margin:0">Приток участников сокращает набор до целевого объёма, но горизонт
-второй фазы — свойство самой метрики, а не бюджета: отток за 90 дней требует прожить
-90 дней, а LTV за полгода не ускоряется никаким потоком. Эксперимент, закрытый до
-горизонта, меряет нетерпение, а не эффект.</p>
+<h4>Что означают буквы формулы n = (Z·σ/E)²</h4>
+<p style="margin:0"><b>n</b> — объём выборки: сколько наблюдений нужно накопить.
+<b>Z</b> — множитель уровня доверия: для 95 % доверия Z = 1,96.
+<b>σ</b> — разброс отдельных наблюдений: чем разнороднее клиенты, тем шире
+коридор при том же n. <b>E</b> — допустимая погрешность: полуширина коридора,
+с которой согласны жить при принятии решения. На графике коридор равен
+x̄ ± Z·σ/√n и сжимается до ±E ровно в тот момент, когда n достигает
+(Z·σ/E)².</p>
 </div>
 
-<p>Точный расчёт размера групп под минимальный детектируемый эффект — в
-<a href="trainer_sample.html">тренажёре «Расчёт выборки»</a>; из его результата
-и складывается фаза 1. Все параметры пресетов учебные.</p>
+<div class="card acc">
+<h4>Бегунок сжимает только набор данных</h4>
+<p style="margin:0">Приток участников ускоряет накопление наблюдений — зелёный
+сигнал наступает раньше по календарю, хотя требует того же числа наблюдений.
+Горизонт второй фазы — свойство самой метрики, а не бюджета: отток за 90 дней
+требует прожить 90 дней, а LTV за полгода не ускоряется никаким потоком.
+Эксперимент, закрытый до горизонта, меряет нетерпение, а не эффект.</p>
+</div>
+
+<details class="more"><summary>Как устроена симуляция и почему ряд не меняется</summary>
+<p>Наблюдения в симуляции случайны, но ряд у каждой метрики зафиксирован:
+генератор случайных чисел стартует с одного и того же начального состояния,
+зависящего от метрики. Поэтому движение бегунка — честное сравнение: меняется
+не удача, а только скорость, с которой тот же поток наблюдений набирается по
+календарю. Бегущая оценка x̄ — накопленное среднее наблюдений; коридор —
+x̄ ± Z·σ/√n с σ из планирования. Светофор считается по правилам из легенды:
+красный, пока полуширина коридора больше E; жёлтый, когда коридор уже сузился
+до E, но порог остаётся внутри него; зелёный — когда коридор устойчиво, до
+конца окна наблюдения, лежит по одну сторону порога.</p>
+</details>
+
+<p style="margin-top:16px">Точный расчёт размера групп под минимальный
+детектируемый эффект — в <a href="trainer_sample.html">тренажёре «Расчёт
+выборки»</a>; из его результата и складывается фаза 1. Все параметры пресетов
+учебные.</p>
 </div></section>
 
 <section><div class="wrap">
@@ -230,11 +342,13 @@ _BODY_TMPL = """
 
 <script>
 var MS=__METRICS__;
+var Zc=1.96;
 var cur=MS[0];
 var flows={};                      // выбранный приток запоминается на метрику
 var $=function(id){return document.getElementById(id)};
 var NB="\\u202F";
 function fi(x){return String(Math.round(x)).replace(/\\B(?=(\\d{3})+(?!\\d))/g,NB)}
+function fv(v,m){return (v*m.sim.scale).toFixed(m.sim.dec).replace('.',',')}
 
 function tx(x,y,t,fs,w,f,a,o){
   return '<text x="'+x+'" y="'+y+'" font-size="'+fs+'"'+(w?' font-weight="'+w+'"':'')
@@ -247,8 +361,126 @@ function tickStep(total){
   return 360;
 }
 
-// SVG-таймлайн двух фаз: зелёная плашка — набор участников, светлая — горизонт
-// метрики. Шкала — дни с начала эксперимента; масштаб подстраивается под итог.
+// ── Детерминированный генератор: ряд наблюдений фиксирован на метрику ──────
+function seedOf(s){var h=5381;s=s+'a360';for(var i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return h}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;
+  var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;
+  return ((t^t>>>14)>>>0)/4294967296}}
+function gauss(rnd){var u=0,v=0;while(u===0)u=rnd();while(v===0)v=rnd();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+
+// Симуляция: броуновская сумма W(k) по числу наблюдений k; бегущая оценка
+// x̄(k) = μ + σ·W(k)/k, полуширина коридора h(k) = Z·σ/√k. Сетка не зависит
+// от притока — бегунок лишь пересчитывает «день ↔ наблюдения».
+var simCache={};
+function simOf(m){
+  if(simCache[m.id])return simCache[m.id];
+  var s=m.sim,G=280,kMax=Math.ceil(2.6*m.n),rnd=mulberry32(seedOf(s.seed||m.id));
+  var k=[],W=[],est=[],h=[],w=0,prev=0;
+  for(var i=1;i<=G;i++){
+    var ki=kMax*i/G;
+    w+=Math.sqrt(ki-prev)*gauss(rnd);prev=ki;
+    k.push(ki);W.push(w);
+    est.push(s.mu+s.sigma*w/ki);
+    h.push(Zc*s.sigma/Math.sqrt(ki));
+  }
+  // зелёный: коридор устойчиво (до конца окна) по одну сторону порога, и n набран
+  var stable=G;
+  for(var j=G-1;j>=0;j--){
+    var out=(s.thr<est[j]-h[j])||(s.thr>est[j]+h[j]);
+    if(out)stable=j;else break;
+  }
+  var kE=Math.pow(Zc*s.sigma/s.E,2);
+  var greenK=Math.max(kE,stable<G?k[stable]:kMax);
+  var side=est[G-1]>s.thr?'above':'below';
+  var o={k:k,est:est,h:h,kMax:kMax,kE:kE,greenK:greenK,reached:stable<G,side:side};
+  simCache[m.id]=o;return o;
+}
+
+// ── Живой график: ряд, коридор, порог, светофорные зоны ────────────────────
+function simChart(m,flow){
+  var s=m.sim,d=simOf(m);
+  var kShow=Math.min(d.kMax,Math.max(d.greenK*1.3,d.kE*1.35));
+  var X0=64,X1=880,Y0=30,Y1=300,H=368;
+  var span=Math.max(s.E*4.4,Math.abs(s.mu-s.thr)+2.4*s.E);
+  var mid=(Math.min(s.mu,s.thr)+Math.max(s.mu,s.thr))/2;
+  var yLo=mid-span/2,yHi=mid+span/2;
+  var xx=function(k){return X0+(k/kShow)*(X1-X0)};
+  var yy=function(v){return Y1-(v-yLo)/(yHi-yLo)*(Y1-Y0)};
+  var out='<svg viewBox="0 0 920 '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" '
+    +'aria-label="Симуляция эксперимента: бегущая оценка метрики, коридор 95 % доверия, '
+    +'порог решения и светофорные зоны" style="font-family:var(--font)">';
+  out+='<clipPath id="simClip"><rect x="'+X0+'" y="'+Y0+'" width="'+(X1-X0)+'" height="'+(Y1-Y0)+'"/></clipPath>';
+  // светофорные зоны состояния
+  var xE=xx(Math.min(d.kE,kShow)),xG=xx(Math.min(d.greenK,kShow));
+  var zone=function(xa,xb,fill,lab,col){
+    if(xb-xa<1)return '';
+    var r='<rect x="'+xa.toFixed(1)+'" y="'+Y0+'" width="'+(xb-xa).toFixed(1)+'" height="'+(Y1-Y0)+'" fill="'+fill+'"/>';
+    if(xb-xa>=120)r+=tx(((xa+xb)/2).toFixed(1),Y0+16,lab,12,'700',col,'middle');
+    return r;
+  };
+  out+=zone(X0,xE,'rgba(196,69,59,0.06)','данных мало: коридор шире E','#C4453B');
+  out+=zone(xE,xG,'rgba(217,164,0,0.10)','порог внутри коридора','#8a6d00');
+  out+=zone(xG,X1,'rgba(32,186,114,0.09)',
+    d.side===s.good?'гипотеза подтверждена':'гипотеза опровергнута','#159A5C');
+  // коридор и бегущая оценка (в клипе)
+  var up=[],lo=[],ce=[];
+  for(var i=0;i<d.k.length;i++){
+    if(d.k[i]>kShow)break;
+    var x=xx(d.k[i]).toFixed(1);
+    up.push(x+','+yy(d.est[i]+d.h[i]).toFixed(1));
+    lo.push(x+','+yy(d.est[i]-d.h[i]).toFixed(1));
+    ce.push(x+','+yy(d.est[i]).toFixed(1));
+  }
+  out+='<g clip-path="url(#simClip)">';
+  out+='<polygon points="'+up.join(' ')+' '+lo.slice().reverse().join(' ')+'" fill="#20BA72" fill-opacity="0.14"/>';
+  out+='<polyline points="'+up.join(' ')+'" fill="none" stroke="#20BA72" stroke-width="1.7"/>';
+  out+='<polyline points="'+lo.join(' ')+'" fill="none" stroke="#20BA72" stroke-width="1.7"/>';
+  out+='<polyline points="'+ce.join(' ')+'" fill="none" stroke="#159A5C" stroke-width="2.6"/>';
+  out+='</g>';
+  // порог решения
+  var yT=yy(s.thr);
+  out+='<line x1="'+X0+'" y1="'+yT.toFixed(1)+'" x2="'+X1+'" y2="'+yT.toFixed(1)
+    +'" stroke="#C4453B" stroke-width="2" stroke-dasharray="7 5"/>';
+  out+=tx(X1-6,yT+(s.good==='above'?18:-8),'порог решения — '+fv(s.thr,m),12.5,'800','#C4453B','end');
+  // вертикаль «n набран»: коридор сузился до ±E
+  out+='<line x1="'+xE.toFixed(1)+'" y1="'+Y0+'" x2="'+xE.toFixed(1)+'" y2="'+(Y1+8)
+    +'" stroke="#2E3641" stroke-opacity="0.45" stroke-width="1.6" stroke-dasharray="4 5"/>';
+  out+=tx(xE.toFixed(1),Y1+24,'n = (Z·σ/E)² набрано',12,'700','#2E3641','middle',0.75);
+  // вертикаль «зелёный сигнал»
+  out+='<line x1="'+xG.toFixed(1)+'" y1="'+Y0+'" x2="'+xG.toFixed(1)+'" y2="'+(Y1+8)
+    +'" stroke="#159A5C" stroke-width="2" stroke-dasharray="3 4"/>';
+  out+=tx(Math.min(xG+8,X1-160).toFixed(1),Y0+34,'зелёный: ≈ '+fi(Math.ceil(d.greenK/flow))+'-й день',12.5,'800','#159A5C');
+  // скобка E у момента набора n: полуширина коридора равна E
+  var iE=0;while(iE<d.k.length-1&&d.k[iE]<d.kE)iE++;
+  var yA=yy(d.est[iE]),yB=yy(d.est[iE]+d.h[iE]),xBr=Math.min(xE+10,X1-16);
+  out+='<line x1="'+xBr.toFixed(1)+'" y1="'+yA.toFixed(1)+'" x2="'+xBr.toFixed(1)+'" y2="'+yB.toFixed(1)
+    +'" stroke="#159A5C" stroke-width="2"/>';
+  out+='<line x1="'+(xBr-4).toFixed(1)+'" y1="'+yA.toFixed(1)+'" x2="'+(xBr+4).toFixed(1)+'" y2="'+yA.toFixed(1)+'" stroke="#159A5C" stroke-width="2"/>';
+  out+='<line x1="'+(xBr-4).toFixed(1)+'" y1="'+yB.toFixed(1)+'" x2="'+(xBr+4).toFixed(1)+'" y2="'+yB.toFixed(1)+'" stroke="#159A5C" stroke-width="2"/>';
+  out+=tx((xBr+8).toFixed(1),((yA+yB)/2+4).toFixed(1),'E',13,'800','#159A5C');
+  // оси
+  out+='<line x1="'+X0+'" y1="'+Y0+'" x2="'+X0+'" y2="'+Y1+'" stroke="#2E3641" stroke-opacity="0.3" stroke-width="1.2"/>';
+  out+='<line x1="'+X0+'" y1="'+Y1+'" x2="'+X1+'" y2="'+Y1+'" stroke="#2E3641" stroke-opacity="0.3" stroke-width="1.2"/>';
+  for(var t=0;t<=4;t++){
+    var v=yLo+(yHi-yLo)*t/4,y=yy(v);
+    out+='<line x1="'+(X0-5)+'" y1="'+y.toFixed(1)+'" x2="'+X0+'" y2="'+y.toFixed(1)+'" stroke="#2E3641" stroke-opacity="0.3" stroke-width="1.2"/>';
+    out+=tx(X0-9,y+4,fv(v,m),11.5,null,'#2E3641','end',0.65);
+  }
+  out+=tx(X0-8,Y0-12,s.unitY+' — бегущая оценка x̄',12,null,'#2E3641',null,0.65);
+  var Dx=kShow/flow,st=Dx<3?(Dx<1?0.1:0.5):tickStep(Dx);
+  for(var dd=0;dd<=Dx;dd+=st){
+    var xd=xx(dd*flow);
+    out+='<line x1="'+xd.toFixed(1)+'" y1="'+Y1+'" x2="'+xd.toFixed(1)+'" y2="'+(Y1+6)+'" stroke="#2E3641" stroke-opacity="0.3" stroke-width="1.2"/>';
+    if(xd<X1-30&&Math.abs(xd-xE)>88)
+      out+=tx(xd.toFixed(1),Y1+24,String(Math.round(dd*10)/10).replace('.',','),12,null,'#2E3641','middle',0.6);
+  }
+  out+=tx(X1,Y1+44,'дни с начала эксперимента → · n (объём) = приток × дни',12.5,null,'#2E3641','end',0.65);
+  out+=tx(X0,Y1+44,'коридор: x̄ ± Z·σ/√n · Z = 1,96 (доверие 95'+NB+'%)',12.5,null,'#2E3641',null,0.65);
+  return out+'</svg>';
+}
+
+// ── Полоса двух фаз под графиком: набор участников и горизонт метрики ──────
 function timeline(p1,p2){
   var total=p1+p2,X0=40,X1=896,BY=32,BH=46,AX=116,H=170;
   var sc=(X1-X0)/total,xb=X0+p1*sc;
@@ -259,7 +491,7 @@ function timeline(p1,p2){
   s+='<rect x="'+X0+'" y="'+BY+'" width="'+Math.max(6,xb-X0).toFixed(1)+'" height="'+BH+'" rx="10" fill="#20BA72"/>';
   s+='<line x1="'+xb.toFixed(1)+'" y1="10" x2="'+xb.toFixed(1)+'" y2="'+AX+'" stroke="#159A5C" stroke-width="1.6" stroke-dasharray="6 5"/>';
   s+='<line x1="'+X1+'" y1="10" x2="'+X1+'" y2="'+AX+'" stroke="#2E3641" stroke-opacity="0.35" stroke-width="1.4" stroke-dasharray="4 5"/>';
-  s+=tx(X0,20,'фаза 1 · набор участников — '+fi(p1)+' дн',13.5,'700','#2E3641');
+  s+=tx(X0,20,'фаза 1 · набор n участников — '+fi(p1)+' дн',13.5,'700','#2E3641');
   s+=tx(X1,20,'итог ≈ '+fi(total)+' дн',14,'800','#2E3641','end');
   if(xb-X0>=70)s+=tx(((X0+xb)/2).toFixed(1),BY+BH/2+5,fi(p1)+' дн',14,'700','#ffffff','middle');
   if(X1-xb>=70)s+=tx(((xb+X1)/2).toFixed(1),BY+BH/2+5,fi(p2)+' дн',14,'700','#159A5C','middle');
@@ -292,22 +524,52 @@ function select(id){
   renderTabs();update();
 }
 
+function setLight(state,txt){
+  var box=$('light');
+  box.className='exp-light st-'+state;
+  ['R','Y','G'].forEach(function(c){
+    var on=(state==='red'&&c==='R')||(state==='yellow'&&c==='Y')||(state==='green'&&c==='G');
+    $('lamp'+c).className=$('lamp'+c).className.replace(' on','')+(on?' on':'');
+  });
+  $('lightTxt').innerHTML=txt;
+}
+
 function update(){
   var flow=+$('flow').value;flows[cur.id]=flow;
+  var s=cur.sim,d=simOf(cur);
   var p1=Math.max(1,Math.ceil(cur.n/flow)),p2=cur.horizon,total=p1+p2;
+  var dE=Math.max(1,Math.ceil(d.kE/flow)),dG=Math.max(1,Math.ceil(d.greenK/flow));
   $('flowLab').textContent=cur.flowLabel;
   $('flowVal').textContent=fi(flow);
   $('mName').textContent=cur.name;
   $('mNote').innerHTML=cur.note+' Подробнее: <a href="'+cur.linkHref+'">'+cur.linkText+'</a>.';
   $('sN').textContent=fi(cur.n);
-  $('sNu').textContent='целевой объём, '+cur.unitN;
-  $('sP1').textContent=fi(p1)+' дн';
+  $('sNu').textContent='целевой объём n, '+cur.unitN;
+  $('sG').textContent='≈ '+fi(dG)+'-й день';
   $('sP2').textContent=fi(p2)+' дн';
   $('sTot').textContent='≈ '+fi(total)+' дн';
+  $('sim').innerHTML=simChart(cur,flow);
   $('tl').innerHTML=timeline(p1,p2);
+  var verdict=d.side===s.good?'гипотеза подтверждена':'гипотеза опровергнута';
+  if(d.reached){
+    setLight('green','<b>Зелёный с ≈ '+fi(dG)+'-го дня: '+verdict+'</b> — коридор устойчиво '
+      +(d.side==='above'?'выше':'ниже')+' порога ('+s.thrTxt+'). До этого: красный '
+      +'до ≈ '+fi(dE)+'-го дня (коридор шире E), затем жёлтый — коридор сузился до ±'
+      +s.ETxt.replace('E = ','')+', но порог оставался внутри.');
+  }else{
+    setLight('yellow','<b>Жёлтый:</b> коридор сузился до ±E, но порог остаётся внутри '
+      +'коридора — в окне наблюдения решение не принято. Красный закончился '
+      +'≈ на '+fi(dE)+'-й день.');
+  }
+  $('legE').textContent=s.ETxt+' · '+s.sigmaTxt;
+  $('legS').textContent='Светофор: красный — данных мало, полуширина коридора больше E; '
+    +'жёлтый — коридор сузился до E, но порог внутри; зелёный — коридор устойчиво '
+    +'по одну сторону порога, гипотеза подтверждена или опровергнута.';
   $('fml').textContent=cur.formula;
   $('fmlU').textContent=cur.unitN+' (Z = 1,96 — доверие 95\\u202F%)';
-  $('fml2').textContent='Фаза 1 = n / приток = '+fi(cur.n)+' / '+fi(flow)+' ≈ '
+  $('fml2').textContent='День ↔ наблюдения: n = приток × дни, поэтому зелёный сигнал ≈ '
+    +fi(Math.ceil(d.greenK))+' наблюдений / '+fi(flow)+' в день ≈ '+fi(dG)+'-й день.';
+  $('fml3').textContent='Фаза 1 = n / приток = '+fi(cur.n)+' / '+fi(flow)+' ≈ '
     +fi(p1)+' дн · фаза 2 = горизонт метрики = '+fi(p2)+' дн · итог ≈ '+fi(total)+' дн.';
   var share=Math.round(100*p2/total);
   $('concl').textContent=(p1<=2

@@ -550,7 +550,7 @@ function calcSprt(){
   const ll1=p1*Math.log(p1/p0)+(1-p1)*Math.log((1-p1)/(1-p0));
   const ll0=p0*Math.log(p1/p0)+(1-p0)*Math.log((1-p1)/(1-p0));
   const ASN_H1 = ((1-b)*A + b*B) / Math.max(ll1,1e-9);
-  const ASN_H0 = (a*A + (1-a)*B) / Math.max(ll0,-1e-9);  // could be negative
+  const ASN_H0 = (a*A + (1-a)*B) / Math.min(ll0,-1e-9);  // ll0 < 0 при p1 > p0; клампим ОТ нуля
   return {n:ASN_H1, asnH0:Math.abs(ASN_H0), za:A, zb:B,
     formula:`Границы Вальда:
   A = ln((1−β)/α) = ${A.toFixed(3)}     ← если log-likelihood ≥ A, принимаем H₁
