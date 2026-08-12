@@ -6,9 +6,169 @@
 же записей собирается отчёт о проверке для заказчика — расхождение между
 текстом и отчётом исключено конструктивно.
 """
+import math
+
 from sources import SOURCES, NUM, ref
+from longread_figs import fig, _txt, _plate, _poly, _svg, _axes, DARK, ACC, DEEP, WARN
 
 READ_MIN = 12
+
+
+# ── Мини-графики к пяти ошибкам (стиль деки Шага 1, helpers из longread_figs) ─
+
+def _fig_outlier():
+    """Ошибка 1: ряд срока рассмотрения с четырьмя днями-выбросами."""
+    s = []
+    X0, Y0, X1, Y1 = 60, 26, 880, 300
+    px = lambda d: X0 + 10 + d * (X1 - X0 - 20) / 89
+    py = lambda v: Y1 - min(v, 100) / 110 * (Y1 - Y0 - 16)
+    SPIKES = {63: 296, 71: 388, 78: 441, 86: 512}
+    # окна сравнения: первые и последние 30 дней
+    s.append(f'<rect x="{px(0):.0f}" y="{Y0 + 14}" width="{px(29) - px(0):.0f}" height="{Y1 - Y0 - 14}" fill="{DEEP}" fill-opacity="0.06"/>')
+    s.append(f'<rect x="{px(60):.0f}" y="{Y0 + 14}" width="{px(89) - px(60):.0f}" height="{Y1 - Y0 - 14}" fill="{WARN}" fill-opacity="0.07"/>')
+    s.append(_axes(X0, Y0, X1, Y1))
+    s.append(_txt(X1, Y1 + 22, "дни квартала →", 12, None, DARK, op=0.6, anchor="end"))
+    s.append(_txt(X0 - 8, Y0 - 8, "минуты на заявку", 12, None, DARK, op=0.6))
+    pts = []
+    for d in range(90):
+        v = SPIKES.get(d, 40.5 + 2.6 * math.sin(d / 2.9) + 1.8 * math.sin(d / 1.31 + 2))
+        pts.append((px(d), py(v)))
+    s.append(_poly(pts, DEEP, 2))
+    for d, v in SPIKES.items():
+        s.append(f'<circle cx="{px(d):.0f}" cy="{py(v):.0f}" r="5" fill="{WARN}"/>')
+        s.append(_txt(px(d), py(v) - 12, f"{v}", 11, "700", WARN, anchor="middle"))
+    s.append(_txt(px(74.5), Y0 + 12, "остановки интеграции — 4 дня из 90", 12, "700", WARN, anchor="middle"))
+    # порог медиана + 3,5·MAD
+    s.append(f'<line x1="{X0 + 10}" y1="{py(54.3):.0f}" x2="{X1 - 10}" y2="{py(54.3):.0f}" '
+             f'stroke="{WARN}" stroke-width="1.8" stroke-dasharray="7 5"/>')
+    s.append(_txt(X0 + 16, py(54.3) - 10, "порог выброса: медиана + 3,5·MAD = 54,3 мин", 12, "700", WARN))
+    # средние по окнам
+    s.append(f'<line x1="{px(0):.0f}" y1="{py(41):.0f}" x2="{px(29):.0f}" y2="{py(41):.0f}" '
+             f'stroke="{DARK}" stroke-width="1.4" stroke-dasharray="3 4" stroke-opacity="0.6"/>')
+    s.append(_txt(px(29), py(41) + 20, "среднее окна: 41 мин", 11.5, "700", DARK, op=0.7, anchor="end"))
+    s.append(f'<line x1="{px(60):.0f}" y1="{py(72):.0f}" x2="{px(89):.0f}" y2="{py(72):.0f}" '
+             f'stroke="{DARK}" stroke-width="1.4" stroke-dasharray="3 4" stroke-opacity="0.6"/>')
+    s.append(_txt(px(60) - 8, py(72) + 4, "среднее окна: 72 мин", 11.5, "700", DARK, op=0.7, anchor="end"))
+    s.append(_txt(px(2), Y1 - 8, "первые 30 дней", 11.5, "700", DEEP))
+    s.append(_txt(px(62), Y1 - 8, "последние 30 дней", 11.5, "700", WARN))
+    return _svg(330, ''.join(s))
+
+
+def _fig_confounder():
+    """Ошибка 2: обращения и отток повторяют форму третьего ряда — ошибок приложения."""
+    s = []
+    X0, Y0, X1, Y1 = 60, 26, 880, 300
+    px = lambda w: X0 + 20 + w * (X1 - X0 - 60) / 25
+    py = lambda v: Y1 - 12 - v * (Y1 - Y0 - 40)
+    g = lambda w: math.exp(-((w - 14) / 2.8) ** 2)
+    err = lambda w: 0.10 + 0.85 * g(w)
+    calls = lambda w: 0.22 + 0.68 * g(w - 0.5) + 0.030 * math.sin(w * 1.3)
+    churn = lambda w: 0.18 + 0.60 * g(w - 1.2) + 0.028 * math.sin(w * 1.1 + 1)
+    # период пика ошибок после релиза
+    s.append(f'<rect x="{px(13):.0f}" y="{Y0 + 12}" width="{px(16) - px(13):.0f}" height="{Y1 - Y0 - 12}" fill="{WARN}" fill-opacity="0.07"/>')
+    s.append(_axes(X0, Y0, X1, Y1))
+    s.append(_txt(X1, Y1 + 22, "недели →", 12, None, DARK, op=0.6, anchor="end"))
+    ws = [i / 2 for i in range(51)]
+    s.append(_poly([(px(w), py(err(w))) for w in ws], WARN, 2.6))
+    s.append(_poly([(px(w), py(calls(w))) for w in ws], ACC, 2.2))
+    s.append(_poly([(px(w), py(churn(w))) for w in ws], DEEP, 2.2))
+    s.append(f'<line x1="{px(13):.0f}" y1="{Y0 + 12}" x2="{px(13):.0f}" y2="{Y1}" '
+             f'stroke="{DARK}" stroke-width="1.4" stroke-dasharray="5 5" stroke-opacity="0.55"/>')
+    s.append(_txt(px(13) - 8, Y0 + 8, "релиз приложения", 11.5, "700", DARK, op=0.7, anchor="end"))
+    for j, (col, name) in enumerate(((ACC, "обращения в контакт-центр"),
+                                     (DEEP, "отток по дебетовым картам"),
+                                     (WARN, "доля сессий с ошибкой в приложении"))):
+        yl = 58 + j * 26
+        s.append(f'<rect x="86" y="{yl - 11}" width="14" height="14" rx="4" fill="{col}"/>')
+        s.append(_txt(108, yl, name, 12, "700", col))
+    s.append(_plate(612, 56, 254, 66, "#fbfdfc", bar=4))
+    s.append(_txt(636, 82, "обращения ↔ отток: r = 0,84", 12.5, "700"))
+    s.append(_txt(636, 104, "при фиксации ошибок: r = 0,07", 12.5, "800", DEEP))
+    return _svg(330, ''.join(s))
+
+
+def _fig_seasonality():
+    """Ошибка 3: волна IV квартала, принятая за рост канала."""
+    s = []
+    X0, Y0, X1, Y1 = 60, 26, 880, 300
+    VALS = [100, 96, 90, 122, 94, 90, 85, 114, 88, 84, 78, 106]
+    bx = lambda i: X0 + 14 + i * 62 + (i // 4) * 20
+    py = lambda v: Y1 - v / 130 * (Y1 - Y0 - 26)
+    s.append(f'<line x1="{X0}" y1="{Y1}" x2="{X1}" y2="{Y1}" stroke="{DARK}" stroke-opacity="0.35" stroke-width="1.5"/>')
+    Q = ["I", "II", "III", "IV"]
+    for i, v in enumerate(VALS):
+        q4 = (i % 4 == 3)
+        s.append(f'<rect x="{bx(i):.0f}" y="{py(v):.0f}" width="46" height="{Y1 - py(v):.0f}" rx="4" '
+                 f'fill="{DEEP if q4 else ACC}" fill-opacity="{0.95 if q4 else 0.45}"/>')
+        s.append(_txt(bx(i) + 23, Y1 + 18, Q[i % 4], 11, None, DARK, op=0.55, anchor="middle"))
+    for g, year in enumerate(("2023", "2024", "2025")):
+        s.append(_txt(bx(4 * g) + 116, Y1 + 38, year, 12.5, "700", DARK, op=0.75, anchor="middle"))
+    # соблазн: III'25 → IV'25, +36 %
+    x_a, y_a = bx(10) + 40, py(VALS[10]) - 10
+    x_b, y_b = bx(11) + 12, py(VALS[11]) - 10
+    s.append(f'<line x1="{x_a}" y1="{y_a}" x2="{x_b}" y2="{y_b}" stroke="{WARN}" stroke-width="2"/>')
+    s.append(f'<polygon points="{x_b},{y_b} {x_b - 11},{y_b + 1} {x_b - 6},{y_b + 9}" fill="{WARN}"/>')
+    s.append(_txt(bx(10) - 10, py(VALS[10]) - 24, "сосед к соседу: «+36 %»", 12.5, "800", WARN, anchor="end"))
+    s.append(_txt(bx(11) + 23, py(VALS[11]) + 22, "+36 %", 12.5, "800", "#ffffff", anchor="middle"))
+    # честное сравнение: IV'24 → IV'25, −7 %
+    s.append(f'<line x1="{bx(7) + 23}" y1="{py(VALS[7]):.0f}" x2="{bx(11) + 23}" y2="{py(VALS[7]):.0f}" '
+             f'stroke="{DEEP}" stroke-width="1.8" stroke-dasharray="6 5"/>')
+    s.append(_txt(bx(7) + 34, py(VALS[7]) - 10, "тот же квартал год назад: −7 %", 12.5, "800", DEEP))
+    return _svg(350, ''.join(s))
+
+
+def _fig_low_base():
+    """Ошибка 4: один список, отсортированный по темпу и по деньгам."""
+    s = []
+    ROWS = [("Банк Б", 60, 4.1), ("Банк А", 52, 6.0), ("Мы", 18, 26.0), ("Банк В", 9, 5.2)]
+    PANELS = [(40, 140, "Темп прироста, %", lambda p, a: p / 60 * 262, lambda p, a: f"+{p} %"),
+              (480, 580, "Прирост, млрд ₽", lambda p, a: a / 26 * 258, lambda p, a: ("+%.1f" % a).replace(".", ","))]
+    s.append(f'<line x1="460" y1="24" x2="460" y2="270" stroke="{DARK}" stroke-opacity="0.15" stroke-width="1.2"/>')
+    for x_name, x_bar, title, width, label in PANELS:
+        s.append(_txt(x_name, 36, title, 14, "800"))
+        for r, (name, p, a) in enumerate(ROWS):
+            y = 62 + r * 52
+            we = (name == "Мы")
+            s.append(_txt(x_name, y + 19, name, 12.5, "800" if we else None, DEEP if we else DARK,
+                          op=None if we else 0.8))
+            w = width(p, a)
+            s.append(f'<rect x="{x_bar}" y="{y}" width="{w:.0f}" height="28" rx="4" '
+                     f'fill="{DEEP if we else DARK}" fill-opacity="{0.95 if we else 0.3}"/>')
+            s.append(_txt(x_bar + w + 8, y + 19, label(p, a), 12.5, "700", DEEP if we else DARK,
+                          op=None if we else 0.75))
+    s.append(_txt(40, 296, "По темпам впереди банк Б, по деньгам — мы: его «+60 %» — это 4,1 млрд ₽, наши «+18 %» — 26 млрд ₽.",
+                  12.5, "700", DARK, op=0.85))
+    return _svg(312, ''.join(s))
+
+
+def _fig_bimodal():
+    """Ошибка 5: двугорбое распределение срока и среднее между горбами."""
+    s = []
+    X0, Y0, X1, Y1 = 60, 26, 880, 300
+    px = lambda t: X0 + 16 + t / 10 * (X1 - X0 - 46)
+    f = lambda t: 2.1 * math.exp(-((t - 0.22) / 0.34) ** 2) + 0.55 * math.exp(-((t - 6.4) / 2.0) ** 2)
+    py = lambda v: Y1 - v / 2.35 * (Y1 - Y0 - 26)
+    ts = [i / 20 for i in range(201)]
+    curve = [(px(t), py(f(t))) for t in ts]
+    area = ' '.join(f'{x:.1f},{y:.1f}' for x, y in curve)
+    s.append(f'<polygon points="{px(0):.1f},{Y1} {area} {px(10):.1f},{Y1}" fill="{ACC}" fill-opacity="0.14"/>')
+    tail = ' '.join(f'{px(t):.1f},{py(f(t)):.1f}' for t in ts if t >= 3)
+    s.append(f'<polygon points="{px(3):.1f},{Y1} {tail} {px(10):.1f},{Y1}" fill="{WARN}" fill-opacity="0.13"/>')
+    s.append(_poly(curve, DEEP, 2.4))
+    s.append(_axes(X0, Y0, X1, Y1))
+    s.append(_txt(X1, Y1 + 22, "срок рассмотрения, дней →", 12, None, DARK, op=0.6, anchor="end"))
+    s.append(_txt(px(0.22) + 20, 70, "72 % — автоскоринг, часы", 12, "700", DEEP))
+    s.append(_txt(px(6.4), py(0.55) - 16, "28 % — ручной андеррайтинг, дни", 12, "700", DEEP, anchor="middle"))
+    marks = [(0.20, "медиана 0,20 дня", DEEP, None, 178),
+             (2.08, "среднее 2,08 дня — здесь почти нет заявок", WARN, None, 104),
+             (3.0, "норматив 3 дня · правее — 25 % заявок", DARK, "6 5", 140),
+             (7.9, "90-й перцентиль: 7,9 дня", DEEP, "6 5", 84)]
+    for t, name, col, dash, ytxt in marks:
+        d = f' stroke-dasharray="{dash}"' if dash else ''
+        s.append(f'<line x1="{px(t):.0f}" y1="{ytxt + 8}" x2="{px(t):.0f}" y2="{Y1}" '
+                 f'stroke="{col}" stroke-width="1.8"{d}/>')
+        s.append(_txt(px(t) + 8, ytxt, name, 12, "700", col))
+    return _svg(330, ''.join(s))
 
 BODY = f"""
 <header><div class="wrap">
@@ -86,6 +246,7 @@ BODY = f"""
 ссылается справочник NIST{ref("mad")}.</p>
 <p>На наших данных: медиана 41,3 мин, MAD 2,5 мин, порог — 54,3 мин. Выше порога ровно
 четыре дня. Без них сравнение периодов даёт <b>+4 %</b> вместо +74 %.</p>
+{fig(_fig_outlier(), 'Четыре дня остановок интеграции (296–512 мин при обычных сорока) поднимают среднее последнего окна с 41 до 72 минут — весь «рост +74 %». Порог медиана + 3,5·MAD отделяет их одной проверкой; масштаб выбросов показан числами над точками.')}
 
 <div class="card">
 <h4>Что спросить</h4>
@@ -123,6 +284,7 @@ BODY = f"""
 <pre><code>r = (0,84 − 0,93 · 0,89) / √((1 − 0,93²)(1 − 0,89²)) = 0,07</code></pre>
 <p>Прямая связь обращений и оттока практически исчезает. Обе кривые повторяют форму
 третьей: пик ошибок 18.05–08.06 — сразу после релиза приложения.</p>
+{fig(_fig_confounder(), 'Обращения и отток идут «рука об руку» (r = 0,84), но оба повторяют форму третьего ряда — доли сессий с ошибкой после релиза. При зафиксированном третьем ряде связь сжимается до 0,07. Ряды приведены к одному масштабу.')}
 
 <div class="card">
 <h4>Что спросить</h4>
@@ -150,6 +312,7 @@ BODY = f"""
 <p>Первый и самый дешёвый способ — <b>сравнивать сопоставимые периоды</b>: IV квартал
 к IV кварталу прошлого года, год к году. У нас: IV кв. 2025 к IV кв. 2024 — <b>−7 %</b>,
 годовые итоги падают три года подряд (−5,9 %, затем −6,8 %).</p>
+{fig(_fig_seasonality(), 'IV квартал выше III каждый год — это календарь, а не работа канала. Сравнение «сосед к соседу» даёт +36 %; сопоставимое сравнение с тем же кварталом прошлого года — −7 %, и высота IV кварталов снижается три года подряд.')}
 <p>Второй способ, когда нужен именно тренд, — разложить ряд на составляющие. Классическая
 схема: находят скользящее среднее, делят на него ряд и по остатку оценивают сезонный
 профиль{ref("decomposition")}. Для рабочих задач берут <b>STL</b> — он устойчив к выбросам
@@ -181,6 +344,7 @@ BODY = f"""
 в шесть раз больше в деньгах. Официальная статистика называет это <b>эффектом базы</b>
 и отдельно предупреждает: большой процент при низкой базе не означает большого
 изменения по существу{ref("base-effect")}.</p>
+{fig(_fig_low_base(), 'Один и тот же список, отсортированный дважды. По темпам лидирует банк Б с «+60 %», но в деньгах его прирост — 4,1 млрд ₽ против наших 26 млрд ₽: проценты без абсолютов меняют лидера местами.')}
 
 <h3>Чем проверяется</h3>
 <p>Проценты пересчитывают в две сопоставимые величины:</p>
@@ -229,6 +393,7 @@ BODY = f"""
 нарушен для <b>25 % заявок</b>. Среднее оказалось единственным числом, при котором отчёт
 выглядит зелёным. Это общее свойство: среднее тянут хвосты и асимметрия, медиана
 к ним устойчива{ref("median")}.</p>
+{fig(_fig_bimodal(), 'Два процесса — два горба: автоскоринг закрывает 72 % заявок за часы, ручной андеррайтинг держит остальные днями. Среднее 2,08 дня попадает в провал между горбами, где почти нет заявок, — а правее норматива лежит 25 % заявок.')}
 <div class="scroll"><table>
 <tr><th>Срок рассмотрения</th><th class="num">Заявок</th><th class="num">Доля</th>
     <th class="num">Конверсия в выдачу</th></tr>

@@ -23,6 +23,15 @@ a:hover{border-bottom-color:var(--acc)}
 
 header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
   border-bottom:1px solid var(--line)}
+
+/* Хлебная крошка: лёгкая строка над шапкой. Фон тот же, что у верха градиента
+   шапки, поэтому крошка визуально сливается с ней в один блок. */
+.crumbs{background:var(--elev);font-size:13.5px;color:var(--ink3)}
+.crumbs .wrap{padding-top:14px;padding-bottom:2px;display:flex;align-items:baseline;gap:8px}
+.crumbs a{color:#128a53;border-bottom:1px solid transparent;font-weight:600}
+.crumbs a:hover{border-bottom-color:var(--acc)}
+.crumbs .sep{color:var(--ink3);font-size:11px}
+.crumbs .here{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .eyebrow{color:var(--acc);font-weight:800;font-size:12.5px;letter-spacing:.14em;
   text-transform:uppercase;margin-bottom:14px}
 h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 16px}
@@ -84,6 +93,10 @@ pre code{background:none;padding:0;font-size:1em}
 figure{margin:0 0 18px}
 figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
 figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+figure.fig{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:18px 18px 12px;margin:22px 0}
+figure.fig svg{max-width:100%;height:auto}
+figure.fig figcaption{padding-top:6px;border-top:1px solid var(--line);margin-top:12px}
 
 .steps{counter-reset:s;list-style:none;padding:0}
 .steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
@@ -121,6 +134,7 @@ a.fn:hover{border:0;text-decoration:underline}
 }
 </style>
 </head><body>
+<nav class="crumbs" aria-label="Навигация"><div class="wrap"><a href="index.html">Материалы</a><span class="sep">▸</span><span class="here">Лонгрид: роль данных</span></div></nav>
 
 <header><div class="wrap">
   <div class="eyebrow">Аналитика 360 · предчтение к Шагу 1</div>
@@ -195,14 +209,7 @@ a.fn:hover{border:0;text-decoration:underline}
     <td>Ранний сигнал: проблема видна здесь раньше, чем доходит
         до вашей отчётности</td></tr>
 </table></div>
-<div class="card">
-<h4>Главный вывод из матрицы</h4>
-<p>Решения в большинстве подразделений принимаются по левому верхнему
-квадранту — по цифрам из своих систем. А причина происходящего почти всегда
-лежит в остальных трёх: в звонках, в рынке, в отзывах. Матрица нужна
-не для классификации ради классификации, а чтобы увидеть, на какую часть
-картины ваша отчётность не смотрит вовсе.</p>
-</div>
+<figure class="fig"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 390" width="100%" style="font-family:Inter, Arial, sans-serif;display:block"><text x="460" y="14" font-size="12" fill="#2E3641" font-weight="700" fill-opacity="0.55" text-anchor="middle">цифры ← → тексты</text><rect x="70" y="20" width="370" height="130" rx="10" fill="#eaf7f0" stroke="#20BA72" stroke-opacity="0.25"/><text x="88" y="50" font-size="14.5" fill="#159A5C" font-weight="800">Структурированные · свои</text><text x="88" y="76" font-size="12.5" fill="#2E3641" fill-opacity="0.8">витрины, CRM, транзакции, статусы</text><text x="88" y="102" font-size="12.5" fill="#159A5C" font-weight="700">здесь принимаются решения</text><rect x="480" y="20" width="370" height="130" rx="10" fill="#ffffff" stroke="#20BA72" stroke-opacity="0.25"/><text x="498" y="50" font-size="14.5" fill="#2E3641" font-weight="800">Структурированные · внешние</text><text x="498" y="76" font-size="12.5" fill="#2E3641" fill-opacity="0.8">рынок, бюро, партнёрские фиды</text><text x="498" y="102" font-size="12.5" fill="#2E3641" font-weight="700">база сравнения и бенчмарки</text><rect x="70" y="170" width="370" height="130" rx="10" fill="#ffffff" stroke="#20BA72" stroke-opacity="0.25"/><text x="88" y="200" font-size="14.5" fill="#2E3641" font-weight="800">Тексты и речь · свои</text><text x="88" y="226" font-size="12.5" fill="#2E3641" fill-opacity="0.8">звонки, обращения, договоры</text><text x="88" y="252" font-size="12.5" fill="#2E3641" font-weight="700">ИИ читает целиком — новый источник</text><rect x="480" y="170" width="370" height="130" rx="10" fill="#ffffff" stroke="#20BA72" stroke-opacity="0.25"/><text x="498" y="200" font-size="14.5" fill="#2E3641" font-weight="800">Тексты · внешние</text><text x="498" y="226" font-size="12.5" fill="#2E3641" fill-opacity="0.8">отзывы, соцсети, СМИ</text><text x="498" y="252" font-size="12.5" fill="#2E3641" font-weight="700">ранние сигналы рынка</text><text x="30" y="165" font-size="12" fill="#2E3641" font-weight="700" fill-opacity="0.55">свои</text><text x="20" y="185" font-size="14" fill="#2E3641" font-weight="700" fill-opacity="0.55">↕</text><text x="14" y="205" font-size="12" fill="#2E3641" font-weight="700" fill-opacity="0.55">внешние</text><rect x="70" y="316" width="4" height="54" rx="2" fill="#20BA72"/><rect x="78" y="316" width="772" height="54" rx="10" fill="#eef5f1" stroke="#20BA72" stroke-opacity="0.25"/><text x="96" y="338" font-size="13.5" fill="#2E3641" font-weight="700">Решения принимаются по левому верхнему квадранту —</text><text x="96" y="358" font-size="13" fill="#2E3641" fill-opacity="0.8">а причина происходящего почти всегда лежит в остальных трёх.</text></svg><figcaption>Та же матрица, что на встрече Шага 1: происхождение × структура. Матрица нужна не для классификации, а чтобы увидеть, на какую часть картины ваша отчётность не смотрит вовсе.</figcaption></figure>
 <p>Отдельно про «свои тексты»: это самый недоиспользованный квадрант. Записи
 звонков и обращения раньше физически нельзя было прочитать целиком — читали
 выборочно, по жалобам. Языковые модели сняли это ограничение: корпус
@@ -313,6 +320,7 @@ a.fn:hover{border:0;text-decoration:underline}
 что из них складывается: выдачи, активация, доля активных клиентов, отток.
 В самом правом столбце — доход и P&amp;L продукта: там уже только объяснять,
 почему получилось так.</p>
+<figure class="fig"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 272" width="100%" style="font-family:Inter, Arial, sans-serif;display:block"><text x="460" y="24" font-size="12" fill="#2E3641" font-weight="700" fill-opacity="0.55" text-anchor="middle">время: сигнал → результат</text><rect x="50" y="44" width="330" height="176" rx="10" fill="#eaf7f0" stroke="#20BA72" stroke-opacity="0.25"/><text x="68" y="74" font-size="15" fill="#159A5C" font-weight="800">Опережающие</text><text x="68" y="96" font-size="12" fill="#2E3641" fill-opacity="0.7">ранний сигнал — влиять ещё можно</text><circle cx="76" cy="118" r="3.5" fill="#20BA72"/><text x="90" y="122" font-size="13" fill="#2E3641" font-weight="700">заявки на карту</text><circle cx="76" cy="142" r="3.5" fill="#20BA72"/><text x="90" y="146" font-size="13" fill="#2E3641" font-weight="700">доля одобрения</text><circle cx="76" cy="166" r="3.5" fill="#20BA72"/><text x="90" y="170" font-size="13" fill="#2E3641" font-weight="700">срок доставки карты</text><circle cx="76" cy="190" r="3.5" fill="#20BA72"/><text x="90" y="194" font-size="13" fill="#2E3641" font-weight="700">ошибки в заявке</text><rect x="540" y="44" width="330" height="176" rx="10" fill="#ffffff" stroke="#20BA72" stroke-opacity="0.25"/><text x="558" y="74" font-size="15" fill="#2E3641" font-weight="800">Запаздывающие</text><text x="558" y="96" font-size="12" fill="#2E3641" fill-opacity="0.7">результат — остаётся объяснять</text><circle cx="566" cy="118" r="3.5" fill="#2E3641" fill-opacity="0.5"/><text x="580" y="122" font-size="13" fill="#2E3641" font-weight="700">выдачи</text><circle cx="566" cy="142" r="3.5" fill="#2E3641" fill-opacity="0.5"/><text x="580" y="146" font-size="13" fill="#2E3641" font-weight="700">активация</text><circle cx="566" cy="166" r="3.5" fill="#2E3641" fill-opacity="0.5"/><text x="580" y="170" font-size="13" fill="#2E3641" font-weight="700">доля активных клиентов</text><circle cx="566" cy="190" r="3.5" fill="#2E3641" fill-opacity="0.5"/><text x="580" y="194" font-size="13" fill="#2E3641" font-weight="700">доход и P&amp;L</text><line x1="388" y1="132" x2="532" y2="132" stroke="#159A5C" stroke-width="3" stroke-linecap="round"/><polygon points="532.0,132.0 522.0,136.5 522.0,127.5" fill="#159A5C"/><text x="460" y="120" font-size="11.5" fill="#159A5C" font-weight="700" text-anchor="middle">складываются в</text><text x="215" y="250" font-size="13" fill="#159A5C" font-weight="800" text-anchor="middle">управление идёт здесь</text><text x="705" y="250" font-size="13" fill="#2E3641" font-weight="800" text-anchor="middle">план ставится здесь</text></svg><figcaption>Метрики кредитной карты — кейса Шага 1. Опережающие складываются в запаздывающие: управление идёт по левой колонке, план ставится по правой.</figcaption></figure>
 <p>Левые метрики называются <b>опережающими</b>, правые —
 <b>запаздывающими</b>. Рабочая система показателей требует и тех и других:
 без запаздывающих не видно, достигнут ли результат, без опережающих —
@@ -339,6 +347,7 @@ a.fn:hover{border:0;text-decoration:underline}
 тот же принцип называется «единым источником правды»: каждый элемент данных
 ведётся ровно в одном месте, и именно это защищает от расползающихся
 копий<a href="#src-ssot" class="fn">[4]</a>.</p>
+<figure class="fig"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 310" width="100%" style="font-family:Inter, Arial, sans-serif;display:block"><text x="170" y="26" font-size="12" fill="#C4453B" font-weight="700" text-anchor="middle">две системы — две цифры</text><text x="525" y="26" font-size="12" fill="#159A5C" font-weight="700" text-anchor="middle">назначен master-source</text><text x="790" y="26" font-size="12" fill="#2E3641" font-weight="700" text-anchor="middle">комитет: одна правда</text><rect x="40" y="46" width="260" height="96" rx="10" fill="#ffffff" stroke="#20BA72" stroke-opacity="0.25"/><text x="58" y="76" font-size="14" fill="#2E3641" font-weight="800">CRM продукта</text><text x="58" y="102" font-size="13.5" fill="#C4453B" font-weight="800">доля активных · 41 %</text><text x="58" y="124" font-size="11.5" fill="#2E3641" fill-opacity="0.7">своя логика «активного клиента»</text><rect x="40" y="196" width="260" height="96" rx="10" fill="#ffffff" stroke="#20BA72" stroke-opacity="0.25"/><text x="58" y="226" font-size="14" fill="#2E3641" font-weight="800">Витрина DWH</text><text x="58" y="252" font-size="13.5" fill="#C4453B" font-weight="800">доля активных · 38 %</text><text x="58" y="274" font-size="11.5" fill="#2E3641" fill-opacity="0.7">прослеживается до первички</text><polyline points="310.0,94.0 338.0,94.0 338.0,244.0 310.0,244.0" fill="none" stroke="#C4453B" stroke-width="1.6" stroke-dasharray="4 4" stroke-opacity="0.8" stroke-linejoin="round" stroke-linecap="round"/><text x="345" y="158" font-size="11.5" fill="#C4453B" font-weight="700">один показатель,</text><text x="345" y="174" font-size="11.5" fill="#C4453B" font-weight="700">разные цифры —</text><text x="345" y="190" font-size="11.5" fill="#C4453B" font-weight="700">спор о данных</text><line x1="340" y1="100" x2="448" y2="152" stroke="#159A5C" stroke-width="2.2" stroke-linecap="round"/><polygon points="448.0,152.0 437.0,151.7 440.9,143.6" fill="#159A5C"/><line x1="340" y1="238" x2="448" y2="186" stroke="#159A5C" stroke-width="2.2" stroke-linecap="round"/><polygon points="448.0,186.0 440.9,194.4 437.0,186.3" fill="#159A5C"/><rect x="452" y="114" width="260" height="110" rx="10" fill="#eaf7f0" stroke="#20BA72" stroke-opacity="0.25"/><text x="470" y="144" font-size="14.5" fill="#159A5C" font-weight="800">Master-source:</text><text x="470" y="164" font-size="14.5" fill="#159A5C" font-weight="800">витрина DWH</text><text x="470" y="188" font-size="11.5" fill="#2E3641" fill-opacity="0.8">один показатель — один источник;</text><text x="470" y="205" font-size="11.5" fill="#2E3641" fill-opacity="0.8">выбор зафиксирован письменно</text><line x1="716" y1="169" x2="756" y2="169" stroke="#159A5C" stroke-width="2.6" stroke-linecap="round"/><polygon points="756.0,169.0 746.0,173.5 746.0,164.5" fill="#159A5C"/><rect x="760" y="114" width="130" height="110" rx="10" fill="#ffffff" stroke="#20BA72" stroke-opacity="0.25"/><text x="778" y="144" font-size="14" fill="#2E3641" font-weight="800">Комитет</text><text x="778" y="168" font-size="12" fill="#159A5C" font-weight="700">одна цифра —</text><text x="778" y="186" font-size="15" fill="#159A5C" font-weight="800">38 %</text><text x="778" y="208" font-size="11.5" fill="#2E3641" fill-opacity="0.75">спор — о деле</text></svg><figcaption>Две системы дают разные цифры одного показателя. Master-source назначается и фиксируется письменно — на комитет идёт одна официальная цифра, и спор возвращается от данных к делу. Значения учебные.</figcaption></figure>
 <p>Критерии выбора master-source — те же, что критерии качества из раздела 4:
 полнота, частота обновления, прослеживаемость до первички и наличие живого
 владельца.</p>

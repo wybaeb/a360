@@ -28,6 +28,15 @@ a:hover{border-bottom-color:var(--acc)}
 
 header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
   border-bottom:1px solid var(--line)}
+
+/* Хлебная крошка: лёгкая строка над шапкой. Фон тот же, что у верха градиента
+   шапки, поэтому крошка визуально сливается с ней в один блок. */
+.crumbs{background:var(--elev);font-size:13.5px;color:var(--ink3)}
+.crumbs .wrap{padding-top:14px;padding-bottom:2px;display:flex;align-items:baseline;gap:8px}
+.crumbs a{color:#128a53;border-bottom:1px solid transparent;font-weight:600}
+.crumbs a:hover{border-bottom-color:var(--acc)}
+.crumbs .sep{color:var(--ink3);font-size:11px}
+.crumbs .here{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .eyebrow{color:var(--acc);font-weight:800;font-size:12.5px;letter-spacing:.14em;
   text-transform:uppercase;margin-bottom:14px}
 h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 16px}
@@ -89,6 +98,10 @@ pre code{background:none;padding:0;font-size:1em}
 figure{margin:0 0 18px}
 figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
 figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+figure.fig{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:18px 18px 12px;margin:22px 0}
+figure.fig svg{max-width:100%;height:auto}
+figure.fig figcaption{padding-top:6px;border-top:1px solid var(--line);margin-top:12px}
 
 .steps{counter-reset:s;list-style:none;padding:0}
 .steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
@@ -159,7 +172,15 @@ document.addEventListener('click',function(e){{
 """
 
 
-def page(title, body):
+def page(title, body, crumb=None):
+    """Готовая страница. crumb — название страницы для хлебной крошки
+    «Материалы ▸ <crumb>»; None (по умолчанию) — без крошки (хаб).
+    Ссылка относительная (index.html): страницы лежат рядом с хабом
+    и в корне репозитория, и в scorm/content, поэтому работает в обеих версиях."""
+    if crumb:
+        body = ('<nav class="crumbs" aria-label="Навигация"><div class="wrap">'
+                '<a href="index.html">Материалы</a><span class="sep">▸</span>'
+                f'<span class="here">{esc(crumb)}</span></div></nav>\n') + body
     return SHELL.format(title=title, css=CSS, body=body)
 
 

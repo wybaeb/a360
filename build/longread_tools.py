@@ -9,8 +9,110 @@ Excel / BI / Python / GigaChat»). По заданию владельца (11.08
 Терминология — та же, что будет на слайдах Шага 2.
 """
 from sources import SOURCES_TOOLS, ref_tools
+from longread_figs import fig, _txt, _svg, _axes, DARK, ACC, DEEP, WARN
 
 READ_MIN = 12
+
+
+# ── Фигуры раздела 7 «Минимум статистики» ───────────────────────────────────
+def hist_bimodal():
+    """Гистограмма с двумя горбами: один показатель — два разных процесса."""
+    s = []
+    X0, Y0, X1, Y1 = 60, 34, 880, 300
+    s.append(_axes(X0, Y0, X1, Y1))
+    s.append(_txt(X1, Y1 + 22, "срок обработки, дни →", 12, None, DARK, op=0.6, anchor="end"))
+    s.append(_txt(X0 - 8, Y0 - 12, "число заявок", 12, None, DARK, op=0.6))
+    H = [3, 7, 13, 18, 15, 9, 4, 2, 2, 4, 9, 14, 17, 12, 6, 2]
+    n, hmax = len(H), max(H)
+    bw = (X1 - X0 - 40) / n
+    for i, h in enumerate(H):
+        x = X0 + 20 + i * bw
+        hh = h / hmax * (Y1 - Y0 - 40)
+        s.append(f'<rect x="{x:.1f}" y="{Y1 - hh:.1f}" width="{bw - 4:.1f}" '
+                 f'height="{hh:.1f}" rx="3" fill="{ACC}" fill-opacity="0.85"/>')
+    gx = lambda i: X0 + 20 + (i + 0.5) * bw
+    mean_i = sum(i * h for i, h in enumerate(H)) / sum(H)
+    xm = gx(mean_i - 0.5) + 0.5 * bw
+    s.append(f'<line x1="{xm:.0f}" y1="{Y0 + 4}" x2="{xm:.0f}" y2="{Y1}" '
+             f'stroke="{WARN}" stroke-width="2" stroke-dasharray="6 5"/>')
+    s.append(_txt(xm, Y0 - 2, "среднее — там, где заявок почти нет", 12, "700", WARN, anchor="middle"))
+    s.append(_txt(gx(3), 96, "процесс 1", 12.5, "800", DEEP, anchor="middle"))
+    s.append(_txt(gx(3), 113, "автоматический маршрут", 11.5, None, DARK, op=0.75, anchor="middle"))
+    s.append(_txt(gx(12), 110, "процесс 2", 12.5, "800", DEEP, anchor="middle"))
+    s.append(_txt(gx(12), 127, "ручная проверка", 11.5, None, DARK, op=0.75, anchor="middle"))
+    return _svg(330, ''.join(s))
+
+
+def mean_vs_median():
+    """Один выброс тянет среднее; медиана стоит на месте."""
+    s = []
+    X0, X1 = 80, 860
+    vals = [12, 14, 16, 17, 18, 19, 21, 23, 26]
+    OUT = 60
+    px = lambda v: X0 + (v - 10) / 54 * (X1 - X0)
+    med1, mean1 = 18, sum(vals) / len(vals)                      # 18.4
+    med2, mean2 = 18.5, (sum(vals) + OUT) / (len(vals) + 1)      # 22.6
+    ROWS = [
+        (108, "девять значений", vals, med1, mean1, None),
+        (238, "те же значения + один выброс", vals + [OUT], med2, mean2, OUT),
+    ]
+    for y, title, vv, med, mean, out in ROWS:
+        s.append(_txt(X0, y - 46, title, 13, "700", DARK))
+        s.append(f'<line x1="{X0 - 10}" y1="{y}" x2="{X1 + 10}" y2="{y}" '
+                 f'stroke="{DARK}" stroke-opacity="0.3" stroke-width="1.5"/>')
+        for v in vv:
+            col = WARN if v == out else ACC
+            s.append(f'<circle cx="{px(v):.1f}" cy="{y}" r="7" fill="{col}" fill-opacity="0.85"/>')
+        xd, xn = px(med), px(mean)
+        s.append(f'<line x1="{xd:.1f}" y1="{y - 30}" x2="{xd:.1f}" y2="{y + 8}" '
+                 f'stroke="{DEEP}" stroke-width="2.5"/>')
+        s.append(_txt(xd, y - 38, "медиана", 12, "800", DEEP, anchor="middle"))
+        s.append(f'<line x1="{xn:.1f}" y1="{y - 8}" x2="{xn:.1f}" y2="{y + 30}" '
+                 f'stroke="{WARN}" stroke-width="2.5" stroke-dasharray="5 4"/>')
+        s.append(_txt(xn + 8, y + 30, "среднее", 12, "800", WARN))
+    s.append(_txt(px(OUT), 238 - 20, "выброс", 12, "700", WARN, anchor="middle"))
+    x1s, x2s = px(mean1), px(mean2)
+    s.append(f'<line x1="{x1s:.1f}" y1="286" x2="{x2s - 8:.1f}" y2="286" '
+             f'stroke="{WARN}" stroke-width="2"/>')
+    s.append(f'<polygon points="{x2s:.1f},286 {x2s - 10:.1f},281 {x2s - 10:.1f},291" fill="{WARN}"/>')
+    s.append(_txt(x2s + 12, 290, "среднее сдвинулось; медиана — нет", 12, "700", WARN))
+    return _svg(310, ''.join(s))
+
+
+def percentile_dist():
+    """Распределение срока процесса: норматив по 90-му перцентилю, не по среднему."""
+    s = []
+    X0, Y0, X1, Y1 = 60, 34, 880, 300
+    s.append(_axes(X0, Y0, X1, Y1))
+    s.append(_txt(X1, Y1 + 22, "срок процесса, дни →", 12, None, DARK, op=0.6, anchor="end"))
+    s.append(_txt(X0 - 8, Y0 - 12, "доля случаев", 12, None, DARK, op=0.6))
+    H = [5, 14, 19, 16, 12, 9, 7, 5.5, 4.5, 3.5, 3, 2.4, 2, 1.6, 1.3, 1.1, 0.9, 0.8]
+    n, hmax, total = len(H), max(H), sum(H)
+    bw = (X1 - X0 - 40) / n
+    acc, p90i = 0.0, n - 1
+    for i, h in enumerate(H):
+        acc += h
+        if acc >= 0.9 * total:
+            p90i = i + 1
+            break
+    for i, h in enumerate(H):
+        x = X0 + 20 + i * bw
+        hh = h / hmax * (Y1 - Y0 - 40)
+        col, op = (WARN, 0.6) if i >= p90i else (ACC, 0.85)
+        s.append(f'<rect x="{x:.1f}" y="{Y1 - hh:.1f}" width="{bw - 4:.1f}" '
+                 f'height="{hh:.1f}" rx="3" fill="{col}" fill-opacity="{op}"/>')
+    mean_i = sum(i * h for i, h in enumerate(H)) / total
+    xm = X0 + 20 + (mean_i + 0.5) * bw
+    s.append(f'<line x1="{xm:.0f}" y1="{Y0 + 30}" x2="{xm:.0f}" y2="{Y1}" '
+             f'stroke="{DARK}" stroke-width="1.8" stroke-dasharray="4 4" stroke-opacity="0.6"/>')
+    s.append(_txt(xm, Y0 + 22, "среднее", 12, "700", DARK, op=0.7, anchor="middle"))
+    xp = X0 + 20 + p90i * bw - 2
+    s.append(f'<line x1="{xp:.0f}" y1="{Y0 + 4}" x2="{xp:.0f}" y2="{Y1}" '
+             f'stroke="{DEEP}" stroke-width="2.5" stroke-dasharray="7 5"/>')
+    s.append(_txt(xp - 8, Y0 - 2, "90-й перцентиль → норматив", 12.5, "800", DEEP, anchor="end"))
+    s.append(_txt(xp + 12, Y0 + 52, "хвост: каждый десятый случай —", 12, "700", WARN))
+    s.append(_txt(xp + 12, Y0 + 69, "здесь живёт клиентский опыт", 12, "700", WARN))
+    return _svg(330, ''.join(s))
 
 BODY = f"""
 <header><div class="wrap">
@@ -143,14 +245,21 @@ BODY = f"""
 <section id="t7"><div class="wrap">
 <h2><span class="num">7</span>Минимум статистики: гистограмма, медиана, перцентиль</h2>
 <p><b>Гистограмма</b> графически сводит распределение одной величины
-{ref_tools("histogram")} — и показывает форму, которую среднее прячет: два
-горба вместо одного означают два разных процесса под одним показателем.</p>
-<p><b>Медиана</b> устойчива к выбросам: среднее сдвигается редкими
-экстремальными значениями, медиана — нет{ref_tools("median")}. Рядом с любым
-средним запрашивайте медиану.</p>
-<p><b>Перцентиль</b> отвечает за хвост: норматив на срок процесса задаётся
-по 90-му перцентилю, а не по среднему — в хвосте и живёт клиентский опыт
-{ref_tools("percentile")}.</p>
+{ref_tools("histogram")} — и показывает форму, которую среднее прячет.</p>
+{fig(hist_bimodal(),
+     "Два горба под одним показателем — это два разных процесса. Среднее "
+     "попадает в провал между ними и не описывает ни один из двух.")}
+<p><b>Медиана</b> устойчива к выбросам, среднее — нет{ref_tools("median")}.
+Рядом с любым средним запрашивайте медиану: если они разошлись — в данных
+выброс или перекос.</p>
+{fig(mean_vs_median(),
+     "Одно экстремальное значение утянуло среднее вправо; медиана осталась "
+     "на месте — она и описывает типичный случай.")}
+<p><b>Перцентиль</b> отвечает за хвост распределения{ref_tools("percentile")}:
+норматив на срок процесса задаётся по 90-му перцентилю, а не по среднему.</p>
+{fig(percentile_dist(),
+     "Среднее обещает быстрый срок, но каждый десятый случай живёт в хвосте. "
+     "Норматив по 90-му перцентилю отвечает и за него.")}
 </div></section>
 
 <section id="t8"><div class="wrap">

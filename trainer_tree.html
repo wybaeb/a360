@@ -44,6 +44,9 @@ button{font-family:var(--font)}
 #app{display:flex;flex-direction:column;height:100vh}
 .header{display:flex;align-items:center;gap:16px;padding:10px 20px;background:var(--bg-surface);border-bottom:1px solid rgba(16,40,28,.06);flex-shrink:0}
 .header-brand{display:flex;align-items:baseline;gap:8px}
+.back-link{font-size:12px;font-weight:600;color:var(--accent);text-decoration:none;
+  white-space:nowrap;border:1px solid rgba(32,186,114,.32);border-radius:8px;padding:3px 9px}
+.back-link:hover{background:rgba(32,186,114,.10);color:var(--accent-hover)}
 .header-title{font-size:16px;font-weight:700}
 .header-tag{font-size:11px;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
 .case-select{background:var(--bg-elevated);color:var(--text);border:1px solid rgba(16,40,28,.1);border-radius:var(--radius-sm);padding:7px 12px;font-size:13px;font-family:var(--font);cursor:pointer;min-width:240px}
@@ -185,6 +188,7 @@ button{font-family:var(--font)}
 <body>
 <div id="app">
   <header class="header">
+    <a class="back-link" href="index.html">&larr; Материалы</a>
     <div class="header-brand"><span class="header-title">Дерево метрик</span><span class="header-tag">Аналитика 360 · Шаг 1</span></div>
     <select id="caseSelect" class="case-select"></select>
     <div class="legend">

@@ -23,6 +23,15 @@ a:hover{border-bottom-color:var(--acc)}
 
 header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
   border-bottom:1px solid var(--line)}
+
+/* Хлебная крошка: лёгкая строка над шапкой. Фон тот же, что у верха градиента
+   шапки, поэтому крошка визуально сливается с ней в один блок. */
+.crumbs{background:var(--elev);font-size:13.5px;color:var(--ink3)}
+.crumbs .wrap{padding-top:14px;padding-bottom:2px;display:flex;align-items:baseline;gap:8px}
+.crumbs a{color:#128a53;border-bottom:1px solid transparent;font-weight:600}
+.crumbs a:hover{border-bottom-color:var(--acc)}
+.crumbs .sep{color:var(--ink3);font-size:11px}
+.crumbs .here{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .eyebrow{color:var(--acc);font-weight:800;font-size:12.5px;letter-spacing:.14em;
   text-transform:uppercase;margin-bottom:14px}
 h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 16px}
@@ -84,6 +93,10 @@ pre code{background:none;padding:0;font-size:1em}
 figure{margin:0 0 18px}
 figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
 figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+figure.fig{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:18px 18px 12px;margin:22px 0}
+figure.fig svg{max-width:100%;height:auto}
+figure.fig figcaption{padding-top:6px;border-top:1px solid var(--line);margin-top:12px}
 
 .steps{counter-reset:s;list-style:none;padding:0}
 .steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
@@ -147,22 +160,22 @@ a.fn:hover{border:0;text-decoration:underline}
 </div>
 
 <div class="card acc">
-<h4><a href="longread_data.html">2 · Лонгрид к Шагу 1: роль данных</a></h4>
+<h4><a href="practice.html">2 · Практика: повторите разборы в GigaChat</a></h4>
+<p>Те же пять разборов, что были на встрече, — но руками. Сценарий один на все пять:
+скачать выгрузку, отдать GigaChat один промпт, открыть страницу с графиками, которую
+он напишет. Плюс пошаговая инструкция для веб-версии GigaChat, готовые отчёты
+для сравнения и таблица воспроизводимости. Программировать не нужно.</p>
+<p class="sub" style="margin:0">40–60 минут. Проверено на GigaChat 2 и GigaChat 2 Max.</p>
+</div>
+
+<div class="card acc">
+<h4><a href="longread_data.html">3 · Лонгрид к Шагу 1: роль данных</a></h4>
 <p>Предчтение к Шагу 1 (13 августа). Категории данных: две оси и четыре
 квадранта; три контекста — продукт, процесс, бизнес; пять критериев ценности;
 качество шире «грязных данных»; опережающие и запаздывающие метрики;
 master-source. Тот язык, на котором пойдёт работа с картой ваших данных
 на встрече.</p>
 <p class="sub" style="margin:0">Чтение 10 минут. Формул для запоминания нет.</p>
-</div>
-
-<div class="card acc">
-<h4><a href="practice.html">3 · Практика: повторите разборы в GigaChat</a></h4>
-<p>Те же пять разборов, что были на встрече, — но руками. Сценарий один на все пять:
-скачать выгрузку, отдать GigaChat один промпт, открыть страницу с графиками, которую
-он напишет. Плюс пошаговая инструкция для веб-версии GigaChat, готовые отчёты
-для сравнения и таблица воспроизводимости. Программировать не нужно.</p>
-<p class="sub" style="margin:0">40–60 минут. Проверено на GigaChat 2 и GigaChat 2 Max.</p>
 </div>
 
 <div class="card acc">
@@ -203,7 +216,7 @@ time-to-evidence), дерево метрик и ансамбль, пять ти�
 </div>
 
 <div class="card acc">
-<h4><a href="longread_tools.html">7 · Лонгрид к Шагу 2: инструменты анализа</a></h4>
+<h4><a href="longread_tools.html">8 · Лонгрид к Шагу 2: инструменты анализа</a></h4>
 <p>Предчтение ко второй встрече (20 августа): какой инструмент под какую задачу —
 Excel, BI или Python, что в каждом из них делает GigaChat, семь шагов разведочного
 анализа, минимум статистики и какой график под какой вопрос.</p>
@@ -211,7 +224,7 @@ Excel, BI или Python, что в каждом из них делает GigaCha
 </div>
 
 <div class="card">
-<h4>8 · Данные и готовые отчёты</h4>
+<h4>9 · Данные и готовые отчёты</h4>
 <p>Пять синтетических выгрузок, на которых построены разборы, — в трёх форматах:
 <b>.js</b> для отчёта, CSV для Excel и Python, TXT для вложения в чат. Рядом —
 пять готовых отчётов, которые GigaChat собрал по этим выгрузкам. Ссылки лежат
