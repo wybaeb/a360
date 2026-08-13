@@ -37,7 +37,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import scorm_engagement
 import theme
-from metrics_data import metric
+from metrics_data import M, metric
 
 
 def theme_font(name):
@@ -488,6 +488,18 @@ assert _eval(_case("process_data"),
 assert _eval(_case("corporate"), ["mn", "rw", "t2a", "actv", "fee"])[:2] == (71, 414)
 assert _eval(_case("portfolio2"),
              ["mreq", "npvi", "npvsum", "statr", "prio"])[:2] == (106, 479)
+
+# Ни одной осиротевшей метрики в справочнике. Метрика, выпавшая из всех кейсов,
+# продолжает жить в справочнике отдельной группой и учить участника тому, чего
+# в тренажёре нет, — ровно так уцелел кейс «Портфель: сопоставимые продукты»
+# после замены на «Портфель инициатив» (метрики dict, adhoc, npvp, cmp, alloc
+# удалены 13.08.2026). Проверка ловит следующий такой случай на сборке.
+_USED = {m["id"] for _c in CASES for m in _c["metrics"]}
+_ORPHAN = sorted(set(M) - _USED)
+assert not _ORPHAN, (
+    "метрики есть в metrics_data, но не входят ни в один кейс тренажёра: "
+    + ", ".join(_ORPHAN) + ". Либо поставьте их в кейс, либо удалите из "
+    "справочника — иначе участник получит группу метрик, которой нет в дереве")
 
 # гомогенность терминов: внутренний жаргон в кейсы не просачивается
 _all_texts = json.dumps(CASES, ensure_ascii=False)
