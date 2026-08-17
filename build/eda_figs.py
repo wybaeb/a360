@@ -40,8 +40,14 @@ def rows(sql):
     return data
 
 
+СЛАЙД = {"режим": False}          # True — рисунок готовится для слайда деки
+
+
 def оформить(ax, заголовок, x=None, y=None):
-    ax.set_title(заголовок, fontsize=12.5, color=INK, pad=12, fontweight="bold")
+    # На слайде заголовок стоит в шапке: второй раз внутри рисунка он читается
+    # как брак вёрстки, поэтому в режиме слайда его не рисуем.
+    if заголовок and not СЛАЙД["режим"]:
+        ax.set_title(заголовок, fontsize=12.5, color=INK, pad=12, fontweight="bold")
     if x:
         ax.set_xlabel(x, fontsize=10.5, color=INK)
     if y:
@@ -53,8 +59,9 @@ def оформить(ax, заголовок, x=None, y=None):
 
 
 def сохранить(fig, имя):
-    OUT.mkdir(exist_ok=True)
-    путь = OUT / имя
+    каталог = OUT / "slides" if СЛАЙД["режим"] else OUT
+    каталог.mkdir(parents=True, exist_ok=True)
+    путь = каталог / имя
     fig.savefig(путь, format="svg", bbox_inches="tight", transparent=True)
     plt.close(fig)
     print(f"  {путь.name}: {путь.stat().st_size // 1024} КБ")
@@ -217,10 +224,17 @@ def дефекты():
     return dict(zip(подписи, значения))
 
 
-if __name__ == "__main__":
-    print("Фигуры лонгрида «Разведочный анализ»:")
+def всё():
     print("  распределение:", гистограмма())
     print("  воронка:", воронка())
     print("  каналы:", каналы())
     print("  месяцы:", месяцы())
     print("  дефекты:", дефекты())
+
+
+if __name__ == "__main__":
+    print("Фигуры лонгрида «Разведочный анализ»:")
+    всё()
+    print("Те же фигуры для слайдов (assets/slides/):")
+    СЛАЙД["режим"] = True
+    всё()

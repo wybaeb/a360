@@ -41,8 +41,12 @@ def rows(sql):
     return данные
 
 
+СЛАЙД = {"режим": False}          # True — рисунок пойдёт на слайд деки
+
+
 def оформить(ax, заголовок, x=None, y=None, размер=12.5):
-    ax.set_title(заголовок, fontsize=размер, color=INK, pad=10, fontweight="bold")
+    if заголовок and not СЛАЙД["режим"]:
+        ax.set_title(заголовок, fontsize=размер, color=INK, pad=10, fontweight="bold")
     if x:
         ax.set_xlabel(x, fontsize=10.5, color=INK)
     if y:
@@ -55,8 +59,9 @@ def оформить(ax, заголовок, x=None, y=None, размер=12.5):
 
 
 def сохранить(fig, имя):
-    OUT.mkdir(exist_ok=True)
-    путь = OUT / имя
+    каталог = OUT / "slides" if СЛАЙД["режим"] else OUT
+    каталог.mkdir(parents=True, exist_ok=True)
+    путь = каталог / имя
     fig.savefig(путь, format="svg", bbox_inches="tight", transparent=True, dpi=140)
     plt.close(fig)
     print(f"  {путь.name}: {путь.stat().st_size // 1024} КБ")
@@ -92,21 +97,36 @@ def связь():
     k8, b8, r8, r2_8 = _прямая(x, y)
     k7, b7, r7, r2_7 = _прямая(x[:-1], y[:-1])
 
-    fig, ax = plt.subplots(figsize=(8.4, 4.2), dpi=110)
-    ax.scatter(x[:-1], y[:-1], s=64, color=ACC, zorder=3, label="полные месяцы")
-    ax.scatter(x[-1:], y[-1:], s=90, color=WARN, zorder=3, marker="D",
+    fig, (ax, ax2) = plt.subplots(1, 2, figsize=(9.6, 4.0), dpi=110)
+
+    # Слева весь ряд: неполный месяц лежит далеко от остальных точек и растягивает
+    # диапазон — именно за счёт этого R² и подскакивает.
+    ax.scatter(x[:-1], y[:-1], s=54, color=ACC, zorder=3, label="полные месяцы")
+    ax.scatter(x[-1:], y[-1:], s=80, color=WARN, zorder=3, marker="D",
                label=f"неполный месяц ({подписи[-1]})")
     сетка = np.linspace(0, x.max() * 1.08, 50)
-    ax.plot(сетка, k7 * сетка + b7, color=DEEP, linewidth=2.2,
-            label=f"по полным месяцам: R² = {r2_7:.3f}".replace(".", ","))
-    ax.plot(сетка, k8 * сетка + b8, color=WARN, linewidth=2, linestyle="--",
-            label=f"со всеми точками: R² = {r2_8:.3f}".replace(".", ","))
-    легенда = ax.legend(frameon=True, fontsize=10, loc="upper left")
+    ax.plot(сетка, k7 * сетка + b7, color=DEEP, linewidth=2.2)
+    ax.plot(сетка, k8 * сетка + b8, color=WARN, linewidth=2, linestyle="--")
+    легенда = ax.legend(frameon=True, fontsize=9.5, loc="upper left")
     легенда.get_frame().set_edgecolor(LINE)
     легенда.get_frame().set_facecolor("#ffffff")
-    оформить(ax, "Заявки и выдачи по месяцам: одна точка меняет вывод",
-             "заявок за месяц", "выдач за месяц")
+    оформить(ax, "Весь ряд", "заявок за месяц", "выдач за месяц")
     ax.grid(alpha=.18)
+
+    # Справа тот же расчёт крупным планом по полным месяцам: там, где принимается
+    # решение, две прямые расходятся заметно.
+    ax2.scatter(x[:-1], y[:-1], s=54, color=ACC, zorder=3)
+    сетка2 = np.linspace(x[:-1].min() - 15, x[:-1].max() + 15, 50)
+    ax2.plot(сетка2, k7 * сетка2 + b7, color=DEEP, linewidth=2.2,
+             label=f"по полным месяцам: R² = {r2_7:.3f}".replace(".", ","))
+    ax2.plot(сетка2, k8 * сетка2 + b8, color=WARN, linewidth=2, linestyle="--",
+             label=f"со всеми точками: R² = {r2_8:.3f}".replace(".", ","))
+    легенда2 = ax2.legend(frameon=True, fontsize=9.5, loc="upper left")
+    легенда2.get_frame().set_edgecolor(LINE)
+    легенда2.get_frame().set_facecolor("#ffffff")
+    оформить(ax2, "Крупным планом: только полные месяцы", "заявок за месяц")
+    ax2.grid(alpha=.18)
+    fig.tight_layout()
     сохранить(fig, "stat_relation.svg")
     return dict(r8=r8, r7=r7, k8=k8, k7=k7, r2_8=r2_8, r2_7=r2_7, n=len(x))
 
@@ -176,8 +196,9 @@ def анскомб():
         оформить(ось, f"{имя} · {ПОДПИСИ[имя]}   r = {r:.2f}".replace(".", ","),
                  размер=11)
         ось.grid(alpha=.15)
-    fig.suptitle("Одинаковые числа, разные данные: квартет Анскомба",
-                 fontsize=13, fontweight="bold", color=INK, y=1.0)
+    if not СЛАЙД["режим"]:
+        fig.suptitle("Одинаковые числа, разные данные: квартет Анскомба",
+                     fontsize=13, fontweight="bold", color=INK, y=1.0)
     fig.tight_layout()
     сохранить(fig, "stat_anscombe.svg")
     return {имя: float(np.corrcoef(x, y)[0, 1]) for имя, (x, y) in АНСКОМБ.items()}
@@ -203,9 +224,18 @@ def остатки():
     return dict(максимум=float(np.abs(ост).max()))
 
 
-if __name__ == "__main__":
-    print("Фигуры теоретического материала:")
+def всё():
     print("  связь:", связь())
     print("  нет связи:", нет_связи())
     print("  Анскомб:", анскомб())
     print("  остатки:", остатки())
+
+
+if __name__ == "__main__":
+    print("Фигуры теоретического материала:")
+    всё()
+    # Те же рисунки без внутренних заголовков — для слайдов: заголовок там
+    # стоит в шапке слайда, и второй раз он читается как ошибка вёрстки.
+    print("Те же фигуры для слайдов (assets/slides/):")
+    СЛАЙД["режим"] = True
+    всё()
