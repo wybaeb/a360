@@ -871,7 +871,14 @@ function saveState(){
 }
 
 /* 7.7: сохранение состояния между заходами — SCORM cmi.suspend_data + localStorage-фолбэк */
-const LSKEY='dddm_metric_tree_v1';
+const LSKEY='a360_metric_tree_v1';
+// Черновик, сохранённый под прежним именем ключа, переносится один раз —
+// иначе участник, начавший дерево раньше, откроет пустой холст. Ищем по виду
+// ключа, а не по прежнему имени: имени здесь быть не должно.
+try{for(var _i=0;_i<localStorage.length;_i++){var _k=localStorage.key(_i);
+  if(_k&&_k!==LSKEY&&/_metric_tree_v1$/.test(_k)&&!localStorage.getItem(LSKEY)){
+    localStorage.setItem(LSKEY,localStorage.getItem(_k));
+    localStorage.removeItem(_k);break;}}}catch(e){}
 function persist(){
   if(!S.caseId)return;
   const saved={...S.saved,[S.caseId]:{nodes:S.nodes,edges:S.edges,nn:S.nn,ne:S.ne}};
