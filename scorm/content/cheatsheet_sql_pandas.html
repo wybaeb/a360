@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Одна операция — два способа: SQL и pandas · Аналитика 360</title>
+<style>
+:root{
+  --acc:#20BA72; --acc-soft:rgba(32,186,114,.10); --acc-line:rgba(32,186,114,.30);
+  --bg:#ffffff; --surf:#f4f8f6; --elev:#e9f3ee; --line:rgba(46,54,65,.13);
+  --ink:#2E3641; --ink2:rgba(46,54,65,.74); --ink3:rgba(46,54,65,.48);
+  --warn:#E4572E; --warn-soft:rgba(228,87,46,.09);
+  --font:'SB Sans Text','Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'SFMono-Regular',Consolas,'Liberation Mono',monospace;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth}
+body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 22px}
+/* overflow-wrap нужен ссылкам-адресам в списках источников: у длинного URL нет
+   точек переноса, на узком экране он уходит за край, а html/body{overflow-x:clip}
+   выше не даёт его прокрутить — текст пропадал совсем. break-word рвёт только
+   слово, которое иначе не помещается, и не влияет на расчёт min-content. */
+a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line);
+  overflow-wrap:break-word}
+a:hover{border-bottom-color:var(--acc)}
+
+header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
+  border-bottom:1px solid var(--line)}
+
+/* Хлебная крошка: лёгкая строка над шапкой. Фон тот же, что у верха градиента
+   шапки, поэтому крошка визуально сливается с ней в один блок. */
+.crumbs{background:var(--elev);font-size:13.5px;color:var(--ink3)}
+.crumbs .wrap{padding-top:14px;padding-bottom:2px;display:flex;align-items:baseline;gap:8px}
+.crumbs a{color:#128a53;border-bottom:1px solid transparent;font-weight:600}
+.crumbs a:hover{border-bottom-color:var(--acc)}
+.crumbs .sep{color:var(--ink3);font-size:11px}
+.crumbs .here{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eyebrow{color:var(--acc);font-weight:800;font-size:12.5px;letter-spacing:.14em;
+  text-transform:uppercase;margin-bottom:14px}
+h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 16px}
+.lead{font-size:clamp(16.5px,2vw,19px);color:var(--ink2);margin:0 0 22px}
+.meta{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;
+  font-size:13.5px;color:var(--ink2)}
+.chip b{color:var(--ink)}
+
+section{padding:44px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-size:clamp(22px,3vw,30px);font-weight:800;margin:0 0 8px;line-height:1.18}
+h2 .num{color:var(--acc);margin-right:.4em;font-variant-numeric:tabular-nums}
+h3{font-size:19px;font-weight:800;margin:30px 0 10px}
+h4{font-size:16px;font-weight:800;margin:22px 0 8px;color:var(--ink2)}
+p{margin:0 0 15px}
+ul,ol{margin:0 0 15px;padding-left:22px}
+li{margin-bottom:7px}
+.sub{color:var(--ink3);margin:0 0 22px;font-size:15.5px}
+
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:20px 22px;margin:0 0 18px}
+.card.acc{background:var(--acc-soft);border-color:var(--acc-line)}
+.card.warn{background:var(--warn-soft);border-color:rgba(228,87,46,.28)}
+.card h4{margin-top:0}
+.card p:last-child,.card ul:last-child,.card ol:last-child{margin-bottom:0}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0 0 15px;font-size:15.5px}
+.kv dt{color:var(--ink3)}
+.kv dd{margin:0;font-weight:600}
+
+table{border-collapse:collapse;width:100%;font-size:15px;margin:0 0 15px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{font-weight:800;color:var(--ink2);font-size:13.5px;text-transform:uppercase;
+  letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 15px}
+.scroll table{margin:0}
+
+pre{background:#20262e;color:#e7edf3;border-radius:12px;padding:16px 18px;overflow-x:auto;
+  font-family:var(--mono);font-size:13.5px;line-height:1.55;margin:0 0 15px}
+code{font-family:var(--mono);font-size:.9em;background:var(--elev);padding:2px 6px;
+  border-radius:5px}
+pre code{background:none;padding:0;font-size:1em}
+
+.prompt{position:relative;background:#20262e;color:#e7edf3;border-radius:12px;
+  padding:16px 18px;margin:0 0 14px}
+/* Промпт должен быть виден целиком: участник его читает, а не только копирует.
+   pre-wrap переносит длинные строки, но сохраняет переводы строк — innerText
+   в кнопке копирования отдаёт ровно исходный текст. */
+.prompt pre{margin:0;padding:0;background:none;max-height:none;
+  white-space:pre-wrap;overflow-wrap:anywhere}
+.prompt{padding-top:46px}
+.copy{position:absolute;top:10px;right:10px;background:var(--acc);color:#fff;border:0;
+  border-radius:8px;padding:7px 13px;font:600 13px var(--font);cursor:pointer}
+.copy:hover{filter:brightness(1.08)}
+.copy.done{background:#0f7a46}
+
+figure{margin:0 0 18px}
+figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+figure.fig{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:18px 18px 12px;margin:22px 0}
+figure.fig svg{max-width:100%;height:auto}
+figure.fig figcaption{padding-top:6px;border-top:1px solid var(--line);margin-top:12px}
+
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;
+  border-radius:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;
+  display:flex;align-items:center;justify-content:center}
+
+/* Раскрывающийся блок: три вспомогательных промпта не должны спорить за внимание
+   с главным, но и прятать их насовсем нельзя — по ним разбирают проверку. */
+details.more{border:1px solid var(--line);border-radius:14px;padding:0 22px;
+  margin:0 0 18px;background:var(--surf)}
+details.more>summary{cursor:pointer;font-weight:800;padding:16px 0;list-style:none;
+  color:var(--ink2)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸";color:var(--acc);margin-right:8px}
+details.more[open]>summary::before{content:"▾"}
+details.more[open]{padding-bottom:14px}
+details.more>summary:hover{color:var(--ink)}
+
+.toc{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+  margin:0 0 8px}
+.toc ol{margin:0;padding-left:20px}
+.toc a{border:0}
+.toc a:hover{border-bottom:1px solid var(--acc)}
+
+footer{padding:36px 0 60px;color:var(--ink3);font-size:14.5px}
+/* Сноска на источник: верхний индекс, чтобы номер не читался как часть текста */
+a.fn{border:0;font-size:.72em;vertical-align:super;font-weight:700;padding-left:2px}
+a.fn:hover{border:0;text-decoration:underline}
+.tag{display:inline-block;background:var(--elev);border-radius:6px;padding:1px 8px;
+  font-size:13px;color:var(--ink2);font-weight:600}
+@media(max-width:600px){
+  body{font-size:16px}
+  .kv{grid-template-columns:1fr}
+}
+</style>
+</head><body>
+<nav class="crumbs" aria-label="Навигация"><div class="wrap"><a href="index.html">Материалы</a><span class="sep">▸</span><span class="here">Памятка: SQL и pandas</span></div></nav>
+
+<style>
+/* Колонка страницы рассчитана на текст, а здесь рядом стоят два блока кода:
+   в 860 пикселях каждый получает по 40 символов, и запрос ломается посреди
+   строки. Разделы с парами — и только они — шире. */
+section.wide .wrap{max-width:1180px}
+.pair{border:1px solid var(--line);border-radius:14px;margin:0 0 22px;overflow:hidden}
+.pair>h3{margin:0;padding:14px 18px;background:var(--surf);font-size:17px;
+  border-bottom:1px solid var(--line)}
+.pair>h3 .n{color:var(--acc);font-variant-numeric:tabular-nums;margin-right:.5em}
+.pair .why{margin:0;padding:14px 18px 0;color:var(--ink2);font-size:15.5px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0;padding:14px 18px 4px;
+  align-items:stretch}
+.two>div{min-width:0;display:flex;flex-direction:column}
+.two .lab{font:700 11.5px var(--font);letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink3);margin:0 0 6px}
+/* Памятку читают, а не только копируют: длинную строку переносим, иначе
+   правый край запроса просто не виден, а горизонтальную прокрутку внутри
+   узкой колонки никто не ищет. */
+.two pre{margin:0;border-radius:10px;font-size:12px;line-height:1.55;flex:1;
+  white-space:pre-wrap;overflow-wrap:anywhere;overflow-x:visible}
+.two>div:first-child pre{border-top-right-radius:0;border-bottom-right-radius:0}
+.two>div:last-child pre{border-top-left-radius:0;border-bottom-left-radius:0;
+  border-left:1px solid rgba(255,255,255,.16)}
+.pair .note{margin:0;padding:12px 18px 16px;color:var(--ink2);font-size:15px}
+.pair .note b{color:var(--ink)}
+@media(max-width:720px){
+  .two{grid-template-columns:1fr;gap:10px}
+  .two pre{border-radius:10px!important;border-left:0!important}
+}
+</style>
+
+<header><div class="wrap">
+  <div class="eyebrow">Материалы практики</div>
+  <h1>Одна операция — два способа: SQL и pandas</h1>
+  <p class="lead">Одна и та же операция разведочного анализа — слева запросом к базе, справа в pandas. Обе колонки выполняются на одних и тех же данных кредитного конвейера, и результат сверяется автоматически: памятка не даёт обещаний, которые нельзя проверить.</p>
+  <div class="meta">
+    <span class="chip">Операций <b>21</b></span>
+    <span class="chip">Данные <b>синтетические</b></span>
+    <span class="chip">Проверено <b>сверкой результатов</b></span>
+  </div>
+</div></header>
+
+<section><div class="wrap">
+<p>SQL считает там, где лежат данные: база читает миллионы строк и отдаёт десятки. Pandas работает уже с тем, что поместилось в память тетради. Отсюда практическое правило: <b>отбор, соединение и агрегация — запросом; доводка, форма таблицы и график — в pandas.</b> Ошибка, которая дорого стоит, — вытащить <code>SELECT *</code> на миллион строк и группировать его в тетради: то же самое база сделает за секунды и вернёт готовый ответ.</p>
+
+<div class="toc">
+<ol>
+<li><a href="#osmotr">Осмотр</a> — что вообще лежит в выгрузке</li><li><a href="#otbor">Отбор и категории</a> — сузить данные до нужного среза</li><li><a href="#chistka">Чистка</a> — пропуски, повторы и типы</li><li><a href="#agregaty">Агрегация</a> — свернуть строки в показатели</li><li><a href="#forma">Соединение и форма</a> — собрать из нескольких таблиц</li><li><a href="#statistika">Статистика и окна</a> — медианы, корзины, ранги, выбросы</li>
+</ol>
+</div>
+
+<p class="sub">Всё то же самое, но выполняемое, — в тетради
+<a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/case_pipeline_sql/памятка_sql_pandas.ipynb">«Памятка SQL ↔ pandas»</a>: там каждая пара считается
+на вашей базе, и под ячейкой появляется отметка о совпадении результатов.
+Разведочный анализ, ради которого эти операции и нужны, разобран
+в <a href="longread_eda.html">отдельном лонгриде</a>.</p>
+</div></section>
+
+<section class="wide" id="osmotr"><div class="wrap"><h2><span class="num">1</span>Осмотр</h2><p class="sub">Что вообще лежит в выгрузке</p><div class="pair" id="op1"><h3><span class="n">1</span>Размер выгрузки и границы периода</h3><p class="why">Первый вопрос к незнакомым данным: сколько строк и за какой период. Пока это не проверено, любая цифра ниже повисает в воздухе.</p><div class="two"><div><p class="lab">SQL</p><pre><code>SELECT count(*)                       AS строк,
+       count(DISTINCT application_id) AS заявок,
+       min(submitted_at)::date        AS первая,
+       max(submitted_at)::date        AS последняя
+FROM raw_applications</code></pre></div><div><p class="lab">pandas</p><pre><code>справа = pd.DataFrame([{
+    &quot;строк&quot;:  len(заявки),
+    &quot;заявок&quot;: заявки[&quot;application_id&quot;].nunique(),
+    &quot;первая&quot;: заявки[&quot;submitted_at&quot;].min().date(),
+    &quot;последняя&quot;: заявки[&quot;submitted_at&quot;].max().date(),
+}])</code></pre></div></div><p class="note">Строк больше, чем заявок, — это уже находка: в выгрузке повторы.</p></div><div class="pair" id="op2"><h3><span class="n">2</span>Какие столбцы и какого они типа</h3><p class="why">Тип столбца решает, что с ним можно делать. Сумма, приехавшая текстом, тихо ломает среднее.</p><div class="two"><div><p class="lab">SQL</p><pre><code>SELECT column_name AS столбец, data_type AS тип
+FROM information_schema.columns
+WHERE table_name = &#x27;raw_applications&#x27;
+ORDER BY ordinal_position</code></pre></div><div><p class="lab">pandas</p><pre><code>справа = заявки.dtypes</code></pre></div></div><p class="note">В базе тип задан схемой и гарантирован. В pandas тип угадывается при чтении файла, поэтому <code>dtypes</code> смотрят всегда: <code>object</code> у колонки с суммами означает, что внутри текст.</p></div><div class="pair" id="op3"><h3><span class="n">3</span>Посмотреть первые строки</h3><p class="why">Глазами по десятку строк видно то, чего не видно ни в одной сводке: формат дат, лишние пробелы, служебные значения.</p><div class="two"><div><p class="lab">SQL</p><pre><code>SELECT application_id, product, channel, amount_requested
+FROM raw_applications
+ORDER BY application_id
+LIMIT 5</code></pre></div><div><p class="lab">pandas</p><pre><code>справа = (заявки.sort_values(&quot;application_id&quot;)
+          [[&quot;application_id&quot;, &quot;product&quot;, &quot;channel&quot;, &quot;amount_requested&quot;]]
+          .head(5))</code></pre></div></div><p class="note"><code>LIMIT</code> без <code>ORDER BY</code> возвращает произвольные строки: порядок в таблице базы не определён. То же и с <code>head()</code> — он берёт первые строки в текущем порядке кадра.</p></div></div></section><section class="wide" id="otbor"><div class="wrap"><h2><span class="num">2</span>Отбор и категории</h2><p class="sub">Сузить данные до нужного среза</p><div class="pair" id="op4"><h3><span class="n">4</span>Отобрать строки по условию</h3><p class="why">Любая проверка гипотезы начинается с отбора: один продукт, один канал, один диапазон сумм.</p><div class="two"><div><p class="lab">SQL</p><pre><code>SELECT count(*) AS заявок, round(avg(amount_requested)) AS средняя
+FROM raw_applications
+WHERE product = &#x27;Автокредит&#x27;
+  AND amount_requested &gt; 3000000</code></pre></div><div><p class="lab">pandas</p><pre><code>крупные = заявки[(заявки[&quot;product&quot;] == &quot;Автокредит&quot;)
+                &amp; (заявки[&quot;amount_requested&quot;] &gt; 3_000_000)]
+справа = pd.DataFrame([{
+    &quot;заявок&quot;:  len(крупные),
+    &quot;средняя&quot;: round(крупные[&quot;amount_requested&quot;].mean()),
+}])</code></pre></div></div><p class="note">Скобки вокруг каждого условия в pandas обязательны: <code>&amp;</code> выполняется раньше сравнения, и без скобок выражение падает.</p></div><div class="pair" id="op5"><h3><span class="n">5</span>Уникальные значения категории</h3><p class="why">Пока не видно списка значений, группировка по столбцу бессмысленна: «Отделение» и «отделение » — две разные строки.</p><div class="two"><div><p class="lab">SQL</p><pre><code>SELECT DISTINCT channel AS канал
+FROM raw_applications
+ORDER BY канал</code></pre></div><div><p class="lab">pandas</p><pre><code>справа = pd.DataFrame({&quot;канал&quot;: sorted(заявки[&quot;channel&quot;].unique())})</code></pre></div></div><p class="note">Порядок сортировки строк в базе и в Python может отличаться локалью — если сверяете списки, сортируйте обе стороны одинаково.</p></div><div class="pair" id="op6"><h3><span class="n">6</span>Частоты значений: сколько чего</h3><p class="why">Самая частая операция разведочного анализа. Показывает и структуру данных, и мусор в них.</p><div class="two"><div><p class="lab">SQL</p><pre><code>SELECT channel        AS канал,
+       count(*)       AS заявок
+FROM raw_applications
+GROUP BY channel
+ORDER BY заявок DESC</code></pre></div><div><p class="lab">pandas</p><pre><code>справа = (заявки[&quot;channel&quot;].value_counts()
+          .rename_axis(&quot;канал&quot;).reset_index(name=&quot;заявок&quot;))</code></pre></div></div><p class="note"><code>value_counts()</code> сразу сортирует по убыванию — это и есть <code>GROUP BY … ORDER BY count(*) DESC</code> одной командой.</p></div></div></section><section class="wide" id="chistka"><div class="wrap"><h2><span class="num">3</span>Чистка</h2><p class="sub">Пропуски, повторы и типы</p><div class="pair" id="op7"><h3><span class="n">7</span>Пропуски по столбцам</h3><p class="why">Пропуск — это не всегда ошибка. Незакрытый этап означает «ещё идёт», и такие строки считают отдельно, а не выбрасывают.</p><div class="two"><div><p class="lab">SQL</p><pre><code>SELECT count(*) FILTER (WHERE left_at IS NULL)    AS без_выхода,
+       count(*) FILTER (WHERE actor_role IS NULL) AS без_роли,
+       count(*)                                   AS всего
+FROM raw_stage_events</code></pre></div><div><p class="lab">pandas</p><pre><code>справа = pd.DataFrame([{
+    &quot;без_выхода&quot;: int(этапы[&quot;left_at&quot;].isna().sum()),
+    &quot;без_роли&quot;:   int(этапы[&quot;actor_role&quot;].isna().sum()),
+    &quot;всего&quot;:      len(этапы),
+}])</code></pre></div></div><p class="note"><code>FILTER (WHERE …)</code> — способ посчитать несколько условий одним проходом по таблице. В pandas тому же соответствует <code>isna().sum()</code> по каждому столбцу.</p></div><div class="pair" id="op8"><h3><span class="n">8</span>Сколько строк лишние: повторы</h3><p class="why">Повторы приезжают при склейке выгрузок из разных систем и завышают всё, что считается по строкам.</p><div class="two"><div><p class="lab">SQL</p><pre><code>SELECT count(*)                                  AS строк,
+       count(DISTINCT application_id)            AS заявок,
+       count(*) - count(DISTINCT application_id) AS лишних
+FROM raw_applications</code></pre></div><div><p class="lab">pandas</p><pre><code>справа = pd.DataFrame([{
+    &quot;строк&quot;:  len(заявки),
+    &quot;заявок&quot;: заявки[&quot;application_id&quot;].nunique(),
+    &quot;лишних&quot;: int(заявки[&quot;application_id&quot;].duplicated().sum()),
+}])</code></pre></div></div><p class="note"><code>duplicated()</code> по умолчанию помечает все повторы, кроме первого, — поэтому его сумма и есть число лишних строк.</p></div><div class="pair" id="op9"><h3><span class="n">9</span>Убрать повторы, оставив первую запись</h3><p class="why">Правило «какую из копий оставляем» задаёт аналитик, а не инструмент: обычно самую раннюю или самую свежую по времени.</p><div class="two"><div><p class="lab">SQL</p><pre><code>SELECT count(*) AS осталось
+FROM (
+    SELECT DISTINCT ON (application_id) application_id
+    FROM raw_applications
+    ORDER BY application_id, submitted_at
+) t</code></pre></div><div><p class="lab">pandas</p><pre><code>без_повторов = (заявки.sort_values([&quot;application_id&quot;, &quot;submitted_at&quot;])
+                 .drop_duplicates(&quot;application_id&quot;, keep=&quot;first&quot;))
+справа = pd.DataFrame([{&quot;осталось&quot;: len(без_повторов)}])</code></pre></div></div><p class="note"><code>DISTINCT ON</code> — приём PostgreSQL: он оставляет первую строку в порядке <code>ORDER BY</code>. В других диалектах то же делают через <code>ROW_NUMBER() OVER (PARTITION BY …)</code> и отбор <code>= 1</code>.</p></div><div class="pair" id="op10"><h3><span class="n">10</span>Привести тип: суммы к числу</h3><p class="why">В выгрузке из файла суммы почти всегда приходят текстом — с пробелами и запятой. Пока не приведены, среднее считать нельзя.</p><div class="two"><div><p class="lab">SQL</p><pre><code>SELECT round(sum(amount_requested)) AS сумма
+FROM raw_applications</code></pre></div><div><p class="lab">pandas</p><pre><code>суммы = pd.to_numeric(заявки[&quot;amount_requested&quot;], errors=&quot;coerce&quot;)
+справа = pd.DataFrame([{&quot;сумма&quot;: round(суммы.sum())}])</code></pre></div></div><p class="note"><code>errors=&quot;coerce&quot;</code> превращает неразобранное в <code>NaN</code> вместо ошибки — и число таких <code>NaN</code> сразу показывает, сколько значений были мусором. В базе тип задан схемой, приводить нечего.</p></div></div></section><section class="wide" id="agregaty"><div class="wrap"><h2><span class="num">4</span>Агрегация</h2><p class="sub">Свернуть строки в показатели</p><div class="pair" id="op11"><h3><span class="n">11</span>Группировка с несколькими метриками</h3><p class="why">Основной рабочий инструмент: разрез плюс два-три показателя.</p><div class="two"><div><p class="lab">SQL</p><pre><code>SELECT channel                     AS канал,
+       count(*)                    AS заявок,
+       round(avg(amount_requested)) AS средняя,
+       round(sum(amount_requested)) AS сумма
+FROM raw_applications
+GROUP BY channel
+ORDER BY заявок DESC</code></pre></div><div><p class="lab">pandas</p><pre><code>справа = (заявки.groupby(&quot;channel&quot;)
+          .agg(заявок=(&quot;application_id&quot;, &quot;count&quot;),
+               средняя=(&quot;amount_requested&quot;, &quot;mean&quot;),
+               сумма=(&quot;amount_requested&quot;, &quot;sum&quot;))
+          .round(0).reset_index()
+          .rename(columns={&quot;channel&quot;: &quot;канал&quot;})
+          .sort_values(&quot;заявок&quot;, ascending=False)
+          .reset_index(drop=True))</code></pre></div></div><p class="note">Именованная агрегация в pandas (<code>заявок=(столбец, функция)</code>) — прямой аналог <code>AS</code> в SQL: столбцы сразу называются по-человечески.</p></div><div class="pair" id="op12"><h3><span class="n">12</span>Фильтр после агрегации</h3><p class="why">«Показать только те группы, где заявок больше тысячи» — это условие на результат, а не на строки.</p><div class="two"><div><p class="lab">SQL</p><pre><code>SELECT channel   AS канал,
+       count(*)  AS заявок
+FROM raw_applications
+GROUP BY channel
+HAVING count(*) &gt; 1000
+ORDER BY заявок DESC</code></pre></div><div><p class="lab">pandas</p><pre><code>справа = (заявки[&quot;channel&quot;].value_counts()
+          .rename_axis(&quot;канал&quot;).reset_index(name=&quot;заявок&quot;)
+          .query(&quot;заявок &gt; 1000&quot;)
+          .reset_index(drop=True))</code></pre></div></div><p class="note"><code>WHERE</code> отбирает строки до группировки, <code>HAVING</code> — группы после. В pandas это просто фильтр по уже посчитанному кадру.</p></div><div class="pair" id="op13"><h3><span class="n">13</span>Сортировка и первые N</h3><p class="why">Рейтинг — самая частая просьба руководителя: «покажи топ-5».</p><div class="two"><div><p class="lab">SQL</p><pre><code>SELECT region                       AS регион,
+       round(sum(amount_requested)) AS сумма
+FROM raw_applications
+GROUP BY region
+ORDER BY сумма DESC
+LIMIT 5</code></pre></div><div><p class="lab">pandas</p><pre><code>справа = (заявки.groupby(&quot;region&quot;)[&quot;amount_requested&quot;].sum()
+          .round(0).rename_axis(&quot;регион&quot;).reset_index(name=&quot;сумма&quot;)
+          .sort_values(&quot;сумма&quot;, ascending=False)
+          .head(5).reset_index(drop=True))</code></pre></div></div><p class="note">При равных значениях на границе топа порядок не определён ни там, ни там: если это важно, добавляйте второй ключ сортировки.</p></div></div></section><section class="wide" id="forma"><div class="wrap"><h2><span class="num">5</span>Соединение и форма</h2><p class="sub">Собрать из нескольких таблиц</p><div class="pair" id="op14"><h3><span class="n">14</span>Соединить две таблицы</h3><p class="why">Данные почти никогда не лежат в одной таблице: заявки в одной, решения по ним в другой.</p><div class="two"><div><p class="lab">SQL</p><pre><code>SELECT a.channel   AS канал,
+       count(*)    AS отказов
+FROM raw_applications a
+JOIN raw_decisions d ON d.application_id = a.application_id
+WHERE d.decision = &#x27;Отказ&#x27;
+GROUP BY a.channel
+ORDER BY отказов DESC</code></pre></div><div><p class="lab">pandas</p><pre><code>вместе = заявки.merge(решения, on=&quot;application_id&quot;, how=&quot;inner&quot;)
+справа = (вместе[вместе[&quot;decision&quot;] == &quot;Отказ&quot;][&quot;channel&quot;]
+          .value_counts().rename_axis(&quot;канал&quot;).reset_index(name=&quot;отказов&quot;))</code></pre></div></div><p class="note"><code>how=&quot;inner&quot;</code> — это <code>JOIN</code>, <code>how=&quot;left&quot;</code> — <code>LEFT JOIN</code>. После соединения всегда проверяйте число строк: если оно выросло, ключ не уникален и результат уже задвоен.</p></div><div class="pair" id="op15"><h3><span class="n">15</span>Разбивка по месяцам</h3><p class="why">Динамика отвечает на вопрос «стало лучше или хуже», а одна цифра за период — нет.</p><div class="two"><div><p class="lab">SQL</p><pre><code>SELECT to_char(date_trunc(&#x27;month&#x27;, submitted_at), &#x27;YYYY-MM&#x27;) AS месяц,
+       count(*)                                          AS заявок
+FROM raw_applications
+GROUP BY 1
+ORDER BY 1</code></pre></div><div><p class="lab">pandas</p><pre><code>справа = (заявки[&quot;submitted_at&quot;].dt.to_period(&quot;M&quot;).astype(str)
+          .value_counts().sort_index()
+          .rename_axis(&quot;месяц&quot;).reset_index(name=&quot;заявок&quot;))</code></pre></div></div><p class="note"><code>date_trunc</code> округляет дату вниз до начала периода. В pandas ту же роль играет <code>to_period(&quot;M&quot;)</code>, а <code>dt.month</code> — не то же самое: он склеит январь двух разных лет.</p></div><div class="pair" id="op16"><h3><span class="n">16</span>Сводная таблица: два разреза сразу</h3><p class="why">Пересечение двух признаков показывает то, чего не видно по каждому в отдельности: например, что доля канала неодинакова у разных продуктов.</p><div class="two"><div><p class="lab">SQL</p><pre><code>SELECT product AS продукт,
+       count(*) FILTER (WHERE channel = &#x27;Отделение&#x27;)            AS отделение,
+       count(*) FILTER (WHERE channel = &#x27;Мобильное приложение&#x27;) AS приложение
+FROM raw_applications
+GROUP BY product
+ORDER BY продукт</code></pre></div><div><p class="lab">pandas</p><pre><code>сводная = заявки.pivot_table(index=&quot;product&quot;, columns=&quot;channel&quot;,
+                            values=&quot;application_id&quot;, aggfunc=&quot;count&quot;,
+                            fill_value=0)
+справа = (сводная[[&quot;Отделение&quot;, &quot;Мобильное приложение&quot;]]
+          .rename(columns={&quot;Отделение&quot;: &quot;отделение&quot;,
+                           &quot;Мобильное приложение&quot;: &quot;приложение&quot;})
+          .rename_axis(&quot;продукт&quot;).reset_index()
+          .sort_values(&quot;продукт&quot;).reset_index(drop=True))</code></pre></div></div><p class="note"><code>pivot_table</code> — самый быстрый способ увидеть пересечение признаков. В SQL то же делают через <code>FILTER (WHERE …)</code> или <code>CASE WHEN</code> внутри агрегата.</p></div><div class="pair" id="op17"><h3><span class="n">17</span>Доля от общего</h3><p class="why">Абсолютные числа сравнивать нельзя, если группы разного размера. Доля — минимальная нормировка.</p><div class="two"><div><p class="lab">SQL</p><pre><code>SELECT channel                                          AS канал,
+       count(*)                                         AS заявок,
+       round(100.0 * count(*) / sum(count(*)) OVER (), 1) AS доля
+FROM raw_applications
+GROUP BY channel
+ORDER BY заявок DESC</code></pre></div><div><p class="lab">pandas</p><pre><code>по_каналу = (заявки[&quot;channel&quot;].value_counts()
+             .rename_axis(&quot;канал&quot;).reset_index(name=&quot;заявок&quot;))
+по_каналу[&quot;доля&quot;] = (100 * по_каналу[&quot;заявок&quot;]
+                     / по_каналу[&quot;заявок&quot;].sum()).round(1)
+справа = по_каналу</code></pre></div></div><p class="note"><code>sum(count(*)) OVER ()</code> — оконная функция: считает итог по всем группам, не схлопывая их. В pandas это просто деление на сумму столбца.</p></div></div></section><section class="wide" id="statistika"><div class="wrap"><h2><span class="num">6</span>Статистика и окна</h2><p class="sub">Медианы, корзины, ранги, выбросы</p><div class="pair" id="op18"><h3><span class="n">18</span>Медиана и перцентиль</h3><p class="why">Среднее по длительностям обманывает: один долгий случай тянет его вверх. Медиана — типичный срок, P90 — тот, в который укладывается почти всё.</p><div class="two"><div><p class="lab">SQL</p><pre><code>SELECT stage AS этап,
+       round(percentile_cont(0.5) WITHIN GROUP (
+             ORDER BY EXTRACT(EPOCH FROM (left_at - entered_at)) / 3600)::numeric, 1) AS медиана,
+       round(percentile_cont(0.9) WITHIN GROUP (
+             ORDER BY EXTRACT(EPOCH FROM (left_at - entered_at)) / 3600)::numeric, 1) AS p90
+FROM raw_stage_events
+WHERE left_at IS NOT NULL AND left_at &gt; entered_at
+GROUP BY stage
+ORDER BY медиана DESC</code></pre></div><div><p class="lab">pandas</p><pre><code>закрытые = этапы[этапы[&quot;left_at&quot;].notna()
+                  &amp; (этапы[&quot;left_at&quot;] &gt; этапы[&quot;entered_at&quot;])].copy()
+закрытые[&quot;часы&quot;] = ((закрытые[&quot;left_at&quot;] - закрытые[&quot;entered_at&quot;])
+                    .dt.total_seconds() / 3600)
+справа = (закрытые.groupby(&quot;stage&quot;)[&quot;часы&quot;]
+          .agg(медиана=lambda s: s.quantile(0.5),
+               p90=lambda s: s.quantile(0.9))
+          .round(1).rename_axis(&quot;этап&quot;).reset_index()
+          .sort_values(&quot;медиана&quot;, ascending=False)
+          .reset_index(drop=True))</code></pre></div></div><p class="note"><code>percentile_cont</code> в PostgreSQL и <code>quantile()</code> в pandas интерполируют одинаково — линейно. <code>percentile_disc</code> вернул бы существующее значение из выборки, и числа разошлись бы.</p></div><div class="pair" id="op19"><h3><span class="n">19</span>Условная колонка: разложить по корзинам</h3><p class="why">Непрерывную величину почти всегда режут на группы: малые, средние и крупные заявки ведут себя по-разному.</p><div class="two"><div><p class="lab">SQL</p><pre><code>SELECT CASE WHEN amount_requested &lt; 500000  THEN &#x27;1. до 500 тыс&#x27;
+            WHEN amount_requested &lt; 2000000 THEN &#x27;2. 0,5–2 млн&#x27;
+            ELSE                                 &#x27;3. свыше 2 млн&#x27;
+       END      AS размер,
+       count(*) AS заявок
+FROM raw_applications
+GROUP BY размер
+ORDER BY размер</code></pre></div><div><p class="lab">pandas</p><pre><code>размер = pd.cut(заявки[&quot;amount_requested&quot;],
+                 bins=[-1, 499_999, 1_999_999, float(&quot;inf&quot;)],
+                 labels=[&quot;1. до 500 тыс&quot;, &quot;2. 0,5–2 млн&quot;, &quot;3. свыше 2 млн&quot;])
+справа = (размер.value_counts().sort_index()
+          .rename_axis(&quot;размер&quot;).reset_index(name=&quot;заявок&quot;))</code></pre></div></div><p class="note">Границы корзин задаёт аналитик, и они всегда спорные — поэтому их проговаривают вслух вместе с выводом, а не прячут в код.</p></div><div class="pair" id="op20"><h3><span class="n">20</span>Оконная функция: первая заявка клиента</h3><p class="why">«Первый», «последний», «предыдущий» — это всегда окно: строки нумеруются внутри группы, а не по всей таблице.</p><div class="two"><div><p class="lab">SQL</p><pre><code>SELECT count(*) AS первых_заявок
+FROM (
+    SELECT ROW_NUMBER() OVER (PARTITION BY client_id
+                              ORDER BY submitted_at) AS n
+    FROM raw_applications
+) t
+WHERE n = 1</code></pre></div><div><p class="lab">pandas</p><pre><code>номер = (заявки.sort_values(&quot;submitted_at&quot;)
+         .groupby(&quot;client_id&quot;).cumcount() + 1)
+справа = pd.DataFrame([{&quot;первых_заявок&quot;: int((номер == 1).sum())}])</code></pre></div></div><p class="note">Оконная функция не схлопывает строки: рядом с каждой заявкой появляется её номер, и дальше можно отобрать любой. В pandas тот же приём — <code>cumcount()</code> после сортировки.</p></div><div class="pair" id="op21"><h3><span class="n">21</span>Выбросы по правилу полутора размахов</h3><p class="why">Классический способ отделить «долго» от «невозможно долго». Найденное — повод для вопроса, а не для удаления строки.</p><div class="two"><div><p class="lab">SQL</p><pre><code>WITH ч AS (
+    SELECT EXTRACT(EPOCH FROM (left_at - entered_at)) / 3600 AS часы
+    FROM raw_stage_events
+    WHERE stage = &#x27;Андеррайтинг&#x27; AND left_at &gt; entered_at
+), г AS (
+    SELECT percentile_cont(0.25) WITHIN GROUP (ORDER BY часы) AS q1,
+           percentile_cont(0.75) WITHIN GROUP (ORDER BY часы) AS q3
+    FROM ч
+)
+SELECT count(*) AS выбросов,
+       round((SELECT (q3 + 1.5 * (q3 - q1))::numeric FROM г), 1) AS порог
+FROM ч, г
+WHERE ч.часы &gt; г.q3 + 1.5 * (г.q3 - г.q1)</code></pre></div><div><p class="lab">pandas</p><pre><code>андеррайтинг = этапы[(этапы[&quot;stage&quot;] == &quot;Андеррайтинг&quot;)
+                     &amp; (этапы[&quot;left_at&quot;] &gt; этапы[&quot;entered_at&quot;])]
+часы = ((андеррайтинг[&quot;left_at&quot;] - андеррайтинг[&quot;entered_at&quot;])
+        .dt.total_seconds() / 3600)
+q1, q3 = часы.quantile(0.25), часы.quantile(0.75)
+порог = q3 + 1.5 * (q3 - q1)
+справа = pd.DataFrame([{&quot;выбросов&quot;: int((часы &gt; порог).sum()),
+                        &quot;порог&quot;: round(порог, 1)}])</code></pre></div></div><p class="note">Правило работает на распределениях без длинного хвоста. Там, где хвост есть по природе процесса, оно пометит выбросами нормальные случаи — тогда границу задают перцентилем, например P99.</p></div></div></section>
+
+<section><div class="wrap">
+<h2>Что выбрать</h2>
+<div class="card acc">
+<ul>
+  <li><b>Данных много, ответ маленький</b> — считает база. Отбор, соединение
+      и агрегация по миллионам строк живут в запросе.</li>
+  <li><b>Данных уже мало, нужна форма</b> — работает pandas: доводка таблицы,
+      производные колонки, подготовка к графику.</li>
+  <li><b>Правило, которым пользуются все</b> — представление в базе, а не
+      ячейка в чужой тетради: так оно живёт в одном месте и не расходится
+      между отчётами.</li>
+</ul>
+</div>
+<p>Числа при этом совпадают до последнего знака — в этом и смысл сверки
+в тетради. Выбор между SQL и pandas — не про правильность, а про место
+вычисления и объём данных.</p>
+</div></section>
+
+<footer><div class="wrap">
+  Аналитика 360 · материалы практической части.<br>
+  Все примеры выполняются на учебном стенде, данные синтетические.
+</div></footer>
+
+<script>
+// Кнопка «скопировать промпт»: сначала пробуем Clipboard API, при отказе —
+// старый execCommand. В LMS страница часто открыта в iframe без разрешения
+// на буфер обмена, и без запасного пути кнопка молча ничего не делает.
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.copy'); if(!b) return;
+  var t=b.parentNode.querySelector('pre').innerText;
+  function done(){b.textContent='Скопировано';b.classList.add('done');
+    setTimeout(function(){b.textContent='Копировать';b.classList.remove('done')},1800);}
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(done,fallback);
+  } else { fallback(); }
+  function fallback(){
+    var a=document.createElement('textarea');a.value=t;a.style.position='fixed';
+    a.style.opacity=0;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');done();}catch(_e){b.textContent='Выделите вручную';}
+    document.body.removeChild(a);
+  }
+});
+</script>
+</body></html>

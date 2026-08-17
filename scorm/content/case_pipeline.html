@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Кейс: кредитный конвейер · Аналитика 360</title>
+<style>
+:root{
+  --acc:#20BA72; --acc-soft:rgba(32,186,114,.10); --acc-line:rgba(32,186,114,.30);
+  --bg:#ffffff; --surf:#f4f8f6; --elev:#e9f3ee; --line:rgba(46,54,65,.13);
+  --ink:#2E3641; --ink2:rgba(46,54,65,.74); --ink3:rgba(46,54,65,.48);
+  --warn:#E4572E; --warn-soft:rgba(228,87,46,.09);
+  --font:'SB Sans Text','Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'SFMono-Regular',Consolas,'Liberation Mono',monospace;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth}
+body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 22px}
+/* overflow-wrap нужен ссылкам-адресам в списках источников: у длинного URL нет
+   точек переноса, на узком экране он уходит за край, а html/body{overflow-x:clip}
+   выше не даёт его прокрутить — текст пропадал совсем. break-word рвёт только
+   слово, которое иначе не помещается, и не влияет на расчёт min-content. */
+a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line);
+  overflow-wrap:break-word}
+a:hover{border-bottom-color:var(--acc)}
+
+header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
+  border-bottom:1px solid var(--line)}
+
+/* Хлебная крошка: лёгкая строка над шапкой. Фон тот же, что у верха градиента
+   шапки, поэтому крошка визуально сливается с ней в один блок. */
+.crumbs{background:var(--elev);font-size:13.5px;color:var(--ink3)}
+.crumbs .wrap{padding-top:14px;padding-bottom:2px;display:flex;align-items:baseline;gap:8px}
+.crumbs a{color:#128a53;border-bottom:1px solid transparent;font-weight:600}
+.crumbs a:hover{border-bottom-color:var(--acc)}
+.crumbs .sep{color:var(--ink3);font-size:11px}
+.crumbs .here{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eyebrow{color:var(--acc);font-weight:800;font-size:12.5px;letter-spacing:.14em;
+  text-transform:uppercase;margin-bottom:14px}
+h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 16px}
+.lead{font-size:clamp(16.5px,2vw,19px);color:var(--ink2);margin:0 0 22px}
+.meta{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;
+  font-size:13.5px;color:var(--ink2)}
+.chip b{color:var(--ink)}
+
+section{padding:44px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-size:clamp(22px,3vw,30px);font-weight:800;margin:0 0 8px;line-height:1.18}
+h2 .num{color:var(--acc);margin-right:.4em;font-variant-numeric:tabular-nums}
+h3{font-size:19px;font-weight:800;margin:30px 0 10px}
+h4{font-size:16px;font-weight:800;margin:22px 0 8px;color:var(--ink2)}
+p{margin:0 0 15px}
+ul,ol{margin:0 0 15px;padding-left:22px}
+li{margin-bottom:7px}
+.sub{color:var(--ink3);margin:0 0 22px;font-size:15.5px}
+
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:20px 22px;margin:0 0 18px}
+.card.acc{background:var(--acc-soft);border-color:var(--acc-line)}
+.card.warn{background:var(--warn-soft);border-color:rgba(228,87,46,.28)}
+.card h4{margin-top:0}
+.card p:last-child,.card ul:last-child,.card ol:last-child{margin-bottom:0}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0 0 15px;font-size:15.5px}
+.kv dt{color:var(--ink3)}
+.kv dd{margin:0;font-weight:600}
+
+table{border-collapse:collapse;width:100%;font-size:15px;margin:0 0 15px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{font-weight:800;color:var(--ink2);font-size:13.5px;text-transform:uppercase;
+  letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 15px}
+.scroll table{margin:0}
+
+pre{background:#20262e;color:#e7edf3;border-radius:12px;padding:16px 18px;overflow-x:auto;
+  font-family:var(--mono);font-size:13.5px;line-height:1.55;margin:0 0 15px}
+code{font-family:var(--mono);font-size:.9em;background:var(--elev);padding:2px 6px;
+  border-radius:5px}
+pre code{background:none;padding:0;font-size:1em}
+
+.prompt{position:relative;background:#20262e;color:#e7edf3;border-radius:12px;
+  padding:16px 18px;margin:0 0 14px}
+/* Промпт должен быть виден целиком: участник его читает, а не только копирует.
+   pre-wrap переносит длинные строки, но сохраняет переводы строк — innerText
+   в кнопке копирования отдаёт ровно исходный текст. */
+.prompt pre{margin:0;padding:0;background:none;max-height:none;
+  white-space:pre-wrap;overflow-wrap:anywhere}
+.prompt{padding-top:46px}
+.copy{position:absolute;top:10px;right:10px;background:var(--acc);color:#fff;border:0;
+  border-radius:8px;padding:7px 13px;font:600 13px var(--font);cursor:pointer}
+.copy:hover{filter:brightness(1.08)}
+.copy.done{background:#0f7a46}
+
+figure{margin:0 0 18px}
+figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+figure.fig{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:18px 18px 12px;margin:22px 0}
+figure.fig svg{max-width:100%;height:auto}
+figure.fig figcaption{padding-top:6px;border-top:1px solid var(--line);margin-top:12px}
+
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;
+  border-radius:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;
+  display:flex;align-items:center;justify-content:center}
+
+/* Раскрывающийся блок: три вспомогательных промпта не должны спорить за внимание
+   с главным, но и прятать их насовсем нельзя — по ним разбирают проверку. */
+details.more{border:1px solid var(--line);border-radius:14px;padding:0 22px;
+  margin:0 0 18px;background:var(--surf)}
+details.more>summary{cursor:pointer;font-weight:800;padding:16px 0;list-style:none;
+  color:var(--ink2)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸";color:var(--acc);margin-right:8px}
+details.more[open]>summary::before{content:"▾"}
+details.more[open]{padding-bottom:14px}
+details.more>summary:hover{color:var(--ink)}
+
+.toc{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+  margin:0 0 8px}
+.toc ol{margin:0;padding-left:20px}
+.toc a{border:0}
+.toc a:hover{border-bottom:1px solid var(--acc)}
+
+footer{padding:36px 0 60px;color:var(--ink3);font-size:14.5px}
+/* Сноска на источник: верхний индекс, чтобы номер не читался как часть текста */
+a.fn{border:0;font-size:.72em;vertical-align:super;font-weight:700;padding-left:2px}
+a.fn:hover{border:0;text-decoration:underline}
+.tag{display:inline-block;background:var(--elev);border-radius:6px;padding:1px 8px;
+  font-size:13px;color:var(--ink2);font-weight:600}
+@media(max-width:600px){
+  body{font-size:16px}
+  .kv{grid-template-columns:1fr}
+}
+</style>
+</head><body>
+<nav class="crumbs" aria-label="Навигация"><div class="wrap"><a href="index.html">Материалы</a><span class="sep">▸</span><span class="here">Кейс: кредитный конвейер</span></div></nav>
+
+<style>
+.stepbox{border:1px solid var(--line);border-radius:14px;padding:0 22px;margin:0 0 18px}
+.stepbox h3{margin:18px 0 8px}
+.stepbox .res{background:var(--acc-soft);border-left:3px solid var(--acc);
+  border-radius:0 8px 8px 0;padding:10px 14px;margin:12px 0 18px;font-size:15.5px}
+.stepbox .res b{color:#0f7a46}
+.shot{margin:22px 0}
+.shot img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;
+  display:block}
+.shot figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+.time{font-variant-numeric:tabular-nums}
+</style>
+
+<header><div class="wrap"><div class="eyebrow">Кейс практики · 2 из 3</div><h1>Кредитный конвейер: от первого запроса до панели в BI</h1><p class="lead">Разведочный анализ на SQL: посмотреть, проверить, вычистить, посчитать — и перенести итоговый запрос в BI новой панелью. Pandas в этом кейсе не нужен.</p><div class="meta"><span class="chip">Время <b>50 минут</b></span><span class="chip">Нужна <b>тетрадь</b></span><span class="chip">Данные <b>3 672 заявки</b></span></div></div></header>
+
+<section><div class="wrap">
+<p><b>Управленческий вопрос.</b> Где конвейер теряет время и заявки —
+и что чинить первым?</p>
+
+<div class="card acc">
+<h4>Перед началом</h4>
+<p>Стенд поднят и проверен: <code>./run.sh up</code>, затем
+<code>python3 tools/check_env.py</code> — последняя строка должна быть
+«всё на месте». Порядок установки с нуля —
+в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/docs/УСТАНОВКА.md">документе установки</a>, для JupyterHub банка —
+в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/docs/JUPYTERHUB.md">отдельной инструкции</a>.</p>
+</div>
+
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">1</span>Шаги</h2>
+
+<div class="stepbox"><h3><span style="color:var(--acc)">1</span> &nbsp;Открыть тетрадь</h3><p><code>case_pipeline_sql/конвейер_sql.ipynb</code>. Первая ячейка подключает базу: <code>from tools.sqlcell import setup; setup()</code>. После неё ячейка, начинающаяся с <code>%%sql</code>, содержит чистый запрос и печатает результат таблицей.</p><div class="res"><b>Должно получиться:</b> Строка «База bank_training на связи: PostgreSQL 16».</div></div>
+
+<div class="stepbox"><h3><span style="color:var(--acc)">2</span> &nbsp;Осмотреть данные</h3><p>Сколько строк, какой период, как распределены заявки по каналам. Первый запрос к незнакомым данным — всегда про объём и границы.</p><div class="res"><b>Должно получиться:</b> 3 672 строки, но уникальных заявок меньше: в выгрузке повторы. Период — с января по август.</div></div>
+
+<div class="stepbox"><h3><span style="color:var(--acc)">3</span> &nbsp;Четыре проверки до расчётов</h3><p>Повторы строк, служебные записи, невозможные значения, разрывы между источниками. Это самая важная часть кейса: именно здесь решается, можно ли верить всему, что посчитается дальше.</p><div class="res"><b>Должно получиться:</b> 72 лишние строки, 58 тестовых заявок, 171 событие с выходом раньше входа, 298 незакрытых этапов и 54 заявки без решения.</div></div>
+
+<div class="stepbox"><h3><span style="color:var(--acc)">4</span> &nbsp;Посчитать цену пропущенной проверки</h3><p>Конверсия в выдачу считается дважды: как есть и после отсева повторов и служебных записей.</p><div class="res"><b>Должно получиться:</b> 49,6 % против 51,4 %. Почти два процентных пункта — это и есть цена одной пропущенной проверки, на сотнях заявок.</div></div>
+
+<div class="stepbox"><h3><span style="color:var(--acc)">5</span> &nbsp;Собрать чистый слой</h3><p>Правило чистки оформляется представлениями <code>v_applications_clean</code> и <code>v_stage_events_clean</code>. Дальше все расчёты идут поверх них — правило живёт в одном месте и не расходится между отчётами.</p><div class="res"><b>Должно получиться:</b> Два представления созданы; проверочный запрос показывает, сколько строк осталось.</div></div>
+
+<div class="stepbox"><h3><span style="color:var(--acc)">6</span> &nbsp;Посчитать то, ради чего всё затевалось</h3><p>Куда доходят заявки, сколько времени занимает этап (медиана и P90, потому что среднее по длительностям обманывает), где теряются заявки.</p><div class="res"><b>Должно получиться:</b> До выдачи доходит 56,4 % заявок. Самый долгий этап — андеррайтинг, медиана 40,6 ч при P90 78,1 ч.</div></div>
+
+<div class="stepbox"><h3><span style="color:var(--acc)">7</span> &nbsp;Перенести запрос в панель BI</h3><p>Итоговый запрос — срок этапа в разрезе канала — оформляется представлением <code>v_pipeline_stage_sla</code>. Дальше руками: <b>Создать → Запрос → Свой SQL-запрос</b>, источник «Учебная база банка», вставить запрос, выполнить, сменить тип отображения на столбчатую диаграмму, сохранить как «Сроки этапов конвейера».</p><p>Один раз пройти этот путь руками полезно: дальше то же самое будет делать агент, и станет видно, что именно он делает за вас.</p><div class="res"><b>Должно получиться:</b> Панель в BI, которая обновится сама, когда в базе появятся новые данные.</div></div>
+
+<figure class="shot"><img src="assets/case_bi_panel.png" alt="Панель, собранная руками из запроса тетради. Здесь показано число заявок по этапам и каналам — тот случай, когда стоит остановиться и спросить себя, тот ли это показатель (см. ниже)."><figcaption>Панель, собранная руками из запроса тетради. Здесь показано число заявок по этапам и каналам — тот случай, когда стоит остановиться и спросить себя, тот ли это показатель (см. ниже).</figcaption></figure>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">2</span>Что должно получиться</h2>
+
+<div class="scroll">
+<table>
+<thead><tr><th>Канал</th><th class="num">Заявок</th>
+<th class="num">Медиана, ч</th><th class="num">P90, ч</th></tr></thead>
+<tbody>
+<tr><td>Партнёрская сеть</td><td class="num">571</td>
+    <td class="num"><b>54,9</b></td><td class="num">106,9</td></tr>
+<tr><td>Мобильное приложение</td><td class="num">904</td>
+    <td class="num">37,9</td><td class="num">69,1</td></tr>
+<tr><td>Отделение</td><td class="num">764</td>
+    <td class="num">37,2</td><td class="num">66,5</td></tr>
+<tr><td>Корпоративный менеджер</td><td class="num">415</td>
+    <td class="num">36,7</td><td class="num">62,7</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Андеррайтинг в партнёрской сети идёт в полтора раза дольше, чем в остальных
+каналах. Это ещё не вывод, а вопрос к владельцу процесса: состав заявок,
+режим работы или способ фиксации времени?</p>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">3</span>На чём спотыкаются</h2>
+<ul>
+  <li><b>Панель строят не по тому показателю.</b> На снимке выше сравниваются
+      каналы по <i>числу заявок</i> — а вопрос был про сроки. График получается
+      красивый и не отвечает ни на что: число заявок в канале говорит
+      о размере канала, а не о скорости конвейера. Проверяйте, что на оси
+      стоит именно та величина, ради которой всё считалось.</li>
+  <li><b>В редакторе SQL выбирают не ту базу.</b> В BI рядом с учебной базой
+      лежит демонстрационная — таблиц конвейера в ней нет.</li>
+  <li><b>Считают до чистки.</b> Разница в два процентных пункта появляется
+      именно здесь.</li>
+  <li><b>Отчитываются средним по длительностям.</b> Среднее на 6 часов больше
+      медианы: хвост тянет его вверх.</li>
+</ul>
+<p class="sub">Почему так и что с этим делать —
+в лонгриде <a href="longread_eda.html">«Разведочный анализ»</a>;
+те же операции в SQL и в pandas — в <a href="cheatsheet_sql_pandas.html">памятке</a>.</p>
+</div></section>
+
+<footer><div class="wrap">
+  Аналитика 360 · материалы практической части.<br>
+  Данные синтетические. Реальные клиентские выгрузки во внешние сервисы
+  не отправляются.
+</div></footer>
+
+
+<script>
+// Кнопка «скопировать промпт»: сначала пробуем Clipboard API, при отказе —
+// старый execCommand. В LMS страница часто открыта в iframe без разрешения
+// на буфер обмена, и без запасного пути кнопка молча ничего не делает.
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.copy'); if(!b) return;
+  var t=b.parentNode.querySelector('pre').innerText;
+  function done(){b.textContent='Скопировано';b.classList.add('done');
+    setTimeout(function(){b.textContent='Копировать';b.classList.remove('done')},1800);}
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(done,fallback);
+  } else { fallback(); }
+  function fallback(){
+    var a=document.createElement('textarea');a.value=t;a.style.position='fixed';
+    a.style.opacity=0;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');done();}catch(_e){b.textContent='Выделите вручную';}
+    document.body.removeChild(a);
+  }
+});
+</script>
+</body></html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Кейс: портфель инициатив · Аналитика 360</title>
+<style>
+:root{
+  --acc:#20BA72; --acc-soft:rgba(32,186,114,.10); --acc-line:rgba(32,186,114,.30);
+  --bg:#ffffff; --surf:#f4f8f6; --elev:#e9f3ee; --line:rgba(46,54,65,.13);
+  --ink:#2E3641; --ink2:rgba(46,54,65,.74); --ink3:rgba(46,54,65,.48);
+  --warn:#E4572E; --warn-soft:rgba(228,87,46,.09);
+  --font:'SB Sans Text','Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'SFMono-Regular',Consolas,'Liberation Mono',monospace;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth}
+body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 22px}
+/* overflow-wrap нужен ссылкам-адресам в списках источников: у длинного URL нет
+   точек переноса, на узком экране он уходит за край, а html/body{overflow-x:clip}
+   выше не даёт его прокрутить — текст пропадал совсем. break-word рвёт только
+   слово, которое иначе не помещается, и не влияет на расчёт min-content. */
+a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line);
+  overflow-wrap:break-word}
+a:hover{border-bottom-color:var(--acc)}
+
+header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
+  border-bottom:1px solid var(--line)}
+
+/* Хлебная крошка: лёгкая строка над шапкой. Фон тот же, что у верха градиента
+   шапки, поэтому крошка визуально сливается с ней в один блок. */
+.crumbs{background:var(--elev);font-size:13.5px;color:var(--ink3)}
+.crumbs .wrap{padding-top:14px;padding-bottom:2px;display:flex;align-items:baseline;gap:8px}
+.crumbs a{color:#128a53;border-bottom:1px solid transparent;font-weight:600}
+.crumbs a:hover{border-bottom-color:var(--acc)}
+.crumbs .sep{color:var(--ink3);font-size:11px}
+.crumbs .here{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eyebrow{color:var(--acc);font-weight:800;font-size:12.5px;letter-spacing:.14em;
+  text-transform:uppercase;margin-bottom:14px}
+h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 16px}
+.lead{font-size:clamp(16.5px,2vw,19px);color:var(--ink2);margin:0 0 22px}
+.meta{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;
+  font-size:13.5px;color:var(--ink2)}
+.chip b{color:var(--ink)}
+
+section{padding:44px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-size:clamp(22px,3vw,30px);font-weight:800;margin:0 0 8px;line-height:1.18}
+h2 .num{color:var(--acc);margin-right:.4em;font-variant-numeric:tabular-nums}
+h3{font-size:19px;font-weight:800;margin:30px 0 10px}
+h4{font-size:16px;font-weight:800;margin:22px 0 8px;color:var(--ink2)}
+p{margin:0 0 15px}
+ul,ol{margin:0 0 15px;padding-left:22px}
+li{margin-bottom:7px}
+.sub{color:var(--ink3);margin:0 0 22px;font-size:15.5px}
+
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:20px 22px;margin:0 0 18px}
+.card.acc{background:var(--acc-soft);border-color:var(--acc-line)}
+.card.warn{background:var(--warn-soft);border-color:rgba(228,87,46,.28)}
+.card h4{margin-top:0}
+.card p:last-child,.card ul:last-child,.card ol:last-child{margin-bottom:0}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0 0 15px;font-size:15.5px}
+.kv dt{color:var(--ink3)}
+.kv dd{margin:0;font-weight:600}
+
+table{border-collapse:collapse;width:100%;font-size:15px;margin:0 0 15px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{font-weight:800;color:var(--ink2);font-size:13.5px;text-transform:uppercase;
+  letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 15px}
+.scroll table{margin:0}
+
+pre{background:#20262e;color:#e7edf3;border-radius:12px;padding:16px 18px;overflow-x:auto;
+  font-family:var(--mono);font-size:13.5px;line-height:1.55;margin:0 0 15px}
+code{font-family:var(--mono);font-size:.9em;background:var(--elev);padding:2px 6px;
+  border-radius:5px}
+pre code{background:none;padding:0;font-size:1em}
+
+.prompt{position:relative;background:#20262e;color:#e7edf3;border-radius:12px;
+  padding:16px 18px;margin:0 0 14px}
+/* Промпт должен быть виден целиком: участник его читает, а не только копирует.
+   pre-wrap переносит длинные строки, но сохраняет переводы строк — innerText
+   в кнопке копирования отдаёт ровно исходный текст. */
+.prompt pre{margin:0;padding:0;background:none;max-height:none;
+  white-space:pre-wrap;overflow-wrap:anywhere}
+.prompt{padding-top:46px}
+.copy{position:absolute;top:10px;right:10px;background:var(--acc);color:#fff;border:0;
+  border-radius:8px;padding:7px 13px;font:600 13px var(--font);cursor:pointer}
+.copy:hover{filter:brightness(1.08)}
+.copy.done{background:#0f7a46}
+
+figure{margin:0 0 18px}
+figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+figure.fig{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:18px 18px 12px;margin:22px 0}
+figure.fig svg{max-width:100%;height:auto}
+figure.fig figcaption{padding-top:6px;border-top:1px solid var(--line);margin-top:12px}
+
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;
+  border-radius:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;
+  display:flex;align-items:center;justify-content:center}
+
+/* Раскрывающийся блок: три вспомогательных промпта не должны спорить за внимание
+   с главным, но и прятать их насовсем нельзя — по ним разбирают проверку. */
+details.more{border:1px solid var(--line);border-radius:14px;padding:0 22px;
+  margin:0 0 18px;background:var(--surf)}
+details.more>summary{cursor:pointer;font-weight:800;padding:16px 0;list-style:none;
+  color:var(--ink2)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸";color:var(--acc);margin-right:8px}
+details.more[open]>summary::before{content:"▾"}
+details.more[open]{padding-bottom:14px}
+details.more>summary:hover{color:var(--ink)}
+
+.toc{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+  margin:0 0 8px}
+.toc ol{margin:0;padding-left:20px}
+.toc a{border:0}
+.toc a:hover{border-bottom:1px solid var(--acc)}
+
+footer{padding:36px 0 60px;color:var(--ink3);font-size:14.5px}
+/* Сноска на источник: верхний индекс, чтобы номер не читался как часть текста */
+a.fn{border:0;font-size:.72em;vertical-align:super;font-weight:700;padding-left:2px}
+a.fn:hover{border:0;text-decoration:underline}
+.tag{display:inline-block;background:var(--elev);border-radius:6px;padding:1px 8px;
+  font-size:13px;color:var(--ink2);font-weight:600}
+@media(max-width:600px){
+  body{font-size:16px}
+  .kv{grid-template-columns:1fr}
+}
+</style>
+</head><body>
+<nav class="crumbs" aria-label="Навигация"><div class="wrap"><a href="index.html">Материалы</a><span class="sep">▸</span><span class="here">Кейс: портфель инициатив</span></div></nav>
+
+<style>
+.stepbox{border:1px solid var(--line);border-radius:14px;padding:0 22px;margin:0 0 18px}
+.stepbox h3{margin:18px 0 8px}
+.stepbox .res{background:var(--acc-soft);border-left:3px solid var(--acc);
+  border-radius:0 8px 8px 0;padding:10px 14px;margin:12px 0 18px;font-size:15.5px}
+.stepbox .res b{color:#0f7a46}
+.shot{margin:22px 0}
+.shot img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;
+  display:block}
+.shot figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+.time{font-variant-numeric:tabular-nums}
+</style>
+
+<header><div class="wrap"><div class="eyebrow">Кейс практики · 3 из 3</div><h1>Портфель инициатив: запрос словами — отчёт и дашборд</h1><p class="lead">Сначала ассистент отвечает на вопрос, заданный обычными словами, отчётом с графиками. Потом другой ассистент собирает из тех же данных постоянный дашборд в BI. SQL не пишет никто.</p><div class="meta"><span class="chip">Время <b>40 минут</b></span><span class="chip">Нужен <b>ключ ассистента</b></span><span class="chip">Инициатив <b>10</b></span></div></div></header>
+
+<section><div class="wrap">
+<p><b>Управленческий вопрос.</b> Когда портфель инициатив выходит в плюс
+и какие инициативы тянут его назад?</p>
+
+<div class="card acc">
+<h4>Перед началом</h4>
+<p>Стенд поднят и проверен: <code>./run.sh up</code>, затем
+<code>python3 tools/check_env.py</code> — последняя строка должна быть
+«всё на месте». Порядок установки с нуля —
+в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/docs/УСТАНОВКА.md">документе установки</a>, для JupyterHub банка —
+в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/docs/JUPYTERHUB.md">отдельной инструкции</a>.</p>
+</div>
+
+<p><b>Паспорт инициативы</b> — четыре параметра: месяц старта, расходы, число
+месяцев до выхода на прибыльность и число месяцев до окупаемости. Одинаковая
+методика этих четырёх параметров делает инициативы сравнимыми, а их кривые
+NPV — складываемыми в кривую портфеля.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">1</span>Часть первая: отчёт по запросу</h2>
+
+<div class="stepbox"><h3><span style="color:var(--acc)">1</span> &nbsp;Открыть тетрадь отчёта</h3><p><code>case_portfolio_agent/отчёт_по_запросу.ipynb</code>. Одна строка подключения: <code>from tools.report_agent import отчёт</code>.</p><div class="res"><b>Должно получиться:</b> Ячейка выполнилась без ошибок — значит, ключ ассистента на месте.</div></div>
+
+<div class="stepbox"><h3><span style="color:var(--acc)">2</span> &nbsp;Задать вопрос словами</h3><p>Вопрос пишется так, как вы задали бы его аналитику: «Покажи кривую накопленного NPV портфеля по месяцам и скажи, в каком месяце портфель выходит в плюс». Никакого SQL.</p><p>В выводе видны шаги ассистента: <code>run_sql</code> — он сходил в базу, <code>make_chart</code> — построил график по результату запроса. Это и есть проверяемость: каждое число в его отчёте получено запросом, а не вспомнено моделью.</p><div class="res"><b>Должно получиться:</b> График кривой NPV и короткий вывод: портфель переходит через ноль на 23-м месяце.</div></div>
+
+<figure class="shot"><img src="assets/case_report_notebook.png" alt="Так это выглядит в тетради: запрос обычными словами, шаги ассистента, построенный график и вывод под ним."><figcaption>Так это выглядит в тетради: запрос обычными словами, шаги ассистента, построенный график и вывод под ним.</figcaption></figure>
+
+<div class="stepbox"><h3><span style="color:var(--acc)">3</span> &nbsp;Задать ещё два вопроса</h3><p>«Сравни инициативы по месяцу окупаемости и покажи три самые поздние» и «Посчитай суммарные расходы по направлениям». Формулировки ответа от запуска к запуску меняются — числа нет.</p><div class="res"><b>Должно получиться:</b> Позже всех окупается витрина клиентских событий — 30-й месяц. Больше всего вложено в направление «Данные» — 17,3 млн, меньше всего в «Обслуживание» — 10,0 млн.</div></div>
+
+<div class="stepbox"><h3><span style="color:var(--acc)">4</span> &nbsp;Проверить ответ</h3><p>Три проверки, каждая на минуту: сходится ли число с запросом; тот ли период и срез; отличает ли ассистент план от факта (в базе есть и плановая кривая из паспорта, и фактические расходы по месяцам — «сколько потратили» и «сколько собирались потратить» дают разные числа).</p></div>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">2</span>Часть вторая: дашборд агентом</h2>
+
+<div class="stepbox"><h3><span style="color:var(--acc)">5</span> &nbsp;Описать дашборд словами</h3><p><code>case_portfolio_agent/дашборд_агентом.ipynb</code>: дашборд описывается одним абзацем — какие показатели нужны и в каком виде. Агент создаёт карточки, выбирает тип отображения и раскладывает их по дашборду через API BI-системы.</p><div class="res"><b>Должно получиться:</b> Ссылка на собранный дашборд из четырёх карточек: кривая NPV, расходы по направлениям, число инициатив и таблица инициатив.</div></div>
+
+<figure class="shot"><img src="assets/case_dashboard.png" alt="Дашборд, собранный агентом за один запрос. Постоянный объект со ссылкой, а не картинка в тетради."><figcaption>Дашборд, собранный агентом за один запрос. Постоянный объект со ссылкой, а не картинка в тетради.</figcaption></figure>
+
+<div class="stepbox"><h3><span style="color:var(--acc)">6</span> &nbsp;Принять дашборд</h3><p>Пять проверок: каждая карточка показывает данные, а не ошибку; у графика подписаны оси; числа совпадают с тетрадью; названия понятны тем, кто не присутствовал при сборке; относительный месяц не спутан с абсолютным.</p><p>Что-то не так — правится прямо в интерфейсе: карточка открывается, запрос виден целиком, тип отображения меняется в два клика.</p></div>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">3</span>Где агент оступается</h2>
+
+<p>Это не изъян материала, а его содержание: разобрать ошибку полезнее,
+чем восхититься удачным ответом.</p>
+
+<div class="card warn">
+<h4>Столбец называется не тем, чем является</h4>
+<p>На дашборде выше в таблице инициатив стоит колонка <b>«Месяц старта»</b> —
+хотя просили месяц окупаемости. Карточка выглядит правдоподобно, числа
+настоящие, вопрос — другой. Это самая частая ошибка агента: он берёт
+похожее поле. Ловится сравнением с тетрадью за десять секунд.</p>
+</div>
+
+<ul>
+  <li><b>Просили три самые поздние — а их четыре.</b> По месяцу окупаемости 25
+      идут три инициативы, и <code>LIMIT 3</code> отрезает произвольную.
+      Ответ формально верен и при этом вводит в заблуждение.</li>
+  <li><b>Относительный месяц против абсолютного.</b> «Месяц окупаемости 14» —
+      это четырнадцатый месяц портфеля или четырнадцатый от старта самой
+      инициативы? В паспорте есть и то и другое.</li>
+  <li><b>План против факта.</b> Разные таблицы и разные числа.</li>
+</ul>
+
+<div class="card">
+<h4>Правило работы с данными</h4>
+<p>Ассистент видит текст запроса, описание схемы и результаты своих запросов —
+всё это покидает ваш контур, если модель внешняя. В промпты идут учебные
+и обезличенные данные; агрегаты и схема — можно, персональные данные
+клиентов — нет. Как это настроено в корпоративном контуре, описано
+в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/docs/JUPYTERHUB.md">инструкции по JupyterHub</a>.</p>
+</div>
+
+<p class="sub">Модель портфеля и разбор кривых NPV —
+в <a href="longread_metrics.html">справочнике метрик</a>; проверка чисел
+запросами — в <a href="cheatsheet_sql_pandas.html">памятке SQL ↔ pandas</a>.</p>
+</div></section>
+
+<footer><div class="wrap">
+  Аналитика 360 · материалы практической части.<br>
+  Данные синтетические. Реальные клиентские выгрузки во внешние сервисы
+  не отправляются.
+</div></footer>
+
+
+<script>
+// Кнопка «скопировать промпт»: сначала пробуем Clipboard API, при отказе —
+// старый execCommand. В LMS страница часто открыта в iframe без разрешения
+// на буфер обмена, и без запасного пути кнопка молча ничего не делает.
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.copy'); if(!b) return;
+  var t=b.parentNode.querySelector('pre').innerText;
+  function done(){b.textContent='Скопировано';b.classList.add('done');
+    setTimeout(function(){b.textContent='Копировать';b.classList.remove('done')},1800);}
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(done,fallback);
+  } else { fallback(); }
+  function fallback(){
+    var a=document.createElement('textarea');a.value=t;a.style.position='fixed';
+    a.style.opacity=0;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');done();}catch(_e){b.textContent='Выделите вручную';}
+    document.body.removeChild(a);
+  }
+});
+</script>
+</body></html>
