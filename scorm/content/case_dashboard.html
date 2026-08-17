@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Кейс: дашборд по описанию · Аналитика 360</title>
+<style>
+:root{
+  --acc:#20BA72; --acc-soft:rgba(32,186,114,.10); --acc-line:rgba(32,186,114,.30);
+  --bg:#ffffff; --surf:#f4f8f6; --elev:#e9f3ee; --line:rgba(46,54,65,.13);
+  --ink:#2E3641; --ink2:rgba(46,54,65,.74); --ink3:rgba(46,54,65,.48);
+  --warn:#E4572E; --warn-soft:rgba(228,87,46,.09);
+  --font:'SB Sans Text','Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'SFMono-Regular',Consolas,'Liberation Mono',monospace;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth}
+body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 22px}
+/* overflow-wrap нужен ссылкам-адресам в списках источников: у длинного URL нет
+   точек переноса, на узком экране он уходит за край, а html/body{overflow-x:clip}
+   выше не даёт его прокрутить — текст пропадал совсем. break-word рвёт только
+   слово, которое иначе не помещается, и не влияет на расчёт min-content. */
+a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line);
+  overflow-wrap:break-word}
+a:hover{border-bottom-color:var(--acc)}
+
+header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
+  border-bottom:1px solid var(--line)}
+
+/* Хлебная крошка: лёгкая строка над шапкой. Фон тот же, что у верха градиента
+   шапки, поэтому крошка визуально сливается с ней в один блок. */
+.crumbs{background:var(--elev);font-size:13.5px;color:var(--ink3)}
+.crumbs .wrap{padding-top:14px;padding-bottom:2px;display:flex;align-items:baseline;gap:8px}
+.crumbs a{color:#128a53;border-bottom:1px solid transparent;font-weight:600}
+.crumbs a:hover{border-bottom-color:var(--acc)}
+.crumbs .sep{color:var(--ink3);font-size:11px}
+.crumbs .here{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eyebrow{color:var(--acc);font-weight:800;font-size:12.5px;letter-spacing:.14em;
+  text-transform:uppercase;margin-bottom:14px}
+h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 16px}
+.lead{font-size:clamp(16.5px,2vw,19px);color:var(--ink2);margin:0 0 22px}
+.meta{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;
+  font-size:13.5px;color:var(--ink2)}
+.chip b{color:var(--ink)}
+
+section{padding:44px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-size:clamp(22px,3vw,30px);font-weight:800;margin:0 0 8px;line-height:1.18}
+h2 .num{color:var(--acc);margin-right:.4em;font-variant-numeric:tabular-nums}
+h3{font-size:19px;font-weight:800;margin:30px 0 10px}
+h4{font-size:16px;font-weight:800;margin:22px 0 8px;color:var(--ink2)}
+p{margin:0 0 15px}
+ul,ol{margin:0 0 15px;padding-left:22px}
+li{margin-bottom:7px}
+.sub{color:var(--ink3);margin:0 0 22px;font-size:15.5px}
+
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:20px 22px;margin:0 0 18px}
+.card.acc{background:var(--acc-soft);border-color:var(--acc-line)}
+.card.warn{background:var(--warn-soft);border-color:rgba(228,87,46,.28)}
+.card h4{margin-top:0}
+.card p:last-child,.card ul:last-child,.card ol:last-child{margin-bottom:0}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0 0 15px;font-size:15.5px}
+.kv dt{color:var(--ink3)}
+.kv dd{margin:0;font-weight:600}
+
+table{border-collapse:collapse;width:100%;font-size:15px;margin:0 0 15px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{font-weight:800;color:var(--ink2);font-size:13.5px;text-transform:uppercase;
+  letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 15px}
+.scroll table{margin:0}
+
+pre{background:#20262e;color:#e7edf3;border-radius:12px;padding:16px 18px;overflow-x:auto;
+  font-family:var(--mono);font-size:13.5px;line-height:1.55;margin:0 0 15px}
+code{font-family:var(--mono);font-size:.9em;background:var(--elev);padding:2px 6px;
+  border-radius:5px}
+pre code{background:none;padding:0;font-size:1em}
+
+.prompt{position:relative;background:#20262e;color:#e7edf3;border-radius:12px;
+  padding:16px 18px;margin:0 0 14px}
+/* Промпт должен быть виден целиком: участник его читает, а не только копирует.
+   pre-wrap переносит длинные строки, но сохраняет переводы строк — innerText
+   в кнопке копирования отдаёт ровно исходный текст. */
+.prompt pre{margin:0;padding:0;background:none;max-height:none;
+  white-space:pre-wrap;overflow-wrap:anywhere}
+.prompt{padding-top:46px}
+.copy{position:absolute;top:10px;right:10px;background:var(--acc);color:#fff;border:0;
+  border-radius:8px;padding:7px 13px;font:600 13px var(--font);cursor:pointer}
+.copy:hover{filter:brightness(1.08)}
+.copy.done{background:#0f7a46}
+
+figure{margin:0 0 18px}
+figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+figure.fig{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:18px 18px 12px;margin:22px 0}
+figure.fig svg{max-width:100%;height:auto}
+figure.fig figcaption{padding-top:6px;border-top:1px solid var(--line);margin-top:12px}
+
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;
+  border-radius:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;
+  display:flex;align-items:center;justify-content:center}
+
+/* Раскрывающийся блок: три вспомогательных промпта не должны спорить за внимание
+   с главным, но и прятать их насовсем нельзя — по ним разбирают проверку. */
+details.more{border:1px solid var(--line);border-radius:14px;padding:0 22px;
+  margin:0 0 18px;background:var(--surf)}
+details.more>summary{cursor:pointer;font-weight:800;padding:16px 0;list-style:none;
+  color:var(--ink2)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸";color:var(--acc);margin-right:8px}
+details.more[open]>summary::before{content:"▾"}
+details.more[open]{padding-bottom:14px}
+details.more>summary:hover{color:var(--ink)}
+
+.toc{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+  margin:0 0 8px}
+.toc ol{margin:0;padding-left:20px}
+.toc a{border:0}
+.toc a:hover{border-bottom:1px solid var(--acc)}
+
+footer{padding:36px 0 60px;color:var(--ink3);font-size:14.5px}
+/* Сноска на источник: верхний индекс, чтобы номер не читался как часть текста */
+a.fn{border:0;font-size:.72em;vertical-align:super;font-weight:700;padding-left:2px}
+a.fn:hover{border:0;text-decoration:underline}
+.tag{display:inline-block;background:var(--elev);border-radius:6px;padding:1px 8px;
+  font-size:13px;color:var(--ink2);font-weight:600}
+@media(max-width:600px){
+  body{font-size:16px}
+  .kv{grid-template-columns:1fr}
+}
+</style>
+</head><body>
+<nav class="crumbs" aria-label="Навигация"><div class="wrap"><a href="index.html">Материалы</a><span class="sep">▸</span><span class="here">Кейс: дашборд агентом</span></div></nav>
+
+<style>
+.stepbox{border:1px solid var(--line);border-radius:14px;padding:0 22px;margin:0 0 18px}
+.stepbox h3{margin:18px 0 8px}
+.stepbox .res{background:var(--acc-soft);border-left:3px solid var(--acc);
+  border-radius:0 8px 8px 0;padding:10px 14px;margin:12px 0 18px;font-size:15.5px}
+.stepbox .res b{color:#0f7a46}
+.shot{margin:22px 0}
+.shot img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;
+  display:block}
+.shot figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+.time{font-variant-numeric:tabular-nums}
+/* Схемы рисуются кодом (build/figs_agent.py) и вставляются как есть:
+   так они масштабируются вместе с колонкой и остаются чёткими на печати. */
+figure.scheme{margin:22px 0}
+figure.scheme svg{width:100%;height:auto;display:block}
+figure.scheme figcaption{color:var(--ink3);font-size:14px;margin-top:10px}
+/* Переключатель сценариев: путь в Google Таблицах и в Excel различается
+   двумя шагами из пяти, и показывать их подряд — верный способ перепутать. */
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 20px}
+.tabs button{font:700 15px var(--font);padding:11px 20px;border-radius:999px;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer}
+.tabs button:hover{border-color:var(--acc-line)}
+.tabs button[aria-selected="true"]{background:var(--acc);border-color:var(--acc);
+  color:#fff}
+.pane[hidden]{display:none}
+</style>
+
+<header><div class="wrap"><div class="eyebrow">Кейс практики · 4 из 4</div><h1>Дашборд по описанию: агент собирает панель в BI</h1><p class="lead">Разница с предыдущим кейсом принципиальная. Там ответом была картинка в тетради, которая живёт до закрытия файла. Здесь агент создаёт постоянные объекты в системе дашбордов — со ссылкой для команды.</p><div class="meta"><span class="chip">Время <b>30 минут</b></span><span class="chip">Нужны <b>ключ и BI</b></span><span class="chip">Карточек <b>4</b></span></div></div></header>
+
+<section><div class="wrap">
+<p><b>Управленческий вопрос.</b> Как сделать так, чтобы ответ про портфель
+не приходилось запрашивать каждый раз заново?</p>
+
+<div class="card acc">
+<h4>Перед началом</h4>
+<p>Стенд поднят и проверен: <code>./run.sh up</code>, затем
+<code>python3 tools/check_env.py</code> — последняя строка должна быть
+«всё на месте». Порядок установки с нуля —
+в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/docs/УСТАНОВКА.md">документе установки</a>, для JupyterHub банка —
+в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/docs/JUPYTERHUB.md">отдельной инструкции</a>.</p>
+</div>
+
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">1</span>Те же инструменты, другой результат</h2>
+
+<p>Агент здесь устроен ровно так же, как в
+<a href="case_portfolio.html">предыдущем кейсе</a>: тот же цикл «модель →
+инструмент → результат → модель». Изменился только набор инструментов —
+вместо запроса и графика ему дали API системы дашбордов.</p>
+
+<figure class="scheme"><svg viewBox="0 0 860 252" role="img" aria-label="Агент собирает дашборд: создать дашборд, создать карточку из SQL, положить карточку на дашборд"><defs><marker id="нак-20BA72" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#20BA72"/></marker><marker id="нак-E4572E" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#E4572E"/></marker></defs><rect x="0" y="66" width="158" height="96" rx="13" fill="rgba(46,54,65,.05)" stroke="rgba(46,54,65,.18)"/><text x="79.0" y="93" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="700" fill="#2E3641">Описание</text><text x="79.0" y="115" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="400" fill="rgba(46,54,65,.74)">какие показатели</text><text x="79.0" y="132" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="400" fill="rgba(46,54,65,.74)">и в каком виде</text><rect x="192" y="66" width="150" height="96" rx="13" fill="rgba(32,186,114,.10)" stroke="rgba(32,186,114,.32)"/><text x="267.0" y="93" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="700" fill="#2E3641">Агент</text><text x="267.0" y="115" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="400" fill="rgba(46,54,65,.74)">пишет SQL</text><text x="267.0" y="132" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="400" fill="rgba(46,54,65,.74)">и вызывает API</text><rect x="384" y="4" width="250" height="240" rx="16" fill="none" stroke="rgba(46,54,65,.16)" stroke-dasharray="6 5"/><text x="400" y="26" font-family="system-ui,sans-serif" font-size="12.5" font-weight="700" letter-spacing=".08em" fill="rgba(46,54,65,.5)">ИНСТРУМЕНТЫ API</text><rect x="402" y="24" width="214" height="62" rx="13" fill="rgba(32,186,114,.10)" stroke="rgba(32,186,114,.32)"/><text x="509.0" y="51" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="15" font-weight="700" fill="#2E3641">create_dashboard</text><text x="509.0" y="73" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="400" fill="rgba(46,54,65,.74)">пустой дашборд</text><rect x="402" y="96" width="214" height="62" rx="13" fill="rgba(32,186,114,.10)" stroke="rgba(32,186,114,.32)"/><text x="509.0" y="123" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="15" font-weight="700" fill="#2E3641">create_card</text><text x="509.0" y="145" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="400" fill="rgba(46,54,65,.74)">карточка из SQL и тип</text><rect x="402" y="168" width="214" height="62" rx="13" fill="rgba(32,186,114,.10)" stroke="rgba(32,186,114,.32)"/><text x="509.0" y="195" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="15" font-weight="700" fill="#2E3641">add_card</text><text x="509.0" y="217" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="400" fill="rgba(46,54,65,.74)">карточка на дашборд</text><path d="M509 86 L509 94" fill="none" stroke="#20BA72" stroke-width="2" stroke-linecap="round" marker-end="url(#нак-20BA72)"/><path d="M509 158 L509 166" fill="none" stroke="#20BA72" stroke-width="2" stroke-linecap="round" marker-end="url(#нак-20BA72)"/><rect x="686" y="66" width="174" height="96" rx="13" fill="rgba(46,54,65,.05)" stroke="rgba(46,54,65,.18)"/><text x="773.0" y="93" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="700" fill="#2E3641">Дашборд в BI</text><text x="773.0" y="115" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="400" fill="rgba(46,54,65,.74)">постоянный объект</text><text x="773.0" y="132" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="400" fill="rgba(46,54,65,.74)">со ссылкой</text><path d="M160 114 L188 114" fill="none" stroke="#20BA72" stroke-width="2" stroke-linecap="round" marker-end="url(#нак-20BA72)"/><path d="M344 114 L398 114" fill="none" stroke="#20BA72" stroke-width="2" stroke-linecap="round" marker-end="url(#нак-20BA72)"/><path d="M620 114 L682 114" fill="none" stroke="#20BA72" stroke-width="2" stroke-linecap="round" marker-end="url(#нак-20BA72)"/></svg><figcaption>Три инструмента повторяют три действия человека в интерфейсе: создать дашборд, создать карточку из SQL, положить карточку на дашборд.</figcaption></figure>
+
+<p>Карточка — это запрос плюс выбранный тип отображения; дашборд — раскладка
+карточек. Устройство системы дашбордов разобрано
+в <a href="case_pipeline.html">кейсе конвейера</a>, там же панель собирается
+руками. Стоит пройти оба пути подряд: тогда видно, что именно агент делает
+за вас, и где он может ошибиться.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">2</span>Шаги</h2>
+
+<div class="stepbox"><h3><span style="color:var(--acc)">1</span> &nbsp;Открыть тетрадь дашборда</h3><p><a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/case_portfolio_agent/дашборд_агентом.ipynb"><code>case_portfolio_agent/дашборд_агентом.ipynb</code></a>. Подключение — одна строка: <code>from tools.dashboard_agent import собрать_дашборд</code>. Система дашбордов должна быть поднята: <code>./run.sh status</code> показывает <code>healthy</code>.</p><div class="res"><b>Должно получиться:</b> Агент вошёл в систему дашбордов и нашёл учебную базу.</div></div>
+
+<div class="stepbox"><h3><span style="color:var(--acc)">2</span> &nbsp;Описать дашборд словами</h3><p>Дашборд описывается одним абзацем — какие показатели нужны и в каком виде: кривая накопленного NPV портфеля по месяцам линией, расходы по направлениям столбцами, число инициатив числом, таблица инициатив с месяцем окупаемости. Ни SQL, ни щелчков в интерфейсе.</p><div class="res"><b>Должно получиться:</b> Ссылка на собранный дашборд из четырёх карточек.</div></div>
+
+<figure class="shot"><img src="assets/case_dashboard.png" alt="Дашборд, собранный агентом за один запрос. Постоянный объект со ссылкой, а не картинка в тетради."><figcaption>Дашборд, собранный агентом за один запрос. Постоянный объект со ссылкой, а не картинка в тетради.</figcaption></figure>
+
+<div class="stepbox"><h3><span style="color:var(--acc)">3</span> &nbsp;Принять дашборд</h3><p>Пять проверок: каждая карточка показывает данные, а не ошибку; у графика подписаны оси; числа совпадают с тетрадью отчёта; названия понятны тем, кто не присутствовал при сборке; относительный месяц не спутан с абсолютным.</p><div class="res"><b>Должно получиться:</b> Список того, что править, — и понимание, что править можно самому.</div></div>
+
+<div class="stepbox"><h3><span style="color:var(--acc)">4</span> &nbsp;Поправить руками</h3><p>Что-то не так — правится прямо в интерфейсе: карточка открывается, запрос виден целиком, тип отображения меняется в два клика. Это важное свойство: результат работы агента остаётся обычным объектом системы, а не чёрным ящиком.</p></div>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">3</span>Где агент оступается</h2>
+
+<div class="card warn">
+<h4>Столбец называется не тем, чем является</h4>
+<p style="margin-bottom:0">На дашборде выше в таблице инициатив стоит колонка
+<b>«Месяц старта»</b> — хотя просили месяц окупаемости. Карточка выглядит
+правдоподобно, числа настоящие, вопрос — другой. Это самая частая ошибка:
+агент берёт похожее поле. Ловится сравнением с тетрадью за десять секунд.</p>
+</div>
+
+<ul>
+  <li><b>Тип отображения не тот.</b> Динамика столбцами вместо линии читается
+      хуже, а иногда прямо мешает: скачок между месяцами теряется.</li>
+  <li><b>Названия карточек «для себя».</b> «Запрос 3» ничего не говорит тому,
+      кому вы дали ссылку.</li>
+  <li><b>Дашборд собран, а вопрос остался.</b> Четыре красивые карточки могут
+      не отвечать на исходный вопрос — проверяйте по нему, а не по виду.</li>
+</ul>
+
+<p>Практический вывод: агент экономит не понимание, а щелчки. Решение о том,
+тот ли это показатель, остаётся за вами — и занимает те же десять секунд,
+что и раньше.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">4</span>Домашнее задание</h2>
+
+<p>Соберите дашборд по своему показателю — тому, за которым вы и так следите
+руками. Порядок тот же: описать словами, что должно быть на панели, принять
+результат по пяти проверкам, поправить руками то, что агент понял не так.</p>
+
+<p>Если своей базы под рукой нет — соберите второй дашборд на данных кейса:
+например, по кредитному конвейеру, где карточки строятся из представлений
+чистого слоя.</p>
+
+
+<div class="card warn">
+<h4>Какие данные какому ассистенту</h4>
+<p>Публичный ассистент видит всё, что вы ему отправили. Данные, которые нельзя
+выносить из контура банка — клиентские, персональные, внутренние выгрузки, —
+обрабатываются ассистентом <b>в закрытом контуре банка</b>, а не публичным.
+Правило простое: если выгрузку нельзя приложить к письму наружу, её нельзя
+вставить и в публичный чат с моделью.</p>
+<p style="margin-bottom:0">Промежуточный случай решается приёмом: сам скрипт
+можно получить и на обезличенном фрагменте — двадцать строк с теми же
+заголовками и типами данных, — а запускать его уже на полной таблице у себя.
+Модель пишет код по описанию структуры, сами данные ей для этого не нужны.</p>
+</div>
+
+
+<p class="sub">Модель портфеля и кривые NPV —
+в <a href="longread_metrics.html">справочнике метрик</a>; проверка чисел
+запросами — в <a href="cheatsheet_sql_pandas.html">памятке SQL ↔ pandas</a>.</p>
+</div></section>
+
+<footer><div class="wrap">
+  Аналитика 360 · материалы практической части.<br>
+  Данные синтетические. Реальные клиентские выгрузки во внешние сервисы
+  не отправляются.
+</div></footer>
+
+
+<script>
+// Кнопка «скопировать промпт»: сначала пробуем Clipboard API, при отказе —
+// старый execCommand. В LMS страница часто открыта в iframe без разрешения
+// на буфер обмена, и без запасного пути кнопка молча ничего не делает.
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.copy'); if(!b) return;
+  var t=b.parentNode.querySelector('pre').innerText;
+  function done(){b.textContent='Скопировано';b.classList.add('done');
+    setTimeout(function(){b.textContent='Копировать';b.classList.remove('done')},1800);}
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(done,fallback);
+  } else { fallback(); }
+  function fallback(){
+    var a=document.createElement('textarea');a.value=t;a.style.position='fixed';
+    a.style.opacity=0;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');done();}catch(_e){b.textContent='Выделите вручную';}
+    document.body.removeChild(a);
+  }
+});
+</script>
+</body></html>

@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive">
-<title>Кейс: портфель инициатив · Аналитика 360</title>
+<title>Кейс: вопрос словами — отчёт агента · Аналитика 360</title>
 <style>
 :root{
   --acc:#20BA72; --acc-soft:rgba(32,186,114,.10); --acc-line:rgba(32,186,114,.30);
@@ -139,7 +139,7 @@ a.fn:hover{border:0;text-decoration:underline}
 }
 </style>
 </head><body>
-<nav class="crumbs" aria-label="Навигация"><div class="wrap"><a href="index.html">Материалы</a><span class="sep">▸</span><span class="here">Кейс: портфель инициатив</span></div></nav>
+<nav class="crumbs" aria-label="Навигация"><div class="wrap"><a href="index.html">Материалы</a><span class="sep">▸</span><span class="here">Кейс: отчёт агента</span></div></nav>
 
 <style>
 .stepbox{border:1px solid var(--line);border-radius:14px;padding:0 22px;margin:0 0 18px}
@@ -152,9 +152,23 @@ a.fn:hover{border:0;text-decoration:underline}
   display:block}
 .shot figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
 .time{font-variant-numeric:tabular-nums}
+/* Схемы рисуются кодом (build/figs_agent.py) и вставляются как есть:
+   так они масштабируются вместе с колонкой и остаются чёткими на печати. */
+figure.scheme{margin:22px 0}
+figure.scheme svg{width:100%;height:auto;display:block}
+figure.scheme figcaption{color:var(--ink3);font-size:14px;margin-top:10px}
+/* Переключатель сценариев: путь в Google Таблицах и в Excel различается
+   двумя шагами из пяти, и показывать их подряд — верный способ перепутать. */
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 20px}
+.tabs button{font:700 15px var(--font);padding:11px 20px;border-radius:999px;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer}
+.tabs button:hover{border-color:var(--acc-line)}
+.tabs button[aria-selected="true"]{background:var(--acc);border-color:var(--acc);
+  color:#fff}
+.pane[hidden]{display:none}
 </style>
 
-<header><div class="wrap"><div class="eyebrow">Кейс практики · 3 из 3</div><h1>Портфель инициатив: запрос словами — отчёт и дашборд</h1><p class="lead">Сначала ассистент отвечает на вопрос, заданный обычными словами, отчётом с графиками. Потом другой ассистент собирает из тех же данных постоянный дашборд в BI. SQL не пишет никто.</p><div class="meta"><span class="chip">Время <b>40 минут</b></span><span class="chip">Нужен <b>ключ ассистента</b></span><span class="chip">Инициатив <b>10</b></span></div></div></header>
+<header><div class="wrap"><div class="eyebrow">Кейс практики · 3 из 4</div><h1>Портфель инициатив: вопрос словами — отчёт с графиками</h1><p class="lead">Тот же анализ, что в предыдущем кейсе, но запрос задаётся обычными словами. Ассистент сам ходит в базу, сам строит графики и отвечает коротким отчётом. SQL не пишет никто.</p><div class="meta"><span class="chip">Время <b>30 минут</b></span><span class="chip">Нужен <b>ключ ассистента</b></span><span class="chip">Инициатив <b>10</b></span></div></div></header>
 
 <section><div class="wrap">
 <p><b>Управленческий вопрос.</b> Когда портфель инициатив выходит в плюс
@@ -176,27 +190,46 @@ NPV — складываемыми в кривую портфеля.</p>
 </div></section>
 
 <section><div class="wrap">
-<h2><span class="num">1</span>Часть первая: отчёт по запросу</h2>
+<h2><span class="num">1</span>Что такое инструментальный агент</h2>
 
-<div class="stepbox"><h3><span style="color:var(--acc)">1</span> &nbsp;Открыть тетрадь отчёта</h3><p><code>case_portfolio_agent/отчёт_по_запросу.ipynb</code>. Одна строка подключения: <code>from tools.report_agent import отчёт</code>.</p><div class="res"><b>Должно получиться:</b> Ячейка выполнилась без ошибок — значит, ключ ассистента на месте.</div></div>
+<p>Обычный чат с моделью отвечает текстом: что помнит, то и говорит. Проверить
+такой ответ нечем. <b>Инструментальный агент</b> устроен иначе: вместе
+с вопросом модель получает список инструментов, которые она может вызвать,
+и вызывает их по очереди, пока не соберёт то, что нужно для ответа.</p>
 
-<div class="stepbox"><h3><span style="color:var(--acc)">2</span> &nbsp;Задать вопрос словами</h3><p>Вопрос пишется так, как вы задали бы его аналитику: «Покажи кривую накопленного NPV портфеля по месяцам и скажи, в каком месяце портфель выходит в плюс». Никакого SQL.</p><p>В выводе видны шаги ассистента: <code>run_sql</code> — он сходил в базу, <code>make_chart</code> — построил график по результату запроса. Это и есть проверяемость: каждое число в его отчёте получено запросом, а не вспомнено моделью.</p><div class="res"><b>Должно получиться:</b> График кривой NPV и короткий вывод: портфель переходит через ноль на 23-м месяце.</div></div>
+<figure class="scheme"><svg viewBox="0 0 860 296" role="img" aria-label="Цикл инструментального агента: модель вызывает инструменты по очереди, пока не соберёт ответ"><defs><marker id="нак-20BA72" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#20BA72"/></marker><marker id="нак-E4572E" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#E4572E"/></marker></defs><rect x="0" y="56" width="152" height="96" rx="13" fill="rgba(46,54,65,.05)" stroke="rgba(46,54,65,.18)"/><text x="76.0" y="83" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="700" fill="#2E3641">Вопрос</text><text x="76.0" y="105" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="400" fill="rgba(46,54,65,.74)">обычными словами,</text><text x="76.0" y="122" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="400" fill="rgba(46,54,65,.74)">без SQL</text><rect x="186" y="46" width="164" height="116" rx="13" fill="rgba(32,186,114,.10)" stroke="rgba(32,186,114,.32)"/><text x="268.0" y="73" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="700" fill="#2E3641">Модель</text><text x="268.0" y="95" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="400" fill="rgba(46,54,65,.74)">решает, каких</text><text x="268.0" y="112" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="400" fill="rgba(46,54,65,.74)">данных не хватает,</text><text x="268.0" y="129" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="400" fill="rgba(46,54,65,.74)">и что вызвать</text><rect x="430" y="10" width="230" height="190" rx="16" fill="none" stroke="rgba(46,54,65,.16)" stroke-dasharray="6 5"/><text x="446" y="32" font-family="system-ui,sans-serif" font-size="12.5" font-weight="700" letter-spacing=".08em" fill="rgba(46,54,65,.5)">ИНСТРУМЕНТЫ</text><rect x="448" y="34" width="194" height="72" rx="13" fill="rgba(32,186,114,.10)" stroke="rgba(32,186,114,.32)"/><text x="545.0" y="61" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="15" font-weight="700" fill="#2E3641">run_sql</text><text x="545.0" y="83" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="400" fill="rgba(46,54,65,.74)">SELECT в базе,</text><text x="545.0" y="100" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="400" fill="rgba(46,54,65,.74)">строки результата</text><rect x="448" y="118" width="194" height="72" rx="13" fill="rgba(32,186,114,.10)" stroke="rgba(32,186,114,.32)"/><text x="545.0" y="145" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="15" font-weight="700" fill="#2E3641">make_chart</text><text x="545.0" y="167" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="400" fill="rgba(46,54,65,.74)">график по строкам</text><text x="545.0" y="184" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="400" fill="rgba(46,54,65,.74)">запроса</text><rect x="690" y="202" width="170" height="84" rx="13" fill="rgba(46,54,65,.05)" stroke="rgba(46,54,65,.18)"/><text x="775.0" y="229" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="700" fill="#2E3641">Отчёт</text><text x="775.0" y="251" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="400" fill="rgba(46,54,65,.74)">таблицы, графики,</text><text x="775.0" y="268" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="400" fill="rgba(46,54,65,.74)">короткий вывод</text><path d="M154 104 L182 104" fill="none" stroke="#20BA72" stroke-width="2" stroke-linecap="round" marker-end="url(#нак-20BA72)"/><path d="M354 78 L426 78" fill="none" stroke="#20BA72" stroke-width="2" stroke-linecap="round" marker-end="url(#нак-20BA72)"/><text x="390.0" y="70.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12.5" font-weight="400" fill="rgba(46,54,65,.62)">вызов</text><path d="M426 130 L354 130" fill="none" stroke="#E4572E" stroke-width="2" stroke-linecap="round" marker-end="url(#нак-E4572E)"/><text x="390.0" y="150.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12.5" font-weight="400" fill="rgba(46,54,65,.62)">результат</text><path d="M268 164 L268 244 Q268 254 278 254 L684 254" fill="none" stroke="#20BA72" stroke-width="2" stroke-linecap="round" marker-end="url(#нак-20BA72)"/><text x="300" y="246" text-anchor="start" font-family="system-ui,sans-serif" font-size="12.5" font-weight="400" fill="rgba(46,54,65,.62)">когда данных хватает</text></svg><figcaption>Цикл агента. Инструментов здесь два: выполнить запрос в базе и построить график по строкам результата.</figcaption></figure>
 
-<figure class="shot"><img src="assets/case_report_notebook.png" alt="Так это выглядит в тетради: запрос обычными словами, шаги ассистента, построенный график и вывод под ним."><figcaption>Так это выглядит в тетради: запрос обычными словами, шаги ассистента, построенный график и вывод под ним.</figcaption></figure>
+<p>Внутри один и тот же круг: модель решает, каких данных не хватает → называет
+инструмент и его параметры → инструмент выполняется обычным кодом → результат
+возвращается модели → круг повторяется. Заканчивается он, когда данных
+достаточно для ответа.</p>
 
-<div class="stepbox"><h3><span style="color:var(--acc)">3</span> &nbsp;Задать ещё два вопроса</h3><p>«Сравни инициативы по месяцу окупаемости и покажи три самые поздние» и «Посчитай суммарные расходы по направлениям». Формулировки ответа от запуска к запуску меняются — числа нет.</p><div class="res"><b>Должно получиться:</b> Позже всех окупается витрина клиентских событий — 30-й месяц. Больше всего вложено в направление «Данные» — 17,3 млн, меньше всего в «Обслуживание» — 10,0 млн.</div></div>
-
-<div class="stepbox"><h3><span style="color:var(--acc)">4</span> &nbsp;Проверить ответ</h3><p>Три проверки, каждая на минуту: сходится ли число с запросом; тот ли период и срез; отличает ли ассистент план от факта (в базе есть и плановая кривая из паспорта, и фактические расходы по месяцам — «сколько потратили» и «сколько собирались потратить» дают разные числа).</p></div>
+<div class="card acc">
+<h4>Что из этого следует для руководителя</h4>
+<ul style="margin-bottom:0">
+  <li><b>Ответ проверяем.</b> Каждое число получено запросом, и запрос виден:
+      его можно повторить и получить то же самое.</li>
+  <li><b>Инструменты — граница возможностей.</b> Агент умеет ровно то, что ему
+      дали. Дали запрос к базе и график — он аналитик; дали ещё и API системы
+      дашбордов — он собирает дашборд.</li>
+  <li><b>Формулировки плавают, числа — нет.</b> От запуска к запуску текст
+      ответа меняется, значения остаются теми же: они не сочиняются.</li>
+</ul>
+</div>
 </div></section>
 
 <section><div class="wrap">
-<h2><span class="num">2</span>Часть вторая: дашборд агентом</h2>
+<h2><span class="num">2</span>Шаги</h2>
 
-<div class="stepbox"><h3><span style="color:var(--acc)">5</span> &nbsp;Описать дашборд словами</h3><p><code>case_portfolio_agent/дашборд_агентом.ipynb</code>: дашборд описывается одним абзацем — какие показатели нужны и в каком виде. Агент создаёт карточки, выбирает тип отображения и раскладывает их по дашборду через API BI-системы.</p><div class="res"><b>Должно получиться:</b> Ссылка на собранный дашборд из четырёх карточек: кривая NPV, расходы по направлениям, число инициатив и таблица инициатив.</div></div>
+<div class="stepbox"><h3><span style="color:var(--acc)">1</span> &nbsp;Открыть тетрадь отчёта</h3><p><a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/case_portfolio_agent/отчёт_по_запросу.ipynb"><code>case_portfolio_agent/отчёт_по_запросу.ipynb</code></a>. Одна строка подключения: <code>from tools.report_agent import отчёт</code>.</p><div class="res"><b>Должно получиться:</b> Ячейка выполнилась без ошибок — значит, ключ ассистента на месте.</div></div>
 
-<figure class="shot"><img src="assets/case_dashboard.png" alt="Дашборд, собранный агентом за один запрос. Постоянный объект со ссылкой, а не картинка в тетради."><figcaption>Дашборд, собранный агентом за один запрос. Постоянный объект со ссылкой, а не картинка в тетради.</figcaption></figure>
+<div class="stepbox"><h3><span style="color:var(--acc)">2</span> &nbsp;Задать вопрос словами</h3><p>Вопрос пишется так, как вы задали бы его аналитику: «Покажи кривую накопленного NPV портфеля по месяцам и скажи, в каком месяце портфель выходит в плюс». Никакого SQL.</p><p>В выводе видны шаги агента: <code>run_sql</code> — он сходил в базу, <code>make_chart</code> — построил график по результату запроса. Это и есть тот самый цикл со схемы выше, только напечатанный построчно.</p><div class="res"><b>Должно получиться:</b> График кривой NPV и короткий вывод: портфель переходит через ноль на 23-м месяце.</div></div>
 
-<div class="stepbox"><h3><span style="color:var(--acc)">6</span> &nbsp;Принять дашборд</h3><p>Пять проверок: каждая карточка показывает данные, а не ошибку; у графика подписаны оси; числа совпадают с тетрадью; названия понятны тем, кто не присутствовал при сборке; относительный месяц не спутан с абсолютным.</p><p>Что-то не так — правится прямо в интерфейсе: карточка открывается, запрос виден целиком, тип отображения меняется в два клика.</p></div>
+<figure class="shot"><img src="assets/case_report_notebook.png" alt="Так это выглядит в тетради: запрос обычными словами, шаги агента, построенный график и вывод под ним."><figcaption>Так это выглядит в тетради: запрос обычными словами, шаги агента, построенный график и вывод под ним.</figcaption></figure>
+
+<div class="stepbox"><h3><span style="color:var(--acc)">3</span> &nbsp;Задать ещё два вопроса</h3><p>«Сравни инициативы по месяцу окупаемости и покажи три самые поздние» и «Посчитай суммарные расходы по направлениям». Формулировки ответа от запуска к запуску меняются — числа нет.</p><div class="res"><b>Должно получиться:</b> Позже всех окупается витрина клиентских событий — 30-й месяц. Больше всего вложено в направление «Данные» — 17,3 млн, меньше всего в «Обслуживание» — 10,0 млн.</div></div>
+
+<div class="stepbox"><h3><span style="color:var(--acc)">4</span> &nbsp;Проверить ответ</h3><p>Три проверки, каждая на минуту: сходится ли число с запросом; тот ли период и срез; отличает ли агент план от факта (в базе есть и плановая кривая из паспорта, и фактические расходы по месяцам — «сколько потратили» и «сколько собирались потратить» дают разные числа).</p><div class="res"><b>Должно получиться:</b> Три ответа, к каждому из которых вы знаете, каким запросом он получен.</div></div>
 </div></section>
 
 <section><div class="wrap">
@@ -205,14 +238,6 @@ NPV — складываемыми в кривую портфеля.</p>
 <p>Это не изъян материала, а его содержание: разобрать ошибку полезнее,
 чем восхититься удачным ответом.</p>
 
-<div class="card warn">
-<h4>Столбец называется не тем, чем является</h4>
-<p>На дашборде выше в таблице инициатив стоит колонка <b>«Месяц старта»</b> —
-хотя просили месяц окупаемости. Карточка выглядит правдоподобно, числа
-настоящие, вопрос — другой. Это самая частая ошибка агента: он берёт
-похожее поле. Ловится сравнением с тетрадью за десять секунд.</p>
-</div>
-
 <ul>
   <li><b>Просили три самые поздние — а их четыре.</b> По месяцу окупаемости 25
       идут три инициативы, и <code>LIMIT 3</code> отрезает произвольную.
@@ -220,21 +245,26 @@ NPV — складываемыми в кривую портфеля.</p>
   <li><b>Относительный месяц против абсолютного.</b> «Месяц окупаемости 14» —
       это четырнадцатый месяц портфеля или четырнадцатый от старта самой
       инициативы? В паспорте есть и то и другое.</li>
-  <li><b>План против факта.</b> Разные таблицы и разные числа.</li>
+  <li><b>План против факта.</b> Разные таблицы и разные числа; вопрос
+      «сколько потратили» без уточнения допускает оба ответа.</li>
+  <li><b>Похожее поле вместо нужного.</b> Самая частая ошибка: в ответе
+      появляется «месяц старта» там, где спрашивали про месяц окупаемости.
+      Ловится сравнением с запросом за десять секунд.</li>
 </ul>
 
 <div class="card">
 <h4>Правило работы с данными</h4>
-<p>Ассистент видит текст запроса, описание схемы и результаты своих запросов —
+<p>Агент видит текст запроса, описание схемы и результаты своих запросов —
 всё это покидает ваш контур, если модель внешняя. В промпты идут учебные
 и обезличенные данные; агрегаты и схема — можно, персональные данные
 клиентов — нет. Как это настроено в корпоративном контуре, описано
 в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/docs/JUPYTERHUB.md">инструкции по JupyterHub</a>.</p>
 </div>
 
-<p class="sub">Модель портфеля и разбор кривых NPV —
-в <a href="longread_metrics.html">справочнике метрик</a>; проверка чисел
-запросами — в <a href="cheatsheet_sql_pandas.html">памятке SQL ↔ pandas</a>.</p>
+<p class="sub">Дальше: <a href="case_dashboard.html">агент собирает дашборд
+в BI</a> — те же данные, но результат остаётся постоянным объектом
+со ссылкой. Модель портфеля и разбор кривых NPV —
+в <a href="longread_metrics.html">справочнике метрик</a>.</p>
 </div></section>
 
 <footer><div class="wrap">

@@ -152,9 +152,23 @@ a.fn:hover{border:0;text-decoration:underline}
   display:block}
 .shot figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
 .time{font-variant-numeric:tabular-nums}
+/* Схемы рисуются кодом (build/figs_agent.py) и вставляются как есть:
+   так они масштабируются вместе с колонкой и остаются чёткими на печати. */
+figure.scheme{margin:22px 0}
+figure.scheme svg{width:100%;height:auto;display:block}
+figure.scheme figcaption{color:var(--ink3);font-size:14px;margin-top:10px}
+/* Переключатель сценариев: путь в Google Таблицах и в Excel различается
+   двумя шагами из пяти, и показывать их подряд — верный способ перепутать. */
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 20px}
+.tabs button{font:700 15px var(--font);padding:11px 20px;border-radius:999px;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer}
+.tabs button:hover{border-color:var(--acc-line)}
+.tabs button[aria-selected="true"]{background:var(--acc);border-color:var(--acc);
+  color:#fff}
+.pane[hidden]{display:none}
 </style>
 
-<header><div class="wrap"><div class="eyebrow">Кейс практики · 2 из 3</div><h1>Кредитный конвейер: от первого запроса до панели в BI</h1><p class="lead">Разведочный анализ на SQL: посмотреть, проверить, вычистить, посчитать — и перенести итоговый запрос в BI новой панелью. Pandas в этом кейсе не нужен.</p><div class="meta"><span class="chip">Время <b>50 минут</b></span><span class="chip">Нужна <b>тетрадь</b></span><span class="chip">Данные <b>3 672 заявки</b></span></div></div></header>
+<header><div class="wrap"><div class="eyebrow">Кейс практики · 2 из 4</div><h1>Кредитный конвейер: от первого запроса до панели в BI</h1><p class="lead">Классический анализ данных целиком: осмотреть, проверить, вычистить, посчитать — и перенести итоговый запрос в BI новой панелью. Всё делается запросами, pandas в этом кейсе не нужен.</p><div class="meta"><span class="chip">Время <b>50 минут</b></span><span class="chip">Нужна <b>тетрадь</b></span><span class="chip">Данные <b>3 672 заявки</b></span></div></div></header>
 
 <section><div class="wrap">
 <p><b>Управленческий вопрос.</b> Где конвейер теряет время и заявки —
@@ -172,9 +186,42 @@ a.fn:hover{border:0;text-decoration:underline}
 </div></section>
 
 <section><div class="wrap">
-<h2><span class="num">1</span>Шаги</h2>
+<h2><span class="num">1</span>Из чего состоит классический анализ</h2>
 
-<div class="stepbox"><h3><span style="color:var(--acc)">1</span> &nbsp;Открыть тетрадь</h3><p><code>case_pipeline_sql/конвейер_sql.ipynb</code>. Первая ячейка подключает базу: <code>from tools.sqlcell import setup; setup()</code>. После неё ячейка, начинающаяся с <code>%%sql</code>, содержит чистый запрос и печатает результат таблицей.</p><div class="res"><b>Должно получиться:</b> Строка «База bank_training на связи: PostgreSQL 16».</div></div>
+<p>Порядок работы с незнакомой выгрузкой не зависит от инструмента и от того,
+кто её делает — человек или агент. Этапов пять, и пропуск любого из них
+стоит дороже, чем его прохождение.</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>Этап</th><th>Что происходит</th><th>Чем заканчивается</th></tr></thead>
+<tbody>
+<tr><td><b>1. Осмотр</b></td><td>объём, границы периода, состав срезов</td>
+    <td>понимание, о чём вообще данные</td></tr>
+<tr><td><b>2. Проверки</b></td><td>повторы, служебные записи, невозможные
+    значения, разрывы между источниками</td>
+    <td>список того, чему верить нельзя</td></tr>
+<tr><td><b>3. Чистый слой</b></td><td>правило чистки оформляется представлением</td>
+    <td>одно правило на все отчёты</td></tr>
+<tr><td><b>4. Расчёт</b></td><td>воронка, сроки этапов, потери</td>
+    <td>числа, на которые можно ссылаться</td></tr>
+<tr><td><b>5. Публикация</b></td><td>итоговый запрос уезжает в панель BI</td>
+    <td>показатель, который обновляется сам</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Сам метод — что такое очистка данных, почему медиана вместо среднего, как
+читать распределение — разобран отдельно: тетрадь
+<a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/case_pipeline_sql/разведочный_анализ.ipynb">«Разведочный анализ»</a> в репозитории практики
+и <a href="longread_eda.html">лонгрид</a> здесь. Этот кейс — то же самое,
+доведённое до панели в BI.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">2</span>Шаги</h2>
+
+<div class="stepbox"><h3><span style="color:var(--acc)">1</span> &nbsp;Открыть тетрадь</h3><p><a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/case_pipeline_sql/конвейер_sql.ipynb"><code>case_pipeline_sql/конвейер_sql.ipynb</code></a>. Первая ячейка подключает базу: <code>from tools.sqlcell import setup; setup()</code>. После неё ячейка, начинающаяся с <code>%%sql</code>, содержит чистый запрос и печатает результат таблицей.</p><div class="res"><b>Должно получиться:</b> Строка «База bank_training на связи: PostgreSQL 16».</div></div>
 
 <div class="stepbox"><h3><span style="color:var(--acc)">2</span> &nbsp;Осмотреть данные</h3><p>Сколько строк, какой период, как распределены заявки по каналам. Первый запрос к незнакомым данным — всегда про объём и границы.</p><div class="res"><b>Должно получиться:</b> 3 672 строки, но уникальных заявок меньше: в выгрузке повторы. Период — с января по август.</div></div>
 
@@ -192,7 +239,38 @@ a.fn:hover{border:0;text-decoration:underline}
 </div></section>
 
 <section><div class="wrap">
-<h2><span class="num">2</span>Что должно получиться</h2>
+<h2><span class="num">3</span>Как устроена система дашбордов</h2>
+
+<p>На стенде это <b>Metabase</b>, но устройство у всех подобных систем
+одинаковое, и понимать его нужно ровно на три уровня.</p>
+
+<ul>
+  <li><b>Источник</b> — подключённая база. Система не хранит ваши данные,
+      она ходит в базу за ними при каждом открытии.</li>
+  <li><b>Вопрос (карточка)</b> — либо собранный мышью запрос, либо
+      <b>свой SQL</b>. Карточка помнит запрос и выбранный тип отображения:
+      таблица, столбцы, линия, число. Это тот самый шаг, ради которого
+      запрос из тетради переносится сюда без переписывания.</li>
+  <li><b>Дашборд</b> — раскладка из карточек со ссылкой, которую можно дать
+      команде. Ничего, кроме карточек, на нём нет.</li>
+</ul>
+
+<p>Отсюда два практических следствия. Первое: любой расчёт, который вы довели
+до одного <code>SELECT</code>, уже готов стать постоянной панелью — переносится
+текстом запроса. Второе: раз карточка — это SQL плюс тип отображения, её умеет
+создать не только человек. Всё то же самое делает через API агент —
+это <a href="case_dashboard.html">отдельный кейс</a>.</p>
+
+<div class="card">
+<h4>Что проверить в редакторе SQL</h4>
+<p style="margin-bottom:0">В списке источников рядом с учебной базой лежит
+демонстрационная, встроенная в саму систему. Таблиц конвейера в ней нет —
+если запрос «не видит» таблицу, первым делом проверьте выбранный источник.</p>
+</div>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">4</span>Что должно получиться</h2>
 
 <div class="scroll">
 <table>
@@ -217,7 +295,7 @@ a.fn:hover{border:0;text-decoration:underline}
 </div></section>
 
 <section><div class="wrap">
-<h2><span class="num">3</span>На чём спотыкаются</h2>
+<h2><span class="num">5</span>На чём спотыкаются</h2>
 <ul>
   <li><b>Панель строят не по тому показателю.</b> На снимке выше сравниваются
       каналы по <i>числу заявок</i> — а вопрос был про сроки. График получается
@@ -233,7 +311,8 @@ a.fn:hover{border:0;text-decoration:underline}
 </ul>
 <p class="sub">Почему так и что с этим делать —
 в лонгриде <a href="longread_eda.html">«Разведочный анализ»</a>;
-те же операции в SQL и в pandas — в <a href="cheatsheet_sql_pandas.html">памятке</a>.</p>
+те же операции в SQL и в pandas — в <a href="cheatsheet_sql_pandas.html">памятке</a>.
+Дальше: <a href="case_portfolio.html">тот же анализ, но запросом словами</a>.</p>
 </div></section>
 
 <footer><div class="wrap">
