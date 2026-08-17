@@ -28,7 +28,7 @@ _спец.loader.exec_module(_модуль)
 PAIRS, ПРАВИЛО, ВСТУПЛЕНИЕ = _модуль.PAIRS, _модуль.ПРАВИЛО, _модуль.ВСТУПЛЕНИЕ
 
 ТЕТРАДЬ = ("https://github.com/wybaeb/bank-analytics-workshop/blob/master/"
-           "case_pipeline_sql/памятка_sql_pandas.ipynb")
+           "2.3_памятка_sql_и_pandas/2.3.1_памятка_sql_и_pandas.ipynb")
 
 # Разделы: пары идут в том же порядке, что в тетради, но с заголовками —
 # иначе двадцать одна операция подряд читается как список без структуры.

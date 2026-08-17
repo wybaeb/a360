@@ -179,8 +179,8 @@ figure.scheme figcaption{color:var(--ink3);font-size:14px;margin-top:10px}
 <p>Стенд поднят и проверен: <code>./run.sh up</code>, затем
 <code>python3 tools/check_env.py</code> — последняя строка должна быть
 «всё на месте». Порядок установки с нуля —
-в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/docs/УСТАНОВКА.md">документе установки</a>, для JupyterHub банка —
-в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/docs/JUPYTERHUB.md">отдельной инструкции</a>.</p>
+в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/2.4_установка_стенда/2.4.1_установка.md">документе установки</a>, для JupyterHub банка —
+в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/2.4_установка_стенда/2.4.2_jupyterhub.md">отдельной инструкции</a>.</p>
 </div>
 
 </div></section>
@@ -205,7 +205,7 @@ figure.scheme figcaption{color:var(--ink3);font-size:14px;margin-top:10px}
 <section><div class="wrap">
 <h2><span class="num">2</span>Шаги</h2>
 
-<div class="stepbox"><h3><span style="color:var(--acc)">1</span> &nbsp;Открыть тетрадь дашборда</h3><p><a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/case_portfolio_agent/дашборд_агентом.ipynb"><code>case_portfolio_agent/дашборд_агентом.ipynb</code></a>. Подключение — одна строка: <code>from tools.dashboard_agent import собрать_дашборд</code>. Система дашбордов должна быть поднята: <code>./run.sh status</code> показывает <code>healthy</code>.</p><div class="res"><b>Должно получиться:</b> Агент вошёл в систему дашбордов и нашёл учебную базу.</div></div>
+<div class="stepbox"><h3><span style="color:var(--acc)">1</span> &nbsp;Открыть тетрадь дашборда</h3><p><a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/2.8_кейс_дашборд_агентом/2.8.1_дашборд_агентом.ipynb"><code>2.8_кейс_дашборд_агентом/2.8.1_дашборд_агентом.ipynb</code></a>. Подключение — одна строка: <code>from tools.dashboard_agent import собрать_дашборд</code>. Система дашбордов должна быть поднята: <code>./run.sh status</code> показывает <code>healthy</code>.</p><div class="res"><b>Должно получиться:</b> Агент вошёл в систему дашбордов и нашёл учебную базу.</div></div>
 
 <div class="stepbox"><h3><span style="color:var(--acc)">2</span> &nbsp;Описать дашборд словами</h3><p>Дашборд описывается одним абзацем — какие показатели нужны и в каком виде: кривая накопленного NPV портфеля по месяцам линией, расходы по направлениям столбцами, число инициатив числом, таблица инициатив с месяцем окупаемости. Ни SQL, ни щелчков в интерфейсе.</p><div class="res"><b>Должно получиться:</b> Ссылка на собранный дашборд из четырёх карточек.</div></div>
 

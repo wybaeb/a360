@@ -8,8 +8,8 @@
 """
 
 РЕПО = "https://github.com/wybaeb/bank-analytics-workshop"
-УСТАНОВКА = f"{РЕПО}/blob/master/docs/УСТАНОВКА.md"
-JHUB = f"{РЕПО}/blob/master/docs/JUPYTERHUB.md"
+УСТАНОВКА = f"{РЕПО}/blob/master/2.4_установка_стенда/2.4.1_установка.md"
+JHUB = f"{РЕПО}/blob/master/2.4_установка_стенда/2.4.2_jupyterhub.md"
 
 BODY = f"""
 <header><div class="wrap">

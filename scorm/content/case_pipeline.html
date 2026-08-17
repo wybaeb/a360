@@ -179,8 +179,8 @@ figure.scheme figcaption{color:var(--ink3);font-size:14px;margin-top:10px}
 <p>Стенд поднят и проверен: <code>./run.sh up</code>, затем
 <code>python3 tools/check_env.py</code> — последняя строка должна быть
 «всё на месте». Порядок установки с нуля —
-в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/docs/УСТАНОВКА.md">документе установки</a>, для JupyterHub банка —
-в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/docs/JUPYTERHUB.md">отдельной инструкции</a>.</p>
+в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/2.4_установка_стенда/2.4.1_установка.md">документе установки</a>, для JupyterHub банка —
+в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/2.4_установка_стенда/2.4.2_jupyterhub.md">отдельной инструкции</a>.</p>
 </div>
 
 </div></section>
@@ -213,7 +213,7 @@ figure.scheme figcaption{color:var(--ink3);font-size:14px;margin-top:10px}
 
 <p>Сам метод — что такое очистка данных, почему медиана вместо среднего, как
 читать распределение — разобран отдельно: тетрадь
-<a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/case_pipeline_sql/разведочный_анализ.ipynb">«Разведочный анализ»</a> в репозитории практики
+<a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/2.2_разведочный_анализ/2.2.1_разведочный_анализ.ipynb">«Разведочный анализ»</a> в репозитории практики
 и <a href="longread_eda.html">лонгрид</a> здесь. Этот кейс — то же самое,
 доведённое до панели в BI.</p>
 </div></section>
@@ -221,7 +221,7 @@ figure.scheme figcaption{color:var(--ink3);font-size:14px;margin-top:10px}
 <section><div class="wrap">
 <h2><span class="num">2</span>Шаги</h2>
 
-<div class="stepbox"><h3><span style="color:var(--acc)">1</span> &nbsp;Открыть тетрадь</h3><p><a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/case_pipeline_sql/конвейер_sql.ipynb"><code>case_pipeline_sql/конвейер_sql.ipynb</code></a>. Первая ячейка подключает базу: <code>from tools.sqlcell import setup; setup()</code>. После неё ячейка, начинающаяся с <code>%%sql</code>, содержит чистый запрос и печатает результат таблицей.</p><div class="res"><b>Должно получиться:</b> Строка «База bank_training на связи: PostgreSQL 16».</div></div>
+<div class="stepbox"><h3><span style="color:var(--acc)">1</span> &nbsp;Открыть тетрадь</h3><p><a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/2.6_кейс_кредитный_конвейер/2.6.1_конвейер_sql.ipynb"><code>2.6_кейс_кредитный_конвейер/2.6.1_конвейер_sql.ipynb</code></a>. Первая ячейка подключает базу: <code>from tools.sqlcell import setup; setup()</code>. После неё ячейка, начинающаяся с <code>%%sql</code>, содержит чистый запрос и печатает результат таблицей.</p><div class="res"><b>Должно получиться:</b> Строка «База bank_training на связи: PostgreSQL 16».</div></div>
 
 <div class="stepbox"><h3><span style="color:var(--acc)">2</span> &nbsp;Осмотреть данные</h3><p>Сколько строк, какой период, как распределены заявки по каналам. Первый запрос к незнакомым данным — всегда про объём и границы.</p><div class="res"><b>Должно получиться:</b> 3 672 строки, но уникальных заявок меньше: в выгрузке повторы. Период — с января по август.</div></div>
 

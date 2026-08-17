@@ -16,9 +16,9 @@ ASSETS = pathlib.Path(__file__).resolve().parent.parent / "assets"
 
 # Ссылки на материалы практики: репозиторий открытый, тетради лежат в нём.
 РЕПО = "https://github.com/wybaeb/bank-analytics-workshop"
-ПАМЯТКА = f"{РЕПО}/blob/master/case_pipeline_sql/памятка_sql_pandas.ipynb"
-ТЕТРАДЬ = f"{РЕПО}/blob/master/case_pipeline_sql/конвейер_sql.ipynb"
-РАЗВЕДКА = f"{РЕПО}/blob/master/case_pipeline_sql/разведочный_анализ.ipynb"
+ПАМЯТКА = f"{РЕПО}/blob/master/2.3_памятка_sql_и_pandas/2.3.1_памятка_sql_и_pandas.ipynb"
+ТЕТРАДЬ = f"{РЕПО}/blob/master/2.6_кейс_кредитный_конвейер/2.6.1_конвейер_sql.ipynb"
+РАЗВЕДКА = f"{РЕПО}/blob/master/2.2_разведочный_анализ/2.2.1_разведочный_анализ.ipynb"
 
 
 def _svg(имя):

@@ -179,8 +179,8 @@ figure.scheme figcaption{color:var(--ink3);font-size:14px;margin-top:10px}
 <p>Стенд поднят и проверен: <code>./run.sh up</code>, затем
 <code>python3 tools/check_env.py</code> — последняя строка должна быть
 «всё на месте». Порядок установки с нуля —
-в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/docs/УСТАНОВКА.md">документе установки</a>, для JupyterHub банка —
-в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/docs/JUPYTERHUB.md">отдельной инструкции</a>.</p>
+в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/2.4_установка_стенда/2.4.1_установка.md">документе установки</a>, для JupyterHub банка —
+в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/2.4_установка_стенда/2.4.2_jupyterhub.md">отдельной инструкции</a>.</p>
 </div>
 
 <p><b>Паспорт инициативы</b> — четыре параметра: месяц старта, расходы, число
@@ -221,7 +221,7 @@ NPV — складываемыми в кривую портфеля.</p>
 <section><div class="wrap">
 <h2><span class="num">2</span>Шаги</h2>
 
-<div class="stepbox"><h3><span style="color:var(--acc)">1</span> &nbsp;Открыть тетрадь отчёта</h3><p><a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/case_portfolio_agent/отчёт_по_запросу.ipynb"><code>case_portfolio_agent/отчёт_по_запросу.ipynb</code></a>. Одна строка подключения: <code>from tools.report_agent import отчёт</code>.</p><div class="res"><b>Должно получиться:</b> Ячейка выполнилась без ошибок — значит, ключ ассистента на месте.</div></div>
+<div class="stepbox"><h3><span style="color:var(--acc)">1</span> &nbsp;Открыть тетрадь отчёта</h3><p><a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/2.7_кейс_отчёт_агента/2.7.1_отчёт_по_запросу.ipynb"><code>2.7_кейс_отчёт_агента/2.7.1_отчёт_по_запросу.ipynb</code></a>. Одна строка подключения: <code>from tools.report_agent import отчёт</code>.</p><div class="res"><b>Должно получиться:</b> Ячейка выполнилась без ошибок — значит, ключ ассистента на месте.</div></div>
 
 <div class="stepbox"><h3><span style="color:var(--acc)">2</span> &nbsp;Задать вопрос словами</h3><p>Вопрос пишется так, как вы задали бы его аналитику: «Покажи кривую накопленного NPV портфеля по месяцам и скажи, в каком месяце портфель выходит в плюс». Никакого SQL.</p><p>В выводе видны шаги агента: <code>run_sql</code> — он сходил в базу, <code>make_chart</code> — построил график по результату запроса. Это и есть тот самый цикл со схемы выше, только напечатанный построчно.</p><div class="res"><b>Должно получиться:</b> График кривой NPV и короткий вывод: портфель переходит через ноль на 23-м месяце.</div></div>
 
@@ -258,7 +258,7 @@ NPV — складываемыми в кривую портфеля.</p>
 всё это покидает ваш контур, если модель внешняя. В промпты идут учебные
 и обезличенные данные; агрегаты и схема — можно, персональные данные
 клиентов — нет. Как это настроено в корпоративном контуре, описано
-в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/docs/JUPYTERHUB.md">инструкции по JupyterHub</a>.</p>
+в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/2.4_установка_стенда/2.4.2_jupyterhub.md">инструкции по JupyterHub</a>.</p>
 </div>
 
 <p class="sub">Дальше: <a href="case_dashboard.html">агент собирает дашборд
