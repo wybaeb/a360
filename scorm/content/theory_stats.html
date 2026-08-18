@@ -158,10 +158,11 @@ figure.fig figcaption{color:var(--ink3);font-size:14px;margin-top:10px}
   <h1>Связь и причинность: корреляция и регрессия</h1>
   <p class="lead">Теория к следующей встрече в объёме, который нужен
      руководителю: что показывает коэффициент связи, что показывает прямая,
-     чего они не показывают и какие вопросы задать, прежде чем принять вывод.
+     как читаются тренд и сезонность в прогнозе и какие вопросы задать,
+     прежде чем принять вывод.
      Формул для запоминания нет.</p>
   <div class="meta">
-    <span class="chip">Чтение <b>12 минут</b></span>
+    <span class="chip">Чтение <b>16 минут</b></span>
     <span class="chip">Числа <b>из учебного стенда</b></span>
     <span class="chip">Каждое утверждение <b>со ссылкой на источник</b></span>
   </div>
@@ -8293,7 +8294,76 @@ z
 </div></section>
 
 <section><div class="wrap">
-<h2><span class="num">5</span>Что спросить, прежде чем поверить</h2>
+<h2><span class="num">5</span>Прогноз: тренд, сезонность и виды регрессий</h2>
+
+<p>Регрессия из предыдущего раздела описывала связь двух величин. Если одна
+из величин — время, та же техника даёт прогноз, и к ней добавляются два
+понятия, без которых ряд читается неверно.</p>
+
+<div class="term">
+<b>Тренд</b> — устойчивое направление ряда, очищенное от колебаний.
+<b>Сезонность</b> — регулярные колебания с известным периодом: день недели,
+месяц, квартал. <b>Остаток</b> — то, что не объяснено ни трендом,
+ни сезонностью.
+</div>
+
+<p>Стандартный приём — разложить ряд на эти три части (декомпозиция) и смотреть
+на них по отдельности. Тогда «декабрьский всплеск» не выдаётся за рост,
+а «январский провал» — за падение: и то и другое сидит в сезонной компоненте
+и повторяется каждый год.</p>
+
+<h3>Как выравнивают ряд</h3>
+
+<ul>
+  <li><b>Скользящее среднее</b> — усреднение по окну (например, по семи дням
+      или двенадцати месяцам). Гасит случайные колебания, показывает
+      направление; за это платят задержкой: последняя точка окна
+      «подтягивается» к прошлому.</li>
+  <li><b>Сезонное сглаживание</b> — сравнение с тем же периодом прошлого года
+      или деление ряда на сезонный профиль. Отвечает на вопрос «лучше ли,
+      чем в прошлом декабре», а не «лучше ли, чем в ноябре».</li>
+  <li><b>Декомпозиция</b> — явное разделение на тренд, сезонность и остаток.
+      Самое честное представление: видно, какая часть изменения объяснена,
+      а какая нет.</li>
+</ul>
+
+<h3>Какие бывают регрессии</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>Вид</th><th>Когда применяется</th><th>Что даёт на выходе</th></tr></thead>
+<tbody>
+<tr><td><b>Простая линейная</b></td><td>один фактор, связь близка к прямой</td>
+    <td>изменение результата на единицу фактора</td></tr>
+<tr><td><b>Множественная</b></td><td>несколько факторов одновременно</td>
+    <td>вклад каждого фактора при прочих равных</td></tr>
+<tr><td><b>С временными переменными</b></td><td>ряд во времени</td>
+    <td>тренд и сезонные поправки как отдельные слагаемые</td></tr>
+<tr><td><b>Нелинейная</b></td><td>эффект насыщается или ускоряется</td>
+    <td>кривую вместо прямой; сложнее интерпретировать</td></tr>
+<tr><td><b>Логистическая</b></td><td>результат — «да / нет» (одобрено, ушёл)</td>
+    <td>вероятность события, а не величину</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="card warn">
+<h4>Прогноз без интервала — это не прогноз</h4>
+<p style="margin-bottom:0">Любая модель даёт не точку, а диапазон. Учебник
+по прогнозированию формулирует это прямо: интервал показывает, в каких
+пределах ожидается будущее значение, и без него точечная оценка вводит
+в заблуждение. Управленческое следствие простое: спрашивайте не «сколько
+будет», а «в каких пределах и с какой вероятностью».</p>
+</div>
+
+<p>И последнее ограничение, общее для всех видов: модель описывает то, что уже
+происходило. Она не знает про изменение регламента, запуск конкурента или
+разовую акцию — если такое событие ожидается, прогноз корректируют вручную
+и говорят об этом вслух.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">6</span>Что спросить, прежде чем поверить</h2>
 
 <ol class="steps">
   <li><b>Покажите график.</b> Не коэффициент, а точки. Первый же взгляд снимает
@@ -8310,6 +8380,10 @@ z
       вывод преждевременен.</li>
   <li><b>Как это проверить действием?</b> Пилот на части потока с контрольной
       группой отвечает на вопрос о причине, выгрузка — нет.</li>
+  <li><b>Если это прогноз — какой горизонт и какой интервал?</b> Точечное
+      число без диапазона и без срока не проверяемо.</li>
+  <li><b>Учтена ли сезонность?</b> Сравнение с прошлым месяцем и сравнение
+      с тем же месяцем прошлого года дают разные ответы.</li>
 </ol>
 
 <div class="card acc">
@@ -8330,10 +8404,10 @@ z
 </div></section>
 
 <section><div class="wrap">
-<h2><span class="num">6</span>Источники</h2>
+<h2><span class="num">7</span>Источники</h2>
 <p class="sub">Всё, что утверждается выше, проверяется по этим публикациям.
 Ссылки ведут на первоисточники, а не на пересказы.</p>
-<ol class='src'><li><a href="https://www.itl.nist.gov/div898/handbook/pmd/section1/pmd12.htm">NIST/SEMATECH e-Handbook of Statistical Methods, 4.1.2 «What terminology do statisticians use to describe process models?»</a><span class="what">модель наблюдения: y = f(x;β) + ε, ошибки со средним ноль</span></li><li><a href="https://www.itl.nist.gov/div898/handbook/pmd/section1/pmd141.htm">NIST/SEMATECH e-Handbook, 4.1.4.1 «Linear Least Squares Regression»</a><span class="what">метод наименьших квадратов: прямая минимизирует сумму квадратов отклонений</span></li><li><a href="https://www.itl.nist.gov/div898/handbook/pmd/section4/pmd44.htm">NIST/SEMATECH e-Handbook, 4.4.4 «How can I tell if a model fits my data?»</a><span class="what">«R² Is Not Enough!» — высокое R² не гарантирует, что модель описывает данные; основная проверка — графический анализ остатков</span></li><li><a href="https://pubmed.ncbi.nlm.nih.gov/29481436/">P. Schober, C. Boer, L. A. Schwarte. Correlation Coefficients: Appropriate Use and Interpretation. Anesthesia & Analgesia, 2018;126(5):1763–1768</a><span class="what">как читать величину коэффициента корреляции и какие у него ограничения</span></li><li><a href="https://www.nature.com/articles/nmeth.3587">N. Altman, M. Krzywinski. Association, correlation and causation. Nature Methods 12, 899–900 (2015)</a><span class="what">корреляция говорит об ассоциации, а не о причине; причина даёт ассоциацию, но не обязательно корреляцию</span></li><li><a href="https://doi.org/10.1080/00031305.1973.10478966">F. J. Anscombe. Graphs in Statistical Analysis. The American Statistician, 27(1), 1973, с. 17–21</a><span class="what">квартет: четыре набора данных с одинаковыми статистиками и разным смыслом</span></li></ol>
+<ol class='src'><li><a href="https://www.itl.nist.gov/div898/handbook/pmd/section1/pmd12.htm">NIST/SEMATECH e-Handbook of Statistical Methods, 4.1.2 «What terminology do statisticians use to describe process models?»</a><span class="what">модель наблюдения: y = f(x;β) + ε, ошибки со средним ноль</span></li><li><a href="https://www.itl.nist.gov/div898/handbook/pmd/section1/pmd141.htm">NIST/SEMATECH e-Handbook, 4.1.4.1 «Linear Least Squares Regression»</a><span class="what">метод наименьших квадратов: прямая минимизирует сумму квадратов отклонений</span></li><li><a href="https://www.itl.nist.gov/div898/handbook/pmd/section4/pmd44.htm">NIST/SEMATECH e-Handbook, 4.4.4 «How can I tell if a model fits my data?»</a><span class="what">«R² Is Not Enough!» — высокое R² не гарантирует, что модель описывает данные; основная проверка — графический анализ остатков</span></li><li><a href="https://pubmed.ncbi.nlm.nih.gov/29481436/">P. Schober, C. Boer, L. A. Schwarte. Correlation Coefficients: Appropriate Use and Interpretation. Anesthesia & Analgesia, 2018;126(5):1763–1768</a><span class="what">как читать величину коэффициента корреляции и какие у него ограничения</span></li><li><a href="https://www.nature.com/articles/nmeth.3587">N. Altman, M. Krzywinski. Association, correlation and causation. Nature Methods 12, 899–900 (2015)</a><span class="what">корреляция говорит об ассоциации, а не о причине; причина даёт ассоциацию, но не обязательно корреляцию</span></li><li><a href="https://doi.org/10.1080/00031305.1973.10478966">F. J. Anscombe. Graphs in Statistical Analysis. The American Statistician, 27(1), 1973, с. 17–21</a><span class="what">квартет: четыре набора данных с одинаковыми статистиками и разным смыслом</span></li><li><a href="https://otexts.com/fpp3/decomposition.html">R. J. Hyndman, G. Athanasopoulos. Forecasting: Principles and Practice, 3-е издание, OTexts, 2021 — глава 3 «Time series decomposition»</a><span class="what">разложение ряда на тренд-цикл, сезонность и остаток</span></li><li><a href="https://otexts.com/fpp3/regression.html">Там же, глава 7 «Time series regression models»</a><span class="what">регрессия по времени: тренд, сезонные переменные, несколько факторов</span></li><li><a href="https://otexts.com/fpp3/prediction-intervals.html">Там же, раздел 5.5 «Prediction intervals»</a><span class="what">прогноз без интервала неинформативен: интервал показывает разброс возможных значений</span></li></ol>
 <p class="sub">Продолжение темы в наших материалах:
 <a href="longread.html">пять ошибок вывода</a> — как обманывает уже посчитанное
 число; <a href="longread_eda.html">разведочный анализ</a> — что сделать
