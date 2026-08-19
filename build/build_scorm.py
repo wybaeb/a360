@@ -39,10 +39,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC = ROOT / "scorm" / "content"
 STAGE = ROOT / "scorm" / "package"
 DIST = ROOT / "dist"
-ZIP = DIST / "a360_step0_scorm12.zip"
+ZIP = DIST / "a360_materials_scorm12.zip"
 
+# Идентификатор не меняем: LMS различает курсы по нему, новый identifier
+# завёл бы в системе второй курс и обнулил прогресс участников.
 IDENT = "KK.SBER.A360.STEP0"
-TITLE = "Аналитика 360 · практическая часть: предчтение и практика в GigaChat"
+TITLE = "Аналитика 360 · материалы практики: лонгриды, кейсы и тренажёры"
 
 # Обвязка ищет API по спецификации SCORM 1.2: сначала вверх по window.parent,
 # потом в opener. Если API не найден (страницу открыли просто в браузере),
