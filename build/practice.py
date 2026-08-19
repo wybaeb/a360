@@ -126,7 +126,7 @@ def _one(p, best):
     # id секции — slug разбора: на эти якоря ссылается лонгрид (practice.html#<slug>)
     anch, name = THEORY[p["slug"]]
     theory = (f'<p><b>Теория этой ошибки</b> — почему она обманывает и какой проверкой '
-              f'ловится — в разделе <a href="longread.html#{anch}">«{esc(name)}»</a> '
+              f'обнаруживается — в разделе <a href="longread.html#{anch}">«{esc(name)}»</a> '
               f'лонгрида «Ошибки вывода».</p>')
     return f"""
 <section id="{p['slug']}"><div class="wrap">
