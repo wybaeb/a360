@@ -36,7 +36,7 @@ cd bank-analytics-workshop</code></pre></li>
 
 <li><b>Поставить библиотеки.</b>
 <pre><code>pip install -r requirements.txt</code></pre>
-<p class="sub" style="margin:8px 0 0">Пять штук: тетради, драйвер базы, pandas,
+<p class="sub" style="margin:8px 0 0">Пять пакетов: тетради, драйвер базы, pandas,
 графики и клиент ассистента.</p></li>
 
 <li><b>Заполнить <code>.env</code>.</b>
