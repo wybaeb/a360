@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Кейс: анализ отклонений · Аналитика 360</title>
+<style>
+:root{
+  --acc:#20BA72; --acc-soft:rgba(32,186,114,.10); --acc-line:rgba(32,186,114,.30);
+  --bg:#ffffff; --surf:#f4f8f6; --elev:#e9f3ee; --line:rgba(46,54,65,.13);
+  --ink:#2E3641; --ink2:rgba(46,54,65,.74); --ink3:rgba(46,54,65,.48);
+  --warn:#E4572E; --warn-soft:rgba(228,87,46,.09);
+  --font:'SB Sans Text','Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'SFMono-Regular',Consolas,'Liberation Mono',monospace;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth}
+body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 22px}
+/* overflow-wrap нужен ссылкам-адресам в списках источников: у длинного URL нет
+   точек переноса, на узком экране он уходит за край, а html/body{overflow-x:clip}
+   выше не даёт его прокрутить — текст пропадал совсем. break-word рвёт только
+   слово, которое иначе не помещается, и не влияет на расчёт min-content. */
+a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line);
+  overflow-wrap:break-word}
+a:hover{border-bottom-color:var(--acc)}
+
+header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
+  border-bottom:1px solid var(--line)}
+
+/* Хлебная крошка: лёгкая строка над шапкой. Фон тот же, что у верха градиента
+   шапки, поэтому крошка визуально сливается с ней в один блок. */
+.crumbs{background:var(--elev);font-size:13.5px;color:var(--ink3)}
+.crumbs .wrap{padding-top:14px;padding-bottom:2px;display:flex;align-items:baseline;gap:8px}
+.crumbs a{color:#128a53;border-bottom:1px solid transparent;font-weight:600}
+.crumbs a:hover{border-bottom-color:var(--acc)}
+.crumbs .sep{color:var(--ink3);font-size:11px}
+.crumbs .here{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eyebrow{color:var(--acc);font-weight:800;font-size:12.5px;letter-spacing:.14em;
+  text-transform:uppercase;margin-bottom:14px}
+h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 16px}
+.lead{font-size:clamp(16.5px,2vw,19px);color:var(--ink2);margin:0 0 22px}
+.meta{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;
+  font-size:13.5px;color:var(--ink2)}
+.chip b{color:var(--ink)}
+
+section{padding:44px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-size:clamp(22px,3vw,30px);font-weight:800;margin:0 0 8px;line-height:1.18}
+h2 .num{color:var(--acc);margin-right:.4em;font-variant-numeric:tabular-nums}
+h3{font-size:19px;font-weight:800;margin:30px 0 10px}
+h4{font-size:16px;font-weight:800;margin:22px 0 8px;color:var(--ink2)}
+p{margin:0 0 15px}
+ul,ol{margin:0 0 15px;padding-left:22px}
+li{margin-bottom:7px}
+.sub{color:var(--ink3);margin:0 0 22px;font-size:15.5px}
+
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:20px 22px;margin:0 0 18px}
+.card.acc{background:var(--acc-soft);border-color:var(--acc-line)}
+.card.warn{background:var(--warn-soft);border-color:rgba(228,87,46,.28)}
+.card h4{margin-top:0}
+.card p:last-child,.card ul:last-child,.card ol:last-child{margin-bottom:0}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0 0 15px;font-size:15.5px}
+.kv dt{color:var(--ink3)}
+.kv dd{margin:0;font-weight:600}
+
+table{border-collapse:collapse;width:100%;font-size:15px;margin:0 0 15px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{font-weight:800;color:var(--ink2);font-size:13.5px;text-transform:uppercase;
+  letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 15px}
+.scroll table{margin:0}
+
+pre{background:#20262e;color:#e7edf3;border-radius:12px;padding:16px 18px;overflow-x:auto;
+  font-family:var(--mono);font-size:13.5px;line-height:1.55;margin:0 0 15px}
+code{font-family:var(--mono);font-size:.9em;background:var(--elev);padding:2px 6px;
+  border-radius:5px}
+pre code{background:none;padding:0;font-size:1em}
+
+.prompt{position:relative;background:#20262e;color:#e7edf3;border-radius:12px;
+  padding:16px 18px;margin:0 0 14px}
+/* Промпт должен быть виден целиком: участник его читает, а не только копирует.
+   pre-wrap переносит длинные строки, но сохраняет переводы строк — innerText
+   в кнопке копирования отдаёт ровно исходный текст. */
+.prompt pre{margin:0;padding:0;background:none;max-height:none;
+  white-space:pre-wrap;overflow-wrap:anywhere}
+.prompt{padding-top:46px}
+.copy{position:absolute;top:10px;right:10px;background:var(--acc);color:#fff;border:0;
+  border-radius:8px;padding:7px 13px;font:600 13px var(--font);cursor:pointer}
+.copy:hover{filter:brightness(1.08)}
+.copy.done{background:#0f7a46}
+
+figure{margin:0 0 18px}
+figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+figure.fig{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:18px 18px 12px;margin:22px 0}
+figure.fig svg{max-width:100%;height:auto}
+figure.fig figcaption{padding-top:6px;border-top:1px solid var(--line);margin-top:12px}
+
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;
+  border-radius:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;
+  display:flex;align-items:center;justify-content:center}
+
+/* Раскрывающийся блок: три вспомогательных промпта не должны спорить за внимание
+   с главным, но и прятать их насовсем нельзя — по ним разбирают проверку. */
+details.more{border:1px solid var(--line);border-radius:14px;padding:0 22px;
+  margin:0 0 18px;background:var(--surf)}
+details.more>summary{cursor:pointer;font-weight:800;padding:16px 0;list-style:none;
+  color:var(--ink2)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸";color:var(--acc);margin-right:8px}
+details.more[open]>summary::before{content:"▾"}
+details.more[open]{padding-bottom:14px}
+details.more>summary:hover{color:var(--ink)}
+
+.toc{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+  margin:0 0 8px}
+.toc ol{margin:0;padding-left:20px}
+.toc a{border:0}
+.toc a:hover{border-bottom:1px solid var(--acc)}
+
+footer{padding:36px 0 60px;color:var(--ink3);font-size:14.5px}
+/* Сноска на источник: верхний индекс, чтобы номер не читался как часть текста */
+a.fn{border:0;font-size:.72em;vertical-align:super;font-weight:700;padding-left:2px}
+a.fn:hover{border:0;text-decoration:underline}
+.tag{display:inline-block;background:var(--elev);border-radius:6px;padding:1px 8px;
+  font-size:13px;color:var(--ink2);font-weight:600}
+@media(max-width:600px){
+  body{font-size:16px}
+  .kv{grid-template-columns:1fr}
+}
+</style>
+</head><body>
+<nav class="crumbs" aria-label="Навигация"><div class="wrap"><a href="index.html">Материалы</a><span class="sep">▸</span><span class="here">Кейс: анализ отклонений</span></div></nav>
+
+<style>
+.stepbox{border:1px solid var(--line);border-radius:14px;padding:0 22px;margin:0 0 18px}
+.stepbox h3{margin:18px 0 8px}
+.stepbox .res{background:var(--acc-soft);border-left:3px solid var(--acc);
+  border-radius:0 8px 8px 0;padding:10px 14px;margin:12px 0 18px;font-size:15.5px}
+.stepbox .res b{color:#0f7a46}
+.shot{margin:22px 0}
+.shot img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;
+  display:block}
+.shot figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+.time{font-variant-numeric:tabular-nums}
+/* Схемы рисуются кодом (build/figs_agent.py) и вставляются как есть:
+   так они масштабируются вместе с колонкой и остаются чёткими на печати. */
+figure.scheme{margin:22px 0}
+figure.scheme svg{width:100%;height:auto;display:block}
+figure.scheme figcaption{color:var(--ink3);font-size:14px;margin-top:10px}
+/* Переключатель сценариев: путь в Google Таблицах и в Excel различается
+   двумя шагами из пяти, и показывать их подряд — верный способ перепутать. */
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 20px}
+.tabs button{font:700 15px var(--font);padding:11px 20px;border-radius:999px;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer}
+.tabs button:hover{border-color:var(--acc-line)}
+.tabs button[aria-selected="true"]{background:var(--acc);border-color:var(--acc);
+  color:#fff}
+.pane[hidden]{display:none}
+</style>
+
+<header><div class="wrap"><div class="eyebrow">Кейс практики · бизнес</div><h1>Анализ отклонений: сезонность, тренд и выбор прогнозной модели</h1><p class="lead">Один ряд данных, три способа посмотреть на него и три противоположных вывода. Какой из них верен, решает не выразительность графика, а измеренная ошибка прогноза.</p><div class="meta"><span class="chip">Время <b>30 минут</b></span><span class="chip">Нужен <b>Python</b></span><span class="chip">Уровень <b>портфеля</b></span></div></div></header>
+
+<section><div class="wrap">
+<h2>Управленческий вопрос</h2>
+<p class="sub">Объём операций портфеля растёт или падает — и какому
+из ответов верить?</p>
+
+<p>Данные — дневной ряд
+<a href="https://github.com/wybaeb/bank-analytics-workshop/raw/master/data/series/portfolio_operations_daily.csv">portfolio_operations_daily.csv</a>:
+объём операций и их число за три года, 1 158 строк. Тетрадь целиком —
+<a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/3.4_кейс_анализ_отклонений/3.4.3_анализ_отклонений.ipynb">3.4.3_анализ_отклонений.ipynb</a>.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2>Взгляд первый: линия тренда по исходному ряду</h2>
+<p>Месячные суммы и прямая по всей истории: наклон +18,7 млн рублей в месяц,
+около +6 % в год. Портфель растёт, продление тренда обещает рост и дальше.
+На этом месте отчёт обычно и заканчивается.</p>
+
+<figure class="shot"><img src="assets/step3_trend_raw.png" alt="Месячные суммы и линия тренда по всей истории наблюдений"><figcaption>Месячные суммы и линия тренда по всей истории наблюдений</figcaption></figure>
+</div></section>
+
+<section><div class="wrap">
+<h2>Взгляд второй: снять сезонность</h2>
+<p>В ряде наложены три регулярных ритма: день недели, начало и конец месяца,
+месяц года. Пока они в данных, сезонный подъём читается как рост.</p>
+
+<figure class="shot"><img src="assets/step3_seasonality.png" alt="Сезонные коэффициенты: день недели, день месяца, месяц года"><figcaption>Сезонные коэффициенты: день недели, день месяца, месяц года</figcaption></figure>
+
+<p>Коэффициент сезонности — отношение среднего значения в позиции к общему
+среднему; деление на коэффициент убирает ритм из ряда. Годовые коэффициенты
+считаются не к общему среднему, а к скользящему среднему за двенадцать
+месяцев: иначе при выраженном тренде поздние месяцы получают завышенный
+коэффициент просто потому, что они поздние.</p>
+
+<p>После очистки тренд последнего года идёт вниз: −1,0 млн рублей в день
+за каждый месяц. Тот же ряд — противоположный вывод.</p>
+
+<figure class="shot"><img src="assets/step3_trend_clean.png" alt="Ряд без сезонности и тренд последних двенадцати месяцев"><figcaption>Ряд без сезонности и тренд последних двенадцати месяцев</figcaption></figure>
+</div></section>
+
+<section><div class="wrap">
+<h2>Взгляд третий: модели сравниваются на отложенных периодах</h2>
+<p>Прямая по фиксированному окну не знает ничего, кроме наклона, и не видит
+перелома. Проверка устроена иначе: из каждой точки последнего года строится
+прогноз на три месяца вперёд только по предшествующим данным, и он
+сравнивается с фактом.</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>Модель</th>
+<th class="num">Средняя абсолютная ошибка, млн руб. в день</th></tr></thead>
+<tbody>
+<tr><td>Сглаживание Холта</td><td class="num">7,40</td></tr>
+<tr><td>Линейный тренд по 12 месяцам</td><td class="num">8,61</td></tr>
+<tr><td>Сезонная наивная</td><td class="num">9,79</td></tr>
+</tbody></table>
+</div>
+
+<p>Побеждает сглаживание — единственная из трёх, которая реагирует
+на перелом. Её прогноз: просадка закончилась, ряд восстанавливается.</p>
+
+<figure class="shot"><img src="assets/step3_forecast.png" alt="Прогноз модели с наименьшей проверенной ошибкой и продление линейного тренда"><figcaption>Прогноз модели с наименьшей проверенной ошибкой и продление линейного тренда</figcaption></figure>
+</div></section>
+
+<section><div class="wrap">
+<h2>Как формулируется вывод</h2>
+
+<div class="scroll">
+<table>
+<thead><tr><th>Взгляд</th><th>Метод</th><th>Вывод</th></tr></thead>
+<tbody>
+<tr><td>Первый</td><td>тренд по исходному ряду</td>
+<td>рост — сезонность принята за тренд</td></tr>
+<tr><td>Второй</td><td>тренд по очищенному году</td>
+<td>падение — прямая не видит перелома</td></tr>
+<tr><td>Третий</td><td>модель с наименьшей ошибкой на отложенных периодах</td>
+<td>просадка завершается, идёт восстановление</td></tr>
+</tbody></table>
+</div>
+
+<p>Ни один из трёх не является истиной сам по себе: у третьего есть то, чего
+нет у первых двух, — измеренная ошибка. Форма вывода для доклада: «просадка
+началась восемь месяцев назад, последние четыре месяца восстанавливаются;
+модель с наименьшей проверенной ошибкой ожидает выход на прежний уровень
+с такой-то полосой неопределённости».</p>
+
+<div class="card acc">
+<h4>Вопросы к любому прогнозу до принятия решения</h4>
+<ul style="margin-bottom:0">
+<li>На каких данных проверялась модель и какова её ошибка на отложенном
+периоде.</li>
+<li>Что произойдёт, если реализуется нижняя граница полосы.</li>
+<li>Какое событие вызвало отклонение и учтено ли его повторение.</li>
+<li>Когда прогноз пересчитывается и кто это делает.</li>
+</ul>
+</div>
+</div></section>
+
+<section><div class="wrap">
+<h2>Правки к коду ассистента</h2>
+<p class="sub">Пять исправлений, все — из разряда тихих: код выглядел
+законченным.</p>
+<ul>
+<li>дневной ряд делился на семь сезонных коэффициентов напрямую — значения
+выравнивались по индексу и обращались в пустоту;</li>
+<li>скользящая проверка отсчитывалась от даты запуска, а не от конца ряда:
+результат менялся бы день ото дня;</li>
+<li>позиционное обращение к ряду с датами вместо явного обращения
+по номеру;</li>
+<li>параметры сглаживания назначены без обоснования — они подбираются
+на той же проверке, что и выбор модели;</li>
+<li>коэффициенты годовой сезонности считались к общему среднему без учёта
+тренда.</li>
+</ul>
+</div></section>
+
+<footer><div class="wrap">
+  Аналитика 360 · материалы практической части.<br>
+  Данные синтетические. Реальные клиентские выгрузки во внешние сервисы
+  не отправляются.
+</div></footer>
+
+
+<script>
+// Кнопка «скопировать промпт»: сначала пробуем Clipboard API, при отказе —
+// старый execCommand. В LMS страница часто открыта в iframe без разрешения
+// на буфер обмена, и без запасного пути кнопка молча ничего не делает.
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.copy'); if(!b) return;
+  var t=b.parentNode.querySelector('pre').innerText;
+  function done(){b.textContent='Скопировано';b.classList.add('done');
+    setTimeout(function(){b.textContent='Копировать';b.classList.remove('done')},1800);}
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(done,fallback);
+  } else { fallback(); }
+  function fallback(){
+    var a=document.createElement('textarea');a.value=t;a.style.position='fixed';
+    a.style.opacity=0;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');done();}catch(_e){b.textContent='Выделите вручную';}
+    document.body.removeChild(a);
+  }
+});
+</script>
+</body></html>

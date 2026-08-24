@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Эффект для бизнеса: как метрика превращается в деньги · Аналитика 360</title>
+<style>
+:root{
+  --acc:#20BA72; --acc-soft:rgba(32,186,114,.10); --acc-line:rgba(32,186,114,.30);
+  --bg:#ffffff; --surf:#f4f8f6; --elev:#e9f3ee; --line:rgba(46,54,65,.13);
+  --ink:#2E3641; --ink2:rgba(46,54,65,.74); --ink3:rgba(46,54,65,.48);
+  --warn:#E4572E; --warn-soft:rgba(228,87,46,.09);
+  --font:'SB Sans Text','Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'SFMono-Regular',Consolas,'Liberation Mono',monospace;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth}
+body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 22px}
+/* overflow-wrap нужен ссылкам-адресам в списках источников: у длинного URL нет
+   точек переноса, на узком экране он уходит за край, а html/body{overflow-x:clip}
+   выше не даёт его прокрутить — текст пропадал совсем. break-word рвёт только
+   слово, которое иначе не помещается, и не влияет на расчёт min-content. */
+a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line);
+  overflow-wrap:break-word}
+a:hover{border-bottom-color:var(--acc)}
+
+header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
+  border-bottom:1px solid var(--line)}
+
+/* Хлебная крошка: лёгкая строка над шапкой. Фон тот же, что у верха градиента
+   шапки, поэтому крошка визуально сливается с ней в один блок. */
+.crumbs{background:var(--elev);font-size:13.5px;color:var(--ink3)}
+.crumbs .wrap{padding-top:14px;padding-bottom:2px;display:flex;align-items:baseline;gap:8px}
+.crumbs a{color:#128a53;border-bottom:1px solid transparent;font-weight:600}
+.crumbs a:hover{border-bottom-color:var(--acc)}
+.crumbs .sep{color:var(--ink3);font-size:11px}
+.crumbs .here{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eyebrow{color:var(--acc);font-weight:800;font-size:12.5px;letter-spacing:.14em;
+  text-transform:uppercase;margin-bottom:14px}
+h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 16px}
+.lead{font-size:clamp(16.5px,2vw,19px);color:var(--ink2);margin:0 0 22px}
+.meta{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;
+  font-size:13.5px;color:var(--ink2)}
+.chip b{color:var(--ink)}
+
+section{padding:44px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-size:clamp(22px,3vw,30px);font-weight:800;margin:0 0 8px;line-height:1.18}
+h2 .num{color:var(--acc);margin-right:.4em;font-variant-numeric:tabular-nums}
+h3{font-size:19px;font-weight:800;margin:30px 0 10px}
+h4{font-size:16px;font-weight:800;margin:22px 0 8px;color:var(--ink2)}
+p{margin:0 0 15px}
+ul,ol{margin:0 0 15px;padding-left:22px}
+li{margin-bottom:7px}
+.sub{color:var(--ink3);margin:0 0 22px;font-size:15.5px}
+
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:20px 22px;margin:0 0 18px}
+.card.acc{background:var(--acc-soft);border-color:var(--acc-line)}
+.card.warn{background:var(--warn-soft);border-color:rgba(228,87,46,.28)}
+.card h4{margin-top:0}
+.card p:last-child,.card ul:last-child,.card ol:last-child{margin-bottom:0}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0 0 15px;font-size:15.5px}
+.kv dt{color:var(--ink3)}
+.kv dd{margin:0;font-weight:600}
+
+table{border-collapse:collapse;width:100%;font-size:15px;margin:0 0 15px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{font-weight:800;color:var(--ink2);font-size:13.5px;text-transform:uppercase;
+  letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 15px}
+.scroll table{margin:0}
+
+pre{background:#20262e;color:#e7edf3;border-radius:12px;padding:16px 18px;overflow-x:auto;
+  font-family:var(--mono);font-size:13.5px;line-height:1.55;margin:0 0 15px}
+code{font-family:var(--mono);font-size:.9em;background:var(--elev);padding:2px 6px;
+  border-radius:5px}
+pre code{background:none;padding:0;font-size:1em}
+
+.prompt{position:relative;background:#20262e;color:#e7edf3;border-radius:12px;
+  padding:16px 18px;margin:0 0 14px}
+/* Промпт должен быть виден целиком: участник его читает, а не только копирует.
+   pre-wrap переносит длинные строки, но сохраняет переводы строк — innerText
+   в кнопке копирования отдаёт ровно исходный текст. */
+.prompt pre{margin:0;padding:0;background:none;max-height:none;
+  white-space:pre-wrap;overflow-wrap:anywhere}
+.prompt{padding-top:46px}
+.copy{position:absolute;top:10px;right:10px;background:var(--acc);color:#fff;border:0;
+  border-radius:8px;padding:7px 13px;font:600 13px var(--font);cursor:pointer}
+.copy:hover{filter:brightness(1.08)}
+.copy.done{background:#0f7a46}
+
+figure{margin:0 0 18px}
+figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+figure.fig{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:18px 18px 12px;margin:22px 0}
+figure.fig svg{max-width:100%;height:auto}
+figure.fig figcaption{padding-top:6px;border-top:1px solid var(--line);margin-top:12px}
+
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;
+  border-radius:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;
+  display:flex;align-items:center;justify-content:center}
+
+/* Раскрывающийся блок: три вспомогательных промпта не должны спорить за внимание
+   с главным, но и прятать их насовсем нельзя — по ним разбирают проверку. */
+details.more{border:1px solid var(--line);border-radius:14px;padding:0 22px;
+  margin:0 0 18px;background:var(--surf)}
+details.more>summary{cursor:pointer;font-weight:800;padding:16px 0;list-style:none;
+  color:var(--ink2)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸";color:var(--acc);margin-right:8px}
+details.more[open]>summary::before{content:"▾"}
+details.more[open]{padding-bottom:14px}
+details.more>summary:hover{color:var(--ink)}
+
+.toc{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+  margin:0 0 8px}
+.toc ol{margin:0;padding-left:20px}
+.toc a{border:0}
+.toc a:hover{border-bottom:1px solid var(--acc)}
+
+footer{padding:36px 0 60px;color:var(--ink3);font-size:14.5px}
+/* Сноска на источник: верхний индекс, чтобы номер не читался как часть текста */
+a.fn{border:0;font-size:.72em;vertical-align:super;font-weight:700;padding-left:2px}
+a.fn:hover{border:0;text-decoration:underline}
+.tag{display:inline-block;background:var(--elev);border-radius:6px;padding:1px 8px;
+  font-size:13px;color:var(--ink2);font-weight:600}
+@media(max-width:600px){
+  body{font-size:16px}
+  .kv{grid-template-columns:1fr}
+}
+</style>
+</head><body>
+<nav class="crumbs" aria-label="Навигация"><div class="wrap"><a href="index.html">Материалы</a><span class="sep">▸</span><span class="here">Эффект для бизнеса</span></div></nav>
+
+<style>
+.term{border-left:3px solid var(--acc);background:var(--acc-soft);
+  border-radius:0 10px 10px 0;padding:12px 16px;margin:16px 0}
+.term b{color:#0f7a46}
+.src li{margin:0 0 14px}
+.src .what{color:var(--ink3);font-size:14.5px;display:block;margin-top:3px}
+.chain{display:grid;gap:10px;margin:20px 0}
+.chain div{background:var(--surf);border:1px solid var(--line);border-radius:12px;
+  padding:12px 16px;font-size:15.5px}
+.chain b{color:#0f7a46}
+</style>
+
+<header><div class="wrap">
+  <div class="eyebrow">Материалы практической части</div>
+  <h1>Эффект для бизнеса: как метрика превращается в деньги</h1>
+  <p class="lead">Материал к следующей встрече. Обсуждение результата
+     останавливается там, где вместо расчёта начинается спор о допущениях.
+     Здесь разобрано, как связать метрику с финансовым результатом,
+     как записывается допущение и как проверяется, какое из них
+     определяет ответ.</p>
+  <div class="meta">
+    <span class="chip">Чтение <b>14 минут</b></span>
+    <span class="chip">Числа <b>из учебной модели портфеля</b></span>
+    <span class="chip">Формул для запоминания <b>нет</b></span>
+  </div>
+</div></header>
+
+<section><div class="wrap">
+<h2><span class="num">1</span>Почему «метрика выросла» — ещё не результат</h2>
+
+<p>Изменение показателя становится результатом только после того, как названы
+три вещи: сколько наблюдений затронуто, во сколько оценивается одно
+наблюдение и когда эта оценка реализуется в отчётности. Без них рост
+показателя остаётся утверждением о показателе, а не о бизнесе.</p>
+
+<div class="term">
+<b>Эффект</b> — изменение финансового результата, вызванное изменением
+показателя. Он всегда произведение: изменение показателя × объём, к которому
+оно применимо × стоимость единицы. Каждый множитель берётся из своего
+источника, и у каждого своя достоверность.
+</div>
+
+<div class="chain">
+<div><b>Что изменилось.</b> Показатель, на который влияет инициатива:
+конверсия этапа, доля обращений в цифровом канале, срок прохождения
+заявки.</div>
+<div><b>К какому объёму применимо.</b> Не ко всей базе, а к той её части,
+которая проходит через изменённый участок.</div>
+<div><b>Сколько стоит единица.</b> Маржа на одном клиенте, стоимость одного
+обращения, стоимость дня работы.</div>
+<div><b>Когда это отразится.</b> Лаг между изменением показателя
+и его появлением в финансовом результате.</div>
+</div>
+
+<p>Пример из кейса конвейера: конверсия этапа выросла на два процентных
+пункта. Это ещё не эффект. Эффект появляется, когда сказано, что через этап
+проходит столько-то заявок в месяц, что одна выданная заявка приносит
+столько-то маржи и что признание дохода наступает через столько-то месяцев
+после выдачи.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">2</span>Допущение — не оговорка, а часть расчёта</h2>
+
+<p>В любой модели эффекта есть числа, которых нет в данных: доля клиентов,
+которая примет предложение; сохранится ли эффект после окончания
+эксперимента; сколько стоит час работы сотрудника, который освободится.
+Это допущения, и они определяют результат сильнее, чем сама метрика.</p>
+
+<div class="card acc">
+<h4>Как записывается допущение</h4>
+<ol style="margin-bottom:0">
+  <li><b>Значение</b> и единица измерения.</li>
+  <li><b>Источник</b>: расчёт по выгрузке, отраслевой ориентир, экспертная
+      оценка, аналогичная инициатива прошлого года.</li>
+  <li><b>Диапазон</b>: пессимистичное и оптимистичное значения, а не одно
+      число.</li>
+  <li><b>Кто подтверждает</b> и когда допущение заменяется фактом.</li>
+</ol>
+</div>
+
+<p>Разница между «мы предполагаем отклик 4 %» и «отклик 4 %, диапазон 2–7 %,
+источник — три похожие кампании прошлого года, подтверждает владелец
+продукта, заменяется фактом через месяц после старта» — это разница между
+спором на комитете и обсуждением решения.</p>
+
+<div class="card warn">
+<h4>Формулировка, которой стоит избегать</h4>
+<p style="margin-bottom:0">«Консервативная оценка» без числа и без источника
+не является оценкой. Консервативность проверяется тем же способом, что
+и любое другое допущение: подстановкой пессимистичного значения
+в расчёт.</p>
+</div>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">3</span>Проверка чувствительности</h2>
+
+<p>Вопрос, который снимает большую часть возражений заранее: <b>какое
+допущение нужно изменить и насколько, чтобы вывод стал обратным.</b>
+Процедура простая: каждое допущение по очереди ставится в пессимистичное
+значение при неизменных остальных, эффект пересчитывается, результаты
+выстраиваются по величине изменения.</p>
+
+<p>Итог обычно один и тот же: из десятка допущений результат определяют
+одно-два. Работать имеет смысл именно с ними — уточнять источник, сужать
+диапазон, планировать замер, — а остальные принять и не обсуждать.</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>Допущение</th><th>Базовое значение</th><th>Пессимистичное</th>
+<th>Что происходит с выводом</th></tr></thead>
+<tbody>
+<tr><td>Доля клиентов, принимающих предложение</td><td>4 %</td><td>2 %</td>
+<td>эффект уменьшается вдвое, вывод сохраняется</td></tr>
+<tr><td>Срок сохранения эффекта</td><td>12 месяцев</td><td>4 месяца</td>
+<td>окупаемость выходит за горизонт — <b>вывод меняется</b></td></tr>
+<tr><td>Стоимость контакта</td><td>18 руб.</td><td>26 руб.</td>
+<td>эффект уменьшается на десятую часть, вывод сохраняется</td></tr>
+</tbody></table>
+</div>
+
+<p class="sub">Строение таблицы важнее её содержания: одна строка на допущение,
+последняя колонка отвечает на вопрос «меняется ли решение», а не «на сколько
+меняется число».</p>
+
+<p>Такая таблица заменяет собой обсуждение достоверности отдельных цифр.
+Если вывод устойчив ко всем пессимистичным значениям сразу — обсуждать
+нечего. Если он ломается на одном допущении — это единственное, о чём стоит
+говорить.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">4</span>Время: почему нельзя складывать рубли разных лет</h2>
+
+<p>Расходы инициативы приходятся на начало, доходы — на потом. Чтобы
+сравнивать их между собой, будущие суммы приводят к текущему моменту:
+рубль через год стоит меньше рубля сегодня, потому что сегодняшний рубль
+может быть вложен во что-то другое.</p>
+
+<div class="term">
+<b>Ставка дисконтирования</b> — на сколько обесценивается будущая сумма
+за период. <b>Накопленный дисконтированный поток</b> — сумма всех
+приведённых поступлений и расходов с начала. Момент, когда он проходит через
+ноль, — <b>окупаемость</b>. Момент, когда месячный поток становится
+положительным, — <b>выход на прибыльность</b>. Это разные события, и между
+ними обычно проходят месяцы.
+</div>
+
+<p>Из этого следует практическое требование к паспорту инициативы: четырёх
+параметров достаточно, чтобы построить её финансовую кривую целиком —
+месяц старта, расходы, число месяцев до выхода на прибыльность и число
+месяцев до окупаемости. Учебная модель практики устроена именно так:
+<a href="https://github.com/wybaeb/bank-analytics-workshop/raw/master/data/portfolio/initiative_passport.csv">initiative_passport.csv</a>.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">5</span>Уровень портфеля: кривые складываются</h2>
+
+<p>Разница между руководителем продукта и руководителем портфеля видна
+именно здесь. Отдельная инициатива оценивается своей кривой. Портфель —
+суммой кривых, и у суммы появляются собственные свойства, которых нет
+у слагаемых.</p>
+
+<p>На учебном портфеле из десяти инициатив с общими расходами 63,7 млн
+рублей: потребность в финансировании достигает максимума на 11-м месяце
+(−47,8 млн рублей накопленным итогом), портфель выходит в плюс
+на 23-м месяце, к концу трёхлетнего горизонта накопленный результат
+составляет 56 млн рублей.</p>
+
+<div class="card acc">
+<h4>Что видно только на уровне портфеля</h4>
+<ul style="margin-bottom:0">
+  <li><b>Пик потребности в деньгах</b> — он определяется не суммой расходов,
+      а их совпадением по времени.</li>
+  <li><b>Влияние порядка запуска</b>: перестановка двух инициатив меняет
+      и пик, и срок окупаемости портфеля, хотя сами инициативы
+      не изменились.</li>
+  <li><b>Вклад отдельной инициативы в общий срок</b>: одна инициатива
+      с длинной окупаемостью может сдвинуть срок всего портфеля.</li>
+</ul>
+</div>
+
+<p><b>Условие складываемости.</b> Кривые можно складывать только тогда, когда
+паспорта всех инициатив посчитаны по единой методике: один горизонт, одна
+ставка, одинаковое понимание того, что считается расходом и что —
+доходом. Это требование к процессу сбора паспортов, а не к арифметике; там,
+где каждый владелец считает по-своему, сумма кривых не означает ничего.</p>
+
+<p>Разбор устройства такой модели и вопросы к ней — в
+<a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/2.7_кейс_отчёт_агента">кейсе отчёта агента</a>: те же данные, вопросы задаются
+словами, каждое число в ответе получено запросом к базе.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">6</span>Что подготовить к встрече</h2>
+
+<p>На встрече расчёт эффекта делается на собственном материале, поэтому
+имеет смысл прийти с заготовкой.</p>
+
+<ol class="steps">
+<li><b>Объект изменений.</b> Одно из трёх: продукт, процесс или бизнес-инициатива.
+Формулировка проблемы одним предложением — что именно работает не так.</li>
+<li><b>Показатель.</b> Тот, который изменится, если проблема будет решена,
+и по которому это изменение можно будет увидеть.</li>
+<li><b>Три числа для расчёта.</b> Объём, к которому применимо изменение;
+стоимость единицы; ожидаемое изменение показателя. Даже приблизительные
+значения лучше, чем их отсутствие: на встрече они будут уточняться.</li>
+<li><b>Список допущений.</b> Всё, чего нет в данных и что придётся
+предположить, — с диапазоном значений.</li>
+</ol>
+
+<div class="card warn">
+<h4>Данные, содержащие коммерческую тайну, в публичный контур не передаются</h4>
+<p style="margin-bottom:0">Для расчёта эффекта достаточно агрегированных
+величин: объём, средняя маржа, доля. Публичному ассистенту передаются
+только такие числа; работа с исходными выгрузками ведётся в закрытом
+контуре банка.</p>
+</div>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">7</span>Источники</h2>
+<p class="sub">Публикации, на которые опираются утверждения этой страницы.</p>
+<ol class='src'><li><a href="https://pages.stern.nyu.edu/~adamodar/">A. Damodaran. Investment Valuation: Tools and Techniques for Determining the Value of Any Asset, 3-е издание, Wiley, 2012 — гл. 2 и 5</a><span class="what">дисконтированный денежный поток, чистая приведённая стоимость, ставка дисконтирования</span></li><li><a href="https://www.amazon.com/dp/1935401009">D. Reinertsen. The Principles of Product Development Flow, Celeritas Publishing, 2009 — гл. 2</a><span class="what">стоимость задержки как способ сравнивать инициативы между собой</span></li><li><a href="https://www.itl.nist.gov/div898/handbook/pri/section1/pri1.htm">NIST/SEMATECH e-Handbook of Statistical Methods, 5.1 «Introduction to Design of Experiments»</a><span class="what">проверка эффекта экспериментом, а не сравнением до и после</span></li><li><a href="https://otexts.com/fpp3/prediction-intervals.html">R. J. Hyndman, G. Athanasopoulos. Forecasting: Principles and Practice, 3-е издание, OTexts, 2021 — раздел 5.5 «Prediction intervals»</a><span class="what">почему прогноз без интервала неинформативен</span></li><li><a href="https://protect.gost.ru/document.aspx?control=7&id=257943">ГОСТ Р 71484.2-2024. Качество данных. Часть 2. Показатели качества данных</a><span class="what">показатели, по которым оценивается пригодность данных для расчёта</span></li></ol>
+</div></section>
+
+<footer><div class="wrap">
+  Аналитика 360 · материалы практической части.<br>
+  Данные синтетические. Реальные клиентские выгрузки во внешние сервисы
+  не отправляются.
+</div></footer>
+
+<script>
+// Кнопка «скопировать промпт»: сначала пробуем Clipboard API, при отказе —
+// старый execCommand. В LMS страница часто открыта в iframe без разрешения
+// на буфер обмена, и без запасного пути кнопка молча ничего не делает.
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.copy'); if(!b) return;
+  var t=b.parentNode.querySelector('pre').innerText;
+  function done(){b.textContent='Скопировано';b.classList.add('done');
+    setTimeout(function(){b.textContent='Копировать';b.classList.remove('done')},1800);}
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(done,fallback);
+  } else { fallback(); }
+  function fallback(){
+    var a=document.createElement('textarea');a.value=t;a.style.position='fixed';
+    a.style.opacity=0;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');done();}catch(_e){b.textContent='Выделите вручную';}
+    document.body.removeChild(a);
+  }
+});
+</script>
+</body></html>
