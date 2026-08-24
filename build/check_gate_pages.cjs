@@ -1,6 +1,9 @@
 const puppeteer=require('puppeteer-core');
 const fs=require('fs');
-const pw=fs.readFileSync('/tmp/claude-0/-root-work-sessions-max--76387277381017/fc47512f-3713-456a-b17c-dad2781d7db3/scratchpad/.a360pw','utf8').trim();
+// Пароль берётся из окружения; путь к файлу-черновику в скрипте не живёт —
+// он у каждой сессии свой, и проверка ломалась при смене сессии.
+const pw=(process.env.A360_PASSWORD||'').trim();
+if(!pw){console.error('нужен пароль: A360_PASSWORD=... node build/check_gate_pages.cjs');process.exit(2);}
 const R='/root/work/sessions/max--76387277381017/a360/';
 const pages=fs.readdirSync(R).filter(f=>f.endsWith('.html'));
 (async()=>{
