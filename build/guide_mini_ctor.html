@@ -1,0 +1,169 @@
+<section><div class="wrap">
+<h2 id="konstruktor"><span class="num">4</span>Конструктор промпта</h2>
+
+<p>Помощник собирает готовый промпт под вашу выгрузку. Опишите поля
+таблицы — добавляйте их кнопкой «плюс», меняйте и удаляйте, — выберите
+операцию из списка или задайте свою; структура и примеры значений
+подставятся в промпт сами. Каждая заготовка списка прогнана через
+GigaChat и проверена; рядом с промптами лежат готовые образцы.</p>
+
+<div class="card" style="padding:18px 20px">
+  <p style="margin:0 0 6px"><b>1 · Поля выгрузки.</b> Имя, тип и примерное
+  значение каждой колонки:</p>
+  <div style="overflow-x:auto"><table id="ctor-fields" style="width:100%">
+    <thead><tr><th style="text-align:left">Поле</th>
+    <th style="text-align:left">Тип</th>
+    <th style="text-align:left">Пример значения</th><th></th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <button type="button" id="ctor-add"
+    style="margin-top:8px;padding:6px 14px;font-size:15px">+ Добавить поле</button>
+  <span style="color:var(--ink3);font-size:14px;margin-left:14px">
+    …или заполнить список из файла:</span>
+  <input type="file" id="ctor-file" accept=".csv" style="font-size:14px">
+  <div id="ctor-file-info" style="color:var(--ink3);font-size:14px;margin:6px 0 0"></div>
+
+  <p style="margin:16px 0 6px"><b>2 · Операция:</b></p>
+  <select id="ctor-preset" style="font-size:15px;padding:6px 10px;max-width:100%"></select>
+
+  <div id="ctor-custom" style="display:none;margin-top:12px">
+    <p style="margin:0 0 4px">Элементы управления на странице:</p>
+    <input id="ctor-controls" style="width:100%;padding:6px 10px" placeholder="например: список показателя и список среза">
+    <p style="margin:10px 0 4px">Расчёт и правила агрегации:</p>
+    <input id="ctor-calc" style="width:100%;padding:6px 10px" placeholder="например: корреляция выбранной пары по месячным итогам">
+    <p style="margin:10px 0 4px">Что выводится:</p>
+    <input id="ctor-out" style="width:100%;padding:6px 10px" placeholder="например: график и таблица с итогами">
+    <p style="margin:10px 0 4px">Контрольные числа для проверки:</p>
+    <input id="ctor-check" style="width:100%;padding:6px 10px" placeholder="например: пара закрытые_счета и жалобы даёт около 0,96">
+  </div>
+
+  <p style="margin:14px 0 6px"><b>3 · Готовый промпт</b> — скопируйте
+  и отправьте GigaChat одним сообщением:</p>
+  <div class="prompt"><button class="copy" type="button">Копировать</button>
+  <pre id="ctor-result"></pre></div>
+</div>
+
+<script>
+(function () {
+  var PRESETS = @@P@@;
+  var CUSTOM = @@C@@;
+
+  var fields = [
+    { name: 'месяц', type: 'месяц', sample: '2024-07' },
+    { name: 'регион', type: 'текст (срез)', sample: 'Центральный' },
+    { name: 'канал', type: 'текст (срез)', sample: 'Мобильное приложение' },
+    { name: 'новые_счета', type: 'число', sample: '620' },
+    { name: 'закрытые_счета', type: 'число', sample: '110' }
+  ];
+  var TYPES = ['месяц', 'число', 'текст (срез)'];
+
+  var tbody = document.querySelector('#ctor-fields tbody');
+  function drawFields() {
+    tbody.innerHTML = '';
+    fields.forEach(function (f, i) {
+      var tr = document.createElement('tr');
+      var tdN = document.createElement('td');
+      var inN = document.createElement('input');
+      inN.value = f.name; inN.style.width = '95%';
+      inN.oninput = function () { f.name = inN.value; render(); };
+      tdN.appendChild(inN);
+      var tdT = document.createElement('td');
+      var sel2 = document.createElement('select');
+      TYPES.forEach(function (tp) {
+        var o = document.createElement('option'); o.value = tp; o.text = tp;
+        sel2.appendChild(o);
+      });
+      sel2.value = f.type;
+      sel2.onchange = function () { f.type = sel2.value; render(); };
+      tdT.appendChild(sel2);
+      var tdS = document.createElement('td');
+      var inS = document.createElement('input');
+      inS.value = f.sample; inS.style.width = '95%';
+      inS.oninput = function () { f.sample = inS.value; render(); };
+      tdS.appendChild(inS);
+      var tdX = document.createElement('td');
+      var del = document.createElement('button');
+      del.type = 'button'; del.textContent = '×';
+      del.title = 'Удалить поле';
+      del.onclick = function () { fields.splice(i, 1); drawFields(); render(); };
+      tdX.appendChild(del);
+      tr.appendChild(tdN); tr.appendChild(tdT);
+      tr.appendChild(tdS); tr.appendChild(tdX);
+      tbody.appendChild(tr);
+    });
+  }
+  document.getElementById('ctor-add').onclick = function () {
+    fields.push({ name: 'показатель_' + (fields.length + 1),
+                  type: 'число', sample: '100' });
+    drawFields(); render();
+  };
+
+  function sampleBlock() {
+    var heads = fields.map(function (f) { return f.name; }).join(';');
+    var row = fields.map(function (f) { return f.sample; }).join(';');
+    return heads + '\n' + row;
+  }
+
+  var sel = document.getElementById('ctor-preset');
+  Object.keys(PRESETS).forEach(function (k) {
+    var o = document.createElement('option'); o.value = k; o.text = k;
+    sel.appendChild(o);
+  });
+  var oc = document.createElement('option');
+  oc.value = '__custom__'; oc.text = 'Свой вариант — описать операцию';
+  sel.appendChild(oc);
+
+  function val(id, def) {
+    var v = document.getElementById(id).value.trim();
+    return v || def;
+  }
+  function render() {
+    var custom = sel.value === '__custom__';
+    document.getElementById('ctor-custom').style.display = custom ? '' : 'none';
+    var text;
+    if (custom) {
+      text = CUSTOM
+        .replace('__CONTROLS__', val('ctor-controls', 'списки для выбора показателя и среза'))
+        .replace('__CALC__', val('ctor-calc', 'свёртка строк по месяцам: показатели с «средн», «ставка», «проц» или «доля» усредняются, остальные суммируются'))
+        .replace('__OUT__', val('ctor-out', 'график по месяцам'))
+        .replace('__CHECK__', val('ctor-check', 'значения, которые вы знаете по своей выгрузке'));
+    } else {
+      text = PRESETS[sel.value];
+    }
+    text = text.replace(/Пример первых строк:\n\n[\s\S]*?\n\n/,
+                        'Пример первых строк:\n\n' + sampleBlock() + '\n\n');
+    document.getElementById('ctor-result').textContent = text;
+  }
+  sel.onchange = render;
+  ['ctor-controls', 'ctor-calc', 'ctor-out', 'ctor-check'].forEach(function (id) {
+    document.getElementById(id).oninput = render;
+  });
+
+  document.getElementById('ctor-file').onchange = function () {
+    var f = this.files[0];
+    if (!f) return;
+    var r = new FileReader();
+    r.onload = function (e) {
+      var lines = String(e.target.result).replace(/^﻿/, '')
+        .split(/\r?\n/).filter(function (l) { return l.trim(); });
+      var heads = lines[0].split(';');
+      var row = (lines[1] || '').split(';');
+      fields = heads.map(function (h, i) {
+        var v = row[i] || '';
+        var tp = i === 0 ? 'месяц'
+          : (!isNaN(parseFloat(String(v).replace(',', '.'))) ? 'число'
+             : 'текст (срез)');
+        return { name: h, type: tp, sample: v };
+      });
+      document.getElementById('ctor-file-info').textContent =
+        'Из файла: ' + heads.length + ' полей, строк данных: ' +
+        (lines.length - 1) + ' — список заполнен, можно править.';
+      drawFields(); render();
+    };
+    r.readAsText(f);
+  };
+
+  drawFields(); render();
+})();
+</script>
+</div></section>
