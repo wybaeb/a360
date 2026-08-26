@@ -191,8 +191,10 @@ def сверху_и_в_3d(режим, имя, слайд):
     сверху.spines[["top", "right"]].set_visible(False)
     сверху.grid(alpha=0.25)
     сверху.tick_params(labelsize=режим["base"])
-    сверху.set_title("Вид сверху: два облака", fontsize=режим["base"] + 2,
-                     fontweight="bold", color=INK, pad=10)
+    if not слайд:
+        сверху.set_title("Вид сверху: два облака",
+                         fontsize=режим["base"] + 2,
+                         fontweight="bold", color=INK, pad=10)
 
     объём.set_xlabel("возраст", fontsize=режим["label"], labelpad=-4)
     объём.set_ylabel("доход", fontsize=режим["label"], labelpad=-4)
@@ -200,8 +202,10 @@ def сверху_и_в_3d(режим, имя, слайд):
     # в заголовок панели: у трёхмерных осей место под неё не резервируется
     объём.view_init(elev=16, azim=-58)
     объём.tick_params(labelsize=режим["base"] - 2, pad=-2)
-    объём.set_title("Поворот: облаков три", fontsize=режим["base"] + 2,
-                    fontweight="bold", color=INK, pad=2)
+    if not слайд:
+        объём.set_title("Поворот: облаков три",
+                        fontsize=режим["base"] + 2,
+                        fontweight="bold", color=INK, pad=2)
     # на слайде это пояснение живёт в подзаголовке, внутри кадра оно спорит
     # с легендой за место
     if режим["title"]:
