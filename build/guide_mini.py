@@ -26,6 +26,10 @@ CSS = """
   border-radius:0 10px 10px 0;padding:12px 16px;margin:16px 0}
 .term b{color:#0f7a46}
 .steps li{margin:0 0 12px}
+figure.shot{margin:24px 0}
+figure.shot img{width:100%;height:auto;display:block;border:1px solid var(--line);
+  border-radius:12px}
+figure.shot figcaption{color:var(--ink3);font-size:14px;margin-top:10px}
 </style>
 """
 
@@ -52,6 +56,137 @@ CSS = """
 
 Ответ — только полный HTML-файл в тройных кавычках, без пояснений."""
 
+
+import json as _json
+
+_ПРЕСЕТЫ = {
+    "Матрица корреляций": _промпт.__wrapped__ if False else None,
+}
+
+
+def _текст_промпта(отн):
+    путь = pathlib.Path(__file__).resolve().parent.parent.parent / "a360-workspace" / отн
+    return путь.read_text(encoding="utf-8").strip()
+
+
+ПРЕСЕТЫ_JS = _json.dumps({
+    "Матрица корреляций всех пар": _текст_промпта("3.2_кейс_gigachat_отчёт/3.2.4_промпт_корреляции.md"),
+    "Тренд и выбросы по срезу": _текст_промпта("3.2_кейс_gigachat_отчёт/3.2.5_промпт_тренды.md"),
+    "Карта разбросов (пара показателей)": _текст_промпта("3.2_кейс_gigachat_отчёт/3.2.8_промпт_карта_разбросов.md"),
+    "Сезонный профиль по месяцам года": _текст_промпта("3.2_кейс_gigachat_отчёт/3.2.9_промпт_сезонный_профиль.md"),
+    "Динамика по всем значениям среза": _текст_промпта("3.2_кейс_gigachat_отчёт/3.2.10_промпт_динамика_среза.md"),
+}, ensure_ascii=False).replace("</", "<\\/")
+
+КАСТОМ_JS = _json.dumps(ШАБЛОН_ПРОМПТА
+    .replace("<НАЗВАНИЕ: что инструмент делает одной фразой>", "инструмент по моему описанию ниже")
+    .replace("<ВСТАВИТЬ: заголовок CSV и две первые строки данных>",
+             "месяц;регион;канал;новые_счета;закрытые_счета;активные_счета_на_конец_месяца;средний_остаток_тыс_руб;расходы_на_продвижение_тыс_руб;ставка_по_счёту_проц;жалобы\n2024-07;Центральный;Мобильное приложение;620;110;3930;221,1;515;11,49;13")
+    .replace("2. <ОПИСАТЬ: какие элементы управления нужны — списки, фильтры, переключатели>", "2. __CONTROLS__")
+    .replace("3. <ОПИСАТЬ: какой расчёт выполняется и по каким правилам агрегируются строки>", "3. __CALC__")
+    .replace("4. <ОПИСАТЬ: что выводится — таблица, график, список значений>", "4. __OUT__")
+    .replace("<ВСТАВИТЬ: одно-два контрольных числа, которые должны получиться на вашей выгрузке>", "__CHECK__"),
+    ensure_ascii=False).replace("</", "<\\/")
+
+КОНСТРУКТОР_HTML = ('''<section><div class="wrap">
+<h2 id="konstruktor"><span class="num">4</span>Конструктор промпта</h2>
+
+<p>Помощник собирает готовый промпт: загрузите свою выгрузку — структура
+колонок и первые строки подставятся автоматически, — выберите операцию
+из списка или опишите свою. Каждая заготовка из списка прогнана через
+GigaChat и проверена: сгенерированный по ней инструмент работает; рядом
+с промптами лежат готовые образцы.</p>
+
+<div class="card" style="padding:18px 20px">
+  <p style="margin:0 0 6px"><b>1 · Выгрузка</b> (по желанию — без файла
+  останется учебный пример структуры):</p>
+  <input type="file" id="ctor-file" accept=".csv">
+  <div id="ctor-file-info" style="color:var(--ink3);font-size:14px;margin:6px 0 14px"></div>
+
+  <p style="margin:0 0 6px"><b>2 · Операция:</b></p>
+  <select id="ctor-preset" style="font-size:15px;padding:6px 10px;max-width:100%"></select>
+
+  <div id="ctor-custom" style="display:none;margin-top:12px">
+    <p style="margin:0 0 4px">Элементы управления на странице:</p>
+    <input id="ctor-controls" style="width:100%;padding:6px 10px" placeholder="например: список показателя и список среза">
+    <p style="margin:10px 0 4px">Расчёт и правила агрегации:</p>
+    <input id="ctor-calc" style="width:100%;padding:6px 10px" placeholder="например: корреляция выбранной пары по месячным итогам">
+    <p style="margin:10px 0 4px">Что выводится:</p>
+    <input id="ctor-out" style="width:100%;padding:6px 10px" placeholder="например: график и таблица с итогами">
+    <p style="margin:10px 0 4px">Контрольные числа для проверки:</p>
+    <input id="ctor-check" style="width:100%;padding:6px 10px" placeholder="например: пара закрытые_счета и жалобы даёт около 0,96">
+  </div>
+
+  <p style="margin:14px 0 6px"><b>3 · Готовый промпт</b> — скопируйте
+  и отправьте GigaChat одним сообщением:</p>
+  <div class="prompt"><button class="copy" type="button">Копировать</button>
+  <pre id="ctor-result"></pre></div>
+</div>
+
+<script>
+(function () {
+  var PRESETS = @@PRESETS@@;
+  var CUSTOM = @@CUSTOM@@;
+  var sampleBlock = null;   // блок «Пример первых строк» из файла пользователя
+
+  var sel = document.getElementById('ctor-preset');
+  Object.keys(PRESETS).forEach(function (k) {
+    var o = document.createElement('option'); o.value = k; o.text = k;
+    sel.appendChild(o);
+  });
+  var oc = document.createElement('option');
+  oc.value = '__custom__'; oc.text = 'Свой вариант — описать операцию';
+  sel.appendChild(oc);
+
+  function render() {
+    var custom = sel.value === '__custom__';
+    document.getElementById('ctor-custom').style.display = custom ? '' : 'none';
+    var text;
+    if (custom) {
+      text = CUSTOM
+        .replace('__CONTROLS__', val('ctor-controls', 'списки для выбора показателя и среза'))
+        .replace('__CALC__', val('ctor-calc', 'свёртка строк по месяцам: показатели с «средн», «ставка», «проц» или «доля» усредняются, остальные суммируются'))
+        .replace('__OUT__', val('ctor-out', 'график по месяцам'))
+        .replace('__CHECK__', val('ctor-check', 'значения, которые вы знаете по своей выгрузке'));
+    } else {
+      text = PRESETS[sel.value];
+    }
+    if (sampleBlock) {
+      text = text.replace(/Пример первых строк:\\n\\n[\\s\\S]*?\\n\\n/,
+                          'Пример первых строк:\\n\\n' + sampleBlock + '\\n\\n');
+    }
+    document.getElementById('ctor-result').textContent = text;
+  }
+  function val(id, def) {
+    var v = document.getElementById(id).value.trim();
+    return v || def;
+  }
+  sel.onchange = render;
+  ['ctor-controls','ctor-calc','ctor-out','ctor-check'].forEach(function (id) {
+    document.getElementById(id).oninput = render;
+  });
+  document.getElementById('ctor-file').onchange = function () {
+    var f = this.files[0];
+    if (!f) return;
+    var r = new FileReader();
+    r.onload = function (e) {
+      var lines = String(e.target.result).replace(/^\\uFEFF/, '')
+        .split(/\\r?\\n/).filter(function (l) { return l.trim(); });
+      sampleBlock = lines.slice(0, 3).join('\\n');
+      document.getElementById('ctor-file-info').textContent =
+        'Строк: ' + (lines.length - 1) + ' · колонок: ' +
+        lines[0].split(';').length + ' — структура подставлена в промпт.';
+      render();
+    };
+    r.readAsText(f);
+  };
+  render();
+})();
+</script>
+</div></section>
+
+'''
+    .replace('@@PRESETS@@', ПРЕСЕТЫ_JS)
+    .replace('@@CUSTOM@@', КАСТОМ_JS))
 
 BODY = f"""{CSS}
 <header><div class="wrap">
@@ -146,6 +281,22 @@ BODY = f"""{CSS}
       цель задания в выводе из данных, а не в генерации.</li>
 </ol>
 
+<h3>Что должно получиться</h3>
+
+<p>Результат работы двух основных мини-инструментов на учебной выгрузке —
+сверяйте с ним свой запуск:</p>
+
+<figure class="shot"><img src="assets/step3_mini_corr.png"
+  alt="Матрица корреляций мини-инструмента">
+<figcaption>Мини-инструмент «Матрица корреляций»: коэффициенты всех пар
+на месячных итогах, сильнейшие связи названы списком. Контрольное число —
+0,96 у пары закрытых счетов и жалоб.</figcaption></figure>
+
+<figure class="shot"><img src="assets/step3_mini_trend.png"
+  alt="Мини-инструмент трендов с выбросом">
+<figcaption>Мини-инструмент «Тренд и выбросы»: закрытия счетов по одному
+региону, линия тренда с наклоном и месяц-выброс, помеченный красным.</figcaption></figure>
+
 <h3>Промпт мини-инструмента «Матрица корреляций»</h3>
 {_промпт('3.2_кейс_gigachat_отчёт/3.2.4_промпт_корреляции.md')}
 
@@ -153,8 +304,10 @@ BODY = f"""{CSS}
 {_промпт('3.2_кейс_gigachat_отчёт/3.2.5_промпт_тренды.md')}
 </div></section>
 
+
+{КОНСТРУКТОР_HTML}
 <section><div class="wrap">
-<h2 id="svoi-prompt"><span class="num">4</span>Промпт для собственного мини-инструмента</h2>
+<h2 id="svoi-prompt"><span class="num">5</span>Промпт для собственного мини-инструмента</h2>
 
 <p>Когда готовые инструменты освоены, следующий шаг — инструмент под свою
 задачу. Рабочий промпт состоит из пяти разделов; пропуск любого из них
