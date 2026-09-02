@@ -106,6 +106,16 @@ CSS = """
 .pr .slnav button{border:0;border-radius:8px;background:#3a4453;color:#fff;padding:6px 14px;cursor:pointer;font:inherit}
 .pr .svgbox svg{max-width:100%;height:auto}
 .pr table.sm{font-size:14px}.pr table.sm td{white-space:normal}
+.pr #tree [data-pick],.pr #tree [data-info]{cursor:pointer}
+.pr #tree [data-pick]:hover rect{filter:brightness(0.97)}
+.pr .modal{position:fixed;inset:0;background:rgba(46,54,65,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+.pr .modal.on{display:flex}
+.pr .mbox{background:#fff;border-radius:16px;max-width:760px;width:100%;max-height:88vh;overflow:auto;padding:22px 26px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.pr .mbox h3{margin:0 40px 6px 0;font-size:20px}
+.pr .mbox .meta{color:var(--ink3);font-size:13.5px;margin:0 0 12px}
+.pr .mclose{position:absolute;top:12px;right:12px;border:0;background:var(--surf);border-radius:50%;width:34px;height:34px;font-size:20px;cursor:pointer;color:var(--ink2)}
+.pr .mbox table{font-size:13.5px;margin:6px 0 10px}.pr .mbox td,.pr .mbox th{white-space:nowrap;padding:5px 9px}
+.pr .mbox .calc{background:var(--surf);border-radius:10px;padding:8px 12px;font-size:14px;margin:0 0 10px}
 </style>
 """
 
@@ -193,9 +203,9 @@ HTML = f"""
 <a href="longread_metrics.html#eco">Экономика данных: срок и стоимость</a>
 <a href="longread_metrics.html#tree">Опережающие и запаздывающие</a>
 <a href="trainer_map.html">Карта источников</a></p>
-<div class="part"><h4><span class="n">1</span>Дерево</h4><div class="vis" id="tree"></div></div>
-<div class="part"><h4><span class="n">2</span>Источники по входам</h4><div id="srcs"></div></div>
-<div class="part"><h4><span class="n">3</span>Оценка конфигурации</h4>
+<div class="part"><h4><span class="n">1</span>Дерево: щелчок по источнику выбирает его, значок «?» открывает описание</h4><div class="vis" id="tree"></div>
+<p class="hint" style="margin:8px 0 0">Сплошная рамка — выбранный источник, пунктир — запасной. В описании источника: срок, стоимость, файл, расчёт входа и структура данных.</p></div>
+<div class="part"><h4><span class="n">2</span>Оценка конфигурации</h4>
 <div class="kpi">
 <div><div class="l">Срок первого значения метрики</div><div class="v" id="k-tte"></div><div class="s" id="k-tte-s"></div></div>
 <div><div class="l">Стоимость данных за пилот</div><div class="v" id="k-cost"></div><div class="s" id="k-cost-s"></div></div>
@@ -297,6 +307,7 @@ HTML = f"""
 {_нав(5, True)}
 </div>
 
+<div class="modal" id="modal"><div class="mbox"><button class="mclose" type="button" id="mclose" aria-label="Закрыть">×</button><div id="mbody"></div></div></div>
 </div></section>
 
 <footer><div class="wrap">
@@ -362,28 +373,53 @@ function renderFrame(){var v=V(),h='';FRAME.forEach(function(f){h+='<dt>'+f[1]+'
 // ── шаг 2: дерево и источники ────────────────────────────────────────────
 function tx(x,y,t,fs,w,f,a,o){return '<text x="'+x+'" y="'+y+'" font-size="'+fs+'"'+(w?' font-weight="'+w+'"':'')+' fill="'+f+'"'+(a?' text-anchor="'+a+'"':'')+(o?' fill-opacity="'+o+'"':'')+'>'+esc(t)+'</text>'}
 function wrap(t,n,max){var w=String(t).split(' '),out=[],c='';w.forEach(function(x){if((c+' '+x).trim().length>n&&c){out.push(c.trim());c=x}else c+=' '+x});if(c.trim())out.push(c.trim());return out.slice(0,max||3)}
+function badge(x,y){return '<g data-info="1"><circle cx="'+x+'" cy="'+y+'" r="9" fill="#fff" stroke="#128a53" stroke-width="1.5"/><text x="'+x+'" y="'+(y+4)+'" font-size="12" font-weight="800" fill="#128a53" text-anchor="middle">?</text></g>'}
 function box(x,y,w,h,t,sub,fill,stroke,dash,fs){fs=fs||13;var o='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="10" fill="'+fill+'" stroke="'+stroke+'" stroke-width="2"'+(dash?' stroke-dasharray="6 4"':'')+'/>';
   // текст центрируется по вертикали в части ячейки над строкой подписи
-  var lh=fs*1.22,lines=wrap(t,Math.floor((w-16)/(fs*0.56)),4),subH=sub?16:0,avail=h-subH,block=lines.length*lh;
+  var lh=fs*1.22,lines=wrap(t,Math.floor((w-40)/(fs*0.56)),4),subH=sub?16:0,avail=h-subH,block=lines.length*lh;
   var y0=y+(avail-block)/2+lh*0.8;
   lines.forEach(function(l,i){o+=tx(x+w/2,(y0+i*lh).toFixed(1),l,fs,'700','#2E3641','middle')});
   if(sub)o+=tx(x+w/2,y+h-7,sub,10.5,null,'#2E3641','middle',0.7);return o}
 function treeSvg(v,chosen,forSlide){
   var W=960,H=346,s=[],n=v.inputs.length,colW=W/n;
   s.push('<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" font-family="'+(forSlide?'system-ui,Segoe UI,Roboto,Arial,sans-serif':'inherit')+'">');
-  s.push(box(W/2-230,16,460,64,v.metric.name,v.metric.unit+' · '+v.metric.formula,'#e4ecf9','#1b5fa8',false,14));
+  var g=function(attrs,inner){return forSlide?inner:'<g '+attrs+'>'+inner+'</g>'};
+  s.push(g('data-kind="metric"',box(W/2-230,16,460,64,v.metric.name,v.metric.unit+' · '+v.metric.formula,'#e4ecf9','#1b5fa8',false,14)+(forSlide?'':badge(W/2+230-14,30))));
   v.inputs.forEach(function(inp,i){var cx=colW*i+colW/2,bw=Math.min(240,colW-24);
     s.push('<line x1="'+(W/2)+'" y1="80" x2="'+cx+'" y2="118" stroke="#1b5fa8" stroke-width="2" stroke-opacity="0.7"/>');
-    s.push(box(cx-bw/2,118,bw,58,inp.name,inp.unit,'#e3f2ea','#20BA72',false,12.5));
+    s.push(g('data-kind="input" data-inp="'+esc(inp.id)+'"',box(cx-bw/2,118,bw,58,inp.name,inp.unit,'#e3f2ea','#20BA72',false,12.5)+(forSlide?'':badge(cx+bw/2-14,132))));
     inp.sources.forEach(function(src,j){var on=chosen[inp.id]===src.id,sw=bw/2-6,sx=cx-bw/2+j*(sw+12);
       s.push('<line x1="'+cx+'" y1="176" x2="'+(sx+sw/2)+'" y2="222" stroke="'+(on?'#20BA72':'#2E3641')+'" stroke-width="'+(on?2.5:1)+'" stroke-opacity="'+(on?0.9:0.3)+'"/>');
-      s.push(box(sx,222,sw,98,src.name,src.days+' дн. · '+(src.cost?C.fi(src.cost)+' руб.':'0 руб.'),on?'#fff':'#f4f8f6',on?'#20BA72':'#c9d3cd',!on,11));
+      s.push(g('data-kind="source" data-inp="'+esc(inp.id)+'" data-src="'+esc(src.id)+'" data-pick="1"',box(sx,222,sw,98,src.name,src.days+' дн. · '+(src.cost?C.fi(src.cost)+' руб.':'0 руб.'),on?'#fff':'#f4f8f6',on?'#20BA72':'#c9d3cd',!on,11)+(forSlide?'':badge(sx+sw-12,234))));
       if(on)s.push(tx(sx+sw/2,334,'выбран',10.5,'700','#128a53','middle'));
     });
   });
   s.push('</svg>');return s.join('');
 }
 function renderTree(){$('tree').innerHTML=treeSvg(V(),st.chosen,false)}
+function pick(inpId,srcId){st.chosen[inpId]=srcId;save();renderTree();renderEco();renderFiles();renderPrompt(3);renderCtrl3()}
+function sampleTable(file){var t=SAMPLES[cur+'/'+file]||'';var lines=t.split(/\r?\n/).filter(Boolean);if(!lines.length)return '';
+  var h='<div class="scroll"><table><thead><tr>'+lines[0].split(';').map(function(c){return '<th>'+esc(c)+'</th>'}).join('')+'</tr></thead><tbody>';
+  lines.slice(1).forEach(function(l){h+='<tr>'+l.split(';').map(function(c){return '<td>'+esc(c)+'</td>'}).join('')+'</tr>'});return h+'<tr><td colspan="9" style="color:var(--ink3)">… и далее по строкам файла</td></tr></tbody></table></div>'}
+function openModal(kind,inpId,srcId){var v=V(),h='';
+  if(kind==='metric'){h='<h3>'+esc(v.metric.name)+'</h3><p class="meta">Итоговая метрика эффекта · '+esc(v.metric.unit)+'</p><div class="calc">'+esc(v.metric.formula)+' — эффект в месяц; из него финансовая модель разворачивает поток по месяцам.</div>';
+    h+='<p><b>Параметры финансовой модели, которые считает мини-инструмент:</b></p><table><tr><th>Параметр</th><th>Единица</th><th>Формула из входов</th></tr>';
+    ['delta','volume','price'].forEach(function(k){var p=v.params[k];h+='<tr><td>'+esc(p.name)+' ('+k+')</td><td>'+esc(p.unit)+'</td><td style="white-space:normal">'+esc(p.formula)+(p.note?' — '+esc(p.note):'')+'</td></tr>'});h+='</table>';
+    h+='<p class="hint">Входы дерева: '+v.inputs.map(function(i){return i.name+' ('+i.id+')'}).join('; ')+'.</p>';}
+  else{var inp=v.inputs.filter(function(i){return i.id===inpId})[0];
+    if(kind==='input'){h='<h3>'+esc(inp.name)+'</h3><p class="meta">Вход дерева '+esc(inp.id)+' · '+esc(inp.unit)+'</p><p>Значение входа можно получить из двух источников; выбор источника задаёт срок первого проверенного значения метрики и стоимость данных.</p>';
+      inp.sources.forEach(function(sr){var on=st.chosen[inp.id]===sr.id;h+='<div class="calc"><b>'+esc(sr.name)+'</b>'+(on?' <span style="color:#128a53;font-weight:700">— выбран</span>':'')+'<br><span style="color:var(--ink3);font-size:13px">'+sr.days+' дн. · '+(sr.cost?C.fi(sr.cost)+' руб.':'без затрат')+' · файл '+esc(sr.file)+'</span><br>Расчёт: '+esc(sr.calc)+'</div>'})}
+    else{var sr=inp.sources.filter(function(x){return x.id===srcId})[0],on=st.chosen[inp.id]===sr.id;
+      h='<h3>'+esc(sr.name)+'</h3><p class="meta">Источник входа «'+esc(inp.name)+'» ('+esc(inp.id)+', '+esc(inp.unit)+') · срок первого значения '+sr.days+' дн. · стоимость за пилот '+(sr.cost?C.fi(sr.cost)+' руб.':'без затрат')+' · файл '+esc(sr.file)+'</p>';
+      h+='<div class="calc"><b>Расчёт входа:</b> '+esc(sr.calc)+'</div><p style="margin:0 0 4px"><b>Структура данных</b> — шапка и первые строки файла:</p>'+sampleTable(sr.file);
+      h+='<p style="margin-top:12px">'+(on?'<span style="color:#128a53;font-weight:700">Этот источник выбран.</span>':'<button class="btn" type="button" data-modal-pick="'+esc(inp.id)+'|'+esc(sr.id)+'">Выбрать этот источник</button>')+'</p>';}}
+  $('mbody').innerHTML=h;$('modal').className='modal on'}
+function closeModal(){$('modal').className='modal'}
+$('tree').addEventListener('click',function(e){var b=e.target.closest('[data-info]');var gEl=e.target.closest('[data-kind]');if(!gEl)return;
+  if(b){openModal(gEl.dataset.kind,gEl.dataset.inp,gEl.dataset.src);return}
+  if(gEl.dataset.pick)pick(gEl.dataset.inp,gEl.dataset.src)});
+$('modal').addEventListener('click',function(e){var b=e.target.closest('[data-modal-pick]');if(b){var x=b.dataset.modalPick.split('|');pick(x[0],x[1]);closeModal();return}if(e.target===$('modal')||e.target.id==='mclose')closeModal()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal()});
 function renderSrcs(){var v=V(),h='';v.inputs.forEach(function(inp){h+='<p style="margin:8px 0 4px"><b>'+esc(inp.name)+'</b> <span class="hint" style="display:inline">('+esc(inp.unit)+')</span></p><div class="src">';
     inp.sources.forEach(function(s){var on=st.chosen[inp.id]===s.id;h+='<label class="'+(on?'on':'')+'"><input type="radio" name="src-'+inp.id+'" value="'+esc(s.id)+'"'+(on?' checked':'')+'><b>'+esc(s.name)+'</b><span class="meta">срок первого значения: '+s.days+' дн. · стоимость за пилот: '+(s.cost?C.fi(s.cost)+' руб.':'без затрат')+' · файл '+esc(s.file)+'</span><div style="margin-top:4px;font-size:13px">Расчёт: '+esc(s.calc)+'</div></label>'});h+='</div>'});
   $('srcs').innerHTML=h;
@@ -475,7 +511,7 @@ document.addEventListener('click',function(e){var t=e.target.closest('button');i
   if(t.id==='bTool'){codeState(3);downloadHtml(assemble(3),'инструмент_параметров_'+cur+'.html');return}
   if(t.id==='bFin'){codeState(4);downloadHtml(assemble(4),'финмодель_'+cur+'.html');return}});
 function renderStep(n){fillInputs($('st'+n));
-  switch(n){case 1:renderFrame();break;case 2:renderTree();renderSrcs();renderEco();break;case 3:renderFiles();renderPrompt(3);codeState(3);renderCtrl3();break;case 4:renderPrompt(4);codeState(4);renderCtrl4();renderSvg();break;case 5:slideNo=0;renderSlide();break}}
+  switch(n){case 1:renderFrame();break;case 2:renderTree();renderEco();break;case 3:renderFiles();renderPrompt(3);codeState(3);renderCtrl3();break;case 4:renderPrompt(4);codeState(4);renderCtrl4();renderSvg();break;case 5:slideNo=0;renderSlide();break}}
 function renderAll(){fillInputs(document);renderPicker();renderStepper();go(st.step||1)}
 var first=null;try{first=localStorage.getItem('a360_practice_last')}catch(e){}
 load(first&&VARS.some(function(v){return v.id===first})?first:VARS[0].id);
