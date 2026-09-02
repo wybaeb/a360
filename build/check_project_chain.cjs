@@ -29,8 +29,8 @@ function ask(prompt, model) {
 
 function metricsLines(m) {
   return ['result', 'd1', 'd2', 'control'].filter(k => m[k] && m[k].name)
-    .map(k => ({ result: 'Результат', d1: 'Драйвер', d2: 'Драйвер', control: 'Контрольная' })[k] + ': ' + m[k].name +
-      ' (' + C.or(m[k].unit, '—') + ', ' + C.or(m[k].freq, '—') + ')').join('\n');
+    .map(k => '- ' + m[k].name + ' (' + C.or(m[k].unit, '—') + ', ' + C.or(m[k].freq, '—') + ') — ' +
+      ({ result: 'результат', d1: 'драйвер', d2: 'драйвер', control: 'контрольная' })[k]).join('\n');
 }
 
 function runChain(pid, model, n) {

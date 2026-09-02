@@ -629,7 +629,7 @@ function onChange(n,bind){
 
 // ── промпты ──────────────────────────────────────────────────────────────
 function metricsLines(){var m=st.s2.metrics;return ['result','d1','d2','control'].filter(function(k){return m[k]&&m[k].name})
-  .map(function(k){return ROLE[k].replace(/ \d$/,'')+': '+m[k].name+' ('+C.or(m[k].unit,'—')+', '+C.or(m[k].freq,'—')+')'}).join('\n')}
+  .map(function(k){return '- '+m[k].name+' ('+C.or(m[k].unit,'—')+', '+C.or(m[k].freq,'—')+') — '+ROLE[k].replace(/ \d$/,'').toLowerCase()}).join('\n')}
 function missingText(){return (st.s3.rows||[]).filter(function(r){return r.status!=='есть'}).map(function(r){return r.metric+' ('+r.status+': '+r.source+')'}).join('; ')||'нет'}
 function promptVals(n){
   var t=table(),m=st.s2.metrics;
