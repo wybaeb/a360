@@ -50,6 +50,13 @@ h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 
 .chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;
   font-size:13.5px;color:var(--ink2)}
 .chip b{color:var(--ink)}
+a.chip{border-bottom:0;color:var(--ink2)} a.chip:hover{border-color:var(--acc)}
+.mir{display:inline-block;font-size:12px;font-weight:700;line-height:1.5;padding:0 8px;
+  margin-left:5px;border:1px solid var(--acc-line);border-radius:999px;color:#128a53;
+  background:var(--acc-soft);white-space:nowrap;vertical-align:baseline}
+.mir:hover{border-color:var(--acc);background:#fff}
+.md h2{margin-top:34px}.md h3{margin-top:26px}.md img{max-width:100%;border-radius:12px}
+.md table{font-size:14.5px}.md pre{margin:0 0 16px}
 
 section{padding:44px 0;border-bottom:1px solid var(--line)}
 section:last-of-type{border-bottom:0}

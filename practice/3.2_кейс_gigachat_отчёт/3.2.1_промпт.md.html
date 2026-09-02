@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>3.2.1_промпт.md · Аналитика 360</title>
+<style>
+:root{
+  --acc:#20BA72; --acc-soft:rgba(32,186,114,.10); --acc-line:rgba(32,186,114,.30);
+  --bg:#ffffff; --surf:#f4f8f6; --elev:#e9f3ee; --line:rgba(46,54,65,.13);
+  --ink:#2E3641; --ink2:rgba(46,54,65,.74); --ink3:rgba(46,54,65,.48);
+  --warn:#E4572E; --warn-soft:rgba(228,87,46,.09);
+  --font:'SB Sans Text','Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'SFMono-Regular',Consolas,'Liberation Mono',monospace;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth}
+body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 22px}
+/* overflow-wrap нужен ссылкам-адресам в списках источников: у длинного URL нет
+   точек переноса, на узком экране он уходит за край, а html/body{overflow-x:clip}
+   выше не даёт его прокрутить — текст пропадал совсем. break-word рвёт только
+   слово, которое иначе не помещается, и не влияет на расчёт min-content. */
+a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line);
+  overflow-wrap:break-word}
+a:hover{border-bottom-color:var(--acc)}
+
+header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
+  border-bottom:1px solid var(--line)}
+
+/* Хлебная крошка: лёгкая строка над шапкой. Фон тот же, что у верха градиента
+   шапки, поэтому крошка визуально сливается с ней в один блок. */
+.crumbs{background:var(--elev);font-size:13.5px;color:var(--ink3)}
+.crumbs .wrap{padding-top:14px;padding-bottom:2px;display:flex;align-items:baseline;gap:8px}
+.crumbs a{color:#128a53;border-bottom:1px solid transparent;font-weight:600}
+.crumbs a:hover{border-bottom-color:var(--acc)}
+.crumbs .sep{color:var(--ink3);font-size:11px}
+.crumbs .here{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eyebrow{color:var(--acc);font-weight:800;font-size:12.5px;letter-spacing:.14em;
+  text-transform:uppercase;margin-bottom:14px}
+h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 16px}
+.lead{font-size:clamp(16.5px,2vw,19px);color:var(--ink2);margin:0 0 22px}
+.meta{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;
+  font-size:13.5px;color:var(--ink2)}
+.chip b{color:var(--ink)}
+a.chip{border-bottom:0;color:var(--ink2)} a.chip:hover{border-color:var(--acc)}
+.mir{display:inline-block;font-size:12px;font-weight:700;line-height:1.5;padding:0 8px;
+  margin-left:5px;border:1px solid var(--acc-line);border-radius:999px;color:#128a53;
+  background:var(--acc-soft);white-space:nowrap;vertical-align:baseline}
+.mir:hover{border-color:var(--acc);background:#fff}
+.md h2{margin-top:34px}.md h3{margin-top:26px}.md img{max-width:100%;border-radius:12px}
+.md table{font-size:14.5px}.md pre{margin:0 0 16px}
+
+section{padding:44px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-size:clamp(22px,3vw,30px);font-weight:800;margin:0 0 8px;line-height:1.18}
+h2 .num{color:var(--acc);margin-right:.4em;font-variant-numeric:tabular-nums}
+h3{font-size:19px;font-weight:800;margin:30px 0 10px}
+h4{font-size:16px;font-weight:800;margin:22px 0 8px;color:var(--ink2)}
+p{margin:0 0 15px}
+ul,ol{margin:0 0 15px;padding-left:22px}
+li{margin-bottom:7px}
+.sub{color:var(--ink3);margin:0 0 22px;font-size:15.5px}
+
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:20px 22px;margin:0 0 18px}
+.card.acc{background:var(--acc-soft);border-color:var(--acc-line)}
+.card.warn{background:var(--warn-soft);border-color:rgba(228,87,46,.28)}
+.card h4{margin-top:0}
+.card p:last-child,.card ul:last-child,.card ol:last-child{margin-bottom:0}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0 0 15px;font-size:15.5px}
+.kv dt{color:var(--ink3)}
+.kv dd{margin:0;font-weight:600}
+
+table{border-collapse:collapse;width:100%;font-size:15px;margin:0 0 15px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{font-weight:800;color:var(--ink2);font-size:13.5px;text-transform:uppercase;
+  letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 15px}
+.scroll table{margin:0}
+
+pre{background:#20262e;color:#e7edf3;border-radius:12px;padding:16px 18px;overflow-x:auto;
+  font-family:var(--mono);font-size:13.5px;line-height:1.55;margin:0 0 15px}
+code{font-family:var(--mono);font-size:.9em;background:var(--elev);padding:2px 6px;
+  border-radius:5px}
+pre code{background:none;padding:0;font-size:1em}
+
+.prompt{position:relative;background:#20262e;color:#e7edf3;border-radius:12px;
+  padding:16px 18px;margin:0 0 14px}
+/* Промпт должен быть виден целиком: участник его читает, а не только копирует.
+   pre-wrap переносит длинные строки, но сохраняет переводы строк — innerText
+   в кнопке копирования отдаёт ровно исходный текст. */
+.prompt pre{margin:0;padding:0;background:none;max-height:none;
+  white-space:pre-wrap;overflow-wrap:anywhere}
+.prompt{padding-top:46px}
+.copy{position:absolute;top:10px;right:10px;background:var(--acc);color:#fff;border:0;
+  border-radius:8px;padding:7px 13px;font:600 13px var(--font);cursor:pointer}
+.copy:hover{filter:brightness(1.08)}
+.copy.done{background:#0f7a46}
+
+figure{margin:0 0 18px}
+figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+figure.fig{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:18px 18px 12px;margin:22px 0}
+figure.fig svg{max-width:100%;height:auto}
+figure.fig figcaption{padding-top:6px;border-top:1px solid var(--line);margin-top:12px}
+
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;
+  border-radius:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;
+  display:flex;align-items:center;justify-content:center}
+
+/* Раскрывающийся блок: три вспомогательных промпта не должны спорить за внимание
+   с главным, но и прятать их насовсем нельзя — по ним разбирают проверку. */
+details.more{border:1px solid var(--line);border-radius:14px;padding:0 22px;
+  margin:0 0 18px;background:var(--surf)}
+details.more>summary{cursor:pointer;font-weight:800;padding:16px 0;list-style:none;
+  color:var(--ink2)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸";color:var(--acc);margin-right:8px}
+details.more[open]>summary::before{content:"▾"}
+details.more[open]{padding-bottom:14px}
+details.more>summary:hover{color:var(--ink)}
+
+.toc{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+  margin:0 0 8px}
+.toc ol{margin:0;padding-left:20px}
+.toc a{border:0}
+.toc a:hover{border-bottom:1px solid var(--acc)}
+
+footer{padding:36px 0 60px;color:var(--ink3);font-size:14.5px}
+/* Сноска на источник: верхний индекс, чтобы номер не читался как часть текста */
+a.fn{border:0;font-size:.72em;vertical-align:super;font-weight:700;padding-left:2px}
+a.fn:hover{border:0;text-decoration:underline}
+.tag{display:inline-block;background:var(--elev);border-radius:6px;padding:1px 8px;
+  font-size:13px;color:var(--ink2);font-weight:600}
+@media(max-width:600px){
+  body{font-size:16px}
+  .kv{grid-template-columns:1fr}
+}
+</style>
+</head><body>
+<nav class="crumbs" aria-label="Навигация"><div class="wrap"><a href="../../index.html">Материалы</a><span class="sep">▸</span><a href="../../practice_files.html">Папка практики</a><span class="sep">▸</span><span class="here">3.2.1_промпт.md</span></div></nav>
+<header><div class="wrap"><div class="eyebrow">Репозиторий практики · <code>3.2_кейс_gigachat_отчёт</code></div><h1>3.2.1_промпт.md</h1><div class="meta"><a class="chip" href="../../downloads/practice/3.2_%D0%BA%D0%B5%D0%B9%D1%81_gigachat_%D0%BE%D1%82%D1%87%D1%91%D1%82/3.2.1_%D0%BF%D1%80%D0%BE%D0%BC%D0%BF%D1%82.md" download="3.2.1_промпт.md">Скачать <b>3.2.1_промпт.md</b></a><a class="chip" href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/3.2_%D0%BA%D0%B5%D0%B9%D1%81_gigachat_%D0%BE%D1%82%D1%87%D1%91%D1%82/3.2.1_%D0%BF%D1%80%D0%BE%D0%BC%D0%BF%D1%82.md">На <b>GitHub</b></a></div></div></header><section><div class="wrap md"><p>Ты пишешь одностраничный веб-инструмент для разведочного анализа банковских выгрузок. Результат — один HTML-файл, который открывается двойным щелчком и работает без интернета, кроме одной внешней библиотеки для графиков.</p>
+<h2>Данные</h2>
+<p>Инструмент принимает CSV-файл: кодировка UTF-8 с меткой порядка байтов, разделитель — точка с запятой, десятичный разделитель — запятая, первая строка — заголовки на русском.</p>
+<p>Пример выгрузки, на которой инструмент должен работать (10 колонок, 480 строк, 24 месяца):</p>
+<p>месяц;регион;канал;новые_счета;закрытые_счета;активные_счета_на_конец_месяца;средний_остаток_тыс_руб;расходы_на_продвижение_тыс_руб;ставка_по_счёту_проц;жалобы
+2024-07;Центральный;Мобильное приложение;620;110;3930;221,1;515;11,49;13</p>
+<p>Состав колонок жёстко не задавать: инструмент определяет его сам. Колонка с месяцем — та, где значения имеют вид ГГГГ-ММ. Колонки, где значения разбираются в число, — показатели. Остальные — срезы (в примере это регион и канал).</p>
+<h2>Что должно быть на странице</h2>
+<p><strong>1. Паспорт выгрузки.</strong> Число строк, период (первый и последний месяц), список найденных показателей, список срезов с числом значений в каждом. Если в числовой колонке есть пустые значения — предупреждение с названием колонки и числом пропусков.</p>
+<p><strong>2. Матрица корреляций.</strong> Главный блок. Два режима, переключаются списком:</p>
+<ul>
+<li>«между показателями» — квадратная матрица по всем показателям;</li>
+<li>«по срезу» — выбираются срез и один показатель; матрица показывает, как связаны между собой значения этого среза по динамике выбранного показателя. Например, при срезе «канал» и показателе «новые счета» матрица отвечает на вопрос, какие каналы растут и падают вместе.</li>
+</ul>
+<p>Оформление матрицы: в ячейке коэффициент с двумя знаками после запятой; фон ячейки тем насыщеннее, чем сильнее связь; положительные и отрицательные связи — разными цветами, около нуля — почти белый. Подсказка при наведении с названиями пары. Щелчок по ячейке строит под матрицей диаграмму рассеяния этой пары.</p>
+<p>Над матрицей — строка о том, на скольких наблюдениях она посчитана.</p>
+<p><strong>3. Сильнейшие связи.</strong> Список пар, отсортированный по модулю коэффициента, семь строк. У каждой: коэффициент, названия показателей, сила связи словами (сильная, заметная, умеренная, связи практически нет), направление словами и кнопка, строящая диаграмму рассеяния этой пары.</p>
+<p><strong>4. Диаграмма рассеяния.</strong> Точки — наблюдения, подписи осей — названия показателей, в заголовке коэффициент. Под графиком — одна строка обычными словами: насколько сильна связь и предупреждение, что связь не означает причину, потому что оба показателя могут зависеть от третьего.</p>
+<p><strong>5. Выбросы.</strong> Для каждого среза, каждого его значения и каждого показателя найти месяцы, выпадающие из собственного ряда по правилу межквартильного размаха: значение меньше первого квартиля минус полтора размаха или больше третьего квартиля плюс полтора размаха. Таблица: срез, значение среза, показатель, месяц, значение, во сколько раз отличается от медианы своего ряда. Сортировка по убыванию отклонения, показывать двадцать строк, остальные — по кнопке.</p>
+<p><strong>6. Динамика.</strong> График по месяцам с тремя списками: показатель, срез и значение среза (или «вся выгрузка»). Точки-выбросы на линии выделены другим цветом и большим размером.</p>
+<h2>Требования к расчётам</h2>
+<p><strong>Агрегация обязательна.</strong> В выгрузке на один месяц приходится столько строк, сколько сочетаний срезов. Все связи и вся динамика считаются на месячных итогах, а не на исходных строках. Если считать корреляцию по исходным строкам, коэффициент измерит различия между срезами, а не связь показателей: крупный регион даёт большие значения сразу во всех колонках, и любые два показателя выглядят связанными.</p>
+<p><strong>Правило свёртки.</strong> Показатели, которые являются долями, ставками, процентами или средними величинами, при свёртке усредняются; остальные суммируются. Определять по названию колонки: если в нём есть «средн», «ставка», «проц» или «доля» — усреднять, иначе суммировать. Иначе средний остаток превратится в сумму средних.</p>
+<p><strong>Корреляция</strong> — коэффициент Пирсона. Пары, где одно из значений пустое, в расчёт не включать. Если знаменатель нулевой, вернуть ноль, а не «не число».</p>
+<p><strong>Выбросы</strong> ищутся внутри ряда конкретного среза и показателя, а не по всей выгрузке: всплеск в одном регионе растворяется в сумме по двадцати строкам месяца.</p>
+<h2>Как устроить расчёт</h2>
+<p>Не изобретай архитектуру: ниже перечислены функции, из которых складывается решение. Напиши их именно так — это избавит от вложенных структур, в которых легко потеряться.</p>
+<p>Разбор файла и определение типов — место, где ошибаются чаще всего, поэтому вот готовый код, возьми его как есть:</p>
+<pre><code>function num(value) {
+    if (value === undefined || value === null) return NaN;
+    return parseFloat(String(value).trim().replace(/\s/g, '').replace(',', '.'));
+}
+
+function parseCSV(text) {
+    const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(l =&gt; l.trim());
+    const headers = lines.shift().split(';').map(h =&gt; h.trim());
+    return lines.map(line =&gt; {
+        const parts = line.split(';');
+        const row = {};
+        headers.forEach((h, i) =&gt; { row[h] = (parts[i] || '').trim(); });
+        return row;   // все значения — строки, числами занимается num()
+    });
+}
+
+function detectTypes(rows) {
+    const types = {};
+    Object.keys(rows[0]).forEach(col =&gt; {
+        const sample = rows.slice(0, 50).map(r =&gt; r[col]).filter(v =&gt; v !== '');
+        if (sample.every(v =&gt; /^\d{4}-\d{2}$/.test(v))) types[col] = 'month';
+        else if (sample.every(v =&gt; !isNaN(num(v)))) types[col] = 'metric';
+        else types[col] = 'slice';
+    });
+    return types;
+}
+</code></pre>
+<p>Везде дальше числовое значение получай через <code>num(row[col])</code>, а не через прямое обращение: в объектах лежат строки.</p>
+<p>Все имена функций и переменных в коде — латиницей, как в примере выше. Русский язык только в том, что видит пользователь: заголовки, подписи, сообщения.</p>
+<p>Имя функции не используй повторно как имя переменной: <code>const buildMatrix = ...</code> рядом с <code>function buildMatrix()</code> ломает страницу целиком. Каждое имя объявляется в файле ровно один раз.</p>
+<p>Остальные функции напиши сам по этим описаниям:</p>
+<pre><code>
+aggregateMonths(rows, types, sliceCol) -&gt; массив объектов
+    sliceCol необязателен; без него ключ группировки — только месяц,
+    с ним — строка «месяц + значение среза»
+    в каждой группе показатели с «средн», «ставка», «проц» или «доля»
+    в названии усредняются, остальные суммируются
+    результат: [{month: '2024-07', slice: '...', 'новые_счета': 5200, ...}, ...]
+    месяц в результате — строка
+
+corr(x, y) -&gt; число
+    коэффициент Пирсона по двум массивам чисел одинаковой длины;
+    пары, где хотя бы одно значение NaN, пропускаются;
+    при нулевом знаменателе вернуть 0
+
+buildMatrix(rows, cols) -&gt; двумерный массив
+    corr каждой колонки с каждой; значения берутся как rows[i][col]
+
+buildPivot(rows, types, sliceCol, metric) -&gt; {rows, cols}
+    cols — уникальные значения среза, отсортированные
+    rows — по одной записи на месяц: {month, 'Отделение': 4500, 'Сайт банка': 900, ...}
+
+quantile(values, p) -&gt; число
+    сортировать копию: [...values].sort((a, b) =&gt; a - b)
+
+detectOutliers(rows, types) -&gt; массив объектов
+    для каждого среза, каждого его значения и каждого показателя:
+    взять ряд по месяцам (через aggregateMonths с этим срезом),
+    посчитать границы по межквартильному размаху,
+    вернуть выпадающие точки: {slice, sliceValue, metric, month, value,
+    ratio — во сколько раз значение отличается от медианы своего ряда}
+</code></pre>
+<p>Порядок работы страницы: разобрать файл → определить типы колонок → показать паспорт → построить матрицу (по умолчанию режим «между показателями») → список сильнейших связей → таблицу выбросов → график динамики.</p>
+<p><strong>В матрицу передаётся результат <code>aggregateMonths</code>, а не исходные строки.</strong> На примере выгрузки это 24 записи вместо 480, и правильно посчитанная матрица даёт: закрытые_счета и жалобы 0,96; новые_счета и закрытые_счета 0,89; новые_счета и расходы_на_продвижение_тыс_руб 0,79. Если получились 0,34 и 0,97 — матрица считается по строкам, это ошибка.</p>
+<h2>Требования к коду</h2>
+<p>Всё в одном файле: разметка, стили и скрипт. Из внешних зависимостей только Chart.js версии 4, подключается так:</p>
+<pre><code>&lt;script src=&quot;https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js&quot;&gt;&lt;/script&gt;
+</code></pre>
+<p>Настройки графиков писать по синтаксису четвёртой версии: заголовок и легенда живут в <code>options.plugins</code>, оси задаются как <code>scales.x</code> и <code>scales.y</code>. Синтаксис второй версии (<code>xAxes</code>, <code>yAxes</code>, <code>options.title</code>) молча игнорируется, и график строится с настройками по умолчанию.</p>
+<p>Ось времени не объявлять типом <code>time</code>: для этого нужен адаптер дат, которого в сборке нет. Использовать категориальную ось с подписями месяцев.</p>
+<p>Файл читается через <code>FileReader</code>, разбор синхронный — <code>async</code> и <code>await</code> не нужны нигде. Если всё же используешь <code>await</code>, функция, внутри которой он стоит, обязана быть объявлена как <code>async</code>, включая колбэк <code>reader.onload</code>.</p>
+<p>Перед каждой перерисовкой графика уничтожать предыдущий экземпляр (<code>chart.destroy()</code>), иначе Chart.js откажется рисовать на занятом холсте.</p>
+<p>Месяц внутри расчётов — строка вида ГГГГ-ММ. Если разбирать его в объект даты, одинаковые месяцы перестанут совпадать при группировке, и сводная таблица получится длиннее, чем нужно, с пустыми ячейками.</p>
+<p>Функции, которые сортируют массив, обязаны сортировать копию: <code>[...массив].sort(...)</code>. Иначе расчёт квантилей переставит исходные данные, и последующие расчёты дадут другой результат.</p>
+<p>Каждый элемент управления должен быть подключён к перерисовке: если список меняет значение, а на странице ничего не меняется — это дефект.</p>
+<p>Каждый холст графика — внутри контейнера с заданной высотой, у графика <code>maintainAspectRatio: false</code>, иначе он растянется на всю страницу.</p>
+<p>Все подписи, заголовки и сообщения — по-русски. Никаких данных наружу: файл читается в браузере и никуда не отправляется.</p>
+<p>Используй только существующие методы браузера: <code>addEventListener</code>, <code>querySelector</code>, <code>createElement</code>, <code>appendChild</code>. Не придумывай методов, которых нет в стандарте, — страница перестанет работать целиком.</p>
+<p>Не оборачивай разбор файла в <code>try/catch</code> с <code>alert</code>: если что-то сломается, ошибка должна быть видна в консоли, а не спрятана в окне.</p>
+<h2>Перед тем как ответить, проверь себя</h2>
+<ol>
+<li>Матрица считается на месячных итогах, а не на исходных строках выгрузки.</li>
+<li>Средние и ставки при свёртке усредняются, объёмы суммируются.</li>
+<li>Каждый список подключён к перерисовке.</li>
+<li>Все настройки графиков — синтаксиса Chart.js 4.</li>
+<li>Нет <code>await</code> вне <code>async</code>-функций.</li>
+<li>Все функции, которые вызываются, объявлены в файле.</li>
+<li>Сортировки идут по копии массива.</li>
+<li>Месяц в расчётах — строка, а не объект даты.</li>
+<li>Перед перерисовкой график уничтожается.</li>
+<li>В режиме «по срезу» матрица строится между значениями среза, а не между показателями.</li>
+</ol>
+<p>Ответ — один HTML-файл целиком, без пояснений до и после.</p></div></section><footer><div class="wrap">Аналитика 360 · копия файла из репозитория практики.</div></footer>
+<script>
+// Кнопка «скопировать промпт»: сначала пробуем Clipboard API, при отказе —
+// старый execCommand. В LMS страница часто открыта в iframe без разрешения
+// на буфер обмена, и без запасного пути кнопка молча ничего не делает.
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.copy'); if(!b) return;
+  var t=b.parentNode.querySelector('pre').innerText;
+  function done(){b.textContent='Скопировано';b.classList.add('done');
+    setTimeout(function(){b.textContent='Копировать';b.classList.remove('done')},1800);}
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(done,fallback);
+  } else { fallback(); }
+  function fallback(){
+    var a=document.createElement('textarea');a.value=t;a.style.position='fixed';
+    a.style.opacity=0;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');done();}catch(_e){b.textContent='Выделите вручную';}
+    document.body.removeChild(a);
+  }
+});
+</script>
+</body></html>

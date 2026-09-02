@@ -45,6 +45,13 @@ h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 
 .chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;
   font-size:13.5px;color:var(--ink2)}
 .chip b{color:var(--ink)}
+a.chip{border-bottom:0;color:var(--ink2)} a.chip:hover{border-color:var(--acc)}
+.mir{display:inline-block;font-size:12px;font-weight:700;line-height:1.5;padding:0 8px;
+  margin-left:5px;border:1px solid var(--acc-line);border-radius:999px;color:#128a53;
+  background:var(--acc-soft);white-space:nowrap;vertical-align:baseline}
+.mir:hover{border-color:var(--acc);background:#fff}
+.md h2{margin-top:34px}.md h3{margin-top:26px}.md img{max-width:100%;border-radius:12px}
+.md table{font-size:14.5px}.md pre{margin:0 0 16px}
 
 section{padding:44px 0;border-bottom:1px solid var(--line)}
 section:last-of-type{border-bottom:0}
@@ -218,7 +225,7 @@ figure.shot figcaption{color:var(--ink3);font-size:14px;margin-top:10px}
       показателями. Из Excel: «Файл → Сохранить как → CSV (разделители —
       запятые)». Из Google Таблиц: «Файл → Скачать → CSV». Для тренировки
       подойдёт учебная выгрузка кейса:
-      <a href="https://github.com/wybaeb/bank-analytics-workshop/raw/master/data/product/savings_monthly.csv">savings_monthly.csv</a>.</li>
+      <a href="https://github.com/wybaeb/bank-analytics-workshop/raw/master/data/product/savings_monthly.csv">savings_monthly.csv</a><a class="mir" href="downloads/practice/data/product/savings_monthly.csv" download="savings_monthly.csv">скачать</a>.</li>
   <li><b>Скопируйте промпт.</b> Готовые промпты двух мини-инструментов —
       ниже, кнопка «Копировать» в правом верхнем углу блока.</li>
   <li><b>Отправьте промпт ассистенту.</b> В веб-версии GigaChat выберите
@@ -239,8 +246,8 @@ figure.shot figcaption{color:var(--ink3);font-size:14px;margin-top:10px}
   <li><b>Если результат не открылся или числа не совпали.</b> Отправьте
       ассистенту сообщение «исправь ошибку: …» с текстом ошибки со
       страницы. Если генерация не удалась и после этого — возьмите готовый
-      образец: <a href="https://github.com/wybaeb/bank-analytics-workshop/raw/master/3.2_%D0%BA%D0%B5%D0%B9%D1%81_gigachat_%D0%BE%D1%82%D1%87%D1%91%D1%82/3.2.6_%D0%B8%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BC%D0%B5%D0%BD%D1%82_%D0%BA%D0%BE%D1%80%D1%80%D0%B5%D0%BB%D1%8F%D1%86%D0%B8%D0%B9.html">корреляции</a>
-      и <a href="https://github.com/wybaeb/bank-analytics-workshop/raw/master/3.2_%D0%BA%D0%B5%D0%B9%D1%81_gigachat_%D0%BE%D1%82%D1%87%D1%91%D1%82/3.2.7_%D0%B8%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BC%D0%B5%D0%BD%D1%82_%D1%82%D1%80%D0%B5%D0%BD%D0%B4%D0%BE%D0%B2.html">тренды</a> —
+      образец: <a href="https://github.com/wybaeb/bank-analytics-workshop/raw/master/3.2_%D0%BA%D0%B5%D0%B9%D1%81_gigachat_%D0%BE%D1%82%D1%87%D1%91%D1%82/3.2.6_%D0%B8%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BC%D0%B5%D0%BD%D1%82_%D0%BA%D0%BE%D1%80%D1%80%D0%B5%D0%BB%D1%8F%D1%86%D0%B8%D0%B9.html">корреляции</a><a class="mir" href="downloads/practice/3.2_%D0%BA%D0%B5%D0%B9%D1%81_gigachat_%D0%BE%D1%82%D1%87%D1%91%D1%82/3.2.6_%D0%B8%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BC%D0%B5%D0%BD%D1%82_%D0%BA%D0%BE%D1%80%D1%80%D0%B5%D0%BB%D1%8F%D1%86%D0%B8%D0%B9.html">на сайте</a><a class="mir" href="downloads/practice/3.2_%D0%BA%D0%B5%D0%B9%D1%81_gigachat_%D0%BE%D1%82%D1%87%D1%91%D1%82/3.2.6_%D0%B8%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BC%D0%B5%D0%BD%D1%82_%D0%BA%D0%BE%D1%80%D1%80%D0%B5%D0%BB%D1%8F%D1%86%D0%B8%D0%B9.html" download="3.2.6_инструмент_корреляций.html">скачать</a>
+      и <a href="https://github.com/wybaeb/bank-analytics-workshop/raw/master/3.2_%D0%BA%D0%B5%D0%B9%D1%81_gigachat_%D0%BE%D1%82%D1%87%D1%91%D1%82/3.2.7_%D0%B8%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BC%D0%B5%D0%BD%D1%82_%D1%82%D1%80%D0%B5%D0%BD%D0%B4%D0%BE%D0%B2.html">тренды</a><a class="mir" href="downloads/practice/3.2_%D0%BA%D0%B5%D0%B9%D1%81_gigachat_%D0%BE%D1%82%D1%87%D1%91%D1%82/3.2.7_%D0%B8%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BC%D0%B5%D0%BD%D1%82_%D1%82%D1%80%D0%B5%D0%BD%D0%B4%D0%BE%D0%B2.html">на сайте</a><a class="mir" href="downloads/practice/3.2_%D0%BA%D0%B5%D0%B9%D1%81_gigachat_%D0%BE%D1%82%D1%87%D1%91%D1%82/3.2.7_%D0%B8%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BC%D0%B5%D0%BD%D1%82_%D1%82%D1%80%D0%B5%D0%BD%D0%B4%D0%BE%D0%B2.html" download="3.2.7_инструмент_трендов.html">скачать</a> —
       цель задания в выводе из данных, а не в генерации.</li>
 </ol>
 

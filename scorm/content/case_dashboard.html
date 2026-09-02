@@ -45,6 +45,13 @@ h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 
 .chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;
   font-size:13.5px;color:var(--ink2)}
 .chip b{color:var(--ink)}
+a.chip{border-bottom:0;color:var(--ink2)} a.chip:hover{border-color:var(--acc)}
+.mir{display:inline-block;font-size:12px;font-weight:700;line-height:1.5;padding:0 8px;
+  margin-left:5px;border:1px solid var(--acc-line);border-radius:999px;color:#128a53;
+  background:var(--acc-soft);white-space:nowrap;vertical-align:baseline}
+.mir:hover{border-color:var(--acc);background:#fff}
+.md h2{margin-top:34px}.md h3{margin-top:26px}.md img{max-width:100%;border-radius:12px}
+.md table{font-size:14.5px}.md pre{margin:0 0 16px}
 
 section{padding:44px 0;border-bottom:1px solid var(--line)}
 section:last-of-type{border-bottom:0}
@@ -179,8 +186,8 @@ figure.scheme figcaption{color:var(--ink3);font-size:14px;margin-top:10px}
 <p>Стенд поднят и проверен: <code>./run.sh up</code>, затем
 <code>python3 tools/check_env.py</code> — последняя строка должна быть
 «всё на месте». Порядок установки с нуля —
-в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/2.4_установка_стенда/2.4.1_установка.md">документе установки</a>, для JupyterHub банка —
-в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/2.4_установка_стенда/2.4.2_jupyterhub.md">отдельной инструкции</a>.</p>
+в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/2.4_установка_стенда/2.4.1_установка.md">документе установки</a><a class="mir" href="practice/2.4_%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0_%D1%81%D1%82%D0%B5%D0%BD%D0%B4%D0%B0/2.4.1_%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0.md.html">на сайте</a><a class="mir" href="downloads/practice/2.4_%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0_%D1%81%D1%82%D0%B5%D0%BD%D0%B4%D0%B0/2.4.1_%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0.md" download="2.4.1_установка.md">скачать</a>, для JupyterHub банка —
+в <a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/2.4_установка_стенда/2.4.2_jupyterhub.md">отдельной инструкции</a><a class="mir" href="practice/2.4_%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0_%D1%81%D1%82%D0%B5%D0%BD%D0%B4%D0%B0/2.4.2_jupyterhub.md.html">на сайте</a><a class="mir" href="downloads/practice/2.4_%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0_%D1%81%D1%82%D0%B5%D0%BD%D0%B4%D0%B0/2.4.2_jupyterhub.md" download="2.4.2_jupyterhub.md">скачать</a>.</p>
 </div>
 
 </div></section>
@@ -205,7 +212,7 @@ figure.scheme figcaption{color:var(--ink3);font-size:14px;margin-top:10px}
 <section><div class="wrap">
 <h2><span class="num">2</span>Шаги</h2>
 
-<div class="stepbox"><h3><span style="color:var(--acc)">1</span> &nbsp;Открыть тетрадь дашборда</h3><p><a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/2.8_кейс_дашборд_агентом/2.8.1_дашборд_агентом.ipynb"><code>2.8_кейс_дашборд_агентом/2.8.1_дашборд_агентом.ipynb</code></a>. Подключение — одна строка: <code>from tools.dashboard_agent import собрать_дашборд</code>. Система дашбордов должна быть поднята: <code>./run.sh status</code> показывает <code>healthy</code>.</p><div class="res"><b>Должно получиться:</b> Агент вошёл в систему дашбордов и нашёл учебную базу.</div></div>
+<div class="stepbox"><h3><span style="color:var(--acc)">1</span> &nbsp;Открыть тетрадь дашборда</h3><p><a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/2.8_кейс_дашборд_агентом/2.8.1_дашборд_агентом.ipynb"><code>2.8_кейс_дашборд_агентом/2.8.1_дашборд_агентом.ipynb</code></a><a class="mir" href="practice/2.8_%D0%BA%D0%B5%D0%B9%D1%81_%D0%B4%D0%B0%D1%88%D0%B1%D0%BE%D1%80%D0%B4_%D0%B0%D0%B3%D0%B5%D0%BD%D1%82%D0%BE%D0%BC/2.8.1_%D0%B4%D0%B0%D1%88%D0%B1%D0%BE%D1%80%D0%B4_%D0%B0%D0%B3%D0%B5%D0%BD%D1%82%D0%BE%D0%BC.ipynb.html">на сайте</a><a class="mir" href="downloads/practice/2.8_%D0%BA%D0%B5%D0%B9%D1%81_%D0%B4%D0%B0%D1%88%D0%B1%D0%BE%D1%80%D0%B4_%D0%B0%D0%B3%D0%B5%D0%BD%D1%82%D0%BE%D0%BC/2.8.1_%D0%B4%D0%B0%D1%88%D0%B1%D0%BE%D1%80%D0%B4_%D0%B0%D0%B3%D0%B5%D0%BD%D1%82%D0%BE%D0%BC.ipynb" download="2.8.1_дашборд_агентом.ipynb">скачать</a>. Подключение — одна строка: <code>from tools.dashboard_agent import собрать_дашборд</code>. Система дашбордов должна быть поднята: <code>./run.sh status</code> показывает <code>healthy</code>.</p><div class="res"><b>Должно получиться:</b> Агент вошёл в систему дашбордов и нашёл учебную базу.</div></div>
 
 <div class="stepbox"><h3><span style="color:var(--acc)">2</span> &nbsp;Описать дашборд словами</h3><p>Дашборд описывается одним абзацем — какие показатели нужны и в каком виде: кривая накопленного NPV портфеля по месяцам линией, расходы по направлениям столбцами, число инициатив числом, таблица инициатив с месяцем окупаемости. Ни SQL, ни щелчков в интерфейсе.</p><div class="res"><b>Должно получиться:</b> Ссылка на собранный дашборд из четырёх карточек.</div></div>
 

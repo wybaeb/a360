@@ -40,6 +40,8 @@ import longread_tools
 import practice
 import setup_page
 import practice_files
+import nogit
+import repolink
 import theme
 import theory_stats
 import trainer_accum
@@ -214,6 +216,15 @@ time-to-evidence), дерево метрик и набор источников 
 по нарастанию: таблица и скрипт → запросы и панель BI → агент отвечает
 отчётом → агент собирает дашборд. Всё, что нужно, лежит в открытом
 репозитории практики.</p>
+
+<div class="card warn">
+<h4><a href="nogit.html">Если не открывается GitHub</a></h4>
+<p>В корпоративной сети сайт репозитория часто закрыт. Все файлы практики
+продублированы на этом сайте: README и тетради читаются страницами,
+файлы скачиваются по одному или комплектом на кейс — см.
+<a href="practice_files.html">страницу файлов практики</a>. Рядом с каждой
+ссылкой на репозиторий в материалах стоят плашки «на сайте» и «скачать».</p>
+</div>
 
 <div class="card acc">
 <h4><a href="setup.html">2.4 · Установка и настройка стенда</a></h4>
@@ -622,6 +633,10 @@ PAGES = [
     ("setup.html", "Установка и настройка стенда · Аналитика 360",
      "Установка стенда", setup_page.BODY,
      "Как поднять стенд практики у себя и что настроить в JupyterHub."),
+    ("nogit.html", "Если не открывается GitHub · Аналитика 360",
+     "Если не открывается GitHub", nogit.BODY,
+     "Все пути к файлам практики на машине, где закрыт сайт репозитория: "
+     "читать, скачать, загрузить в JupyterHub."),
     ("practice_files.html", "Папка практики: скачать без git · Аналитика 360",
      "Папка практики без git", practice_files.BODY,
      "Все файлы папки практики по отдельности и архивом — для машин, "
@@ -732,6 +747,12 @@ def main():
         crumb = None if name == "index.html" else heading
         html = theme.page(title, body if body is not None else practice.body(),
                           crumb=crumb)
+        # К каждой ссылке на репозиторий — плашки «на сайте» и «скачать»:
+        # в корпоративной сети github.com закрыт, github.io открыт.
+        html = repolink.переписать(html)
+        без_пары = repolink.сколько_без_пары(html)
+        if без_пары:
+            sys.exit(f"{name}: ссылки на репозиторий без копии на сайте: {без_пары}")
         (scorm / name).write_text(html, encoding="utf-8")          # открытая версия
         (ROOT / name).write_text(
             gate.wrap(html, a.password, title, heading, intro), encoding="utf-8")
@@ -774,7 +795,7 @@ def main():
 
     # Ассеты, данные и готовые отчёты нужны обеим версиям: пути в HTML
     # относительные, поэтому внутри LMS всё работает так же, как на Pages.
-    for sub in ("assets", "data", "demos", "reports", "downloads"):
+    for sub in ("assets", "data", "demos", "reports", "downloads", "practice"):
         dst = scorm / sub
         if dst.exists():
             shutil.rmtree(dst)

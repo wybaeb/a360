@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Рабочая папка практики: инструменты анализа и методы · Аналитика 360</title>
+<style>
+:root{
+  --acc:#20BA72; --acc-soft:rgba(32,186,114,.10); --acc-line:rgba(32,186,114,.30);
+  --bg:#ffffff; --surf:#f4f8f6; --elev:#e9f3ee; --line:rgba(46,54,65,.13);
+  --ink:#2E3641; --ink2:rgba(46,54,65,.74); --ink3:rgba(46,54,65,.48);
+  --warn:#E4572E; --warn-soft:rgba(228,87,46,.09);
+  --font:'SB Sans Text','Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'SFMono-Regular',Consolas,'Liberation Mono',monospace;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth}
+body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 22px}
+/* overflow-wrap нужен ссылкам-адресам в списках источников: у длинного URL нет
+   точек переноса, на узком экране он уходит за край, а html/body{overflow-x:clip}
+   выше не даёт его прокрутить — текст пропадал совсем. break-word рвёт только
+   слово, которое иначе не помещается, и не влияет на расчёт min-content. */
+a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line);
+  overflow-wrap:break-word}
+a:hover{border-bottom-color:var(--acc)}
+
+header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
+  border-bottom:1px solid var(--line)}
+
+/* Хлебная крошка: лёгкая строка над шапкой. Фон тот же, что у верха градиента
+   шапки, поэтому крошка визуально сливается с ней в один блок. */
+.crumbs{background:var(--elev);font-size:13.5px;color:var(--ink3)}
+.crumbs .wrap{padding-top:14px;padding-bottom:2px;display:flex;align-items:baseline;gap:8px}
+.crumbs a{color:#128a53;border-bottom:1px solid transparent;font-weight:600}
+.crumbs a:hover{border-bottom-color:var(--acc)}
+.crumbs .sep{color:var(--ink3);font-size:11px}
+.crumbs .here{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eyebrow{color:var(--acc);font-weight:800;font-size:12.5px;letter-spacing:.14em;
+  text-transform:uppercase;margin-bottom:14px}
+h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 16px}
+.lead{font-size:clamp(16.5px,2vw,19px);color:var(--ink2);margin:0 0 22px}
+.meta{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;
+  font-size:13.5px;color:var(--ink2)}
+.chip b{color:var(--ink)}
+a.chip{border-bottom:0;color:var(--ink2)} a.chip:hover{border-color:var(--acc)}
+.mir{display:inline-block;font-size:12px;font-weight:700;line-height:1.5;padding:0 8px;
+  margin-left:5px;border:1px solid var(--acc-line);border-radius:999px;color:#128a53;
+  background:var(--acc-soft);white-space:nowrap;vertical-align:baseline}
+.mir:hover{border-color:var(--acc);background:#fff}
+.md h2{margin-top:34px}.md h3{margin-top:26px}.md img{max-width:100%;border-radius:12px}
+.md table{font-size:14.5px}.md pre{margin:0 0 16px}
+
+section{padding:44px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-size:clamp(22px,3vw,30px);font-weight:800;margin:0 0 8px;line-height:1.18}
+h2 .num{color:var(--acc);margin-right:.4em;font-variant-numeric:tabular-nums}
+h3{font-size:19px;font-weight:800;margin:30px 0 10px}
+h4{font-size:16px;font-weight:800;margin:22px 0 8px;color:var(--ink2)}
+p{margin:0 0 15px}
+ul,ol{margin:0 0 15px;padding-left:22px}
+li{margin-bottom:7px}
+.sub{color:var(--ink3);margin:0 0 22px;font-size:15.5px}
+
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:20px 22px;margin:0 0 18px}
+.card.acc{background:var(--acc-soft);border-color:var(--acc-line)}
+.card.warn{background:var(--warn-soft);border-color:rgba(228,87,46,.28)}
+.card h4{margin-top:0}
+.card p:last-child,.card ul:last-child,.card ol:last-child{margin-bottom:0}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0 0 15px;font-size:15.5px}
+.kv dt{color:var(--ink3)}
+.kv dd{margin:0;font-weight:600}
+
+table{border-collapse:collapse;width:100%;font-size:15px;margin:0 0 15px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{font-weight:800;color:var(--ink2);font-size:13.5px;text-transform:uppercase;
+  letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 15px}
+.scroll table{margin:0}
+
+pre{background:#20262e;color:#e7edf3;border-radius:12px;padding:16px 18px;overflow-x:auto;
+  font-family:var(--mono);font-size:13.5px;line-height:1.55;margin:0 0 15px}
+code{font-family:var(--mono);font-size:.9em;background:var(--elev);padding:2px 6px;
+  border-radius:5px}
+pre code{background:none;padding:0;font-size:1em}
+
+.prompt{position:relative;background:#20262e;color:#e7edf3;border-radius:12px;
+  padding:16px 18px;margin:0 0 14px}
+/* Промпт должен быть виден целиком: участник его читает, а не только копирует.
+   pre-wrap переносит длинные строки, но сохраняет переводы строк — innerText
+   в кнопке копирования отдаёт ровно исходный текст. */
+.prompt pre{margin:0;padding:0;background:none;max-height:none;
+  white-space:pre-wrap;overflow-wrap:anywhere}
+.prompt{padding-top:46px}
+.copy{position:absolute;top:10px;right:10px;background:var(--acc);color:#fff;border:0;
+  border-radius:8px;padding:7px 13px;font:600 13px var(--font);cursor:pointer}
+.copy:hover{filter:brightness(1.08)}
+.copy.done{background:#0f7a46}
+
+figure{margin:0 0 18px}
+figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+figure.fig{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:18px 18px 12px;margin:22px 0}
+figure.fig svg{max-width:100%;height:auto}
+figure.fig figcaption{padding-top:6px;border-top:1px solid var(--line);margin-top:12px}
+
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;
+  border-radius:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;
+  display:flex;align-items:center;justify-content:center}
+
+/* Раскрывающийся блок: три вспомогательных промпта не должны спорить за внимание
+   с главным, но и прятать их насовсем нельзя — по ним разбирают проверку. */
+details.more{border:1px solid var(--line);border-radius:14px;padding:0 22px;
+  margin:0 0 18px;background:var(--surf)}
+details.more>summary{cursor:pointer;font-weight:800;padding:16px 0;list-style:none;
+  color:var(--ink2)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸";color:var(--acc);margin-right:8px}
+details.more[open]>summary::before{content:"▾"}
+details.more[open]{padding-bottom:14px}
+details.more>summary:hover{color:var(--ink)}
+
+.toc{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+  margin:0 0 8px}
+.toc ol{margin:0;padding-left:20px}
+.toc a{border:0}
+.toc a:hover{border-bottom:1px solid var(--acc)}
+
+footer{padding:36px 0 60px;color:var(--ink3);font-size:14.5px}
+/* Сноска на источник: верхний индекс, чтобы номер не читался как часть текста */
+a.fn{border:0;font-size:.72em;vertical-align:super;font-weight:700;padding-left:2px}
+a.fn:hover{border:0;text-decoration:underline}
+.tag{display:inline-block;background:var(--elev);border-radius:6px;padding:1px 8px;
+  font-size:13px;color:var(--ink2);font-weight:600}
+@media(max-width:600px){
+  body{font-size:16px}
+  .kv{grid-template-columns:1fr}
+}
+</style>
+</head><body>
+<nav class="crumbs" aria-label="Навигация"><div class="wrap"><a href="../index.html">Материалы</a><span class="sep">▸</span><a href="../practice_files.html">Папка практики</a><span class="sep">▸</span><span class="here">README.md</span></div></nav>
+<header><div class="wrap"><div class="eyebrow">Репозиторий практики</div><h1>Рабочая папка практики: инструменты анализа и методы</h1><div class="meta"><a class="chip" href="../downloads/practice/README.md" download="README.md">Скачать <b>README.md</b></a><a class="chip" href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/README.md">На <b>GitHub</b></a></div></div></header><section><div class="wrap md"><p>Семь кейсов банка, четыре инструмента, один стенд. Данные синтетические, ключи
+наружу не уходят. Стенд разворачивается двумя способами: локально одной
+командой или на общем окружении с VS Code в браузере — см. ниже.</p>
+<h2>Порядок прохождения</h2>
+<p>Папки и файлы пронумерованы в том порядке, в каком их открывают, и теми же
+номерами, что на странице материалов. Идти сверху вниз.</p>
+<table>
+<thead>
+<tr>
+<th>№</th>
+<th>Материал</th>
+<th>Что это</th>
+<th>Время</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2.1</td>
+<td>Лонгрид «Инструменты анализа»</td>
+<td>страница материалов, файлов в репозитории нет</td>
+<td>12 мин</td>
+</tr>
+<tr>
+<td>2.2</td>
+<td><a href="../practice_files.html#p-2.2_%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D0%B4%D0%BE%D1%87%D0%BD%D1%8B%D0%B9_%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7">Разведочный анализ</a></td>
+<td>тетрадь: что такое очистка данных и какие решения принимаются по данным</td>
+<td>40 мин</td>
+</tr>
+<tr>
+<td>2.3</td>
+<td><a href="../practice_files.html#p-2.3_%D0%BF%D0%B0%D0%BC%D1%8F%D1%82%D0%BA%D0%B0_sql_%D0%B8_pandas">Памятка SQL и pandas</a></td>
+<td>тетрадь-справочник: 21 операция двумя способами со сверкой</td>
+<td>справочно</td>
+</tr>
+<tr>
+<td>2.4</td>
+<td><a href="../practice_files.html#p-2.4_%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0_%D1%81%D1%82%D0%B5%D0%BD%D0%B4%D0%B0">Установка стенда</a></td>
+<td>делается один раз перед кейсами</td>
+<td>10–15 мин</td>
+</tr>
+<tr>
+<td>2.5</td>
+<td><a href="../practice_files.html#p-2.5_%D0%BA%D0%B5%D0%B9%D1%81_%D0%BA%D0%B0%D1%80%D1%82%D0%BE%D1%87%D0%BD%D1%8B%D0%B9_%D0%B1%D0%B8%D0%B7%D0%BD%D0%B5%D1%81">Кейс: карточный бизнес</a></td>
+<td>таблицы + ассистент: скрипт чистит выгрузку и строит сводную</td>
+<td>40 мин</td>
+</tr>
+<tr>
+<td>2.6</td>
+<td><a href="../practice_files.html#p-2.6_%D0%BA%D0%B5%D0%B9%D1%81_%D0%BA%D1%80%D0%B5%D0%B4%D0%B8%D1%82%D0%BD%D1%8B%D0%B9_%D0%BA%D0%BE%D0%BD%D0%B2%D0%B5%D0%B9%D0%B5%D1%80">Кейс: кредитный конвейер</a></td>
+<td>тетрадь + SQL: запрос от первого <code>SELECT</code> до панели в BI</td>
+<td>50 мин</td>
+</tr>
+<tr>
+<td>2.7</td>
+<td><a href="../practice_files.html#p-2.7_%D0%BA%D0%B5%D0%B9%D1%81_%D0%BE%D1%82%D1%87%D1%91%D1%82_%D0%B0%D0%B3%D0%B5%D0%BD%D1%82%D0%B0">Кейс: отчёт агента</a></td>
+<td>вопрос словами — отчёт с графиками</td>
+<td>30 мин</td>
+</tr>
+<tr>
+<td>2.8</td>
+<td><a href="../practice_files.html#p-2.8_%D0%BA%D0%B5%D0%B9%D1%81_%D0%B4%D0%B0%D1%88%D0%B1%D0%BE%D1%80%D0%B4_%D0%B0%D0%B3%D0%B5%D0%BD%D1%82%D0%BE%D0%BC">Кейс: дашборд агентом</a></td>
+<td>описание абзацем — постоянная панель в BI</td>
+<td>30 мин</td>
+</tr>
+<tr>
+<td>3.2</td>
+<td><a href="../practice_files.html#p-3.2_%D0%BA%D0%B5%D0%B9%D1%81_gigachat_%D0%BE%D1%82%D1%87%D1%91%D1%82">Кейс: страница анализа от ассистента</a></td>
+<td>описание таблицы — готовая страница с графиками, без программирования</td>
+<td>30 мин</td>
+</tr>
+<tr>
+<td>3.3</td>
+<td><a href="../practice_files.html#p-3.3_%D0%BA%D0%B5%D0%B9%D1%81_%D0%BA%D0%BB%D0%B0%D1%81%D1%82%D0%B5%D1%80%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F">Кейс: сегментация клиентов</a></td>
+<td>код от ассистента в тетради: почему «средний клиент» — не сегмент</td>
+<td>30 мин</td>
+</tr>
+<tr>
+<td>3.4</td>
+<td><a href="../practice_files.html#p-3.4_%D0%BA%D0%B5%D0%B9%D1%81_%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7_%D0%BE%D1%82%D0%BA%D0%BB%D0%BE%D0%BD%D0%B5%D0%BD%D0%B8%D0%B9">Кейс: анализ отклонений</a></td>
+<td>один ряд, три взгляда и выбор прогнозной модели по ошибке</td>
+<td>30 мин</td>
+</tr>
+<tr>
+<td>4.1</td>
+<td><a href="../practice_files.html#p-4.1_%D0%BA%D0%B0%D1%80%D0%BA%D0%B0%D1%81_%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82%D0%B0">Каркас проекта</a></td>
+<td>шаблоны презентации проекта и письма команде, три заполненных каркаса</td>
+<td>15 мин</td>
+</tr>
+<tr>
+<td>4.4</td>
+<td><a href="../practice_files.html#p-4.4_%D1%84%D0%B8%D0%BD%D0%BC%D0%BE%D0%B4%D0%B5%D0%BB%D1%8C_%D1%8D%D1%84%D1%84%D0%B5%D0%BA%D1%82%D0%B0">Финансовая модель эффекта</a></td>
+<td>тетрадь: множители из выгрузки, поток эффекта, окупаемость, NPV, чувствительность</td>
+<td>30 мин</td>
+</tr>
+</tbody>
+</table>
+<p>Материалы 2.1 и 3.1 — страницы, файлов в репозитории у них нет. Внутри каждой
+папки файлы пронумерованы так же: <code>2.5.1_</code>, <code>2.5.2_</code> и дальше по порядку шагов
+кейса. Ненумерованные папки в корне — общие для всех
+материалов: <code>tools/</code>, <code>data/</code>, <code>sql/</code>.</p>
+<h2>Документация</h2>
+<ul>
+<li><a href="../practice/2.4_%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0_%D1%81%D1%82%D0%B5%D0%BD%D0%B4%D0%B0/2.4.1_%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0.md.html">Установка и проверка стенда</a> — с нуля до открытой тетради.</li>
+<li><a href="../practice/2.4_%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0_%D1%81%D1%82%D0%B5%D0%BD%D0%B4%D0%B0/2.4.2_jupyterhub.md.html">Развернуть материалы в JupyterHub</a> — библиотеки, сетевые
+  доступы, сертификаты, переменные окружения и подключение к реальной базе.</li>
+<li><a href="../practice/_STAND.md.html"><code>_STAND.md</code></a> — работа на уже поднятом общем стенде.</li>
+</ul>
+<h2>Как открыть</h2>
+<h3>На общем стенде (VS Code в браузере)</h3>
+<p>Если преподаватель прислал ссылку на VS Code в браузере — стенд уже поднят.
+Ничего доустанавливать не надо, Docker и Postgres на вашей стороне не нужны.
+Подробные шаги — в <a href="../practice/_STAND.md.html"><code>_STAND.md</code></a>. Короткая версия:</p>
+<ol>
+<li>Открыть VS Code по ссылке, в сайдбаре найти папку <code>bank_workshop/</code>.</li>
+<li>Открыть тетрадь любого кейса, вверху нажать <strong>Restart Kernel</strong> → <strong>Run All</strong>.</li>
+<li>В Metabase в редакторе SQL выбрать базу «Учебная база банка», а не
+   «Sample Database».</li>
+</ol>
+<h3>Без git</h3>
+<p>Если git или сайт репозитория недоступны — та же папка лежит на странице
+файлов практики сайта материалов:
+<a href="https://wybaeb.github.io/a360/practice_files.html">https://wybaeb.github.io/a360/practice_files.html</a>. Архив целиком и каждый
+файл по отдельности, с указанием, что нужно для какого кейса.</p>
+<h3>Локально одной командой</h3>
+<p>Нужен Docker и Python 3.10 или новее.</p>
+<pre><code class="language-bash">pip install -r requirements.txt
+cp .env.example .env          # вписать ключ ассистента
+./run.sh up
+</code></pre>
+<p>Через минуту-две поднимутся два сервиса:</p>
+<ul>
+<li>база: <code>postgresql://bank_user:bank_pass@localhost:5433/bank_training</code></li>
+<li>дашборды: <a href="http://localhost:3000">http://localhost:3000</a>, вход <code>workshop@example.local</code> / <code>WorkshopBI2026!</code></li>
+</ul>
+<p>Пароли учебные и действуют только на вашей машине.</p>
+<p>Другие команды: <code>./run.sh status</code> — что запущено и сколько строк в таблицах,
+<code>./run.sh sql</code> — консоль к базе, <code>./run.sh dump</code> — снять дамп,
+<code>./run.sh reset</code> — снести стенд вместе с данными и собрать заново.</p>
+<h2>Ключ ассистента</h2>
+<p>Тетради работают с GigaChat. В <code>.env</code> нужен <code>GIGACHAT_AUTH_KEY</code> — строка
+авторизации из личного кабинета. Если под рукой другой ассистент с
+OpenAI-совместимым интерфейсом, заполните вместо неё <code>AI_PROVIDER_URL</code> и
+<code>AI_PROVIDER_TOKEN</code> и добавьте <code>ASSISTANT_BACKEND=openai</code> — тетради работают
+одинаково через оба пути.</p>
+<p>Провайдер должен уметь новый OpenAI-протокол <code>tools</code>/<code>tool_choice</code>: агентские
+тетради без него отвечают текстом «Tool use: …» вместо реальных вызовов.
+На общем стенде ключ и провайдер уже настроены преподавателем.</p>
+<p>Файл <code>.env</code> в репозиторий не попадает — так ключ и остаётся у вас.</p>
+<h2>Что где лежит</h2>
+<pre><code>data/            выгрузки в CSV и генератор, который их создаёт
+sql/init/        схема, загрузка данных и представления портфеля
+sql/dump/        полный дамп базы — если удобнее поднять без docker
+tools/           клиент ассистента, SQL в ячейках тетради, два агента, проверки
+2.N_*/, 3.N_*/   сами кейсы: промпты, тетради, эталоны, разборы
+</code></pre>
+<p>Данные создаются скриптами с фиксированным зерном: <code>python3 data/generate_data.py</code>
+для кейсов стенда и <code>python3 data/generate_data_step3.py</code> для наборов
+<code>product/</code>, <code>clients/</code> и <code>series/</code> — повторный запуск всегда даёт те же файлы,
+поэтому числа в материалах не разъезжаются.</p>
+<p>Кейсы 3.3 и 3.4 базу не используют: тетради читают выгрузки прямо из <code>data/</code>.
+Сверх общих библиотек им нужны <code>scikit-learn</code> и <code>plotly</code> — они в
+<code>requirements.txt</code>.</p>
+<h2>Что можно проверить, ничего не запуская</h2>
+<pre><code class="language-bash">python3 tools/check_env.py          # что подключено, чего не хватает (без вывода ключей)
+node tools/check_apps_script.js     # эталонный скрипт для таблиц даёт ожидаемые числа
+./run.sh status                     # в базе ровно столько строк, сколько должно быть
+</code></pre>
+<p>На общем стенде вместо <code>./run.sh status</code> пересчёт делается запросом:</p>
+<pre><code class="language-bash">psql -h postgres -U bank_user -d bank_training \
+  -c &quot;SELECT 'raw_applications', COUNT(*) FROM raw_applications&quot;
+</code></pre>
+<h2>Данные</h2>
+<p>Все наборы синтетические, сгенерированы для обучения: карты, заявки, инициативы,
+клиенты и сотрудники вымышлены. Совпадения случайны.</p></div></section><footer><div class="wrap">Аналитика 360 · копия файла из репозитория практики.</div></footer>
+<script>
+// Кнопка «скопировать промпт»: сначала пробуем Clipboard API, при отказе —
+// старый execCommand. В LMS страница часто открыта в iframe без разрешения
+// на буфер обмена, и без запасного пути кнопка молча ничего не делает.
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.copy'); if(!b) return;
+  var t=b.parentNode.querySelector('pre').innerText;
+  function done(){b.textContent='Скопировано';b.classList.add('done');
+    setTimeout(function(){b.textContent='Копировать';b.classList.remove('done')},1800);}
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(done,fallback);
+  } else { fallback(); }
+  function fallback(){
+    var a=document.createElement('textarea');a.value=t;a.style.position='fixed';
+    a.style.opacity=0;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');done();}catch(_e){b.textContent='Выделите вручную';}
+    document.body.removeChild(a);
+  }
+});
+</script>
+</body></html>

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Портфель инициатив: вопрос словами — отчёт с графиками · Аналитика 360</title>
+<style>
+:root{
+  --acc:#20BA72; --acc-soft:rgba(32,186,114,.10); --acc-line:rgba(32,186,114,.30);
+  --bg:#ffffff; --surf:#f4f8f6; --elev:#e9f3ee; --line:rgba(46,54,65,.13);
+  --ink:#2E3641; --ink2:rgba(46,54,65,.74); --ink3:rgba(46,54,65,.48);
+  --warn:#E4572E; --warn-soft:rgba(228,87,46,.09);
+  --font:'SB Sans Text','Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'SFMono-Regular',Consolas,'Liberation Mono',monospace;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth}
+body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 22px}
+/* overflow-wrap нужен ссылкам-адресам в списках источников: у длинного URL нет
+   точек переноса, на узком экране он уходит за край, а html/body{overflow-x:clip}
+   выше не даёт его прокрутить — текст пропадал совсем. break-word рвёт только
+   слово, которое иначе не помещается, и не влияет на расчёт min-content. */
+a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line);
+  overflow-wrap:break-word}
+a:hover{border-bottom-color:var(--acc)}
+
+header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
+  border-bottom:1px solid var(--line)}
+
+/* Хлебная крошка: лёгкая строка над шапкой. Фон тот же, что у верха градиента
+   шапки, поэтому крошка визуально сливается с ней в один блок. */
+.crumbs{background:var(--elev);font-size:13.5px;color:var(--ink3)}
+.crumbs .wrap{padding-top:14px;padding-bottom:2px;display:flex;align-items:baseline;gap:8px}
+.crumbs a{color:#128a53;border-bottom:1px solid transparent;font-weight:600}
+.crumbs a:hover{border-bottom-color:var(--acc)}
+.crumbs .sep{color:var(--ink3);font-size:11px}
+.crumbs .here{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eyebrow{color:var(--acc);font-weight:800;font-size:12.5px;letter-spacing:.14em;
+  text-transform:uppercase;margin-bottom:14px}
+h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 16px}
+.lead{font-size:clamp(16.5px,2vw,19px);color:var(--ink2);margin:0 0 22px}
+.meta{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;
+  font-size:13.5px;color:var(--ink2)}
+.chip b{color:var(--ink)}
+a.chip{border-bottom:0;color:var(--ink2)} a.chip:hover{border-color:var(--acc)}
+.mir{display:inline-block;font-size:12px;font-weight:700;line-height:1.5;padding:0 8px;
+  margin-left:5px;border:1px solid var(--acc-line);border-radius:999px;color:#128a53;
+  background:var(--acc-soft);white-space:nowrap;vertical-align:baseline}
+.mir:hover{border-color:var(--acc);background:#fff}
+.md h2{margin-top:34px}.md h3{margin-top:26px}.md img{max-width:100%;border-radius:12px}
+.md table{font-size:14.5px}.md pre{margin:0 0 16px}
+
+section{padding:44px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-size:clamp(22px,3vw,30px);font-weight:800;margin:0 0 8px;line-height:1.18}
+h2 .num{color:var(--acc);margin-right:.4em;font-variant-numeric:tabular-nums}
+h3{font-size:19px;font-weight:800;margin:30px 0 10px}
+h4{font-size:16px;font-weight:800;margin:22px 0 8px;color:var(--ink2)}
+p{margin:0 0 15px}
+ul,ol{margin:0 0 15px;padding-left:22px}
+li{margin-bottom:7px}
+.sub{color:var(--ink3);margin:0 0 22px;font-size:15.5px}
+
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:20px 22px;margin:0 0 18px}
+.card.acc{background:var(--acc-soft);border-color:var(--acc-line)}
+.card.warn{background:var(--warn-soft);border-color:rgba(228,87,46,.28)}
+.card h4{margin-top:0}
+.card p:last-child,.card ul:last-child,.card ol:last-child{margin-bottom:0}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0 0 15px;font-size:15.5px}
+.kv dt{color:var(--ink3)}
+.kv dd{margin:0;font-weight:600}
+
+table{border-collapse:collapse;width:100%;font-size:15px;margin:0 0 15px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{font-weight:800;color:var(--ink2);font-size:13.5px;text-transform:uppercase;
+  letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 15px}
+.scroll table{margin:0}
+
+pre{background:#20262e;color:#e7edf3;border-radius:12px;padding:16px 18px;overflow-x:auto;
+  font-family:var(--mono);font-size:13.5px;line-height:1.55;margin:0 0 15px}
+code{font-family:var(--mono);font-size:.9em;background:var(--elev);padding:2px 6px;
+  border-radius:5px}
+pre code{background:none;padding:0;font-size:1em}
+
+.prompt{position:relative;background:#20262e;color:#e7edf3;border-radius:12px;
+  padding:16px 18px;margin:0 0 14px}
+/* Промпт должен быть виден целиком: участник его читает, а не только копирует.
+   pre-wrap переносит длинные строки, но сохраняет переводы строк — innerText
+   в кнопке копирования отдаёт ровно исходный текст. */
+.prompt pre{margin:0;padding:0;background:none;max-height:none;
+  white-space:pre-wrap;overflow-wrap:anywhere}
+.prompt{padding-top:46px}
+.copy{position:absolute;top:10px;right:10px;background:var(--acc);color:#fff;border:0;
+  border-radius:8px;padding:7px 13px;font:600 13px var(--font);cursor:pointer}
+.copy:hover{filter:brightness(1.08)}
+.copy.done{background:#0f7a46}
+
+figure{margin:0 0 18px}
+figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+figure.fig{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:18px 18px 12px;margin:22px 0}
+figure.fig svg{max-width:100%;height:auto}
+figure.fig figcaption{padding-top:6px;border-top:1px solid var(--line);margin-top:12px}
+
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;
+  border-radius:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;
+  display:flex;align-items:center;justify-content:center}
+
+/* Раскрывающийся блок: три вспомогательных промпта не должны спорить за внимание
+   с главным, но и прятать их насовсем нельзя — по ним разбирают проверку. */
+details.more{border:1px solid var(--line);border-radius:14px;padding:0 22px;
+  margin:0 0 18px;background:var(--surf)}
+details.more>summary{cursor:pointer;font-weight:800;padding:16px 0;list-style:none;
+  color:var(--ink2)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸";color:var(--acc);margin-right:8px}
+details.more[open]>summary::before{content:"▾"}
+details.more[open]{padding-bottom:14px}
+details.more>summary:hover{color:var(--ink)}
+
+.toc{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+  margin:0 0 8px}
+.toc ol{margin:0;padding-left:20px}
+.toc a{border:0}
+.toc a:hover{border-bottom:1px solid var(--acc)}
+
+footer{padding:36px 0 60px;color:var(--ink3);font-size:14.5px}
+/* Сноска на источник: верхний индекс, чтобы номер не читался как часть текста */
+a.fn{border:0;font-size:.72em;vertical-align:super;font-weight:700;padding-left:2px}
+a.fn:hover{border:0;text-decoration:underline}
+.tag{display:inline-block;background:var(--elev);border-radius:6px;padding:1px 8px;
+  font-size:13px;color:var(--ink2);font-weight:600}
+@media(max-width:600px){
+  body{font-size:16px}
+  .kv{grid-template-columns:1fr}
+}
+</style>
+</head><body>
+<nav class="crumbs" aria-label="Навигация"><div class="wrap"><a href="../../index.html">Материалы</a><span class="sep">▸</span><a href="../../practice_files.html">Папка практики</a><span class="sep">▸</span><span class="here">README.md</span></div></nav>
+<header><div class="wrap"><div class="eyebrow">Репозиторий практики · <code>2.7_кейс_отчёт_агента</code></div><h1>Портфель инициатив: вопрос словами — отчёт с графиками</h1><div class="meta"><a class="chip" href="../../downloads/practice/2.7_%D0%BA%D0%B5%D0%B9%D1%81_%D0%BE%D1%82%D1%87%D1%91%D1%82_%D0%B0%D0%B3%D0%B5%D0%BD%D1%82%D0%B0/README.md" download="README.md">Скачать <b>README.md</b></a><a class="chip" href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/2.7_%D0%BA%D0%B5%D0%B9%D1%81_%D0%BE%D1%82%D1%87%D1%91%D1%82_%D0%B0%D0%B3%D0%B5%D0%BD%D1%82%D0%B0/README.md">На <b>GitHub</b></a></div></div></header><section><div class="wrap md"><blockquote>
+<p>Работаете на общем стенде? БД и Metabase уже подняты. При первом
+запуске и после любой правки <code>tools/*.py</code> в тетради жмите <strong>Restart
+Kernel</strong> и потом <strong>Run All</strong> — иначе Jupyter возьмёт старую версию
+модуля из памяти ядра и агент напишет «Tool use: …» текстом вместо
+реального вызова. Общие шаги стенда — в <a href="../../practice/_STAND.md.html"><code>../_STAND.md</code></a>.</p>
+</blockquote>
+<p><strong>Управленческий вопрос.</strong> Когда портфель инициатив выходит в плюс и какие
+инициативы тянут его назад?</p>
+<p>Здесь никто не пишет SQL вручную: вопрос задаётся обычными словами, агент сам
+ходит в базу, сам строит график и отвечает коротким отчётом. Продолжение —
+в кейсе <a href="../../practice_files.html#p-2.8_%D0%BA%D0%B5%D0%B9%D1%81_%D0%B4%D0%B0%D1%88%D0%B1%D0%BE%D1%80%D0%B4_%D0%B0%D0%B3%D0%B5%D0%BD%D1%82%D0%BE%D0%BC"><code>../2.8_кейс_дашборд_агентом/</code></a>: там
+из тех же данных собирается постоянный дашборд.</p>
+<h2>Что в папке</h2>
+<table>
+<thead>
+<tr>
+<th>Файл</th>
+<th>Зачем</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>2.7.1_отчёт_по_запросу.ipynb</code></td>
+<td>пишем вопрос словами — получаем короткий отчёт с графиками</td>
+</tr>
+</tbody>
+</table>
+<p>Агент живёт в <code>tools/report_agent.py</code>, данные — в <code>data/portfolio/</code>,
+модель портфеля — в <code>sql/init/03_portfolio_views.sql</code>.</p>
+<h2>Как устроен инструментальный агент</h2>
+<p>Вместе с вопросом модель получает список инструментов и вызывает их по очереди,
+пока не соберёт то, что нужно для ответа. Инструментов здесь два:</p>
+<ul>
+<li><code>run_sql</code> — выполнить <code>SELECT</code> в учебной базе и получить строки;</li>
+<li><code>make_chart</code> — построить график по строкам результата.</li>
+</ul>
+<p>Цикл один и тот же: модель решает, каких данных не хватает → называет
+инструмент и параметры → инструмент выполняется обычным кодом → результат
+возвращается модели. Поэтому каждое число в отчёте получено запросом,
+а не вспомнено моделью: запрос виден в выводе ячейки и повторяется вручную.</p>
+<h2>Паспорт инициативы</h2>
+<p>Четыре параметра, по которым инициатива превращается в кривую NPV: месяц старта,
+расходы, число месяцев до выхода на прибыльность и число месяцев до окупаемости.
+Расходы распределены равномерно до выхода на прибыльность, ежемесячная прибыль
+подобрана так, чтобы накопленный дисконтированный поток обнулился ровно в месяц
+окупаемости из паспорта. Ставка дисконтирования — 1 % в месяц, горизонт — 36 месяцев.</p>
+<p>Одинаковая методика этих четырёх параметров и делает инициативы сравнимыми,
+а кривые — складываемыми в кривую портфеля. Никакой «экспертной оценки
+сопоставимости» для этого не нужно.</p>
+<p>В портфеле десять инициатив по пяти направлениям, всего 63,7 млн расходов:</p>
+<table>
+<thead>
+<tr>
+<th>Инициатива</th>
+<th>Направление</th>
+<th style="text-align: right;">Старт</th>
+<th style="text-align: right;">Расходы</th>
+<th style="text-align: right;">До прибыльности</th>
+<th style="text-align: right;">До окупаемости</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Автоплатёж по кредитной карте</td>
+<td>Карты</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">4,2 млн</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">14</td>
+</tr>
+<tr>
+<td>Предодобренный лимит в приложении</td>
+<td>Карты</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">6,8 млн</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">19</td>
+</tr>
+<tr>
+<td>Скоринг заявок на автокредит</td>
+<td>Кредиты</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">9,5 млн</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">24</td>
+</tr>
+<tr>
+<td>Электронная подпись в конвейере</td>
+<td>Кредиты</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">3,1 млн</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">11</td>
+</tr>
+<tr>
+<td>Речевая аналитика контакт-центра</td>
+<td>Обслуживание</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">7,4 млн</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">21</td>
+</tr>
+<tr>
+<td>Самообслуживание по выпискам</td>
+<td>Обслуживание</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">2,6 млн</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">9</td>
+</tr>
+<tr>
+<td>Витрина клиентских событий</td>
+<td>Данные</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">12,0 млн</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">30</td>
+</tr>
+<tr>
+<td>Единый ключ группы компаний</td>
+<td>Данные</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">5,3 млн</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">17</td>
+</tr>
+<tr>
+<td>Онбординг малого бизнеса за день</td>
+<td>Бизнес</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">8,1 млн</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">20</td>
+</tr>
+<tr>
+<td>Пакетные тарифы для МСБ</td>
+<td>Бизнес</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">4,7 млн</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">13</td>
+</tr>
+</tbody>
+</table>
+<p>Кроме плана в базе есть факт (<code>initiative_fact</code>, 82 месячные записи) — чтобы
+можно было задать агенту вопрос, на котором план и факт расходятся.</p>
+<h2>Как провести</h2>
+<p><strong>1. Отчёт по запросу.</strong> Три вопроса подряд в тетради
+<code>2.7.1_отчёт_по_запросу.ipynb</code>: когда портфель выходит в плюс, какие инициативы
+окупаются позже всех, куда уходят деньги. Каждый ответ агента — это выполненный
+SQL плюс построенный график, шаги видны в выводе ячейки.</p>
+<p><strong>2. Приёмка ответа.</strong> Три проверки из тетради: сходится ли число с запросом, тот
+ли период и срез, отличает ли агент план от факта.</p>
+<h2>Что должно получиться</h2>
+<ul>
+<li>Портфель выходит в плюс на <strong>23-м месяце</strong>, к концу горизонта накопленный
+  NPV — около <strong>56 млн</strong>.</li>
+<li>Позже всех окупаются «Витрина клиентских событий» (30-й месяц),
+  «Скоринг заявок на автокредит» и «Единый ключ группы компаний» (по 25-му).</li>
+<li>Больше всего вложено в направление «Данные» — 17,3 млн, меньше всего
+  в «Обслуживание» — 10,0 млн.</li>
+</ul>
+<h2>Частые ошибки агента</h2>
+<p>Это не изъян материала, а его содержание — на занятии полезнее разобрать ошибку,
+чем восхититься удачным ответом.</p>
+<ul>
+<li><strong>Просили три самые поздние — а их четыре.</strong> По месяцу окупаемости 25 идут три
+  инициативы, а не одна: <code>LIMIT 3</code> отрезает произвольную. Ответ агента формально
+  верен и при этом вводит в заблуждение.</li>
+<li><strong>Относительный месяц против абсолютного.</strong> «Месяц окупаемости 14» — это
+  четырнадцатый месяц портфеля или четырнадцатый от старта самой инициативы?
+  В паспорте есть и то и другое, и чаще всего числа в отчётах расходятся именно здесь.</li>
+<li><strong>План против факта.</strong> «Сколько потратили» и «сколько собирались потратить» —
+  разные таблицы и разные числа.</li>
+</ul>
+<h2>Проверка</h2>
+<p>Стенд поднят, данные на месте:</p>
+<pre><code class="language-bash">./run.sh status
+</code></pre>
+<p>Тетрадь исполняется от начала до конца на чистом стенде — это критерий
+готовности кейса. Ответы агента от запуска к запуску звучат по-разному,
+но числа в них должны совпадать с приведёнными выше: они берутся из базы
+запросом, а не из памяти модели.</p></div></section><footer><div class="wrap">Аналитика 360 · копия файла из репозитория практики.</div></footer>
+<script>
+// Кнопка «скопировать промпт»: сначала пробуем Clipboard API, при отказе —
+// старый execCommand. В LMS страница часто открыта в iframe без разрешения
+// на буфер обмена, и без запасного пути кнопка молча ничего не делает.
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.copy'); if(!b) return;
+  var t=b.parentNode.querySelector('pre').innerText;
+  function done(){b.textContent='Скопировано';b.classList.add('done');
+    setTimeout(function(){b.textContent='Копировать';b.classList.remove('done')},1800);}
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(done,fallback);
+  } else { fallback(); }
+  function fallback(){
+    var a=document.createElement('textarea');a.value=t;a.style.position='fixed';
+    a.style.opacity=0;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');done();}catch(_e){b.textContent='Выделите вручную';}
+    document.body.removeChild(a);
+  }
+});
+</script>
+</body></html>
