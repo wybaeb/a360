@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Папка практики: скачать без git · Аналитика 360</title>
+<style>
+:root{
+  --acc:#20BA72; --acc-soft:rgba(32,186,114,.10); --acc-line:rgba(32,186,114,.30);
+  --bg:#ffffff; --surf:#f4f8f6; --elev:#e9f3ee; --line:rgba(46,54,65,.13);
+  --ink:#2E3641; --ink2:rgba(46,54,65,.74); --ink3:rgba(46,54,65,.48);
+  --warn:#E4572E; --warn-soft:rgba(228,87,46,.09);
+  --font:'SB Sans Text','Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'SFMono-Regular',Consolas,'Liberation Mono',monospace;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth}
+body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 22px}
+/* overflow-wrap нужен ссылкам-адресам в списках источников: у длинного URL нет
+   точек переноса, на узком экране он уходит за край, а html/body{overflow-x:clip}
+   выше не даёт его прокрутить — текст пропадал совсем. break-word рвёт только
+   слово, которое иначе не помещается, и не влияет на расчёт min-content. */
+a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line);
+  overflow-wrap:break-word}
+a:hover{border-bottom-color:var(--acc)}
+
+header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
+  border-bottom:1px solid var(--line)}
+
+/* Хлебная крошка: лёгкая строка над шапкой. Фон тот же, что у верха градиента
+   шапки, поэтому крошка визуально сливается с ней в один блок. */
+.crumbs{background:var(--elev);font-size:13.5px;color:var(--ink3)}
+.crumbs .wrap{padding-top:14px;padding-bottom:2px;display:flex;align-items:baseline;gap:8px}
+.crumbs a{color:#128a53;border-bottom:1px solid transparent;font-weight:600}
+.crumbs a:hover{border-bottom-color:var(--acc)}
+.crumbs .sep{color:var(--ink3);font-size:11px}
+.crumbs .here{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eyebrow{color:var(--acc);font-weight:800;font-size:12.5px;letter-spacing:.14em;
+  text-transform:uppercase;margin-bottom:14px}
+h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 16px}
+.lead{font-size:clamp(16.5px,2vw,19px);color:var(--ink2);margin:0 0 22px}
+.meta{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;
+  font-size:13.5px;color:var(--ink2)}
+.chip b{color:var(--ink)}
+
+section{padding:44px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-size:clamp(22px,3vw,30px);font-weight:800;margin:0 0 8px;line-height:1.18}
+h2 .num{color:var(--acc);margin-right:.4em;font-variant-numeric:tabular-nums}
+h3{font-size:19px;font-weight:800;margin:30px 0 10px}
+h4{font-size:16px;font-weight:800;margin:22px 0 8px;color:var(--ink2)}
+p{margin:0 0 15px}
+ul,ol{margin:0 0 15px;padding-left:22px}
+li{margin-bottom:7px}
+.sub{color:var(--ink3);margin:0 0 22px;font-size:15.5px}
+
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:20px 22px;margin:0 0 18px}
+.card.acc{background:var(--acc-soft);border-color:var(--acc-line)}
+.card.warn{background:var(--warn-soft);border-color:rgba(228,87,46,.28)}
+.card h4{margin-top:0}
+.card p:last-child,.card ul:last-child,.card ol:last-child{margin-bottom:0}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0 0 15px;font-size:15.5px}
+.kv dt{color:var(--ink3)}
+.kv dd{margin:0;font-weight:600}
+
+table{border-collapse:collapse;width:100%;font-size:15px;margin:0 0 15px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{font-weight:800;color:var(--ink2);font-size:13.5px;text-transform:uppercase;
+  letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 15px}
+.scroll table{margin:0}
+
+pre{background:#20262e;color:#e7edf3;border-radius:12px;padding:16px 18px;overflow-x:auto;
+  font-family:var(--mono);font-size:13.5px;line-height:1.55;margin:0 0 15px}
+code{font-family:var(--mono);font-size:.9em;background:var(--elev);padding:2px 6px;
+  border-radius:5px}
+pre code{background:none;padding:0;font-size:1em}
+
+.prompt{position:relative;background:#20262e;color:#e7edf3;border-radius:12px;
+  padding:16px 18px;margin:0 0 14px}
+/* Промпт должен быть виден целиком: участник его читает, а не только копирует.
+   pre-wrap переносит длинные строки, но сохраняет переводы строк — innerText
+   в кнопке копирования отдаёт ровно исходный текст. */
+.prompt pre{margin:0;padding:0;background:none;max-height:none;
+  white-space:pre-wrap;overflow-wrap:anywhere}
+.prompt{padding-top:46px}
+.copy{position:absolute;top:10px;right:10px;background:var(--acc);color:#fff;border:0;
+  border-radius:8px;padding:7px 13px;font:600 13px var(--font);cursor:pointer}
+.copy:hover{filter:brightness(1.08)}
+.copy.done{background:#0f7a46}
+
+figure{margin:0 0 18px}
+figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+figure.fig{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:18px 18px 12px;margin:22px 0}
+figure.fig svg{max-width:100%;height:auto}
+figure.fig figcaption{padding-top:6px;border-top:1px solid var(--line);margin-top:12px}
+
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;
+  border-radius:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;
+  display:flex;align-items:center;justify-content:center}
+
+/* Раскрывающийся блок: три вспомогательных промпта не должны спорить за внимание
+   с главным, но и прятать их насовсем нельзя — по ним разбирают проверку. */
+details.more{border:1px solid var(--line);border-radius:14px;padding:0 22px;
+  margin:0 0 18px;background:var(--surf)}
+details.more>summary{cursor:pointer;font-weight:800;padding:16px 0;list-style:none;
+  color:var(--ink2)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸";color:var(--acc);margin-right:8px}
+details.more[open]>summary::before{content:"▾"}
+details.more[open]{padding-bottom:14px}
+details.more>summary:hover{color:var(--ink)}
+
+.toc{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+  margin:0 0 8px}
+.toc ol{margin:0;padding-left:20px}
+.toc a{border:0}
+.toc a:hover{border-bottom:1px solid var(--acc)}
+
+footer{padding:36px 0 60px;color:var(--ink3);font-size:14.5px}
+/* Сноска на источник: верхний индекс, чтобы номер не читался как часть текста */
+a.fn{border:0;font-size:.72em;vertical-align:super;font-weight:700;padding-left:2px}
+a.fn:hover{border:0;text-decoration:underline}
+.tag{display:inline-block;background:var(--elev);border-radius:6px;padding:1px 8px;
+  font-size:13px;color:var(--ink2);font-weight:600}
+@media(max-width:600px){
+  body{font-size:16px}
+  .kv{grid-template-columns:1fr}
+}
+</style>
+</head><body>
+<nav class="crumbs" aria-label="Навигация"><div class="wrap"><a href="index.html">Материалы</a><span class="sep">▸</span><span class="here">Папка практики без git</span></div></nav>
+
+<header><div class="wrap">
+  <div class="eyebrow">Материалы практики</div>
+  <h1>Папка практики: скачать без git</h1>
+  <p class="lead">Та же папка, что в репозитории практики, — файл за файлом.
+     Для машин, где git и сайт репозитория недоступны: скачайте архив целиком
+     или нужные файлы по отдельности и положите их в одну папку с той же
+     структурой — в JupyterHub, VS Code или просто на диск.</p>
+  <div class="meta">
+    <span class="chip">Файлов: <b>86</b></span>
+    <span class="chip">Всего: <b>8,0 МБ</b></span>
+    <span class="chip">Архив: <b>2,5 МБ</b></span>
+  </div>
+</div></header>
+
+<section><div class="wrap">
+<h2><span class="num">1</span>Три способа забрать папку</h2>
+
+<ol class="steps">
+<li><b>Архив целиком.</b>
+<p><a href="downloads/practice.zip" download="bank-analytics-workshop.zip"
+   style="display:inline-block;background:var(--acc);color:#fff;font-weight:800;
+   padding:12px 22px;border-radius:12px;border:0">Скачать bank-analytics-workshop.zip
+   · 2,5 МБ</a></p>
+<p>Распакуйте — получится папка <code>bank-analytics-workshop</code> со всей структурой.
+Дальше по <a href="setup.html">инструкции установки</a> со второго шага.</p></li>
+
+<li><b>По одному файлу.</b>
+<p>Если архивы на вашей машине не скачиваются или не открываются — ниже
+список всех файлов по папкам. Щелчок по имени сохраняет файл. Сохраняйте
+структуру: тетради ищут общие модули в <code>tools/</code> и выгрузки
+в <code>data/</code> на уровень выше себя, поэтому папка кейса,
+<code>tools/</code> и <code>data/</code> должны лежать рядом в одной
+родительской папке.</p></li>
+
+<li><b>Через git</b> — на машине, где он есть и репозиторий доступен:
+<pre><code>git clone https://github.com/wybaeb/bank-analytics-workshop.git</code></pre></li>
+</ol>
+
+<div class="card acc">
+<h4>Что нужно для какого кейса</h4>
+<p>Стенд — это база данных и система дашбордов из инструкции установки.
+Кейсы, которые читают выгрузку из файла, работают без него: достаточно
+папки кейса и одного файла из <code>data/</code>.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>Кейс</th><th>Что скачать</th><th>Стенд</th></tr></thead>
+<tbody><tr><td>2.2 · Разведочный анализ</td><td>папка 2.2 и папка tools</td><td>база данных</td></tr><tr><td>2.3 · Памятка SQL и pandas</td><td>папка 2.3 и папка tools</td><td>база данных</td></tr><tr><td>2.5 · Карточный бизнес</td><td>только папка 2.5</td><td>не нужен</td></tr><tr><td>2.6 · Кредитный конвейер</td><td>папка 2.6 и папка tools</td><td>база данных и BI</td></tr><tr><td>2.7 · Отчёт агента</td><td>папка 2.7 и папка tools</td><td>база данных и ключ ассистента</td></tr><tr><td>2.8 · Дашборд агентом</td><td>папка 2.8 и папка tools</td><td>база, BI и ключ ассистента</td></tr><tr><td>3.2 · Страница анализа от ассистента</td><td>папка 3.2 и файл data/product/savings_monthly.csv</td><td>не нужен</td></tr><tr><td>3.3 · Сегментация клиентов</td><td>папка 3.3 и файл data/clients/clients_sample.csv</td><td>не нужен</td></tr><tr><td>3.4 · Анализ отклонений</td><td>папка 3.4 и файл data/series/portfolio_operations_daily.csv</td><td>не нужен</td></tr><tr><td>4.1 · Каркас проекта</td><td>только папка 4.1</td><td>не нужен</td></tr><tr><td>4.4 · Финансовая модель эффекта</td><td>папка 4.4 и файл data/product/savings_monthly.csv</td><td>не нужен</td></tr></tbody>
+</table>
+</div>
+</div>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">2</span>Как положить в JupyterHub</h2>
+<ol>
+<li>В файловой панели хаба создайте папку <code>bank-analytics-workshop</code>.</li>
+<li>Внутри неё — папки с теми же именами, что здесь: папку кейса,
+<code>tools/</code> и <code>data/</code> с вложенными папками.</li>
+<li>Кнопкой <b>Upload</b> загрузите файлы в каждую из папок. Тетрадь
+открывается двойным щелчком; вверху — <b>Restart Kernel</b> →
+<b>Run All</b>.</li>
+<li>Для тетрадей с базой нужны переменные окружения подключения —
+их задаёт администратор хаба, см. второй раздел
+<a href="setup.html">инструкции установки</a>.</li>
+</ol>
+<p class="sub">Файл <code>.env.example</code> — образец настроек для локального
+стенда; в хабе он не нужен.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">3</span>Все файлы по папкам</h2>
+<p class="sub"><a href="#p-2.2_разведочный_анализ">2.2_разведочный_анализ</a> · <a href="#p-2.3_памятка_sql_и_pandas">2.3_памятка_sql_и_pandas</a> · <a href="#p-2.4_установка_стенда">2.4_установка_стенда</a> · <a href="#p-2.5_кейс_карточный_бизнес">2.5_кейс_карточный_бизнес</a> · <a href="#p-2.6_кейс_кредитный_конвейер">2.6_кейс_кредитный_конвейер</a> · <a href="#p-2.7_кейс_отчёт_агента">2.7_кейс_отчёт_агента</a> · <a href="#p-2.8_кейс_дашборд_агентом">2.8_кейс_дашборд_агентом</a> · <a href="#p-3.2_кейс_gigachat_отчёт">3.2_кейс_gigachat_отчёт</a> · <a href="#p-3.3_кейс_кластеризация">3.3_кейс_кластеризация</a> · <a href="#p-3.4_кейс_анализ_отклонений">3.4_кейс_анализ_отклонений</a> · <a href="#p-4.1_каркас_проекта">4.1_каркас_проекта</a> · <a href="#p-4.4_финмодель_эффекта">4.4_финмодель_эффекта</a> · <a href="#p-data">data</a> · <a href="#p-tools">tools</a> · <a href="#p-sql">sql</a> · <a href="#p-root">корень</a></p>
+<h3 id="p-2.2_разведочный_анализ">Разведочный анализ</h3><p class="sub" style="margin-bottom:10px"><code>2.2_разведочный_анализ/</code> · тетрадь: семь этапов работы с незнакомой выгрузкой. 1 файл.</p><div class="scroll"><table><thead><tr><th>Файл</th><th>Что это</th><th>Размер</th></tr></thead><tbody><tr><td><a href="downloads/practice/2.2_разведочный_анализ/2.2.1_разведочный_анализ.ipynb" download="2.2.1_разведочный_анализ.ipynb">2.2.1_разведочный_анализ.ipynb</a></td><td>тетрадь — загрузить в JupyterHub или открыть в VS Code</td><td style="white-space:nowrap;text-align:right">257 КБ</td></tr></tbody></table></div><h3 id="p-2.3_памятка_sql_и_pandas">Памятка SQL и pandas</h3><p class="sub" style="margin-bottom:10px"><code>2.3_памятка_sql_и_pandas/</code> · тетрадь-справочник: 21 операция двумя способами со сверкой. 1 файл.</p><div class="scroll"><table><thead><tr><th>Файл</th><th>Что это</th><th>Размер</th></tr></thead><tbody><tr><td><a href="downloads/practice/2.3_памятка_sql_и_pandas/2.3.1_памятка_sql_и_pandas.ipynb" download="2.3.1_памятка_sql_и_pandas.ipynb">2.3.1_памятка_sql_и_pandas.ipynb</a></td><td>тетрадь — загрузить в JupyterHub или открыть в VS Code</td><td style="white-space:nowrap;text-align:right">91 КБ</td></tr></tbody></table></div><h3 id="p-2.4_установка_стенда">Установка стенда</h3><p class="sub" style="margin-bottom:10px"><code>2.4_установка_стенда/</code> · полные тексты инструкций: локально и в JupyterHub. 2 файла.</p><div class="scroll"><table><thead><tr><th>Файл</th><th>Что это</th><th>Размер</th></tr></thead><tbody><tr><td><a href="downloads/practice/2.4_установка_стенда/2.4.1_установка.md" download="2.4.1_установка.md">2.4.1_установка.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">9 КБ</td></tr><tr><td><a href="downloads/practice/2.4_установка_стенда/2.4.2_jupyterhub.md" download="2.4.2_jupyterhub.md">2.4.2_jupyterhub.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">14 КБ</td></tr></tbody></table></div><h3 id="p-2.5_кейс_карточный_бизнес">Кейс: карточный бизнес</h3><p class="sub" style="margin-bottom:10px"><code>2.5_кейс_карточный_бизнес/</code> · выгрузка, промпты и эталонные скрипты для таблиц. 8 файлов.</p><div class="scroll"><table><thead><tr><th>Файл</th><th>Что это</th><th>Размер</th></tr></thead><tbody><tr><td><a href="downloads/practice/2.5_кейс_карточный_бизнес/2.5.1_выгрузка_для_google.csv" download="2.5.1_выгрузка_для_google.csv">2.5.1_выгрузка_для_google.csv</a></td><td>выгрузка — таблица или тетрадь</td><td style="white-space:nowrap;text-align:right">339 КБ</td></tr><tr><td><a href="downloads/practice/2.5_кейс_карточный_бизнес/2.5.2_выгрузка_для_excel.xlsx" download="2.5.2_выгрузка_для_excel.xlsx">2.5.2_выгрузка_для_excel.xlsx</a></td><td>выгрузка для Excel</td><td style="white-space:nowrap;text-align:right">152 КБ</td></tr><tr><td><a href="downloads/practice/2.5_кейс_карточный_бизнес/2.5.3_промпт_google_таблицы.txt" download="2.5.3_промпт_google_таблицы.txt">2.5.3_промпт_google_таблицы.txt</a></td><td>промпт — скопировать в ассистент</td><td style="white-space:nowrap;text-align:right">4 КБ</td></tr><tr><td><a href="downloads/practice/2.5_кейс_карточный_бизнес/2.5.4_промпт_excel_vba.txt" download="2.5.4_промпт_excel_vba.txt">2.5.4_промпт_excel_vba.txt</a></td><td>промпт — скопировать в ассистент</td><td style="white-space:nowrap;text-align:right">5 КБ</td></tr><tr><td><a href="downloads/practice/2.5_кейс_карточный_бизнес/2.5.5_разбор_ответа_ассистента.md" download="2.5.5_разбор_ответа_ассистента.md">2.5.5_разбор_ответа_ассистента.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">5 КБ</td></tr><tr><td><a href="downloads/practice/2.5_кейс_карточный_бизнес/2.5.6_эталон_google_apps_script.gs" download="2.5.6_эталон_google_apps_script.gs">2.5.6_эталон_google_apps_script.gs</a></td><td>эталонный скрипт Google Таблиц</td><td style="white-space:nowrap;text-align:right">9 КБ</td></tr><tr><td><a href="downloads/practice/2.5_кейс_карточный_бизнес/2.5.7_эталон_excel_vba.bas" download="2.5.7_эталон_excel_vba.bas">2.5.7_эталон_excel_vba.bas</a></td><td>эталонный макрос Excel</td><td style="white-space:nowrap;text-align:right">11 КБ</td></tr><tr><td><a href="downloads/practice/2.5_кейс_карточный_бизнес/README.md" download="README.md">README.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">9 КБ</td></tr></tbody></table></div><h3 id="p-2.6_кейс_кредитный_конвейер">Кейс: кредитный конвейер</h3><p class="sub" style="margin-bottom:10px"><code>2.6_кейс_кредитный_конвейер/</code> · тетрадь: SQL от первого запроса до панели в BI. 2 файла.</p><div class="scroll"><table><thead><tr><th>Файл</th><th>Что это</th><th>Размер</th></tr></thead><tbody><tr><td><a href="downloads/practice/2.6_кейс_кредитный_конвейер/2.6.1_конвейер_sql.ipynb" download="2.6.1_конвейер_sql.ipynb">2.6.1_конвейер_sql.ipynb</a></td><td>тетрадь — загрузить в JupyterHub или открыть в VS Code</td><td style="white-space:nowrap;text-align:right">54 КБ</td></tr><tr><td><a href="downloads/practice/2.6_кейс_кредитный_конвейер/README.md" download="README.md">README.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">6 КБ</td></tr></tbody></table></div><h3 id="p-2.7_кейс_отчёт_агента">Кейс: отчёт агента</h3><p class="sub" style="margin-bottom:10px"><code>2.7_кейс_отчёт_агента/</code> · тетрадь: вопрос словами — отчёт с графиками. 2 файла.</p><div class="scroll"><table><thead><tr><th>Файл</th><th>Что это</th><th>Размер</th></tr></thead><tbody><tr><td><a href="downloads/practice/2.7_кейс_отчёт_агента/2.7.1_отчёт_по_запросу.ipynb" download="2.7.1_отчёт_по_запросу.ipynb">2.7.1_отчёт_по_запросу.ipynb</a></td><td>тетрадь — загрузить в JupyterHub или открыть в VS Code</td><td style="white-space:nowrap;text-align:right">169 КБ</td></tr><tr><td><a href="downloads/practice/2.7_кейс_отчёт_агента/README.md" download="README.md">README.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">8 КБ</td></tr></tbody></table></div><h3 id="p-2.8_кейс_дашборд_агентом">Кейс: дашборд агентом</h3><p class="sub" style="margin-bottom:10px"><code>2.8_кейс_дашборд_агентом/</code> · тетрадь: описание абзацем — постоянная панель в BI. 3 файла.</p><div class="scroll"><table><thead><tr><th>Файл</th><th>Что это</th><th>Размер</th></tr></thead><tbody><tr><td><a href="downloads/practice/2.8_кейс_дашборд_агентом/2.8.1_дашборд_агентом.ipynb" download="2.8.1_дашборд_агентом.ipynb">2.8.1_дашборд_агентом.ipynb</a></td><td>тетрадь — загрузить в JupyterHub или открыть в VS Code</td><td style="white-space:nowrap;text-align:right">11 КБ</td></tr><tr><td><a href="downloads/practice/2.8_кейс_дашборд_агентом/2.8.2_снимок_дашборда.png" download="2.8.2_снимок_дашборда.png">2.8.2_снимок_дашборда.png</a></td><td>изображение</td><td style="white-space:nowrap;text-align:right">75 КБ</td></tr><tr><td><a href="downloads/practice/2.8_кейс_дашборд_агентом/README.md" download="README.md">README.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">7 КБ</td></tr></tbody></table></div><h3 id="p-3.2_кейс_gigachat_отчёт">Кейс: страница анализа от ассистента</h3><p class="sub" style="margin-bottom:10px"><code>3.2_кейс_gigachat_отчёт/</code> · промпты и готовые мини-инструменты, открываются в браузере. 14 файлов.</p><div class="scroll"><table><thead><tr><th>Файл</th><th>Что это</th><th>Размер</th></tr></thead><tbody><tr><td><a href="downloads/practice/3.2_кейс_gigachat_отчёт/3.2.10_промпт_динамика_среза.md" download="3.2.10_промпт_динамика_среза.md">3.2.10_промпт_динамика_среза.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">4 КБ</td></tr><tr><td><a href="downloads/practice/3.2_кейс_gigachat_отчёт/3.2.11_инструмент_карта_разбросов.html" download="3.2.11_инструмент_карта_разбросов.html">3.2.11_инструмент_карта_разбросов.html</a></td><td>мини-инструмент — открыть в браузере двойным щелчком</td><td style="white-space:nowrap;text-align:right">6 КБ</td></tr><tr><td><a href="downloads/practice/3.2_кейс_gigachat_отчёт/3.2.12_инструмент_сезонный_профиль.html" download="3.2.12_инструмент_сезонный_профиль.html">3.2.12_инструмент_сезонный_профиль.html</a></td><td>мини-инструмент — открыть в браузере двойным щелчком</td><td style="white-space:nowrap;text-align:right">7 КБ</td></tr><tr><td><a href="downloads/practice/3.2_кейс_gigachat_отчёт/3.2.13_инструмент_динамика_среза.html" download="3.2.13_инструмент_динамика_среза.html">3.2.13_инструмент_динамика_среза.html</a></td><td>мини-инструмент — открыть в браузере двойным щелчком</td><td style="white-space:nowrap;text-align:right">5 КБ</td></tr><tr><td><a href="downloads/practice/3.2_кейс_gigachat_отчёт/3.2.1_промпт.md" download="3.2.1_промпт.md">3.2.1_промпт.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">18 КБ</td></tr><tr><td><a href="downloads/practice/3.2_кейс_gigachat_отчёт/3.2.2_инструмент.html" download="3.2.2_инструмент.html">3.2.2_инструмент.html</a></td><td>мини-инструмент — открыть в браузере двойным щелчком</td><td style="white-space:nowrap;text-align:right">24 КБ</td></tr><tr><td><a href="downloads/practice/3.2_кейс_gigachat_отчёт/3.2.3_проверка_инструмента.py" download="3.2.3_проверка_инструмента.py">3.2.3_проверка_инструмента.py</a></td><td>модуль Python — положить рядом с тетрадью, как в структуре папок</td><td style="white-space:nowrap;text-align:right">10 КБ</td></tr><tr><td><a href="downloads/practice/3.2_кейс_gigachat_отчёт/3.2.4_промпт_корреляции.md" download="3.2.4_промпт_корреляции.md">3.2.4_промпт_корреляции.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">4 КБ</td></tr><tr><td><a href="downloads/practice/3.2_кейс_gigachat_отчёт/3.2.5_промпт_тренды.md" download="3.2.5_промпт_тренды.md">3.2.5_промпт_тренды.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">4 КБ</td></tr><tr><td><a href="downloads/practice/3.2_кейс_gigachat_отчёт/3.2.6_инструмент_корреляций.html" download="3.2.6_инструмент_корреляций.html">3.2.6_инструмент_корреляций.html</a></td><td>мини-инструмент — открыть в браузере двойным щелчком</td><td style="white-space:nowrap;text-align:right">9 КБ</td></tr><tr><td><a href="downloads/practice/3.2_кейс_gigachat_отчёт/3.2.7_инструмент_трендов.html" download="3.2.7_инструмент_трендов.html">3.2.7_инструмент_трендов.html</a></td><td>мини-инструмент — открыть в браузере двойным щелчком</td><td style="white-space:nowrap;text-align:right">10 КБ</td></tr><tr><td><a href="downloads/practice/3.2_кейс_gigachat_отчёт/3.2.8_промпт_карта_разбросов.md" download="3.2.8_промпт_карта_разбросов.md">3.2.8_промпт_карта_разбросов.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">4 КБ</td></tr><tr><td><a href="downloads/practice/3.2_кейс_gigachat_отчёт/3.2.9_промпт_сезонный_профиль.md" download="3.2.9_промпт_сезонный_профиль.md">3.2.9_промпт_сезонный_профиль.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">4 КБ</td></tr><tr><td><a href="downloads/practice/3.2_кейс_gigachat_отчёт/README.md" download="README.md">README.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">13 КБ</td></tr></tbody></table></div><h3 id="p-3.3_кейс_кластеризация">Кейс: сегментация клиентов</h3><p class="sub" style="margin-bottom:10px"><code>3.3_кейс_кластеризация/</code> · промпт, ответ ассистента, тетрадь, трёхмерный график. 5 файлов.</p><div class="scroll"><table><thead><tr><th>Файл</th><th>Что это</th><th>Размер</th></tr></thead><tbody><tr><td><a href="downloads/practice/3.3_кейс_кластеризация/3.3.1_промпт.md" download="3.3.1_промпт.md">3.3.1_промпт.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">2 КБ</td></tr><tr><td><a href="downloads/practice/3.3_кейс_кластеризация/3.3.2_ответ_ассистента.md" download="3.3.2_ответ_ассистента.md">3.3.2_ответ_ассистента.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">3 КБ</td></tr><tr><td><a href="downloads/practice/3.3_кейс_кластеризация/3.3.3_кластеризация.ipynb" download="3.3.3_кластеризация.ipynb">3.3.3_кластеризация.ipynb</a></td><td>тетрадь — загрузить в JupyterHub или открыть в VS Code</td><td style="white-space:nowrap;text-align:right">307 КБ</td></tr><tr><td><a href="downloads/practice/3.3_кейс_кластеризация/3.3.4_кластеры_3d.html" download="3.3.4_кластеры_3d.html">3.3.4_кластеры_3d.html</a></td><td>мини-инструмент — открыть в браузере двойным щелчком</td><td style="white-space:nowrap;text-align:right">62 КБ</td></tr><tr><td><a href="downloads/practice/3.3_кейс_кластеризация/README.md" download="README.md">README.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">9 КБ</td></tr></tbody></table></div><h3 id="p-3.4_кейс_анализ_отклонений">Кейс: анализ отклонений</h3><p class="sub" style="margin-bottom:10px"><code>3.4_кейс_анализ_отклонений/</code> · промпт, ответ ассистента, тетрадь. 4 файла.</p><div class="scroll"><table><thead><tr><th>Файл</th><th>Что это</th><th>Размер</th></tr></thead><tbody><tr><td><a href="downloads/practice/3.4_кейс_анализ_отклонений/3.4.1_промпт.md" download="3.4.1_промпт.md">3.4.1_промпт.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">3 КБ</td></tr><tr><td><a href="downloads/practice/3.4_кейс_анализ_отклонений/3.4.2_ответ_ассистента.md" download="3.4.2_ответ_ассистента.md">3.4.2_ответ_ассистента.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">7 КБ</td></tr><tr><td><a href="downloads/practice/3.4_кейс_анализ_отклонений/3.4.3_анализ_отклонений.ipynb" download="3.4.3_анализ_отклонений.ipynb">3.4.3_анализ_отклонений.ipynb</a></td><td>тетрадь — загрузить в JupyterHub или открыть в VS Code</td><td style="white-space:nowrap;text-align:right">879 КБ</td></tr><tr><td><a href="downloads/practice/3.4_кейс_анализ_отклонений/README.md" download="README.md">README.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">8 КБ</td></tr></tbody></table></div><h3 id="p-4.1_каркас_проекта">Каркас проекта</h3><p class="sub" style="margin-bottom:10px"><code>4.1_каркас_проекта/</code> · шаблоны презентации проекта и письма команде, примеры каркасов. 4 файла.</p><div class="scroll"><table><thead><tr><th>Файл</th><th>Что это</th><th>Размер</th></tr></thead><tbody><tr><td><a href="downloads/practice/4.1_каркас_проекта/4.1.1_шаблон_презентации_проекта.md" download="4.1.1_шаблон_презентации_проекта.md">4.1.1_шаблон_презентации_проекта.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">4 КБ</td></tr><tr><td><a href="downloads/practice/4.1_каркас_проекта/4.1.2_шаблон_письма_команде.md" download="4.1.2_шаблон_письма_команде.md">4.1.2_шаблон_письма_команде.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">4 КБ</td></tr><tr><td><a href="downloads/practice/4.1_каркас_проекта/4.1.3_примеры_каркасов.md" download="4.1.3_примеры_каркасов.md">4.1.3_примеры_каркасов.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">8 КБ</td></tr><tr><td><a href="downloads/practice/4.1_каркас_проекта/README.md" download="README.md">README.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">1 КБ</td></tr></tbody></table></div><h3 id="p-4.4_финмодель_эффекта">Финансовая модель эффекта</h3><p class="sub" style="margin-bottom:10px"><code>4.4_финмодель_эффекта/</code> · тетрадь: множители из выгрузки, поток, окупаемость, NPV. 3 файла.</p><div class="scroll"><table><thead><tr><th>Файл</th><th>Что это</th><th>Размер</th></tr></thead><tbody><tr><td><a href="downloads/practice/4.4_финмодель_эффекта/4.4.1_финмодель_эффекта.ipynb" download="4.4.1_финмодель_эффекта.ipynb">4.4.1_финмодель_эффекта.ipynb</a></td><td>тетрадь — загрузить в JupyterHub или открыть в VS Code</td><td style="white-space:nowrap;text-align:right">279 КБ</td></tr><tr><td><a href="downloads/practice/4.4_финмодель_эффекта/README.md" download="README.md">README.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">2 КБ</td></tr><tr><td><a href="downloads/practice/4.4_финмодель_эффекта/сделать_тетрадь.py" download="сделать_тетрадь.py">сделать_тетрадь.py</a></td><td>модуль Python — положить рядом с тетрадью, как в структуре папок</td><td style="white-space:nowrap;text-align:right">18 КБ</td></tr></tbody></table></div><h3 id="p-data">Выгрузки</h3><p class="sub" style="margin-bottom:10px"><code>data/</code> · учебные наборы данных для всех кейсов и генераторы. 12 файлов.</p><div class="scroll"><table><thead><tr><th>Файл</th><th>Что это</th><th>Размер</th></tr></thead><tbody><tr><td><a href="downloads/practice/data/cards/cards_issued_raw.csv" download="cards_issued_raw.csv">cards_issued_raw.csv</a></td><td>выгрузка — таблица или тетрадь</td><td style="white-space:nowrap;text-align:right">339 КБ</td></tr><tr><td><a href="downloads/practice/data/clients/clients_sample.csv" download="clients_sample.csv">clients_sample.csv</a></td><td>выгрузка — таблица или тетрадь</td><td style="white-space:nowrap;text-align:right">79 КБ</td></tr><tr><td><a href="downloads/practice/data/generate_data.py" download="generate_data.py">generate_data.py</a></td><td>модуль Python — положить рядом с тетрадью, как в структуре папок</td><td style="white-space:nowrap;text-align:right">16 КБ</td></tr><tr><td><a href="downloads/practice/data/generate_data_step3.py" download="generate_data_step3.py">generate_data_step3.py</a></td><td>модуль Python — положить рядом с тетрадью, как в структуре папок</td><td style="white-space:nowrap;text-align:right">13 КБ</td></tr><tr><td><a href="downloads/practice/data/pipeline/raw_applications.csv" download="raw_applications.csv">raw_applications.csv</a></td><td>выгрузка — таблица или тетрадь</td><td style="white-space:nowrap;text-align:right">525 КБ</td></tr><tr><td><a href="downloads/practice/data/pipeline/raw_decisions.csv" download="raw_decisions.csv">raw_decisions.csv</a></td><td>выгрузка — таблица или тетрадь</td><td style="white-space:nowrap;text-align:right">275 КБ</td></tr><tr><td><a href="downloads/practice/data/pipeline/raw_disbursements.csv" download="raw_disbursements.csv">raw_disbursements.csv</a></td><td>выгрузка — таблица или тетрадь</td><td style="white-space:nowrap;text-align:right">70 КБ</td></tr><tr><td><a href="downloads/practice/data/pipeline/raw_stage_events.csv" download="raw_stage_events.csv">raw_stage_events.csv</a></td><td>выгрузка — таблица или тетрадь</td><td style="white-space:nowrap;text-align:right">1,4 МБ</td></tr><tr><td><a href="downloads/practice/data/portfolio/initiative_fact.csv" download="initiative_fact.csv">initiative_fact.csv</a></td><td>выгрузка — таблица или тетрадь</td><td style="white-space:nowrap;text-align:right">2 КБ</td></tr><tr><td><a href="downloads/practice/data/portfolio/initiative_passport.csv" download="initiative_passport.csv">initiative_passport.csv</a></td><td>выгрузка — таблица или тетрадь</td><td style="white-space:nowrap;text-align:right">1 КБ</td></tr><tr><td><a href="downloads/practice/data/product/savings_monthly.csv" download="savings_monthly.csv">savings_monthly.csv</a></td><td>выгрузка — таблица или тетрадь</td><td style="white-space:nowrap;text-align:right">41 КБ</td></tr><tr><td><a href="downloads/practice/data/series/portfolio_operations_daily.csv" download="portfolio_operations_daily.csv">portfolio_operations_daily.csv</a></td><td>выгрузка — таблица или тетрадь</td><td style="white-space:nowrap;text-align:right">28 КБ</td></tr></tbody></table></div><h3 id="p-tools">Общие модули</h3><p class="sub" style="margin-bottom:10px"><code>tools/</code> · подключение к базе, сверка SQL и pandas, клиент ассистента, агенты. 15 файлов.</p><div class="scroll"><table><thead><tr><th>Файл</th><th>Что это</th><th>Размер</th></tr></thead><tbody><tr><td><a href="downloads/practice/tools/check_apps_script.js" download="check_apps_script.js">check_apps_script.js</a></td><td>проверка скрипта</td><td style="white-space:nowrap;text-align:right">5 КБ</td></tr><tr><td><a href="downloads/practice/tools/check_env.py" download="check_env.py">check_env.py</a></td><td>модуль Python — положить рядом с тетрадью, как в структуре папок</td><td style="white-space:nowrap;text-align:right">11 КБ</td></tr><tr><td><a href="downloads/practice/tools/compare.py" download="compare.py">compare.py</a></td><td>модуль Python — положить рядом с тетрадью, как в структуре папок</td><td style="white-space:nowrap;text-align:right">4 КБ</td></tr><tr><td><a href="downloads/practice/tools/dashboard_agent.py" download="dashboard_agent.py">dashboard_agent.py</a></td><td>модуль Python — положить рядом с тетрадью, как в структуре папок</td><td style="white-space:nowrap;text-align:right">13 КБ</td></tr><tr><td><a href="downloads/practice/tools/llm.py" download="llm.py">llm.py</a></td><td>модуль Python — положить рядом с тетрадью, как в структуре папок</td><td style="white-space:nowrap;text-align:right">12 КБ</td></tr><tr><td><a href="downloads/practice/tools/metabase_setup.py" download="metabase_setup.py">metabase_setup.py</a></td><td>модуль Python — положить рядом с тетрадью, как в структуре папок</td><td style="white-space:nowrap;text-align:right">5 КБ</td></tr><tr><td><a href="downloads/practice/tools/nbbuild/build_dashboard_agent.py" download="build_dashboard_agent.py">build_dashboard_agent.py</a></td><td>модуль Python — положить рядом с тетрадью, как в структуре папок</td><td style="white-space:nowrap;text-align:right">5 КБ</td></tr><tr><td><a href="downloads/practice/tools/nbbuild/build_eda.py" download="build_eda.py">build_eda.py</a></td><td>модуль Python — положить рядом с тетрадью, как в структуре папок</td><td style="white-space:nowrap;text-align:right">24 КБ</td></tr><tr><td><a href="downloads/practice/tools/nbbuild/build_pipeline_sql.py" download="build_pipeline_sql.py">build_pipeline_sql.py</a></td><td>модуль Python — положить рядом с тетрадью, как в структуре папок</td><td style="white-space:nowrap;text-align:right">14 КБ</td></tr><tr><td><a href="downloads/practice/tools/nbbuild/build_portfolio_report.py" download="build_portfolio_report.py">build_portfolio_report.py</a></td><td>модуль Python — положить рядом с тетрадью, как в структуре папок</td><td style="white-space:nowrap;text-align:right">5 КБ</td></tr><tr><td><a href="downloads/practice/tools/nbbuild/build_sql_pandas_memo.py" download="build_sql_pandas_memo.py">build_sql_pandas_memo.py</a></td><td>модуль Python — положить рядом с тетрадью, как в структуре папок</td><td style="white-space:nowrap;text-align:right">4 КБ</td></tr><tr><td><a href="downloads/practice/tools/nbbuild/nb.py" download="nb.py">nb.py</a></td><td>модуль Python — положить рядом с тетрадью, как в структуре папок</td><td style="white-space:nowrap;text-align:right">2 КБ</td></tr><tr><td><a href="downloads/practice/tools/nbbuild/pairs_sql_pandas.py" download="pairs_sql_pandas.py">pairs_sql_pandas.py</a></td><td>модуль Python — положить рядом с тетрадью, как в структуре папок</td><td style="white-space:nowrap;text-align:right">25 КБ</td></tr><tr><td><a href="downloads/practice/tools/report_agent.py" download="report_agent.py">report_agent.py</a></td><td>модуль Python — положить рядом с тетрадью, как в структуре папок</td><td style="white-space:nowrap;text-align:right">12 КБ</td></tr><tr><td><a href="downloads/practice/tools/sqlcell.py" download="sqlcell.py">sqlcell.py</a></td><td>модуль Python — положить рядом с тетрадью, как в структуре папок</td><td style="white-space:nowrap;text-align:right">5 КБ</td></tr></tbody></table></div><h3 id="p-sql">База стенда</h3><p class="sub" style="margin-bottom:10px"><code>sql/</code> · схема, загрузка и дамп учебной базы. 4 файла.</p><div class="scroll"><table><thead><tr><th>Файл</th><th>Что это</th><th>Размер</th></tr></thead><tbody><tr><td><a href="downloads/practice/sql/dump/bank_training.sql" download="bank_training.sql">bank_training.sql</a></td><td>запросы к базе стенда</td><td style="white-space:nowrap;text-align:right">2,2 МБ</td></tr><tr><td><a href="downloads/practice/sql/init/01_schema.sql" download="01_schema.sql">01_schema.sql</a></td><td>запросы к базе стенда</td><td style="white-space:nowrap;text-align:right">3 КБ</td></tr><tr><td><a href="downloads/practice/sql/init/02_load.sh" download="02_load.sh">02_load.sh</a></td><td>сценарий запуска стенда</td><td style="white-space:nowrap;text-align:right">782 Б</td></tr><tr><td><a href="downloads/practice/sql/init/03_portfolio_views.sql" download="03_portfolio_views.sql">03_portfolio_views.sql</a></td><td>запросы к базе стенда</td><td style="white-space:nowrap;text-align:right">5 КБ</td></tr></tbody></table></div><h3 id="p-root">Корень папки</h3><p class="sub" style="margin-bottom:10px">инструкции, список библиотек, запуск стенда. 6 файлов.</p><div class="scroll"><table><thead><tr><th>Файл</th><th>Что это</th><th>Размер</th></tr></thead><tbody><tr><td><a href="downloads/practice/.env.example" download=".env.example">.env.example</a></td><td>образец файла настроек: переименовать в .env</td><td style="white-space:nowrap;text-align:right">2 КБ</td></tr><tr><td><a href="downloads/practice/README.md" download="README.md">README.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">10 КБ</td></tr><tr><td><a href="downloads/practice/_STAND.md" download="_STAND.md">_STAND.md</a></td><td>текст — открывается любым редактором</td><td style="white-space:nowrap;text-align:right">5 КБ</td></tr><tr><td><a href="downloads/practice/docker-compose.yml" download="docker-compose.yml">docker-compose.yml</a></td><td>описание стенда для Docker</td><td style="white-space:nowrap;text-align:right">2 КБ</td></tr><tr><td><a href="downloads/practice/requirements.txt" download="requirements.txt">requirements.txt</a></td><td>промпт — скопировать в ассистент</td><td style="white-space:nowrap;text-align:right">224 Б</td></tr><tr><td><a href="downloads/practice/run.sh" download="run.sh">run.sh</a></td><td>сценарий запуска стенда</td><td style="white-space:nowrap;text-align:right">3 КБ</td></tr></tbody></table></div>
+</div></section>
+
+<footer><div class="wrap">
+  Аналитика 360 · материалы практической части.<br>
+  Данные синтетические, сгенерированы для обучения.
+</div></footer>
+
+<script>
+// Кнопка «скопировать промпт»: сначала пробуем Clipboard API, при отказе —
+// старый execCommand. В LMS страница часто открыта в iframe без разрешения
+// на буфер обмена, и без запасного пути кнопка молча ничего не делает.
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.copy'); if(!b) return;
+  var t=b.parentNode.querySelector('pre').innerText;
+  function done(){b.textContent='Скопировано';b.classList.add('done');
+    setTimeout(function(){b.textContent='Копировать';b.classList.remove('done')},1800);}
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(done,fallback);
+  } else { fallback(); }
+  function fallback(){
+    var a=document.createElement('textarea');a.value=t;a.style.position='fixed';
+    a.style.opacity=0;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');done();}catch(_e){b.textContent='Выделите вручную';}
+    document.body.removeChild(a);
+  }
+});
+</script>
+</body></html>

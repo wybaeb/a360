@@ -32,7 +32,11 @@ BODY = f"""
 <ol class="steps">
 <li><b>Забрать папку практики.</b>
 <pre><code>git clone {РЕПО}.git
-cd bank-analytics-workshop</code></pre></li>
+cd bank-analytics-workshop</code></pre>
+<p class="sub" style="margin:8px 0 0">Если git или сайт репозитория недоступны —
+та же папка лежит на <a href="practice_files.html">странице файлов практики</a>:
+архивом целиком и по одному файлу. Скачайте, распакуйте и продолжайте
+со второго шага.</p></li>
 
 <li><b>Поставить библиотеки.</b>
 <pre><code>pip install -r requirements.txt</code></pre>
