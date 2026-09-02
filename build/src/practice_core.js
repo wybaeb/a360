@@ -207,7 +207,7 @@
 
   // ── промпт 2: мини-инструмент финансовой модели с SVG ──────────────────
   function npvSkeleton(variant, p) {
-    var f = variant.fin, L = [];
+    var f = Object.assign({}, variant.fin, p), L = [];
     L.push('<!DOCTYPE html>');
     L.push('<html lang="ru"><head><meta charset="utf-8"><title>Финансовая модель: ' + variant.title + '</title>');
     L.push('<style>body{font-family:Arial,sans-serif;max-width:960px;margin:24px auto;padding:0 16px;color:#222}label{display:inline-block;margin:0 14px 10px 0;font-size:14px}label span{display:block;color:#666;font-size:12px}input{font:inherit;padding:5px 8px;width:140px}button{font:inherit;padding:8px 16px;border:0;border-radius:8px;background:#2a9d5c;color:#fff;cursor:pointer}.tile{display:inline-block;min-width:220px;margin:8px 16px 8px 0}.tile b{display:block;font-size:26px}table{border-collapse:collapse;width:100%;margin:12px 0;font-size:14px}td,th{border-bottom:1px solid #ddd;padding:5px 8px;text-align:left}#status{color:#b33}</style></head><body>');
@@ -215,7 +215,7 @@
     L.push('<div id="form"></div><button type="button" id="calc">Рассчитать</button> <button type="button" id="save">Сохранить SVG</button>');
     L.push('<p id="status"></p><div id="out"></div><div id="chart"></div><div id="tab"></div>');
     L.push('<script>');
-    L.push('var FIELDS = [["delta", "Изменение показателя в месяц, ' + variant.params.delta.unit + '", ' + p.delta + '], ["volume", "Объём, ' + variant.params.volume.unit + '", ' + p.volume + '], ["price", "Стоимость единицы, руб. в месяц", ' + p.price + '], ["ramp", "Выход на полный уровень, мес.", ' + f.ramp + '], ["keep", "Срок сохранения эффекта, мес.", ' + f.keep + '], ["capex", "Единовременные затраты, руб.", ' + f.capex + '], ["opex", "Ежемесячные затраты, руб.", ' + f.opex + '], ["horizon", "Горизонт, мес.", ' + f.horizon + '], ["rate", "Ставка дисконтирования, доля в год", ' + f.rate + ']];');
+    L.push('var FIELDS = [["delta", "Изменение показателя в месяц, ' + variant.params.delta.unit + '", ' + p.delta + '], ["volume", "Объём, ' + variant.params.volume.unit + '", ' + p.volume + '], ["price", "Стоимость единицы, руб. в месяц", ' + p.price + '], ["ramp", "Выход на полный уровень, мес.", ' + f.ramp + '], ["keep", "Срок сохранения эффекта, мес.", ' + f.keep + '], ["capex", "Единовременные затраты, руб. (включая данные ' + fi(f.datacost || 0) + ' руб.)", ' + f.capex + '], ["opex", "Ежемесячные затраты, руб.", ' + f.opex + '], ["horizon", "Горизонт, мес.", ' + f.horizon + '], ["rate", "Ставка дисконтирования, доля в год", ' + f.rate + ']];');
     L.push('document.getElementById("form").innerHTML = FIELDS.map(function (f) { return "<label>" + f[1] + "<span>" + f[0] + "</span><input id=\\"f-" + f[0] + "\\" value=\\"" + f[2] + "\\"></label>"; }).join("");');
     L.push('function num(v) { var n = parseFloat(String(v).replace(",", ".")); return isNaN(n) ? 0 : n; }');
     L.push('function money(x) { var a = Math.abs(x), s = a >= 1e6 ? (a / 1e6).toFixed(2).replace(".", ",") + " млн руб." : Math.round(a).toString().replace(/\\B(?=(\\d{3})+(?!\\d))/g, " ") + " руб."; return (x < 0 ? "−" : "") + s; }');
@@ -258,10 +258,12 @@
     return L.join('\n');
   }
   function npvPrompt(variant, params) {
-    var f = variant.fin, L = [];
+    var f = Object.assign({}, variant.fin, params.fin || {}), L = [];
     var p = { kind: f.kind, delta: params.delta, volume: params.volume, price: params.price, ramp: f.ramp, keep: f.keep, capex: f.capex, opex: f.opex, horizon: f.horizon, rate: f.rate };
     var res = totals(p);
     L.push('Допиши мини-инструмент финансовой модели проекта «' + variant.title + '»: одностраничный HTML-файл с полями параметров, расчётом потока эффекта по месяцам, окупаемостью, NPV, таблицей и графиком SVG с кнопкой сохранения. Основа файла ниже готова: поля, вывод, таблица, график и сохранение написаны. Нужно заполнить функцию effectFlows(p) по формулам и вернуть файл целиком, ничего больше не меняя.');
+    L.push('');
+    L.push('Параметры получены из данных: изменение показателя ' + fmtv(p.delta) + ' × объём ' + fmtv(p.volume) + ' × стоимость единицы ' + fmtv(p.price) + ' руб. = эффект ' + money(p.delta * p.volume * p.price).replace(/\.$/, '') + ' в месяц на полном уровне' + (f.kind === 'cohort' ? ' на когорту' : '') + '. Единовременные затраты ' + fi(p.capex) + ' руб. включают стоимость сбора данных ' + fi(f.datacost || 0) + ' руб.');
     L.push('');
     L.push('Поля p — числа: delta (изменение показателя в месяц), volume (объём), price (стоимость единицы, руб. в месяц), ramp (выход на полный уровень, мес.), keep (срок сохранения эффекта, мес.), capex (единовременные затраты, руб.), opex (ежемесячные затраты, руб.), horizon (горизонт, мес.), rate (годовая ставка дисконтирования, доля). Функция возвращает массив из horizon + 1 объектов для t = 0, 1, …, horizon с полями t, income, cost, cf, cum, cum_disc.');
     L.push('');
@@ -408,7 +410,7 @@
     return html.replace(/function computeInputs\(tables\) \{[\s\S]*?\n\}/, body.join('\n'));
   }
   function npvReference(variant, params) {
-    var f = variant.fin, p = { kind: f.kind, delta: params.delta, volume: params.volume, price: params.price, ramp: f.ramp, keep: f.keep, capex: f.capex, opex: f.opex, horizon: f.horizon, rate: f.rate };
+    var f = Object.assign({}, variant.fin, params.fin || {}), p = { kind: f.kind, delta: params.delta, volume: params.volume, price: params.price, ramp: f.ramp, keep: f.keep, capex: f.capex, opex: f.opex, horizon: f.horizon, rate: f.rate, datacost: f.datacost || 0 };
     var html = npvSkeleton(variant, p);
     var fn = 'function effectFlows(p) {\n  var rows = [], cum = 0, cumd = 0, m = Math.pow(1 + p.rate, 1 / 12) - 1, full = p.delta * p.volume;\n  function rampShare(t) { return p.ramp <= 0 ? 1 : Math.min(t / p.ramp, 1); }\n  for (var t = 0; t <= p.horizon; t++) {\n    var units = 0, income = 0, cost = t === 0 ? p.capex : p.opex;\n    if (t >= 1) { ' +
       (f.kind === 'cohort' ? 'for (var k = Math.max(1, t - p.keep + 1); k <= t; k++) units += full * rampShare(k);' : 'units = t <= p.keep ? full * rampShare(t) : 0;') +
@@ -431,7 +433,7 @@
     L.push('Срок первого проверенного значения метрики: ' + e.tte + ' дн.; стоимость данных за пилот: ' + (e.cost ? fi(e.cost) + ' руб.' : '0 руб.') + '; интегральная оценка конфигурации: ' + e.score + ' из 100 (лучшая возможная: ' + e.bestTte + ' дн. и ' + fi(e.bestCost) + ' руб.).');
     L.push('');
     L.push('Параметры финансовой модели из мини-инструмента: изменение показателя ' + fmtv(ctx.params.delta) + ' (' + variant.params.delta.unit + '; ' + variant.params.delta.note + '), объём ' + fmtv(ctx.params.volume) + ' (' + variant.params.volume.unit + '), стоимость единицы ' + fmtv(ctx.params.price) + ' (' + variant.params.price.unit + ').');
-    L.push('Условия: выход на уровень ' + ctx.fin.ramp + ' мес., срок сохранения эффекта ' + ctx.fin.keep + ' мес., единовременные затраты ' + fi(ctx.fin.capex) + ' руб., ежемесячные ' + fi(ctx.fin.opex) + ' руб., горизонт ' + ctx.fin.horizon + ' мес., ставка ' + fr(ctx.fin.rate * 100, 1) + ' % годовых.');
+    L.push('Условия: выход на уровень ' + ctx.fin.ramp + ' мес., срок сохранения эффекта ' + ctx.fin.keep + ' мес., единовременные затраты ' + fi(ctx.fin.capex) + ' руб. (в том числе сбор данных ' + fi(ctx.fin.datacost || 0) + ' руб.), ежемесячные ' + fi(ctx.fin.opex) + ' руб., горизонт ' + ctx.fin.horizon + ' мес., ставка ' + fr(ctx.fin.rate * 100, 1) + ' % годовых.');
     L.push('Результат финансовой модели: доход за первый год ' + money(ctx.res.year1).replace(/\.$/, '') + '; окупаемость — ' + (ctx.res.payback === null ? 'не достигается в горизонте' : 'месяц ' + ctx.res.payback) + '; NPV за ' + ctx.fin.horizon + ' мес. ' + money(ctx.res.npv).replace(/\.$/, '') + '.');
     L.push('');
     L.push('Ответь строго в формате ниже — четыре строки, каждая начинается с названия поля и двоеточия, без вступления и пояснений:');

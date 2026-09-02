@@ -266,25 +266,29 @@ HTML = f"""
 <p class="links">Из курса: <a href="longread_finmodel.html#potok">Поток эффекта во времени</a>
 <a href="longread_finmodel.html#npv">NPV и правило принятия</a>
 <a href="trainer_effect.html">Тренажёр «Финансовая модель эффекта»</a></p>
-<div class="part"><h4><span class="n">1</span>Условия финансовой модели</h4>
+<div class="part"><h4><span class="n">1</span>Что получено на предыдущих шагах</h4>
+<div id="from34"></div>
+</div>
+<div class="part"><h4><span class="n">2</span>Условия финансовой модели</h4>
 <div class="grid">
+<div class="fld"><label>Стоимость сбора данных за пилот, руб. (из шага 2, входит в единовременные затраты)</label><input data-bind="fin.datacost"></div>
+<div class="fld"><label>Единовременные затраты на изменение, руб.</label><input data-bind="fin.capex"></div>
 <div class="fld"><label>Выход на полный уровень, мес.</label><input data-bind="fin.ramp"></div>
 <div class="fld"><label>Срок сохранения эффекта, мес.</label><input data-bind="fin.keep"></div>
-<div class="fld"><label>Единовременные затраты, руб.</label><input data-bind="fin.capex"></div>
 <div class="fld"><label>Ежемесячные затраты, руб.</label><input data-bind="fin.opex"></div>
 <div class="fld"><label>Горизонт, мес.</label><input data-bind="fin.horizon"></div>
 <div class="fld"><label>Ставка дисконтирования, доля в год</label><input data-bind="fin.rate"></div>
 </div>
 </div>
-<div class="part"><h4><span class="n">2</span>Промпт на инструмент финансовой модели</h4>{_пром(4)}</div>
-<div class="part"><h4><span class="n">3</span>Сохраните и откройте инструмент</h4>
+<div class="part"><h4><span class="n">3</span>Промпт на инструмент финансовой модели</h4>{_пром(4)}</div>
+<div class="part"><h4><span class="n">4</span>Сохраните и откройте инструмент</h4>
 <p style="margin:0 0 6px;font-size:15px">Ответ ассистента сохраните через Блокнот как <b>финмодель.html</b> и откройте. Параметры шага 3
 и условия уже подставлены; при необходимости измените их и нажмите «Рассчитать». Кнопка «Сохранить SVG» сохраняет график
 файлом npv.svg — загрузите его ниже.</p>
 <p class="hint">Не получилось с двух попыток — <button class="btn sec" type="button" id="bFinRef">скачать запасной инструмент</button>,
 собранный по этому же промпту.</p>
 </div>
-<div class="part"><h4><span class="n">4</span>Результат инструмента</h4>
+<div class="part"><h4><span class="n">5</span>Результат инструмента</h4>
 <div class="grid">
 <div class="fld"><label>Окупаемость, месяц</label><input data-bind="res.payback"></div>
 <div class="fld"><label>NPV за горизонт, руб.</label><input data-bind="res.npv"></div>
@@ -348,7 +352,7 @@ var cur=null, st=null, dir=DIRS[0], ptext={}, slideNo=0;
 
 function V(){return VARS.filter(function(v){return v.id===cur})[0]}
 function key(){return 'a360_practice_'+cur}
-function blank(v){var s={step:1,frame:{},action:v.frame.action,chosen:{},paramsLine:'',delta:'',volume:'',price:'',code3:'',code4:'',concl:'',c:{conclusion:'',effect:'',action:'',review:''},fin:JSON.parse(JSON.stringify(v.fin)),res:{payback:'',npv:'',year1:''},svg:''};
+function blank(v){var s={step:1,frame:{},action:v.frame.action,chosen:{},paramsLine:'',delta:'',volume:'',price:'',code3:'',code4:'',concl:'',c:{conclusion:'',effect:'',action:'',review:''},fin:JSON.parse(JSON.stringify(v.fin)),res:{payback:'',npv:'',year1:''},svg:''};s.fin.datacost=C.economy(v,{}).cost;
   FRAME.forEach(function(f){s.frame[f[0]]=v.frame[f[0]]});v.inputs.forEach(function(i){s.chosen[i.id]=i.sources[0].id});return s}
 function load(id){cur=id;var v=V(),s=null;try{var raw=localStorage.getItem(key());if(raw)s=JSON.parse(raw)}catch(e){}
   st=s||blank(v);var b=blank(v);for(var k in b)if(st[k]===undefined)st[k]=b[k];dir=v.direction}
@@ -356,8 +360,9 @@ function save(){try{localStorage.setItem(key(),JSON.stringify(st))}catch(e){}}
 function get(path){var p=path.split('.'),o=st;for(var i=0;i<p.length;i++){if(o==null)return '';o=o[p[i]]}return o==null?'':o}
 function set(path,v){var p=path.split('.'),o=st;for(var i=0;i<p.length-1;i++){if(!o[p[i]])o[p[i]]={};o=o[p[i]]}o[p[p.length-1]]=v}
 function params(){return {delta:C.num(st.delta),volume:C.num(st.volume),price:C.num(st.price)}}
+function npvArgs(){var f=finP();return {delta:f.delta,volume:f.volume,price:f.price,fin:{kind:f.kind,ramp:f.ramp,keep:f.keep,capex:f.capex,datacost:f.datacost,opex:f.opex,horizon:f.horizon,rate:f.rate}}}
 function paramsOk(){var p=params();return !isNaN(p.delta)&&!isNaN(p.volume)&&!isNaN(p.price)}
-function finP(){var f=st.fin,p=params();return {kind:V().fin.kind,delta:p.delta||0,volume:p.volume||0,price:p.price||0,ramp:C.num(f.ramp)||0,keep:C.num(f.keep)||0,capex:C.num(f.capex)||0,opex:C.num(f.opex)||0,horizon:Math.max(1,Math.round(C.num(f.horizon)||24)),rate:C.num(f.rate)||0}}
+function finP(){var f=st.fin,p=params();return {kind:V().fin.kind,delta:p.delta||0,volume:p.volume||0,price:p.price||0,ramp:C.num(f.ramp)||0,keep:C.num(f.keep)||0,capex:(C.num(f.capex)||0)+(C.num(f.datacost)||0),datacost:C.num(f.datacost)||0,opex:C.num(f.opex)||0,horizon:Math.max(1,Math.round(C.num(f.horizon)||24)),rate:C.num(f.rate)||0}}
 function done(n){switch(n){case 1:return true;case 2:return true;case 3:return paramsOk();case 4:return !!(st.svg||C.clean(st.res.npv));case 5:return !!(st.svg&&C.clean(st.c.conclusion))}return false}
 
 // ── выбор варианта ───────────────────────────────────────────────────────
@@ -417,7 +422,7 @@ function treeSvg(v,chosen,forSlide){
   s.push('</svg>');return s.join('');
 }
 function renderTree(){$('tree').innerHTML=treeSvg(V(),st.chosen,false)}
-function pick(inpId,srcId){st.chosen[inpId]=srcId;save();renderTree();renderEco();renderFiles();renderPrompt(3);renderCtrl3()}
+function pick(inpId,srcId){st.chosen[inpId]=srcId;st.fin.datacost=C.economy(V(),st.chosen).cost;save();renderTree();renderEco();renderFiles();renderPrompt(3);renderCtrl3()}
 function sampleTable(file){var t=SAMPLES[cur+'/'+file]||'';var lines=t.split(/\r?\n/).filter(Boolean);if(!lines.length)return '';
   var h='<div class="scroll"><table><thead><tr>'+lines[0].split(';').map(function(c){return '<th>'+esc(c)+'</th>'}).join('')+'</tr></thead><tbody>';
   lines.slice(1).forEach(function(l){h+='<tr>'+l.split(';').map(function(c){return '<td>'+esc(c)+'</td>'}).join('')+'</tr>'});return h+'<tr><td colspan="9" style="color:var(--ink3)">… и далее по строкам файла</td></tr></tbody></table></div>'}
@@ -471,10 +476,10 @@ function assemble(n){var tpl=n===3?TOOL_TPL:FIN_TPL,meta=n===3?toolMeta():finMet
   return tpl.split('__TITLE__').join(esc(V().title)).split('__META__').join(JSON.stringify(meta).replace(/<\//g,'<\\/')).split('__MODULE__').join(code)}
 function downloadHtml(html,name){var a=document.createElement('a');var blob=new Blob([html],{type:'text/html;charset=utf-8'});a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a)}
 window.__assemble=assemble;
-window.__reference=function(n){return n===3?C.toolReference(V(),st.chosen,filesObj()):C.npvReference(V(),params())};
+window.__reference=function(n){return n===3?C.toolReference(V(),st.chosen,filesObj()):C.npvReference(V(),npvArgs())};
 function renderPrompt(n){var pv=$('pv'+n);if(!pv)return;var txt;
   if(n===3){txt=C.toolPrompt(V(),st.chosen,filesObj());$('ps3').textContent='Промпт собран для файлов '+chosenRows().map(function(r){return r.source.file}).join(', ')+' и содержит основу инструмента. Если в ассистенте есть выбор модели — выбирайте самую сильную.'}
-  else if(n===4){var p=params();if(!paramsOk()){txt='';$('ps4').textContent='Сначала введите параметры на шаге 3.'}else{var r=C.npvPrompt(V(),p);txt=r.text;$('ps4').textContent='Параметры шага 3 и условия варианта подставлены в основу инструмента. Контрольные значения расчёта — под полями результата.'}}
+  else if(n===4){var p=params();if(!paramsOk()){txt='';$('ps4').textContent='Сначала введите параметры на шаге 3.'}else{var r=C.npvPrompt(V(),npvArgs());txt=r.text;$('ps4').textContent='Параметры шага 3, стоимость данных шага 2 и условия подставлены в основу инструмента. Контрольные значения расчёта — под полями результата.'}}
   else{if(!paramsOk()){txt='';$('ps5').textContent='Сначала введите параметры на шаге 3.'}else{txt=C.conclusionPrompt(V(),conclCtx());$('ps5').textContent='В промпт подставлены конфигурация источников, значения входов, параметры и результат финансовой модели.'}}
   ptext[n]=txt;pv.textContent=txt}
 function renderCtrl3(){var v=V(),rows=chosenRows(),exp={};rows.forEach(function(r){exp[r.input.id]=r.source.expect});
@@ -488,10 +493,16 @@ function near(a,b,rel){return Math.abs(a-b)<=Math.abs(b)*rel+1e-9}
 function evalFormula(f,vals){var s=String(f);Object.keys(vals).forEach(function(k){s=s.replace(new RegExp('\\b'+k+'\\b','g'),'('+vals[k]+')')});s=s.replace(/×/g,'*').replace(/÷/g,'/');if(!/^[\d\s().*\/+\-]+$/.test(s))return NaN;try{return Function('return ('+s+')')()}catch(e){return NaN}}
 
 // ── шаг 4 ────────────────────────────────────────────────────────────────
+function renderFrom34(){var v=V(),e=C.economy(v,st.chosen),p=params(),ok=paramsOk();
+  var h='<div class="kpi"><div><div class="l">Метрика эффекта из шага 3</div><div class="v">'+(ok?C.money(p.delta*p.volume*p.price):'—')+'</div><div class="s">'+esc(v.metric.name)+', в месяц'+(v.fin.kind==='cohort'?' на когорту':'')+'</div></div>'+
+    '<div><div class="l">Параметры из шага 3</div><div class="v" style="font-size:16px">'+(ok?C.fmtv(p.delta)+' × '+C.fmtv(p.volume)+' × '+C.fmtv(p.price):'—')+'</div><div class="s">изменение показателя × объём × стоимость единицы</div></div>'+
+    '<div><div class="l">Данные из шага 2</div><div class="v">'+(e.cost?C.money(e.cost):'0 руб.')+'</div><div class="s">стоимость сбора за пилот; первое значение через '+e.tte+' дн.; оценка '+e.score+' из 100</div></div></div>'+
+    '<p class="hint" style="margin:0">Поток эффекта считается от метрики шага 3, а стоимость сбора данных из шага 2 входит в единовременные затраты: чем дешевле и быстрее конфигурация источников, тем раньше окупается проект.</p>';
+  $('from34').innerHTML=h}
 function renderCtrl4(){if(!paramsOk()){$('ctrl4').innerHTML='<b>Контрольные значения</b> появятся после ввода параметров.';return}
   var r=C.totals(finP());var have=C.num(st.res.npv),chk='';
   if(!isNaN(have))chk=near(have,r.npv,0.03)?' <b style="color:#128a53">NPV совпадает с контрольным расчётом.</b>':' <b style="color:var(--warn)">NPV отличается от контрольного — проверьте формулу когорт и дисконтирование в инструменте.</b>';
-  $('ctrl4').innerHTML='<b>Контрольные значения</b> (расчёт страницы): окупаемость — '+(r.payback===null?'не достигается':'месяц '+r.payback)+'; NPV за '+r.horizon+' мес. — '+C.money(r.npv)+'; доход за первый год — '+C.money(r.year1).replace(/\.$/,'')+'.'+chk+' Если инструмент не собрался — введите контрольные значения.'}
+  $('ctrl4').innerHTML='<b>Контрольные значения</b> (расчёт страницы, единовременные затраты '+C.money(finP().capex)+' с учётом данных): окупаемость — '+(r.payback===null?'не достигается':'месяц '+r.payback)+'; NPV за '+r.horizon+' мес. — '+C.money(r.npv)+'; доход за первый год — '+C.money(r.year1).replace(/\.$/,'')+'.'+chk+' Если инструмент не собрался — введите контрольные значения.'}
 function sanitizeSvg(t){var s=String(t||'');var i=s.indexOf('<svg');if(i<0)return '';s=s.slice(i);var j=s.lastIndexOf('</svg>');if(j>0)s=s.slice(0,j+6);
   s=s.replace(/<script[\s\S]*?<\/script>/gi,'').replace(/\son\w+="[^"]*"/gi,'').replace(/\son\w+='[^']*'/gi,'').replace(/<foreignObject[\s\S]*?<\/foreignObject>/gi,'');
   if(!/xmlns=/.test(s.slice(0,200)))s=s.replace('<svg','<svg xmlns="http://www.w3.org/2000/svg"');return s}
@@ -502,7 +513,7 @@ $('svgFile').addEventListener('change',function(){var f=this.files&&this.files[0
 function conclCtx(){var v=V(),e=C.economy(v,st.chosen),inputs={};e.rows.forEach(function(r){inputs[r.input.id]=r.source.expect});
   var f=st.fin,fp=finP(),r=C.totals(fp);var res={payback:C.clean(st.res.payback)?C.num(st.res.payback):r.payback,npv:C.clean(st.res.npv)?C.num(st.res.npv):r.npv,year1:C.clean(st.res.year1)?C.num(st.res.year1):r.year1};
   if(C.clean(st.res.payback)&&/не/.test(st.res.payback))res.payback=null;
-  return {frame:st.frame,action:st.action,eco:e,inputs:inputs,params:params(),fin:{ramp:C.num(f.ramp),keep:C.num(f.keep),capex:C.num(f.capex),opex:C.num(f.opex),horizon:C.num(f.horizon),rate:C.num(f.rate)},res:res}}
+  return {frame:st.frame,action:st.action,eco:e,inputs:inputs,params:params(),fin:{ramp:C.num(f.ramp),keep:C.num(f.keep),capex:(C.num(f.capex)||0)+(C.num(f.datacost)||0),datacost:C.num(f.datacost)||0,opex:C.num(f.opex),horizon:C.num(f.horizon),rate:C.num(f.rate)},res:res}}
 function parseConcl(){var r=C.parseConclusion(st.concl),m=$('conclMsg');['conclusion','effect','action','review'].forEach(function(k){if(r.fields[k]!==undefined)st.c[k]=r.fields[k]});save();fillInputs($('st5'));
   m.textContent=r.found?'Разобрано: '+r.found+' из '+r.total+(r.found<r.total?' — остальное впишите вручную':''):'Не удалось разобрать: вставьте ответ целиком или заполните поля вручную';m.className='msg '+(r.found?'ok':'warn');renderSlide();renderStepper()}
 function slides(){var v=V(),e=C.economy(v,st.chosen),p=params(),f=st.frame,r=paramsOk()?C.totals(finP()):null,S=[];
@@ -513,7 +524,7 @@ function slides(){var v=V(),e=C.economy(v,st.chosen),p=params(),f=st.frame,r=par
   S.push({h:'Анализ: параметры эффекта по выгрузкам',b:tb+'<p style="margin-top:.5em"><b>Изменение показателя:</b> '+(paramsOk()?C.fmtv(p.delta):'—')+' '+esc(v.params.delta.unit)+' · <b>Объём:</b> '+(paramsOk()?C.fmtv(p.volume):'—')+' · <b>Стоимость единицы:</b> '+(paramsOk()?C.fmtv(p.price):'—')+' '+esc(v.params.price.unit)+'</p><p>'+esc(f.analysis)+'</p>'});
   var fin='<p><b>Формула:</b> '+(paramsOk()?C.fmtv(p.delta)+' × '+C.fmtv(p.volume)+' × '+C.fmtv(p.price)+' = '+C.money(p.delta*p.volume*p.price)+' в месяц на полном уровне':'—')+'</p>'+
     '<p><b>Окупаемость:</b> '+(C.clean(st.res.payback)||(r?(r.payback===null?'не достигается':'месяц '+r.payback):'—'))+' · <b>NPV за '+st.fin.horizon+' мес.:</b> '+(C.clean(st.res.npv)?C.money(C.num(st.res.npv)):(r?C.money(r.npv):'—'))+' · <b>Доход за первый год:</b> '+(C.clean(st.res.year1)?C.money(C.num(st.res.year1)):(r?C.money(r.year1):'—'))+'</p>'+
-    '<p>Затраты: единовременно '+C.money(C.num(st.fin.capex)||0)+', ежемесячно '+C.money(C.num(st.fin.opex)||0)+'; выход на уровень '+st.fin.ramp+' мес., срок сохранения '+st.fin.keep+' мес., ставка '+C.fr((C.num(st.fin.rate)||0)*100,1)+' %.</p>';
+    '<p>Затраты: единовременно '+C.money((C.num(st.fin.capex)||0)+(C.num(st.fin.datacost)||0))+' (в том числе сбор данных '+C.money(C.num(st.fin.datacost)||0)+'), ежемесячно '+C.money(C.num(st.fin.opex)||0)+'; выход на уровень '+st.fin.ramp+' мес., срок сохранения '+st.fin.keep+' мес., ставка '+C.fr((C.num(st.fin.rate)||0)*100,1)+' %.</p>';
   S.push({h:'Финансовая модель: эффект для бизнеса',b:(st.svg||'')+fin});
   var c=st.c||{};S.push({h:'Заключение и следующий шаг',b:'<p><b>Вывод.</b> '+esc(C.or(c.conclusion,'— заключение ассистента ещё не вставлено (шаг 5)'))+'</p><p><b>Эффект для бизнеса.</b> '+esc(C.or(c.effect,'—'))+'</p><p><b>Первое действие.</b> '+esc(C.or(c.action,'—'))+'</p><p><b>Когда пересматриваем.</b> '+esc(C.or(c.review,'—'))+'</p>'});
   return S}
@@ -538,10 +549,10 @@ document.addEventListener('click',function(e){var t=e.target.closest('button');i
   if(t.dataset.copy){e.stopImmediatePropagation();copyText(ptext[+t.dataset.copy]||'',t,'Копировать промпт');return}
   if(t.id==='bConcl'){parseConcl();return}
   if(t.id==='bToolRef'){downloadHtml(C.toolReference(V(),st.chosen,filesObj()),'инструмент_'+cur+'.html');return}
-  if(t.id==='bFinRef'){if(!paramsOk()){alert('Сначала введите параметры на шаге 3');return}downloadHtml(C.npvReference(V(),params()),'финмодель_'+cur+'.html');return}
+  if(t.id==='bFinRef'){if(!paramsOk()){alert('Сначала введите параметры на шаге 3');return}downloadHtml(C.npvReference(V(),npvArgs()),'финмодель_'+cur+'.html');return}
 });
 function renderStep(n){fillInputs($('st'+n));
-  switch(n){case 1:renderFrame();break;case 2:renderTree();renderEco();break;case 3:renderFiles();renderPrompt(3);renderCtrl3();break;case 4:renderPrompt(4);renderCtrl4();renderSvg();break;case 5:renderPrompt(5);slideNo=0;renderSlide();break}}
+  switch(n){case 1:renderFrame();break;case 2:renderTree();renderEco();break;case 3:renderFiles();renderPrompt(3);renderCtrl3();break;case 4:renderFrom34();renderPrompt(4);renderCtrl4();renderSvg();break;case 5:renderPrompt(5);slideNo=0;renderSlide();break}}
 function renderAll(){fillInputs(document);renderPicker();renderStepper();go(st.step||1)}
 var first=null;try{first=localStorage.getItem('a360_practice_last')}catch(e){}
 load(first&&VARS.some(function(v){return v.id===first})?first:VARS[0].id);
