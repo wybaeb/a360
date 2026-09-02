@@ -1,0 +1,140 @@
+{
+ "GigaChat-2/tool_prod1_dm-crm-fin_1": {
+  "sec": 18,
+  "html": true,
+  "errors": 4,
+  "err0": "TypeError: Cannot read properties of undefined (reading 'value')",
+  "params": null,
+  "svg": true,
+  "deltaOk": false,
+  "priceOk": false,
+  "ok": false,
+  "textLen": 54
+ },
+ "GigaChat-2/npv_prod1_1": {
+  "sec": 18,
+  "html": true,
+  "errors": 3,
+  "err0": "TypeError: Cannot read properties of null (reading 'addEventListener')",
+  "svg": true,
+  "saveBtn": false,
+  "npvOk": false,
+  "paybackOk": false,
+  "ok": false
+ },
+ "GigaChat-2/tool_prod1_dm-crm-fin_2": {
+  "sec": 16,
+  "html": true,
+  "errors": 1,
+  "err0": "TypeError: fileInput.files.forEach is not a function",
+  "params": null,
+  "svg": true,
+  "deltaOk": false,
+  "priceOk": false,
+  "ok": false,
+  "textLen": 331
+ },
+ "GigaChat-2/npv_prod1_2": {
+  "sec": 20,
+  "html": true,
+  "errors": 3,
+  "err0": "TypeError: Cannot read properties of null (reading 'addEventListener')",
+  "svg": true,
+  "saveBtn": false,
+  "npvOk": false,
+  "paybackOk": false,
+  "ok": false
+ },
+ "GigaChat-2/tool_prod1_dm-crm-fin_3": {
+  "sec": 15,
+  "html": true,
+  "errors": 2,
+  "err0": "SyntaxError: missing ) after argument list",
+  "params": null,
+  "svg": false,
+  "deltaOk": false,
+  "priceOk": false,
+  "ok": false,
+  "textLen": 170
+ },
+ "GigaChat-2/npv_prod1_3": {
+  "sec": 18,
+  "html": true,
+  "errors": 1,
+  "err0": "TypeError: a.reduce is not a function",
+  "svg": true,
+  "saveBtn": false,
+  "npvOk": false,
+  "paybackOk": false,
+  "ok": false
+ },
+ "GigaChat-2-Max/tool_prod1_dm-crm-fin_1": {
+  "sec": 43,
+  "html": true,
+  "errors": 3,
+  "err0": "TypeError: Cannot read properties of undefined (reading '1')",
+  "params": null,
+  "svg": false,
+  "deltaOk": false,
+  "priceOk": false,
+  "ok": false,
+  "textLen": 95
+ },
+ "GigaChat-2-Max/npv_prod1_1": {
+  "sec": 63,
+  "html": true,
+  "errors": 0,
+  "err0": "",
+  "svg": true,
+  "saveBtn": true,
+  "npvOk": true,
+  "paybackOk": true,
+  "ok": true
+ },
+ "GigaChat-2-Max/tool_prod1_dm-crm-fin_2": {
+  "sec": 64,
+  "html": true,
+  "errors": 1,
+  "err0": "TypeError: Cannot read properties of undefined (reading 'replace')",
+  "params": null,
+  "svg": false,
+  "deltaOk": false,
+  "priceOk": false,
+  "ok": false,
+  "textLen": 392
+ },
+ "GigaChat-2-Max/npv_prod1_2": {
+  "sec": 60,
+  "html": true,
+  "errors": 2,
+  "err0": "ReferenceError: d3 is not defined",
+  "svg": true,
+  "saveBtn": true,
+  "npvOk": true,
+  "paybackOk": true,
+  "ok": false
+ },
+ "GigaChat-2-Max/tool_prod1_dm-crm-fin_3": {
+  "sec": 50,
+  "html": true,
+  "errors": 1,
+  "err0": "TypeError: Cannot read properties of undefined (reading 'replace')\nfile:///root/work/sessions/max--76387277381017/a360/build/runs/practice/GigaChat-2-Max/tool_prod1_dm-crm-fin_3.html:79:99",
+  "params": null,
+  "svg": true,
+  "deltaOk": false,
+  "priceOk": false,
+  "ok": false,
+  "textLen": 395
+ },
+ "GigaChat-2-Max/npv_prod1_3": {
+  "sec": 84,
+  "html": true,
+  "errors": 2,
+  "err0": "Error: <path> attribute d: Expected number, \"M50 NaNL80 NaNL110 N…\".",
+  "svg": true,
+  "saveBtn": true,
+  "npvOk": true,
+  "paybackOk": true,
+  "ok": false
+ }
+}

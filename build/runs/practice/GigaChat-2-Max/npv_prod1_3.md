@@ -1,0 +1,265 @@
+# промпт
+
+```
+Сделай одностраничный HTML-инструмент: финансовая модель эффекта проекта «Накопительный счёт: удержание закрываемых счетов» — поток эффекта по месяцам, окупаемость и NPV, график в SVG с кнопкой сохранения.
+
+Параметры — поля ввода со значениями по умолчанию и кнопка «Рассчитать» (расчёт также при загрузке страницы):
+delta = 100 — изменение показателя в месяц (предотвращённых закрытий в месяц)
+volume = 1 — объём (—)
+price = 550 — стоимость единицы, руб. в месяц (руб. маржи на счёт в месяц)
+ramp = 3 — выход на полный уровень, мес.
+keep = 12 — срок сохранения эффекта, мес.
+capex = 600000 — единовременные затраты, руб.
+opex = 50000 — ежемесячные затраты, руб.
+horizon = 24 — горизонт, мес.
+rate = 0.15 — годовая ставка дисконтирования, доля
+
+Расчёт по месяцам t от 0 до horizon (повтори формулы точно):
+— доля выхода на уровень: ramp_share(t) = min(t / ramp, 1), при ramp = 0 равна 1;
+— full = delta × volume;
+— units(t) для t ≥ 1: сумма full × ramp_share(k) по k от max(1, t − keep + 1) до t (когорты каждого месяца живут keep месяцев);
+— income(t) = units(t) × price; income(0) = 0;
+— cost(0) = capex; cost(t) = opex для t ≥ 1;
+— cf(t) = income(t) − cost(t); cum(t) — накопленная сумма cf;
+— месячная ставка m = (1 + rate)^(1/12) − 1; disc(t) = cf(t) / (1 + m)^t; cum_disc(t) — накопленная сумма disc;
+— окупаемость — первый месяц t ≥ 1, где cum(t) ≥ 0 (если нет — «не достигается»); NPV = cum_disc(horizon); доход за первый год — сумма income(t) для t от 1 до 12.
+
+Вывод: три числа крупно с названиями — «Доход за первый год», «Окупаемость, мес.», «NPV за горизонт» (рубли — с разделителями тысяч, без копеек); под ними таблица по месяцам: t, доход, затраты, поток, накопленный поток, накопленный дисконтированный.
+График — inline SVG шириной 100 % (viewBox 0 0 960 340): столбики дохода по месяцам, линия накопленного потока, пунктирная линия накопленного дисконтированного потока, вертикальная отметка месяца окупаемости с подписью, подписи оси месяцев и сетка значений; всё без внешних библиотек.
+Кнопка «Сохранить SVG»: сериализовать элемент svg через XMLSerializer, сделать Blob с типом image/svg+xml;charset=utf-8, скачать через ссылку с атрибутом download="npv.svg". В корневой элемент svg добавить атрибут xmlns="http://www.w3.org/2000/svg", чтобы файл открывался отдельно.
+
+Требования к коду: один HTML-файл без внешних библиотек и запросов в сеть; имена переменных и функций латиницей, русский только в подписях; без async и await; числа из полей разбирать после замены запятой на точку.
+
+Проверь себя: при значениях по умолчанию окупаемость — месяц 7, NPV за 24 мес. около 8,03 млн руб, доход за первый год около 3,65 млн руб. Если получилось иначе — проверь формулу units(t) и дисконтирование.
+
+Ответ — только полный HTML-файл в тройных кавычках, без пояснений.
+```
+
+# ответ
+
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Финансовая модель эффекта проекта</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        input[type=number], button { margin-right: 10px; padding: 5px; width: 100px; box-sizing: border-box; }
+        .result h2 { display: inline-block; width: 25%; text-align: center; font-size: 2em; line-height: 1.2; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 5px; text-align: right; }
+        th { background-color: #f0f0f0; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        svg { width: 100%; height: auto; }
+        .bar { fill: steelblue; stroke-width: 1; stroke: white; }
+        .line { stroke: red; stroke-width: 2; }
+        .dashed-line { stroke-dasharray: 5,5; stroke: green; stroke-width: 2; }
+        .label { dominant-baseline: middle; text-anchor: middle; font-size: 12px; }
+        .grid-line { stroke: lightgray; stroke-width: 1; opacity: 0.5; }
+    </style>
+</head>
+<body onload="calculate()">
+
+<h1>Финансовая модель эффекта проекта</h1>
+
+<div style="margin-bottom: 20px;">
+    <input type="number" id="delta" value="100"> Изменение показателя в месяц<br>
+    <input type="number" id="volume" value="1"> Объём<br>
+    <input type="number" id="price" value="550"> Стоимость единицы, руб.<br>
+    <input type="number" id="ramp" value="3"> Выход на полный уровень, мес.<br>
+    <input type="number" id="keep" value="12"> Срок сохранения эффекта, мес.<br>
+    <input type="number" id="capex" value="600000"> Единовременные затраты, руб.<br>
+    <input type="number" id="opex" value="50000"> Ежемесячные затраты, руб.<br>
+    <input type="number" id="horizon" value="24"> Горизонт, мес.<br>
+    <input type="number" id="rate" step="0.01" value="0.15"> Годовая ставка дисконтирования, доля<br><br>
+    <button onclick="calculate()">Рассчитать</button>
+</div>
+
+<div class="result"></div>
+
+<svg viewBox="0 0 960 340" xmlns="http://www.w3.org/2000/svg">
+</svg>
+
+<script>
+function calculate() {
+    const resultDiv = document.querySelector('.result');
+    const svgElement = document.querySelector('svg');
+    while(svgElement.firstChild) svgElement.removeChild(svgElement.lastChild);
+    
+    let delta = Number(document.getElementById("delta").value.replace(",", "."));
+    let volume = Number(document.getElementById("volume").value.replace(",", "."));
+    let price = Number(document.getElementById("price").value.replace(",", "."));
+    let ramp = Number(document.getElementById("ramp").value.replace(",", ".")) || 1;
+    let keep = Number(document.getElementById("keep").value.replace(",", "."));
+    let capex = Number(document.getElementById("capex").value.replace(",", "."));
+    let opex = Number(document.getElementById("opex").value.replace(",", "."));
+    let horizon = Math.floor(Number(document.getElementById("horizon").value.replace(",", ".")));
+    let rate = Number(document.getElementById("rate").value.replace(",", "."));
+
+    function rampShare(t) {
+        return Math.min(t / ramp, 1);
+    }
+
+    // Precompute for performance
+    let full = delta * volume;
+    let monthlyRate = Math.pow(1 + rate, 1/12) - 1;
+
+    let data = [];
+    let totalIncomeFirstYear = 0;
+    let cumulativeCF = 0;
+    let cumulativeDiscountedCF = 0;
+    let paybackMonth = null;
+
+    for(let t = 0; t <= horizon; t++) {
+        let units = 0;
+        if(t >= 1) {
+            for(let k = Math.max(1, t - keep + 1); k <= t; k++) {
+                units += full * rampShare(k);
+            }
+        }
+        
+        let income = units * price;
+        if(t === 0) income = 0;
+        else totalIncomeFirstYear += (t <= 12 ? income : 0);
+        
+        let cost = t === 0 ? capex : opex;
+        let cashFlow = income - cost;
+        cumulativeCF += cashFlow;
+        let discountedCashFlow = cashFlow / Math.pow(1 + monthlyRate, t);
+        cumulativeDiscountedCF += discountedCashFlow;
+        
+        data.push({t, income, cost, cashFlow, cumulativeCF, discountedCashFlow});
+        
+        if(cumulativeCF >= 0 && !paybackMonth) paybackMonth = t;
+    }
+
+    let npv = cumulativeDiscountedCF.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    let totalIncomeFirstYearFormatted = totalIncomeFirstYear.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    let paybackText = paybackMonth !== null ? `Месяц ${paybackMonth}` : 'Не достигается';
+
+    resultDiv.innerHTML = `
+        <h2>Доход за первый год:</h2>${totalIncomeFirstYearFormatted}<br>
+        <h2>Окупаемость, мес.:</h2>${paybackText}<br>
+        <h2>NPV за горизонт:</h2>${npv}
+    `;
+
+    // Create the graph in SVG
+    const barWidth = 30;
+    const xScale = d => (d.t * barWidth) + 50;
+    const yScale = d => 300 - ((d.income / 10000) * 200);
+    const cumYScale = d => 300 - ((d.cumulativeCF / 1000000) * 200);
+    const discountCumYScale = d => 300 - ((d.cumulativeDiscountedCF / 1000000) * 200);
+
+    // Grid lines and axis labels
+    for(let i = 0; i <= horizon; i+=3) {
+        let xPos = xScale(data[i]);
+        let labelX = xPos + barWidth / 2;
+        let gridLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        gridLine.setAttribute("class", "grid-line");
+        gridLine.setAttribute("x1", xPos);
+        gridLine.setAttribute("y1", 0);
+        gridLine.setAttribute("x2", xPos);
+        gridLine.setAttribute("y2", 300);
+        svgElement.appendChild(gridLine);
+        
+        let label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        label.setAttribute("class", "label");
+        label.setAttribute("x", labelX);
+        label.setAttribute("y", 330);
+        label.textContent = `${i}`;
+        svgElement.appendChild(label);
+    }
+
+    // Bars of income per month
+    data.forEach(d => {
+        let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("class", "bar");
+        rect.setAttribute("x", xScale(d)-barWidth/2);
+        rect.setAttribute("width", barWidth);
+        rect.setAttribute("height", Math.abs(yScale(d) - 300));
+        rect.setAttribute("y", Math.min(yScale(d), 300));
+        svgElement.appendChild(rect);
+    });
+
+    // Line of cumulative CF
+    let pathData = '';
+    data.forEach((d, idx) => {
+        if(idx == 0) pathData += `M${xScale(d)} ${cumYScale(d)}`;
+        else pathData += `L${xScale(d)} ${cumYScale(d)}`;
+    });
+    let linePath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    linePath.setAttribute("class", "line");
+    linePath.setAttribute("d", pathData);
+    svgElement.appendChild(linePath);
+
+    // Dashed line of cumulative discounted CF
+    let dashedPathData = '';
+    data.forEach((d, idx) => {
+        if(idx == 0) dashedPathData += `M${xScale(d)} ${discountCumYScale(d)}`;
+        else dashedPathData += `L${xScale(d)} ${discountCumYScale(d)}`;
+    });
+    let dashedLinePath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    dashedLinePath.setAttribute("class", "dashed-line");
+    dashedLinePath.setAttribute("d", dashedPathData);
+    svgElement.appendChild(dashedLinePath);
+
+    // Payback mark
+    if(paybackMonth != null){
+        let verticalMark = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        verticalMark.setAttribute("x1", xScale(data[paybackMonth]));
+        verticalMark.setAttribute("y1", 0);
+        verticalMark.setAttribute("x2", xScale(data[paybackMonth]));
+        verticalMark.setAttribute("y2", 300);
+        verticalMark.setAttribute("stroke", "black");
+        verticalMark.setAttribute("stroke-width", "2");
+        svgElement.appendChild(verticalMark);
+        
+        let paybackLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        paybackLabel.setAttribute("class", "label");
+        paybackLabel.setAttribute("x", xScale(data[paybackMonth]) + barWidth / 2);
+        paybackLabel.setAttribute("y", 320);
+        paybackLabel.textContent = `Окупаемость`;
+        svgElement.appendChild(paybackLabel);
+    }
+
+    // Table output
+    let table = `<table>
+                    <tr><th>Месяц</th><th>Доход</th><th>Затраты</th><th>Поток</th><th>Накопл. поток</th><th>Дисконт.</th></tr>`;
+    data.forEach(row => {
+        table += `<tr>
+                     <td>${row.t}</td>
+                     <td>${row.income.toLocaleString()}</td>
+                     <td>${row.cost.toLocaleString()}</td>
+                     <td>${row.cashFlow.toLocaleString()}</td>
+                     <td>${row.cumulativeCF.toLocaleString()}</td>
+                     <td>${row.discountedCashFlow.toLocaleString()}</td>
+                 </tr>`
+    });
+    table += '</table>';
+    resultDiv.insertAdjacentHTML('beforeend', table);
+}
+
+// Save SVG to file
+document.body.onclick = e => {
+    if(e.target.id === 'saveSVG') {
+        let serializer = new XMLSerializer();
+        let source = '<?xml version="1.0" standalone="no"?>\n' +
+                     '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">' +
+                     serializer.serializeToString(document.querySelector('svg'));
+                     
+        let blob = new Blob([source], {type: 'image/svg+xml;charset=utf-8'});
+        let url = window.URL.createObjectURL(blob);
+        let link = document.createElement('a');
+        link.href = url;
+        link.download = 'npv.svg';
+        link.click();
+    }
+};
+
+document.body.insertAdjacentHTML('beforeend', '<button id="saveSVG">Сохранить SVG</button>');
+</script>
+
+</body>
+</html>
+```

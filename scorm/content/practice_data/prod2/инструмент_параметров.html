@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Мини-инструмент: параметры проекта · Кредитная карта: активация выпущенных карт</title>
+<style>
+  body{margin:0;background:#fff;color:#2E3641;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:16px;line-height:1.5}
+  .wrap{max-width:960px;margin:0 auto;padding:24px 18px}
+  h1{font-size:23px;margin:0 0 4px} h3{margin:0 0 10px;font-size:17px}
+  .sub{color:#6B7580;margin:0 0 18px;font-size:14.5px}
+  .card{border:1px solid #e6ecf1;border-radius:14px;padding:16px 18px;margin:0 0 14px}
+  .tiles{display:flex;flex-wrap:wrap;gap:18px}
+  .tile{min-width:180px}.tile .num{font-size:28px;font-weight:800;line-height:1.1}.tile .lab{color:#6B7580;font-size:13px;margin-top:3px}
+  table{border-collapse:collapse;width:100%;font-size:14px}td,th{border-bottom:1px solid #e6ecf1;padding:6px 9px;text-align:left}
+  .warn{color:#E4572E}.ok{color:#128a53}
+  pre{background:#20262e;color:#e7edf3;border-radius:10px;padding:12px 14px;font-size:13px;white-space:pre-wrap;word-break:break-word}
+  button{background:#20BA72;color:#fff;border:0;border-radius:9px;padding:8px 16px;font:inherit;font-weight:700;cursor:pointer}
+  button.sec{background:#f4f8f6;color:#2E3641;border:1px solid #d9e2dd;font-weight:600}
+  input[type=text],input[type=number]{font:inherit;padding:6px 9px;border:1px solid #d9e2dd;border-radius:8px;width:150px}
+  label{display:inline-block;margin:0 14px 8px 0;font-size:14px}label span{display:block;color:#6B7580;font-size:12.5px}
+  svg{width:100%;height:auto;display:block}
+  .files span{display:inline-block;margin:0 8px 6px 0;padding:3px 10px;border-radius:999px;background:#f4f8f6;border:1px solid #d9e2dd;font-size:13.5px}
+  .files span.got{background:#e3f2ea;border-color:#20BA72}
+  .line{font-family:ui-monospace,Consolas,monospace;background:#f4f8f6;border:1px solid #d9e2dd;border-radius:8px;padding:8px 10px;display:inline-block;margin:6px 8px 6px 0}
+</style></head><body><div class="wrap">
+<h1>Параметры проекта: Кредитная карта: активация выпущенных карт</h1>
+<p class="sub">Каркас мини-инструмента. Расчёт входов — в файле <b>rasschet.js</b>, который пишет ассистент и который лежит рядом с этим файлом.
+Выберите файлы выбранных источников одной кнопкой — инструмент посчитает входы, параметры и итоговую метрику. Данные никуда не отправляются.</p>
+<div class="card"><h3>1 · Файлы источников</h3>
+<input type="file" id="files" multiple accept=".csv">
+<div class="files" id="expected" style="margin-top:10px"></div>
+<p id="status" class="warn" style="margin:8px 0 0"></p></div>
+<div class="card" id="result" style="display:none"><h3>2 · Входы дерева</h3><table id="inputs"></table></div>
+<div class="card" id="params" style="display:none"><h3>3 · Параметры финансовой модели</h3>
+<div class="tiles" id="tiles"></div>
+<p style="margin:14px 0 4px"><b>Итоговая метрика:</b> <span id="metric"></span></p>
+<p style="margin:8px 0 0"><span class="line" id="line"></span><button type="button" id="copy">Копировать параметры</button></p>
+<p class="sub" style="margin:8px 0 0">Строку параметров вставьте в тренажёр на шаге «Параметры из инструмента».</p></div>
+<div class="card" id="chartCard" style="display:none"><h3>4 · Вход по месяцам</h3><div id="chart"></div></div>
+</div>
+<script>
+var META = {"title": "Кредитная карта: активация выпущенных карт", "metric": {"name": "Комиссионный доход от дополнительно активированных карт", "unit": "руб. в месяц на когорту", "formula": "delta × price"}, "params": {"delta": {"name": "Изменение показателя", "unit": "дополнительно активированных карт в месяц", "formula": "issued × inactive × 1/5", "note": "пятая часть неактивированных карт активируется при ускорении доставки — допущение"}, "volume": {"name": "Объём", "unit": "—", "formula": "1", "note": "множитель не используется"}, "price": {"name": "Стоимость единицы", "unit": "руб. дохода активной карты в месяц", "formula": "income", "note": ""}}, "inputs": [{"id": "issued", "name": "Выпуск карт в месяц", "unit": "карт в месяц", "file": "issued_dm.csv / issued_proc.csv"}, {"id": "inactive", "name": "Доля карт без активации за 30 дней", "unit": "доля от 0 до 1", "file": "inactive_tx.csv / inactive_check.csv"}, {"id": "income", "name": "Доход активной карты в месяц", "unit": "руб.", "file": "income_fin.csv / income_tar.csv"}], "files": [{"file": "issued_dm.csv", "input": "Выпуск карт в месяц", "id": "issued"}, {"file": "issued_proc.csv", "input": "Выпуск карт в месяц", "id": "issued"}, {"file": "inactive_tx.csv", "input": "Доля карт без активации за 30 дней", "id": "inactive"}, {"file": "inactive_check.csv", "input": "Доля карт без активации за 30 дней", "id": "inactive"}, {"file": "income_fin.csv", "input": "Доход активной карты в месяц", "id": "income"}, {"file": "income_tar.csv", "input": "Доход активной карты в месяц", "id": "income"}], "ref": {"issued_dm.csv": "var last = rows.slice(-12), s = 0; for (var i = 0; i < last.length; i++) s += last[i]['выпущено_карт']; return s / last.length;", "issued_proc.csv": "var by = {}, order = []; for (var i = 0; i < rows.length; i++) { var m = rows[i]['месяц']; if (by[m] === undefined) { by[m] = 0; order.push(m); } by[m] += rows[i]['выпущено_карт']; } var last = order.slice(-12), s = 0; for (var j = 0; j < last.length; j++) s += by[last[j]]; return s / last.length;", "inactive_tx.csv": "var n = 0, d = 0; for (var i = 0; i < rows.length; i++) { n += rows[i]['без_покупки_за_30_дней']; d += rows[i]['выпущено_карт']; } return d ? n / d : null;", "inactive_check.csv": "var c = 0; for (var i = 0; i < rows.length; i++) if (rows[i]['статус_через_30_дней'] === 'не активирована') c++; return rows.length ? c / rows.length : null;", "income_fin.csv": "var p = {}; for (var i = 0; i < rows.length; i++) p[rows[i]['параметр']] = rows[i]['значение']; return p['доход_активной_карты_руб_в_год'] / 12;", "income_tar.csv": "var s = 0; for (var i = 0; i < rows.length; i++) { var r = rows[i]; s += (r['оборот_активной_карты_тыс_руб_в_мес'] * 1000 * r['ставка_комиссии_проц'] / 100); } return s / rows.length;"}};
+var tables = {};
+function parseCsv(text) {
+  var lines = String(text).replace(/^\uFEFF/, '').split(/\r?\n/).filter(function (l) { return l.trim() !== ''; });
+  if (!lines.length) return [];
+  var head = lines[0].split(';').map(function (h) { return h.trim(); });
+  var rows = [];
+  for (var i = 1; i < lines.length; i++) {
+    var cells = lines[i].split(';'), row = {};
+    for (var j = 0; j < head.length; j++) {
+      var v = (cells[j] === undefined ? '' : cells[j]).trim();
+      var n = parseFloat(v.replace(',', '.'));
+      row[head[j]] = (v !== '' && !isNaN(n) && /^-?[\d\s]+([.,]\d+)?$/.test(v)) ? n : v;
+    }
+    rows.push(row);
+  }
+  return rows;
+}
+function fmt(v) {
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  var a = Math.abs(v);
+  if (a >= 1000) return Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  return String(Math.round(v * 10000) / 10000).replace('.', ',');
+}
+function evalFormula(f, vals) {
+  var s = String(f);
+  Object.keys(vals).forEach(function (k) { s = s.replace(new RegExp('\\b' + k + '\\b', 'g'), '(' + vals[k] + ')'); });
+  s = s.replace(/×/g, '*').replace(/÷/g, '/');
+  if (!/^[\d\s().*\/+\-]+$/.test(s)) return NaN;
+  try { return Function('return (' + s + ')')(); } catch (e) { return NaN; }
+}
+function renderExpected() {
+  document.getElementById('expected').innerHTML = META.inputs.map(function (i) {
+    return '<div style="margin:0 0 6px"><b style="font-size:13.5px">' + i.name + ':</b> ' + META.files.filter(function (f) { return f.id === i.id; }).map(function (f) {
+      return '<span class="' + (tables[f.file] ? 'got' : '') + '">' + (tables[f.file] ? '✓ ' : '') + f.file + '</span>';
+    }).join(' или ') + '</div>';
+  }).join('');
+}
+function setStatus(t, ok) { var s = document.getElementById('status'); s.textContent = t; s.className = ok ? 'ok' : 'warn'; }
+function compute() {
+  renderExpected();
+  var missing = META.inputs.filter(function (i) { return !META.files.some(function (f) { return f.id === i.id && tables[f.file]; }); });
+  if (missing.length) { setStatus('Ожидаются файлы для входов: ' + missing.map(function (i) { return i.id + ' (' + META.files.filter(function (f) { return f.id === i.id; }).map(function (f) { return f.file; }).join(' или ') + ')'; }).join('; '), false); return; }
+  // Контрольный расчёт каркаса — по загруженным файлам, формулы источников известны.
+  var ref = {};
+  META.inputs.forEach(function (i) {
+    var f = META.files.filter(function (x) { return x.id === i.id && tables[x.file]; })[0];
+    try { ref[i.id] = Function('rows', META.ref[f.file])(tables[f.file]); } catch (e) { ref[i.id] = null; }
+  });
+  var inputs = null, note = '';
+  if (typeof window.computeInputs !== 'function') {
+    note = 'Рядом с этим файлом нет rasschet.js или в нём не объявлена функция window.computeInputs. Показан контрольный расчёт каркаса; сохраните ответ ассистента как rasschet.js в эту папку и обновите страницу, чтобы сверить его расчёт.';
+  } else {
+    try { inputs = window.computeInputs(tables); }
+    catch (e) { note = 'Ошибка в rasschet.js: ' + e.message + '. Скопируйте ассистенту: «В функции computeInputs ошибка: ' + e.message + '. Исправь и верни файл целиком». Показан контрольный расчёт каркаса.'; inputs = null; }
+  }
+  var t = '<tr><th>Вход</th><th>Расчёт ассистента</th><th>Контрольный расчёт</th><th>Сверка</th><th>Единица</th><th>Файл</th></tr>';
+  var mismatch = [], missing = [];
+  META.inputs.forEach(function (i) {
+    var used = META.files.filter(function (f) { return f.id === i.id && tables[f.file]; }).map(function (f) { return f.file; }).join(', ');
+    var a = inputs ? inputs[i.id] : null, r = ref[i.id], ok = null;
+    if (a === null || a === undefined || isNaN(a)) { if (inputs) missing.push(i.id); }
+    else if (r !== null && !isNaN(r)) { ok = Math.abs(a - r) <= Math.abs(r) * 0.02 + 1e-9; if (!ok) mismatch.push(i.id); }
+    t += '<tr><td>' + i.name + ' (' + i.id + ')</td><td><b>' + fmt(a) + '</b></td><td>' + fmt(r) + '</td><td>' + (ok === null ? '—' : ok ? '<span class="ok">совпадает</span>' : '<span class="warn">расходится</span>') + '</td><td>' + i.unit + '</td><td>' + used + '</td></tr>';
+  });
+  document.getElementById('inputs').innerHTML = t; document.getElementById('result').style.display = '';
+  if (inputs && missing.length) note = 'Функция computeInputs не вернула значения для: ' + missing.join(', ') + '. Скопируйте ассистенту: «computeInputs возвращает не все входы; нужны поля ' + META.inputs.map(function (i) { return i.id; }).join(', ') + '». Для этих входов взят контрольный расчёт.';
+  else if (inputs && mismatch.length) note = 'Расчёт ассистента расходится с контрольным для: ' + mismatch.join(', ') + '. Скопируйте ассистенту: «Для входов ' + mismatch.join(', ') + ' результат отличается от контрольного; проверь формулу и верни файл целиком». В параметры взят контрольный расчёт.';
+  else if (inputs) note = 'Файлы загружены; расчёт ассистента совпадает с контрольным.';
+  setStatus(note, !!inputs && !missing.length && !mismatch.length);
+  var vals = {}; META.inputs.forEach(function (i) { var a = inputs ? inputs[i.id] : null; var good = a !== null && a !== undefined && !isNaN(a) && mismatch.indexOf(i.id) < 0; vals[i.id] = good ? a : ref[i.id]; });
+  var p = {}; ['delta', 'volume', 'price'].forEach(function (k) { p[k] = evalFormula(META.params[k].formula, vals); });
+  document.getElementById('tiles').innerHTML = ['delta', 'volume', 'price'].map(function (k) {
+    return '<div class="tile"><div class="num">' + fmt(p[k]) + '</div><div class="lab">' + META.params[k].name + '<br>' + META.params[k].unit + '<br><span style="opacity:.7">' + k + ' = ' + META.params[k].formula + '</span></div></div>';
+  }).join('');
+  document.getElementById('metric').textContent = META.metric.name + ' = ' + fmt(p.delta * p.volume * p.price) + ' ' + META.metric.unit;
+  var line = 'delta=' + (Math.round(p.delta * 10000) / 10000) + '; volume=' + (Math.round(p.volume * 10000) / 10000) + '; price=' + (Math.round(p.price * 10000) / 10000);
+  document.getElementById('line').textContent = line; document.getElementById('params').style.display = '';
+  document.getElementById('copy').onclick = function () {
+    var b = this; function done() { b.textContent = 'Скопировано'; setTimeout(function () { b.textContent = 'Копировать параметры'; }, 1800); }
+    function fb() { var a = document.createElement('textarea'); a.value = line; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); done(); } catch (e) { b.textContent = 'Выделите строку вручную'; } document.body.removeChild(a); }
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(line).then(done, fb); else fb();
+  };
+  drawChart();
+}
+function drawChart() {
+  var f = META.files[0], rows = tables[f.file] || [];
+  if (!rows.length || rows[0]['месяц'] === undefined) { document.getElementById('chartCard').style.display = 'none'; return; }
+  var col = null; Object.keys(rows[0]).forEach(function (k) { if (!col && k !== 'месяц' && typeof rows[0][k] === 'number') col = k; });
+  if (!col) return;
+  var byMonth = {}, order = [];
+  rows.forEach(function (r) { var m = String(r['месяц']); if (byMonth[m] === undefined) { byMonth[m] = 0; order.push(m); } byMonth[m] += (typeof r[col] === 'number' ? r[col] : 0); });
+  var ys = order.map(function (m) { return byMonth[m]; });
+  var W = 960, H = 280, L = 70, R = 20, T = 20, B = 44, pw = W - L - R, ph = H - T - B, n = ys.length;
+  var mx = Math.max.apply(null, ys), mn = Math.min.apply(null, ys); if (mx === mn) { mx += 1; mn -= 1; }
+  var pad = (mx - mn) * 0.1; mx += pad; mn = Math.max(0, mn - pad);
+  var X = function (i) { return L + (n > 1 ? pw * i / (n - 1) : pw / 2); }, Y = function (v) { return T + ph * (mx - v) / (mx - mn); };
+  var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">';
+  var d = ''; ys.forEach(function (v, i) { d += (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1) + ' '; });
+  s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(mn) + '" y2="' + Y(mn) + '" stroke="#2E3641" stroke-opacity="0.3"/>';
+  s += '<path d="' + d + '" fill="none" stroke="#159A5C" stroke-width="3"/>';
+  ys.forEach(function (v, i) { s += '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(v).toFixed(1) + '" r="3.2" fill="#159A5C"/>'; });
+  s += '<text x="' + (L - 8) + '" y="' + (Y(mx - pad) + 4) + '" font-size="12" text-anchor="end" fill="#2E3641">' + fmt(Math.max.apply(null, ys)) + '</text>';
+  s += '<text x="' + (L - 8) + '" y="' + (Y(mn + (mn ? pad : 0)) + 4) + '" font-size="12" text-anchor="end" fill="#2E3641">' + fmt(Math.min.apply(null, ys)) + '</text>';
+  var every = Math.max(1, Math.ceil(n / 12));
+  order.forEach(function (m, i) { if (i % every === 0 || i === n - 1) s += '<text x="' + X(i).toFixed(1) + '" y="' + (H - B + 18) + '" font-size="11.5" text-anchor="middle" fill="#2E3641" fill-opacity="0.75">' + m + '</text>'; });
+  s += '<text x="' + L + '" y="' + (H - 8) + '" font-size="12.5" font-weight="700" fill="#2E3641">' + col + ' — ' + f.file + '</text></svg>';
+  document.getElementById('chart').innerHTML = s; document.getElementById('chartCard').style.display = '';
+}
+document.getElementById('files').addEventListener('change', function () {
+  var list = Array.prototype.slice.call(this.files || []), left = list.length;
+  if (!left) return;
+  list.forEach(function (file) {
+    var known = META.files.some(function (f) { return f.file === file.name; });
+    var rd = new FileReader();
+    rd.onload = function () { if (known) tables[file.name] = parseCsv(rd.result); else setStatus('Файл не из списка: ' + file.name, false); if (--left === 0) compute(); };
+    rd.readAsText(file, 'utf-8');
+  });
+});
+renderExpected(); compute();
+</script>
+<script src="rasschet.js"></script>
+<script>compute();</script>
+</body></html>

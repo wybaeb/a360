@@ -1,0 +1,132 @@
+{
+ "GigaChat-2/calc_prod1_dm-crm-fin_1": {
+  "sec": 34,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Ожидаются файлы: closures_abs.csv, linked_survey.csv, margin_rates.csv",
+  "params": null,
+  "ok": false
+ },
+ "GigaChat-2/model_prod1_1": {
+  "sec": 3,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Расчёт ассистента совпадает с контрольным расчётом каркаса.",
+  "npvOk": true,
+  "paybackOk": true,
+  "ok": true
+ },
+ "GigaChat-2/calc_prod1_dm-crm-fin_2": {
+  "sec": 4,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Файлы загружены, расчёт выполнен.",
+  "params": {
+   "delta": 99.0972,
+   "volume": 1,
+   "price": 550
+  },
+  "ok": true
+ },
+ "GigaChat-2/model_prod1_2": {
+  "sec": 3,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Расчёт ассистента совпадает с контрольным расчётом каркаса.",
+  "npvOk": true,
+  "paybackOk": true,
+  "ok": true
+ },
+ "GigaChat-2/calc_prod1_dm-crm-fin_3": {
+  "sec": 4,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Функция computeInputs не вернула значения для: margin. Скопируйте ассистенту: «computeInputs возвращает не все входы; ну",
+  "params": null,
+  "ok": false
+ },
+ "GigaChat-2/model_prod1_3": {
+  "sec": 3,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Расчёт ассистента совпадает с контрольным расчётом каркаса.",
+  "npvOk": true,
+  "paybackOk": true,
+  "ok": true
+ },
+ "GigaChat-2-Max/calc_prod1_dm-crm-fin_1": {
+  "sec": 14,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Файлы загружены, расчёт выполнен.",
+  "params": {
+   "delta": 99.1105,
+   "volume": 1,
+   "price": 550
+  },
+  "ok": true
+ },
+ "GigaChat-2-Max/model_prod1_1": {
+  "sec": 7,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Расчёт ассистента совпадает с контрольным расчётом каркаса.",
+  "npvOk": true,
+  "paybackOk": true,
+  "ok": true
+ },
+ "GigaChat-2-Max/calc_prod1_dm-crm-fin_2": {
+  "sec": 9,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Файлы загружены, расчёт выполнен.",
+  "params": {
+   "delta": 99.1105,
+   "volume": 1,
+   "price": 550
+  },
+  "ok": true
+ },
+ "GigaChat-2-Max/model_prod1_2": {
+  "sec": 6,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Расчёт ассистента совпадает с контрольным расчётом каркаса.",
+  "npvOk": true,
+  "paybackOk": true,
+  "ok": true
+ },
+ "GigaChat-2-Max/calc_prod1_dm-crm-fin_3": {
+  "sec": 10,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Файлы загружены, расчёт выполнен.",
+  "params": {
+   "delta": 99.1105,
+   "volume": 1,
+   "price": 550
+  },
+  "ok": true
+ },
+ "GigaChat-2-Max/model_prod1_3": {
+  "sec": 6,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Расчёт ассистента совпадает с контрольным расчётом каркаса.",
+  "npvOk": true,
+  "paybackOk": true,
+  "ok": true
+ }
+}

@@ -1,0 +1,325 @@
+# промпт
+
+```
+Сделай одностраничный HTML-инструмент: финансовая модель эффекта проекта «Накопительный счёт: удержание закрываемых счетов» — поток эффекта по месяцам, окупаемость и NPV, график в SVG с кнопкой сохранения.
+
+Параметры — поля ввода со значениями по умолчанию и кнопка «Рассчитать» (расчёт также при загрузке страницы):
+delta = 100 — изменение показателя в месяц (предотвращённых закрытий в месяц)
+volume = 1 — объём (—)
+price = 550 — стоимость единицы, руб. в месяц (руб. маржи на счёт в месяц)
+ramp = 3 — выход на полный уровень, мес.
+keep = 12 — срок сохранения эффекта, мес.
+capex = 600000 — единовременные затраты, руб.
+opex = 50000 — ежемесячные затраты, руб.
+horizon = 24 — горизонт, мес.
+rate = 0.15 — годовая ставка дисконтирования, доля
+
+Расчёт по месяцам t от 0 до horizon (повтори формулы точно):
+— доля выхода на уровень: ramp_share(t) = min(t / ramp, 1), при ramp = 0 равна 1;
+— full = delta × volume;
+— units(t) для t ≥ 1: сумма full × ramp_share(k) по k от max(1, t − keep + 1) до t (когорты каждого месяца живут keep месяцев);
+— income(t) = units(t) × price; income(0) = 0;
+— cost(0) = capex; cost(t) = opex для t ≥ 1;
+— cf(t) = income(t) − cost(t); cum(t) — накопленная сумма cf;
+— месячная ставка m = (1 + rate)^(1/12) − 1; disc(t) = cf(t) / (1 + m)^t; cum_disc(t) — накопленная сумма disc;
+— окупаемость — первый месяц t ≥ 1, где cum(t) ≥ 0 (если нет — «не достигается»); NPV = cum_disc(horizon); доход за первый год — сумма income(t) для t от 1 до 12.
+
+Вывод: три числа крупно с названиями — «Доход за первый год», «Окупаемость, мес.», «NPV за горизонт» (рубли — с разделителями тысяч, без копеек); под ними таблица по месяцам: t, доход, затраты, поток, накопленный поток, накопленный дисконтированный.
+График — inline SVG шириной 100 % (viewBox 0 0 960 340): столбики дохода по месяцам, линия накопленного потока, пунктирная линия накопленного дисконтированного потока, вертикальная отметка месяца окупаемости с подписью, подписи оси месяцев и сетка значений; всё без внешних библиотек.
+Кнопка «Сохранить SVG»: сериализовать элемент svg через XMLSerializer, сделать Blob с типом image/svg+xml;charset=utf-8, скачать через ссылку с атрибутом download="npv.svg". В корневой элемент svg добавить атрибут xmlns="http://www.w3.org/2000/svg", чтобы файл открывался отдельно.
+
+Требования к коду: один HTML-файл без внешних библиотек и запросов в сеть; имена переменных и функций латиницей, русский только в подписях; без async и await; числа из полей разбирать после замены запятой на точку.
+
+Проверь себя: при значениях по умолчанию окупаемость — месяц 7, NPV за 24 мес. около 8,03 млн руб, доход за первый год около 3,65 млн руб. Если получилось иначе — проверь формулу units(t) и дисконтирование.
+
+Ответ — только полный HTML-файл в тройных кавычках, без пояснений.
+```
+
+# ответ
+
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Финансовая модель эффекта проекта Накопительный счет</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { display: flex; justify-content: space-between; margin-bottom: 2rem; }
+        input[type=number], button { padding: 0.5em; width: 100px; text-align: center; }
+        table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+        th, td { border: 1px solid #ccc; padding: 0.5em; text-align: right; }
+        tr:nth-child(even) { background-color: #fafafa; }
+        h2 { margin: 1rem 0; }
+        svg { width: 100%; height: auto; }
+        .result-value { font-size: 2rem; color: green; }
+        .bar { fill: steelblue; stroke-width: 1; stroke: white; }
+        .line { stroke: black; stroke-width: 2; }
+        .dashed-line { stroke-dasharray: 5; stroke: gray; stroke-width: 2; }
+        .axis-label { dominant-baseline: middle; text-anchor: middle; }
+        .month-tick { transform: translateX(-10px); }
+        .grid-line { stroke: lightgray; stroke-width: 1; opacity: 0.5; }
+        .break-even-marker { fill: red; r: 4; }
+        .break-even-text { font-weight: bold; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div>
+        <label for="delta">Изменение показателя:</label><br>
+        <input type="number" id="delta" value="100"><br>
+        <label for="volume">Объём:</label><br>
+        <input type="number" id="volume" value="1"><br>
+        <label for="price">Стоимость единицы:</label><br>
+        <input type="number" id="price" value="550"><br>
+        <label for="ramp">Выход на уровень:</label><br>
+        <input type="number" id="ramp" value="3"><br>
+        <label for="keep">Срок сохранения эффекта:</label><br>
+        <input type="number" id="keep" value="12"><br>
+        <label for="capex">Единовременные затраты:</label><br>
+        <input type="number" id="capex" value="600000"><br>
+        <label for="opex">Ежемесячные затраты:</label><br>
+        <input type="number" id="opex" value="50000"><br>
+        <label for="horizon">Горизонт расчёта:</label><br>
+        <input type="number" id="horizon" value="24"><br>
+        <label for="rate">Годовая ставка дисконтирования:</label><br>
+        <input type="number" step="any" id="rate" value="0.15"><br>
+    </div>
+    <button onclick="calculate()">Рассчитать</button>
+</div>
+<h2>Результаты расчета</h2>
+<p>Доход за первый год: <span class="result-value" id="firstYearIncome"></span></p>
+<p>Окупаемость, мес.: <span class="result-value" id="paybackPeriod"></span></p>
+<p>NPV за горизонт: <span class="result-value" id="npvHorizon"></span></p>
+
+<table id="resultsTable">
+    <thead>
+        <tr>
+            <th>Месяц</th>
+            <th>Доход</th>
+            <th>Затраты</th>
+            <th>Поток</th>
+            <th>Накопл. поток</th>
+            <th>Дисконтиров.</th>
+            <th>Накопл. дисконт.</th>
+        </tr>
+    </thead>
+    <tbody id="dataRows"></tbody>
+</table>
+
+<svg viewBox="0 0 960 340" id="chartSvg">
+    <!-- Dynamically generated content -->
+</svg>
+
+<button onclick="saveSVG()">Сохранить SVG</button>
+
+<script>
+function calculate() {
+    const inputs = ['delta', 'volume', 'price', 'ramp', 'keep', 'capex', 'opex', 'horizon', 'rate'];
+    let params = {};
+    inputs.forEach(input => {
+        params[input] = parseFloat(document.getElementById(input).value.replace(',', '.'));
+    });
+    
+    // Core calculations
+    function rampShare(t) {
+        return Math.min(params.ramp === 0 ? 1 : t / params.ramp, 1);
+    }
+    function full() {
+        return params.delta * params.volume;
+    }
+    function units(t) {
+        if (t <= 0) return 0;
+        let sum = 0;
+        for (let k = Math.max(1, t - params.keep + 1); k <= t; k++) {
+            sum += full() * rampShare(k);
+        }
+        return sum;
+    }
+    function income(t) {
+        return t >= 1 ? units(t) * params.price : 0;
+    }
+    function cost(t) {
+        return t === 0 ? params.capex : params.opex;
+    }
+    function cashFlow(t) {
+        return income(t) - cost(t);
+    }
+    function monthlyRate() {
+        return Math.pow(1 + params.rate, 1/12) - 1;
+    }
+    function discountedCashFlow(t) {
+        const m = monthlyRate();
+        return cashFlow(t) / Math.pow(1 + m, t);
+    }
+    
+    // Results arrays
+    let incomes = [], costs = [], flows = [], cumulativeFlows = [], discounts = [], cumulativeDiscounts = [];
+    let firstYearTotal = 0;
+    let breakEvenMonth = null;
+    let npv = 0;
+    
+    for (let t = 0; t <= params.horizon; t++) {
+        incomes.push(income(t));
+        costs.push(cost(t));
+        flows.push(cashFlow(t));
+        
+        if (t > 0 && cumulativeFlows.length > 0) {
+            cumulativeFlows.push(cumulativeFlows[cumulativeFlows.length - 1] + flows[t]);
+        } else {
+            cumulativeFlows.push(flows[t]);
+        }
+        
+        discounts.push(discountedCashFlow(t));
+        
+        if (discounts.length > 0) {
+            cumulativeDiscounts.push((cumulativeDiscounts[cumulativeDiscounts.length - 1] || 0) + discounts[t]);
+        } else {
+            cumulativeDiscounts.push(discounts[t]);
+        }
+        
+        if (t >= 1 && cumulativeFlows[t] >= 0 && breakEvenMonth === null) {
+            breakEvenMonth = t;
+        }
+        
+        if (t >= 1 && t <= 12) {
+            firstYearTotal += income(t);
+        }
+    }
+    
+    npv = cumulativeDiscounts[cumulativeDiscounts.length - 1];
+    
+    document.getElementById('firstYearIncome').textContent = formatNumber(firstYearTotal);
+    document.getElementById('paybackPeriod').textContent = breakEvenMonth !== null ? breakEvenMonth.toString() : 'Не достигается';
+    document.getElementById('npvHorizon').textContent = formatNumber(npv);
+    
+    // Table rendering
+    const rows = document.querySelector('#dataRows');
+    while (rows.firstChild) rows.removeChild(rows.firstChild);
+    for (let i = 0; i <= params.horizon; i++) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${i}</td>
+            <td>${formatNumber(incomes[i])}</td>
+            <td>${formatNumber(costs[i])}</td>
+            <td>${formatNumber(flows[i])}</td>
+            <td>${formatNumber(cumulativeFlows[i])}</td>
+            <td>${formatNumber(discounts[i])}</td>
+            <td>${formatNumber(cumulativeDiscounts[i])}</td>
+        `;
+        rows.appendChild(row);
+    }
+    
+    // Chart drawing
+    drawChart(incomes, cumulativeFlows, cumulativeDiscounts, breakEvenMonth);
+}
+
+// Number formatting helper
+function formatNumber(num) {
+    return num.toLocaleString('ru-RU', { maximumFractionDigits: 0 });
+}
+
+// SVG chart generator
+function drawChart(incomes, cumulativeFlows, cumulativeDiscounts, breakEvenMonth) {
+    const svg = document.getElementById('chartSvg');
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    
+    const xScaleFactor = 960 / (incomes.length - 1);
+    const yMaxValue = Math.max(...incomes.map(Math.abs)) * 1.1;
+    const yScaleFactor = 300 / yMaxValue;
+    
+    // Draw bars and lines
+    incomes.forEach((income, index) => {
+        const barHeight = Math.max(0, income * yScaleFactor);
+        const rectY = 340 - barHeight;
+        const barWidth = xScaleFactor * 0.8;
+        const barX = index * xScaleFactor + (xScaleFactor - barWidth) / 2;
+        const barRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        barRect.setAttribute("class", "bar");
+        barRect.setAttribute("width", barWidth);
+        barRect.setAttribute("height", barHeight);
+        barRect.setAttribute("y", rectY);
+        barRect.setAttribute("x", barX);
+        svg.appendChild(barRect);
+    });
+    
+    // Cumulative flow line
+    const pathDataCF = cumulativeFlows.map((cf, idx) => `${idx * xScaleFactor}, ${340 - cf * yScaleFactor}`).join(' ');
+    const linePathCF = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    linePathCF.setAttribute("class", "line");
+    linePathCF.setAttribute("d", `M${pathDataCF}`);
+    svg.appendChild(linePathCF);
+    
+    // Discounted cumulative flow dashed line
+    const pathDataDCF = cumulativeDiscounts.map((dcf, idx) => `${idx * xScaleFactor}, ${340 - dcf * yScaleFactor}`).join(' ');
+    const linePathDCF = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    linePathDCF.setAttribute("class", "dashed-line");
+    linePathDCF.setAttribute("d", `M${pathDataDCF}`);
+    svg.appendChild(linePathDCF);
+    
+    // Break even marker
+    if (breakEvenMonth !== null) {
+        const beMarkerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        beMarkerCircle.setAttribute("class", "break-even-marker");
+        beMarkerCircle.setAttribute("cx", breakEvenMonth * xScaleFactor);
+        beMarkerCircle.setAttribute("cy", 340 - cumulativeFlows[breakEvenMonth] * yScaleFactor);
+        svg.appendChild(beMarkerCircle);
+        
+        const beText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        beText.setAttribute("class", "break-even-text");
+        beText.setAttribute("x", breakEvenMonth * xScaleFactor);
+        beText.setAttribute("y", 340 - cumulativeFlows[breakEvenMonth] * yScaleFactor - 20);
+        beText.textContent = `Окупаемость: Мес. ${breakEvenMonth}`;
+        svg.appendChild(beText);
+    }
+    
+    // Month ticks and labels
+    for (let i = 0; i <= incomes.length; i++) {
+        const tickLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        tickLine.setAttribute("class", "grid-line");
+        tickLine.setAttribute("x1", i * xScaleFactor);
+        tickLine.setAttribute("y1", 0);
+        tickLine.setAttribute("x2", i * xScaleFactor);
+        tickLine.setAttribute("y2", 340);
+        svg.appendChild(tickLine);
+        
+        const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        label.setAttribute("class", "axis-label month-tick");
+        label.setAttribute("x", i * xScaleFactor);
+        label.setAttribute("y", 350);
+        label.textContent = i;
+        svg.appendChild(label);
+    }
+    
+    // Y-axis gridlines
+    for (let j = 0; j <= 5; j++) {
+        const yGridLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        yGridLine.setAttribute("class", "grid-line");
+        yGridLine.setAttribute("x1", 0);
+        yGridLine.setAttribute("y1", 340 - j * 60);
+        yGridLine.setAttribute("x2", 960);
+        yGridLine.setAttribute("y2", 340 - j * 60);
+        svg.appendChild(yGridLine);
+    }
+}
+
+// Save SVG to file
+function saveSVG() {
+    const serializer = new XMLSerializer();
+    const source = serializer.serializeToString(document.getElementById('chartSvg'));
+    const blob = new Blob([source], {type: "image/svg+xml;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = "npv.svg";
+    link.click();
+    URL.revokeObjectURL(url);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    calculate(); // Initial calculation on page load
+});
+</script>
+</body>
+</html>
+```

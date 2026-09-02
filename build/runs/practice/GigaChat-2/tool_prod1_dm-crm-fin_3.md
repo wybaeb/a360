@@ -1,0 +1,290 @@
+# промпт
+
+```
+Сделай одностраничный HTML-инструмент: расчёт параметров проекта «Накопительный счёт: удержание закрываемых счетов» по нескольким выгрузкам.
+
+Данные: 3 CSV-файла, кодировка UTF-8 с меткой порядка байтов, разделитель — точка с запятой, десятичный знак — запятая. Пользователь выбирает все файлы сразу одной кнопкой (input type="file" multiple accept=".csv"); файл распознаётся по имени. Файлы читаются в браузере и никуда не отправляются.
+
+Файл 1 «closures_dm.csv» — вход closures («Закрытия счетов в месяц», счетов в месяц). Первые строки файла:
+﻿месяц;закрытые_счета;активные_счета
+2024-01;1521;60452
+2024-02;1449;63243
+2024-03;1509;67165
+Расчёт входа closures: среднее значение столбца закрытые_счета за последние 12 строк (месяцев).
+
+Файл 2 «linked_crm.csv» — вход linked («Доля закрытий после обращения», доля от 0 до 1). Первые строки файла:
+﻿месяц;закрытых_счетов_всего;закрытий_после_обращения
+2024-01;1521;266
+2024-02;1449;224
+2024-03;1509;222
+Расчёт входа linked: сумма столбца закрытий_после_обращения ÷ сумма столбца закрытых_счетов_всего по всем строкам.
+
+Файл 3 «margin_fin.csv» — вход margin («Маржа на счёт в месяц», руб.). Первые строки файла:
+﻿параметр;значение
+средний_остаток_тыс_руб;220
+маржа_проц_годовых;3
+срок_жизни_счёта_мес;12
+Расчёт входа margin: средний_остаток_тыс_руб × 1000 × маржа_проц_годовых ÷ 100 ÷ 12.
+
+Итоговые параметры проекта — посчитать из входов и вывести крупно, каждый с названием и единицей:
+- delta — Изменение показателя (предотвращённых закрытий в месяц) = closures × linked × 1/3; треть связанных с обращениями закрытий предотвращается — допущение
+- volume — Объём (—) = 1; множитель не используется
+- price — Стоимость единицы (руб. маржи на счёт в месяц) = margin
+Под параметрами — одна строка для копирования в следующий инструмент, ровно в таком виде: «delta=<число>; volume=<число>; price=<число>» с точкой в качестве десятичного знака, и кнопка «Копировать параметры» (navigator.clipboard.writeText с запасным вариантом через выделение текста).
+Итоговая метрика: Маржинальный доход от удержанных счетов (руб. в месяц на когорту) = delta × price — показать значение рядом с параметрами.
+Ниже — таблица входов: id, название, значение, из какого файла посчитано.
+График: значения входа closures по месяцам (если в файле есть столбец месяц) — линия, нарисованная inline SVG без внешних библиотек: ось месяцев внизу, подписи минимума и максимума слева, ширина 100 %.
+
+Требования к коду:
+— один HTML-файл без внешних библиотек и без запросов в сеть;
+— имена файлов ровно такие, как указано выше: closures_dm.csv, linked_crm.csv, margin_fin.csv; порядок выбора любой; до выбора всех 3 файлов показывать список ожидаемых имён и отмечать, какие уже загружены; если имя файла не из списка — сообщение «файл не из списка» с именем (текстом на странице, без alert);
+— файлы читать через FileReader.readAsText; у первого заголовка срезать метку кодировки: replace(/^\uFEFF/, ""); строки делить по переводу строки, пустые пропускать; числа разбирать после замены запятой на точку: parseFloat(s.replace(",", "."));
+— столбцы находить по названию из заголовка, а не по номеру;
+— месяц — строка, в объект даты не превращать;
+— имена переменных и функций — английские слова латиницей, русский — только в подписях;
+— async и await не использовать;
+— если для расчёта не хватает файла, показывать, какого именно, и не выдавать NaN.
+
+Проверь себя: на этих выгрузках closures около 1 866, linked около 0,1593, margin около 550.
+
+Ответ — только полный HTML-файл в тройных кавычках, без пояснений.
+```
+
+# ответ
+
+```
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Инструмент расчёта накопительного счёта</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .error-message { color: red; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { padding: 8px; text-align: left; }
+    #output-container { display: none; }
+    svg { width: 100%; height: auto; }
+  </style>
+</head>
+<body>
+
+<h1>Расчёт параметров проекта Накопительный счёт: удержание закрываемых счетов</h1>
+<div class="expected-files">Ожидаемые файлы: <ul><li>closures_dm.csv</li><li>linked_crm.csv</li><li>margin_fin.csv</li></ul></div>
+<div id="file-status"></div>
+<input type="file" name="files[]" id="files-input" multiple accept=".csv" onchange="handleFileSelect()"/>
+<p>Выберите все необходимые файлы.</p>
+
+<div id="output-container">
+  <table>
+    <tr>
+      <th>Параметр</th>
+      <th>Значение</th>
+      <th>Из файла</th>
+    </tr>
+    <tr>
+      <td>delta</td>
+      <td id="delta-value"></td>
+      <td>расчёт</td>
+    </tr>
+    <tr>
+      <td>volume</td>
+      <td id="volume-value">1</td>
+      <td>расчёт</td>
+    </tr>
+    <tr>
+      <td>price</td>
+      <td id="price-value"></td>
+      <td>margin_fin.csv</td>
+    </tr>
+  </table>
+  
+  <pre id="copy-text">delta=; volume=1; price=</pre>
+  <button onclick="copyParameters()">Копировать параметры</button>
+  
+  <hr>
+  <span id="closure-line-chart"></span>
+  <br><strong>Маржинальный доход от удержанных счетов:</strong> <span id="mduc-value"></span> руб./мес
+</div>
+
+<script>
+const filesInput = document.getElementById('files-input');
+const fileStatusDiv = document.getElementById('file-status');
+const outputContainer = document.getElementById('output-container');
+const closureLineChartDiv = document.querySelector('#closure-line-chart');
+const copyTextPre = document.getElementById('copy-text');
+const mducValueSpan = document.getElementById('mduc-value');
+
+let loadedFiles = [];
+
+// Срезание метки кодировки UTF-8 BOM
+function removeBom(str) {
+  return str.replace(/^\uFEFF/, '');
+}
+
+// Чтение файла через FileReader
+async function readFile(file) {
+  const reader = new FileReader();
+  let data = '';
+  try {
+    await reader.readAsText(file);
+    data = removeBom(reader.result);
+  } catch (err) {
+    console.error(err);
+  }
+  return data.split(/\r?\n/).filter(row => row.trim());
+}
+
+// Обработка загрузки файла
+function handleFileSelect(event) {
+  if (!event.target.files.length) return;
+  const selectedFiles = event.target.files;
+  fileStatusDiv.textContent = 'Загруженные файлы: ';
+  for (const file of selectedFiles) {
+    fileStatusDiv.appendChild(document.createTextNode(file.name + ', '));
+    loadedFiles.push(file);
+  }
+  // Проверяем наличие всех трёх файлов
+  checkForAllFiles();
+}
+
+// Проверка наличия всех необходимых файлов
+function checkForAllFiles() {
+  const expectedFiles = ['closures_dm.csv', 'linked_crm.csv', 'margin_fin.csv'];
+  const missingFiles = expectedFiles.filter(f => !loadedFiles.some(fl => fl.name.includes(f)));
+  if (missingFiles.length > 0) {
+    showErrorMessage(`Не найдены следующие файлы: ${missingFiles.join(', ')}`);
+  } else {
+    renderCalculations();
+  }
+}
+
+// Отображение ошибки
+function showErrorMessage(message) {
+  const errorMessage = document.createElement('div');
+  errorMessage.className = 'error-message';
+  errorMessage.textContent = message;
+  fileStatusDiv.appendChild(errorMessage);
+}
+
+// Расчёт параметра delta
+function calculateDelta(closuresData, linkedData) {
+  const lastTwelveMonths = closuresData.slice(-12);
+  const avgClosures = lastTwelveMonths.map(row => parseFloat(row.closed_accounts)).reduce((a,b) => a+b)/lastTwelveMonths.length;
+  const linkedRate = linkedData.reduce((sum, row) => sum + parseFloat(row.closed_after_contact), 0) / linkedData.length;
+  return avgClosures * linkedRate / 3;
+}
+
+// Расчёт параметра price
+function calculatePrice(marginData) {
+  const [avgBalance, annualInterestRate, monthsInYear] = [
+    parseFloat(marginData.find(row => row.parameter === 'средний_остаток_тыс_руб').value),
+    parseFloat(marginData.find(row => row.parameter === 'маржа_проц_годовых').value),
+    parseFloat(marginData.find(row => row.parameter === 'срок_жизни_счёта_мес').value)
+  ];
+  return avgBalance * 1000 * annualInterestRate / 100 / monthsInYear;
+}
+
+// Рисование графика закрытия счетов
+function drawClosureLineChart(data) {
+  const chartSvg = d3.select(closureLineChartDiv)
+    .append('svg')
+    .attr('width', '100%')
+    .attr('height', 'auto');
+
+  const xScale = d3.scaleBand()
+    .domain(data.map(d => d.month))
+    .range([0, chartSvg.node().getBoundingClientRect().width])
+    .padding(0.1);
+
+  const yMax = Math.max(...data.map(d => parseFloat(d.closed_accounts)));
+  const yScale = d3.scaleLinear()
+    .domain([0, yMax])
+    .range([chartSvg.attr('height'), 0]);
+
+  chartSvg.append('g')
+    .selectAll('rect')
+    .data(data)
+    .enter()
+    .append('rect')
+    .attr('x', d => xScale(d.month))
+    .attr('y', d => yScale(parseFloat(d.closed_accounts)))
+    .attr('width', xScale.bandwidth())
+    .attr('height', d => chartSvg.attr('height') - yScale(parseFloat(d.closed_accounts)))
+    .attr('fill', '#007bff');
+
+  chartSvg.append('text')
+    .attr('x', xScale.bandwidth()/2)
+    .attr('y', chartSvg.attr('height'))
+    .attr('dy', '.35em')
+    .text('Месяц')
+    .attr('alignment-baseline', 'hanging');
+
+  chartSvg.append('text')
+    .attr('x', xScale.bandwidth()/2)
+    .attr('y', 0)
+    .attr('dy', '-.35em')
+    .text('Закрытые счета')
+    .attr('alignment-baseline', 'middle');
+
+  chartSvg.append('g')
+    .call(d3.axisLeft(yScale))
+    .selectAll('text')
+    .attr('transform', 'rotate(-90)')
+    .attr('dx', '-.8em')
+    .attr('dy', '.15em')
+    .attr('text-anchor', 'end');
+}
+
+// Рендеринг результатов расчётов
+function renderCalculations() {
+  const closuresData = [];
+  const linkedData = [];
+  const marginData = [];
+
+  // Читаем данные из каждого файла
+  Promise.all([
+    readFile(loadedFiles.find(f => f.name.includes('closures_dm.csv'))),
+    readFile(loadedFiles.find(f => f.name.includes('linked_crm.csv'))),
+    readFile(loadedFiles.find(f => f.name.includes('margin_fin.csv')))
+  ]).then(([closuresCsv, linkedCsv, marginCsv]) => {
+    closuresData.push(...closuresCsv.map(row => ({ month: row[0], closed_accounts: row[1] })));
+    linkedData.push(...linkedCsv.map(row => ({ month: row[0], closed_after_contact: row[1] }));
+    marginData.push(...marginCsv.map(row => ({ parameter: row[0], value: row[1] })));
+
+    // Расчёт параметров
+    const delta = calculateDelta(closuresData, linkedData);
+    const price = calculatePrice(marginData);
+
+    // Выводим результаты
+    document.getElementById('delta-value').textContent = delta.toFixed(2);
+    document.getElementById('price-value').textContent = price.toFixed(2);
+
+    // Создаём график закрытия счетов
+    drawClosureLineChart(closuresData);
+
+    // Рассчитываем маржинальный доход
+    const marjinalIncome = delta * price;
+    mducValueSpan.textContent = marjinalIncome.toFixed(2);
+
+    // Показываем контейнер вывода
+    outputContainer.style.display = 'block';
+  });
+}
+
+// Копирование параметров
+function copyParameters() {
+  navigator.clipboard.writeText(copyTextPre.textContent);
+}
+
+window.onload = () => {
+  checkForAllFiles();
+};
+</script>
+
+<!-- Библиотека D3.js -->
+<script src="https://d3js.org/d3.v6.min.js"></script>
+
+</body>
+</html>
+```
