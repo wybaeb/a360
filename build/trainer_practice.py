@@ -157,16 +157,16 @@ HTML = f"""
 <li><b>Выберите вариант</b> — направление и номер. Каркас проекта по варианту заполнен, его можно уточнить.</li>
 <li><b>Соберите конфигурацию</b> дерева: для каждого входа итоговой метрики выберите источник данных.
     Страница показывает срок первого значения, стоимость и интегральную оценку конфигурации.</li>
-<li><b>Скачайте файлы</b> выбранных источников и скопируйте промпт. Ассистент возвращает код расчёта: вставьте его
-    в тренажёр и нажмите «Скачать мой мини-инструмент» — получится один HTML-файл. Откройте его, выберите файлы одной
-    кнопкой — инструмент посчитает параметры проекта и сверит расчёт ассистента с контрольным.</li>
-<li><b>Финансовая модель:</b> второй промпт с параметрами — ассистент возвращает код расчёта потока; вставьте его,
-    скачайте инструмент финансовой модели, откройте: окупаемость, NPV, график SVG с кнопкой сохранения. Загрузите SVG сюда.</li>
+<li><b>Скачайте файлы</b> выбранных источников и скопируйте промпт. Ассистент возвращает код HTML-файла: сохраните его
+    через Блокнот с расширением .html, откройте в браузере и перетащите в него файлы — инструмент посчитает входы
+    и параметры проекта. Контрольные значения для проверки — в тренажёре.</li>
+<li><b>Финансовая модель:</b> второй промпт с параметрами — ассистент возвращает код второго инструмента; сохраните,
+    откройте: окупаемость, NPV, график SVG с кнопкой сохранения. Загрузите SVG сюда.</li>
 <li><b>Презентация</b> собирается из всего сделанного: слайды листаются здесь и скачиваются одним HTML-файлом.</li>
 </ol>
-<p class="sub" style="margin:10px 0 0">Введённое сохраняется в браузере отдельно для каждого варианта. Скачанный инструмент открывается
-двойным щелчком в любом браузере. Если код ассистента не собрался, инструмент показывает контрольный расчёт,
-и занятие продолжается.</p>
+<p class="sub" style="margin:10px 0 0">Введённое сохраняется в браузере отдельно для каждого варианта. Как сохранить ответ ассистента файлом
+и открыть его — в материале <a href="guide_mini.html">«Мини-инструменты»</a>. Если инструмент не собрался с первого раза,
+сообщение об ошибке из браузера отправляется ассистенту; контрольные значения в тренажёре позволяют идти дальше.</p>
 </div>
 
 <h3>Вариант</h3>
@@ -219,9 +219,10 @@ HTML = f"""
 <!-- ─── Шаг 3 ─────────────────────────────────────────────────────────── -->
 <div class="step" id="st3">
 <div class="sthead"><span class="snum">Шаг 3</span><h3>Мини-инструмент расчёта параметров</h3></div>
-<p class="sub">Мини-инструмент читает несколько CSV одной кнопкой, считает входы дерева и три параметра финансовой модели,
-рисует график. Расчёт входов по формулам дерева пишет ассистент по промпту ниже; тренажёр собирает из его ответа готовый
-инструмент одним файлом. Расчёт выполняется в браузере, данные никуда не отправляются.</p>
+<p class="sub">Мини-инструмент создаёт ассистент по промпту ниже: HTML-файл, который принимает несколько CSV
+перетаскиванием, считает входы дерева по формулам и три параметра финансовой модели, рисует график. Промпт собран
+из вашей конфигурации; тот же промпт с другими файлами и формулами даёт другой инструмент. Расчёт выполняется
+в браузере, данные никуда не отправляются.</p>
 <p class="links">Из курса: <a href="guide_mini.html">Мини-инструменты: как создать и открыть</a>
 <a href="case_report.html">Мини-инструменты корреляций и трендов</a>
 <a href="longread_finmodel.html#formula">Формула эффекта</a></p>
@@ -229,14 +230,20 @@ HTML = f"""
 <p class="hint">Имена файлов должны остаться такими же: инструмент распознаёт файл по имени.</p>
 <div class="files" id="files"></div>
 </div>
-<div class="part"><h4><span class="n">2</span>Промпт на расчёт</h4>{_пром(3)}
-<p class="hint" style="margin-top:8px">Вставьте промпт в новый чат ассистента и скопируйте его ответ целиком.</p></div>
-<div class="part"><h4><span class="n">3</span>Соберите мини-инструмент</h4>
-<div class="fld"><label>Ответ ассистента (код расчёта)</label><textarea data-bind="code3" style="min-height:110px;font-family:var(--mono);font-size:13px" placeholder="window.computeInputs = function (tables) {{ … }}"></textarea></div>
-<p class="msg" id="code3msg"></p>
-<button class="btn" type="button" id="bTool">Скачать мой мини-инструмент</button>
-<p class="hint" style="margin-top:8px">Откройте скачанный файл в браузере и выберите CSV-файлы одной кнопкой. Инструмент покажет входы, параметры,
-итоговую метрику и сверит расчёт ассистента с контрольным; при расхождении — готовое сообщение для ассистента.</p>
+<div class="part"><h4><span class="n">2</span>Промпт на мини-инструмент</h4>{_пром(3)}
+<p class="hint" style="margin-top:8px">Вставьте промпт в новый чат ассистента. Ответ — код HTML-файла.</p></div>
+<div class="part"><h4><span class="n">3</span>Сохраните и откройте инструмент</h4>
+<ol style="margin:0 0 6px;padding-left:22px;font-size:15px">
+<li>Скопируйте ответ ассистента целиком, откройте Блокнот, вставьте, сохраните как <b>инструмент.html</b>
+(тип файла «Все файлы», кодировка UTF-8).</li>
+<li>Откройте сохранённый файл двойным щелчком — он откроется в браузере.</li>
+<li>Перетащите в него скачанные CSV-файлы или выберите их по ссылке в окне инструмента.</li>
+<li>Инструмент покажет входы, три параметра, итоговую метрику и график. Строку параметров скопируйте в поле ниже.</li>
+</ol>
+<p class="hint">Если браузер показал ошибку или инструмент ничего не посчитал — скопируйте текст ошибки ассистенту с просьбой исправить
+и вернуть файл целиком. Подробнее: <a href="guide_mini.html">«Мини-инструменты: как создать и открыть»</a>.</p>
+<p class="hint">Не получилось с двух попыток — <button class="btn sec" type="button" id="bToolRef">скачать запасной инструмент</button>,
+собранный по этому же промпту: он считает то же самое, и занятие продолжается.</p>
 </div>
 <div class="part"><h4><span class="n">4</span>Параметры из инструмента</h4>
 <p class="hint">Скопируйте строку параметров из инструмента и вставьте сюда — или впишите числа вручную.</p>
@@ -254,8 +261,8 @@ HTML = f"""
 <!-- ─── Шаг 4 ─────────────────────────────────────────────────────────── -->
 <div class="step" id="st4">
 <div class="sthead"><span class="snum">Шаг 4</span><h3>Мини-инструмент финансовой модели</h3></div>
-<p class="sub">Инструмент финансовой модели показывает поля параметров и условий, таблицу потока по месяцам, окупаемость, NPV
-и график SVG с кнопкой сохранения; расчёт потока по формулам финансовой модели пишет ассистент, тренажёр собирает инструмент одним файлом.</p>
+<p class="sub">Второй мини-инструмент создаёт ассистент по промпту с параметрами и условиями: поля, поток эффекта по месяцам,
+окупаемость, NPV, таблица и график SVG с кнопкой сохранения. Формулы потока — те же, что в материале «Финансовая модель проекта».</p>
 <p class="links">Из курса: <a href="longread_finmodel.html#potok">Поток эффекта во времени</a>
 <a href="longread_finmodel.html#npv">NPV и правило принятия</a>
 <a href="trainer_effect.html">Тренажёр «Финансовая модель эффекта»</a></p>
@@ -269,13 +276,13 @@ HTML = f"""
 <div class="fld"><label>Ставка дисконтирования, доля в год</label><input data-bind="fin.rate"></div>
 </div>
 </div>
-<div class="part"><h4><span class="n">2</span>Промпт на расчёт потока</h4>{_пром(4)}</div>
-<div class="part"><h4><span class="n">3</span>Соберите инструмент финансовой модели</h4>
-<div class="fld"><label>Ответ ассистента (код расчёта потока)</label><textarea data-bind="code4" style="min-height:110px;font-family:var(--mono);font-size:13px" placeholder="window.effectFlows = function (p) {{ … }}"></textarea></div>
-<p class="msg" id="code4msg"></p>
-<button class="btn" type="button" id="bFin">Скачать мой инструмент финансовой модели</button>
-<p class="hint" style="margin-top:8px">Откройте файл: параметры шага 3 и условия уже подставлены, нажмите «Рассчитать». Кнопка «Сохранить SVG»
-сохраняет график файлом npv.svg — загрузите его ниже.</p>
+<div class="part"><h4><span class="n">2</span>Промпт на инструмент финансовой модели</h4>{_пром(4)}</div>
+<div class="part"><h4><span class="n">3</span>Сохраните и откройте инструмент</h4>
+<p style="margin:0 0 6px;font-size:15px">Ответ ассистента сохраните через Блокнот как <b>финмодель.html</b> и откройте. Параметры шага 3
+и условия уже подставлены; при необходимости измените их и нажмите «Рассчитать». Кнопка «Сохранить SVG» сохраняет график
+файлом npv.svg — загрузите его ниже.</p>
+<p class="hint">Не получилось с двух попыток — <button class="btn sec" type="button" id="bFinRef">скачать запасной инструмент</button>,
+собранный по этому же промпту.</p>
 </div>
 <div class="part"><h4><span class="n">4</span>Результат инструмента</h4>
 <div class="grid">
@@ -361,7 +368,7 @@ document.addEventListener('input',function(e){var el=e.target;if(!el.dataset||!e
   save();afterChange(el.dataset.bind)});
 function afterChange(bind){
   if(bind==='delta'||bind==='volume'||bind==='price'||bind==='paramsLine'){renderCtrl3();renderPrompt(4);renderCtrl4()}
-  if(bind==='code3')codeState(3);if(bind==='code4')codeState(4);
+
   if(bind.indexOf('fin.')===0){renderPrompt(4);renderCtrl4()}
   renderStepper();
 }
@@ -451,9 +458,10 @@ function assemble(n){var tpl=n===3?TOOL_TPL:FIN_TPL,meta=n===3?toolMeta():finMet
   return tpl.split('__TITLE__').join(esc(V().title)).split('__META__').join(JSON.stringify(meta).replace(/<\//g,'<\\/')).split('__MODULE__').join(code)}
 function downloadHtml(html,name){var a=document.createElement('a');var blob=new Blob([html],{type:'text/html;charset=utf-8'});a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a)}
 window.__assemble=assemble;
+window.__reference=function(n){return n===3?C.toolReference(V(),st.chosen,filesObj()):C.npvReference(V(),params())};
 function renderPrompt(n){var pv=$('pv'+n);if(!pv)return;var txt;
-  if(n===3){txt=C.calcPrompt(V(),st.chosen,filesObj());$('ps3').textContent='Промпт учитывает выбранные источники: '+chosenRows().map(function(r){return r.source.file}).join(', ')+'. Если в ассистенте есть выбор модели — выбирайте самую сильную.'}
-  else{var p=params();if(!paramsOk()){txt='';$('ps4').textContent='Сначала введите параметры на шаге 3.'}else{var r=C.modelPrompt(V(),p);txt=r.text;$('ps4').textContent='Формулы потока — те же, что в материале «Финансовая модель проекта». Контрольные значения расчёта — под полями результата.'}}
+  if(n===3){txt=C.toolPrompt(V(),st.chosen,filesObj());$('ps3').textContent='Промпт собран для файлов '+chosenRows().map(function(r){return r.source.file}).join(', ')+' и содержит основу инструмента. Если в ассистенте есть выбор модели — выбирайте самую сильную.'}
+  else{var p=params();if(!paramsOk()){txt='';$('ps4').textContent='Сначала введите параметры на шаге 3.'}else{var r=C.npvPrompt(V(),p);txt=r.text;$('ps4').textContent='Параметры шага 3 и условия варианта подставлены в основу инструмента. Контрольные значения расчёта — под полями результата.'}}
   ptext[n]=txt;pv.textContent=txt}
 function renderCtrl3(){var v=V(),rows=chosenRows(),exp={};rows.forEach(function(r){exp[r.input.id]=r.source.expect});
   var keys=Object.keys(exp),delta=v.params.delta.formula,vol=v.params.volume.formula,pr=v.params.price.formula;
@@ -461,7 +469,7 @@ function renderCtrl3(){var v=V(),rows=chosenRows(),exp={};rows.forEach(function(
   $('l-delta').textContent='Изменение показателя ('+v.params.delta.unit+')';$('l-volume').textContent='Объём ('+v.params.volume.unit+')';$('l-price').textContent='Стоимость единицы ('+v.params.price.unit+')';
   var p=params(),chk='';
   if(paramsOk()){var ok=near(p.delta,expDelta,0.05)&&near(p.price,expPrice,0.03)&&near(p.volume,expVol,0.01);chk=ok?' <b style="color:#128a53">Совпадает с контрольным расчётом.</b>':' <b style="color:var(--warn)">Отличается от контрольного расчёта — проверьте файлы и формулы инструмента.</b>'}
-  $('ctrl3').innerHTML='<b>Контрольные значения</b> (страница считает их по тем же файлам): '+keys.map(function(k){return k+' = '+C.fmtv(exp[k])}).join('; ')+' → delta = '+C.fmtv(Math.round(expDelta*100)/100)+', volume = '+C.fmtv(expVol)+', price = '+C.fmtv(Math.round(expPrice*100)/100)+'.'+chk+' Если инструмент не собрался — введите контрольные значения и продолжайте.'}
+  $('ctrl3').innerHTML='<b>Контрольные значения для проверки инструмента</b> (страница считает их по тем же файлам): '+keys.map(function(k){return k+' = '+C.fmtv(exp[k])}).join('; ')+' → delta = '+C.fmtv(Math.round(expDelta*100)/100)+', volume = '+C.fmtv(expVol)+', price = '+C.fmtv(Math.round(expPrice*100)/100)+'.'+chk+' Если инструмент не собрался — введите контрольные значения и продолжайте.'}
 function near(a,b,rel){return Math.abs(a-b)<=Math.abs(b)*rel+1e-9}
 function evalFormula(f,vals){var s=String(f);Object.keys(vals).forEach(function(k){s=s.replace(new RegExp('\\b'+k+'\\b','g'),'('+vals[k]+')')});s=s.replace(/×/g,'*').replace(/÷/g,'/');if(!/^[\d\s().*\/+\-]+$/.test(s))return NaN;try{return Function('return ('+s+')')()}catch(e){return NaN}}
 
@@ -508,10 +516,11 @@ function copyText(txt,btn,lbl){function done(){btn.textContent='Скопиров
 document.addEventListener('click',function(e){var t=e.target.closest('button');if(!t)return;
   if(t.dataset.go){go(+t.dataset.go);return}
   if(t.dataset.copy){e.stopImmediatePropagation();copyText(ptext[+t.dataset.copy]||'',t,'Копировать промпт');return}
-  if(t.id==='bTool'){codeState(3);downloadHtml(assemble(3),'инструмент_параметров_'+cur+'.html');return}
-  if(t.id==='bFin'){codeState(4);downloadHtml(assemble(4),'финмодель_'+cur+'.html');return}});
+  if(t.id==='bToolRef'){downloadHtml(C.toolReference(V(),st.chosen,filesObj()),'инструмент_'+cur+'.html');return}
+  if(t.id==='bFinRef'){if(!paramsOk()){alert('Сначала введите параметры на шаге 3');return}downloadHtml(C.npvReference(V(),params()),'финмодель_'+cur+'.html');return}
+});
 function renderStep(n){fillInputs($('st'+n));
-  switch(n){case 1:renderFrame();break;case 2:renderTree();renderEco();break;case 3:renderFiles();renderPrompt(3);codeState(3);renderCtrl3();break;case 4:renderPrompt(4);codeState(4);renderCtrl4();renderSvg();break;case 5:slideNo=0;renderSlide();break}}
+  switch(n){case 1:renderFrame();break;case 2:renderTree();renderEco();break;case 3:renderFiles();renderPrompt(3);renderCtrl3();break;case 4:renderPrompt(4);renderCtrl4();renderSvg();break;case 5:slideNo=0;renderSlide();break}}
 function renderAll(){fillInputs(document);renderPicker();renderStepper();go(st.step||1)}
 var first=null;try{first=localStorage.getItem('a360_practice_last')}catch(e){}
 load(first&&VARS.some(function(v){return v.id===first})?first:VARS[0].id);

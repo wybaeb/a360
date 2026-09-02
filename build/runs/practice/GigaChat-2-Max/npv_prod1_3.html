@@ -1,224 +1,205 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Финансовая модель эффекта проекта</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        input[type=number], button { margin-right: 10px; padding: 5px; width: 100px; box-sizing: border-box; }
-        .result h2 { display: inline-block; width: 25%; text-align: center; font-size: 2em; line-height: 1.2; margin-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 5px; text-align: right; }
-        th { background-color: #f0f0f0; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        svg { width: 100%; height: auto; }
-        .bar { fill: steelblue; stroke-width: 1; stroke: white; }
-        .line { stroke: red; stroke-width: 2; }
-        .dashed-line { stroke-dasharray: 5,5; stroke: green; stroke-width: 2; }
-        .label { dominant-baseline: middle; text-anchor: middle; font-size: 12px; }
-        .grid-line { stroke: lightgray; stroke-width: 1; opacity: 0.5; }
-    </style>
-</head>
-<body onload="calculate()">
-
-<h1>Финансовая модель эффекта проекта</h1>
-
-<div style="margin-bottom: 20px;">
-    <input type="number" id="delta" value="100"> Изменение показателя в месяц<br>
-    <input type="number" id="volume" value="1"> Объём<br>
-    <input type="number" id="price" value="550"> Стоимость единицы, руб.<br>
-    <input type="number" id="ramp" value="3"> Выход на полный уровень, мес.<br>
-    <input type="number" id="keep" value="12"> Срок сохранения эффекта, мес.<br>
-    <input type="number" id="capex" value="600000"> Единовременные затраты, руб.<br>
-    <input type="number" id="opex" value="50000"> Ежемесячные затраты, руб.<br>
-    <input type="number" id="horizon" value="24"> Горизонт, мес.<br>
-    <input type="number" id="rate" step="0.01" value="0.15"> Годовая ставка дисконтирования, доля<br><br>
-    <button onclick="calculate()">Рассчитать</button>
-</div>
-
-<div class="result"></div>
-
-<svg viewBox="0 0 960 340" xmlns="http://www.w3.org/2000/svg">
-</svg>
-
-<script>
-function calculate() {
-    const resultDiv = document.querySelector('.result');
-    const svgElement = document.querySelector('svg');
-    while(svgElement.firstChild) svgElement.removeChild(svgElement.lastChild);
-    
-    let delta = Number(document.getElementById("delta").value.replace(",", "."));
-    let volume = Number(document.getElementById("volume").value.replace(",", "."));
-    let price = Number(document.getElementById("price").value.replace(",", "."));
-    let ramp = Number(document.getElementById("ramp").value.replace(",", ".")) || 1;
-    let keep = Number(document.getElementById("keep").value.replace(",", "."));
-    let capex = Number(document.getElementById("capex").value.replace(",", "."));
-    let opex = Number(document.getElementById("opex").value.replace(",", "."));
-    let horizon = Math.floor(Number(document.getElementById("horizon").value.replace(",", ".")));
-    let rate = Number(document.getElementById("rate").value.replace(",", "."));
-
-    function rampShare(t) {
-        return Math.min(t / ramp, 1);
+  <meta charset="utf-8">
+  <title>Финансовая модель: Накопительный счёт: удержание закрываемых счетов</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 960px;
+      margin: 24px auto;
+      padding: 0 16px;
+      color: #222;
     }
-
-    // Precompute for performance
-    let full = delta * volume;
-    let monthlyRate = Math.pow(1 + rate, 1/12) - 1;
-
-    let data = [];
-    let totalIncomeFirstYear = 0;
-    let cumulativeCF = 0;
-    let cumulativeDiscountedCF = 0;
-    let paybackMonth = null;
-
-    for(let t = 0; t <= horizon; t++) {
-        let units = 0;
-        if(t >= 1) {
-            for(let k = Math.max(1, t - keep + 1); k <= t; k++) {
-                units += full * rampShare(k);
-            }
+    label {
+      display: inline-block;
+      margin: 0 14px 10px 0;
+      font-size: 14px;
+    }
+    label span {
+      display: block;
+      color: #666;
+      font-size: 12px;
+    }
+    input {
+      font: inherit;
+      padding: 5px 8px;
+      width: 140px;
+    }
+    button {
+      font: inherit;
+      padding: 8px 16px;
+      border: 0;
+      border-radius: 8px;
+      background: #2a9d5c;
+      color: #fff;
+      cursor: pointer;
+    }
+    .tile {
+      display: inline-block;
+      min-width: 220px;
+      margin: 8px 16px 8px 0;
+    }
+    .tile b {
+      display: block;
+      font-size: 26px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 12px 0;
+      font-size: 14px;
+    }
+    td,
+    th {
+      border-bottom: 1px solid #ddd;
+      padding: 5px 8px;
+      text-align: left;
+    }
+    #status {
+      color: #b33;
+    }
+  </style>
+</head>
+<body>
+  <h1>Финансовая модель эффекта: Накопительный счёт: удержание закрываемых счетов</h1>
+  <div id="form"></div>
+  <button type="button" id="calc">Рассчитать</button>
+  <button type="button" id="save">Сохранить SVG</button>
+  <p id="status"></p>
+  <div id="out"></div>
+  <div id="chart"></div>
+  <div id="tab"></div>
+  <script>
+    var FIELDS = [
+      ["delta", "Изменение показателя в месяц, предотвращённых закрытий в месяц", 100],
+      ["volume", "Объём, —", 1],
+      ["price", "Стоимость единицы, руб. в месяц", 550],
+      ["ramp", "Выход на полный уровень, мес.", 3],
+      ["keep", "Срок сохранения эффекта, мес.", 12],
+      ["capex", "Единовременные затраты, руб.", 600000],
+      ["opex", "Ежемесячные затраты, руб.", 50000],
+      ["horizon", "Горизонт, мес.", 24],
+      ["rate", "Ставка дисконтирования, доля в год", 0.15]
+    ];
+    document.getElementById("form").innerHTML = FIELDS.map(function(f) {
+      return "<label>" + f[1] + "<span>" + f[0] + "</span><input id=\"f-" + f[0] + "\" value=\"" + f[2] + "\"></label>";
+    }).join("");
+    
+    function num(v) {
+      var n = parseFloat(String(v).replace(",", "."));
+      return isNaN(n) ? 0 : n;
+    }
+    
+    function money(x) {
+      var a = Math.abs(x),
+          s = a >= 1e6 ? (a / 1e6).toFixed(2).replace(".", ",") + " млн руб." : Math.round(a).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " руб.";
+      return (x < 0 ? "-" : "") + s;
+    }
+    
+    function effectFlows(p) {
+      var rows = [], 
+          rampShare = function(t) { return Math.min((t / p.ramp), 1); },
+          full = p.delta * p.volume,
+          m = Math.pow(1 + p.rate, 1 / 12) - 1, // месячная ставка дисконтирования
+          cumIncome = 0, cumCF = 0, cumDisc = 0;
+      
+      for (var t = 0; t <= p.horizon; t++) {
+        var income = 0, cost = 0, cf = 0, disc = 0;
+        
+        if (t == 0) {
+          income = 0;
+          cost = p.capex;
+        } else {
+          var startK = Math.max(1, t - p.keep + 1),
+              endK = t;
+          
+          // подсчёт дохода
+          for (var k = startK; k <= endK; k++) {
+            income += full * rampShare(k);
+          }
+          income *= p.price;
+          
+          // ежемесячные расходы
+          cost = p.opex;
         }
         
-        let income = units * price;
-        if(t === 0) income = 0;
-        else totalIncomeFirstYear += (t <= 12 ? income : 0);
+        // денежный поток и накопленные суммы
+        cf = income - cost;
+        cumIncome += income;
+        cumCF += cf;
+        disc = cf / Math.pow(1 + m, t);
+        cumDisc += disc;
         
-        let cost = t === 0 ? capex : opex;
-        let cashFlow = income - cost;
-        cumulativeCF += cashFlow;
-        let discountedCashFlow = cashFlow / Math.pow(1 + monthlyRate, t);
-        cumulativeDiscountedCF += discountedCashFlow;
-        
-        data.push({t, income, cost, cashFlow, cumulativeCF, discountedCashFlow});
-        
-        if(cumulativeCF >= 0 && !paybackMonth) paybackMonth = t;
+        rows.push({t: t, income: income, cost: cost, cf: cf, cum: cumCF, cum_disc: cumDisc});
+      }
+      
+      return rows;
     }
-
-    let npv = cumulativeDiscountedCF.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-    let totalIncomeFirstYearFormatted = totalIncomeFirstYear.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-    let paybackText = paybackMonth !== null ? `Месяц ${paybackMonth}` : 'Не достигается';
-
-    resultDiv.innerHTML = `
-        <h2>Доход за первый год:</h2>${totalIncomeFirstYearFormatted}<br>
-        <h2>Окупаемость, мес.:</h2>${paybackText}<br>
-        <h2>NPV за горизонт:</h2>${npv}
-    `;
-
-    // Create the graph in SVG
-    const barWidth = 30;
-    const xScale = d => (d.t * barWidth) + 50;
-    const yScale = d => 300 - ((d.income / 10000) * 200);
-    const cumYScale = d => 300 - ((d.cumulativeCF / 1000000) * 200);
-    const discountCumYScale = d => 300 - ((d.cumulativeDiscountedCF / 1000000) * 200);
-
-    // Grid lines and axis labels
-    for(let i = 0; i <= horizon; i+=3) {
-        let xPos = xScale(data[i]);
-        let labelX = xPos + barWidth / 2;
-        let gridLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        gridLine.setAttribute("class", "grid-line");
-        gridLine.setAttribute("x1", xPos);
-        gridLine.setAttribute("y1", 0);
-        gridLine.setAttribute("x2", xPos);
-        gridLine.setAttribute("y2", 300);
-        svgElement.appendChild(gridLine);
-        
-        let label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        label.setAttribute("class", "label");
-        label.setAttribute("x", labelX);
-        label.setAttribute("y", 330);
-        label.textContent = `${i}`;
-        svgElement.appendChild(label);
+    
+    function calc() {
+      var p = {};
+      FIELDS.forEach(function(f) { p[f[0]] = num(document.getElementById("f-" + f[0]).value); });
+      var rows = effectFlows(p);
+      if (!rows || rows.length !== Math.round(p.horizon) + 1) {
+        document.getElementById("status").textContent = "Функция effectFlows должна вернуть horizon + 1 строк";
+        return;
+      }
+      var pb = null, y1 = 0;
+      rows.forEach(function(r) {
+        if (r.t > 0 && pb === null && r.cum >= 0) pb = r.t;
+        if (r.t >= 1 && r.t <= 12) y1 += r.income;
+      });
+      var npv = rows[rows.length - 1].cum_disc;
+      document.getElementById("status").textContent = "";
+      document.getElementById("out").innerHTML =
+        "<div class='tile'><b>" + money(y1) + "</b> Доход за первый год</div>" +
+        "<div class='tile'><b>" + (pb === null ? "не достигается" : "месяц " + pb) + "</b> Окупаемость</div>" +
+        "<div class='tile'><b>" + money(npv) + "</b> NPV за " + Math.round(p.horizon) + " мес.</div>";
+  
+      var t = "<table><tr><th>Мес.</th><th>Доход</th><th>Затраты</th><th>Поток</th><th>Накопленный</th><th>Накопленный дисконтированный</th></tr>";
+      rows.forEach(function(r) {
+        t += "<tr><td>" + r.t + "</td><td>" + money(r.income) + "</td><td>" + money(r.cost) + "</td><td>" + money(r.cf) + "</td><td>" + money(r.cum) + "</td><td>" + money(r.cum_disc) + "</td></tr>";
+      });
+      document.getElementById("tab").innerHTML = t + "</table>";
+      drawChart(rows, pb, Math.round(p.horizon));
     }
-
-    // Bars of income per month
-    data.forEach(d => {
-        let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        rect.setAttribute("class", "bar");
-        rect.setAttribute("x", xScale(d)-barWidth/2);
-        rect.setAttribute("width", barWidth);
-        rect.setAttribute("height", Math.abs(yScale(d) - 300));
-        rect.setAttribute("y", Math.min(yScale(d), 300));
-        svgElement.appendChild(rect);
-    });
-
-    // Line of cumulative CF
-    let pathData = '';
-    data.forEach((d, idx) => {
-        if(idx == 0) pathData += `M${xScale(d)} ${cumYScale(d)}`;
-        else pathData += `L${xScale(d)} ${cumYScale(d)}`;
-    });
-    let linePath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    linePath.setAttribute("class", "line");
-    linePath.setAttribute("d", pathData);
-    svgElement.appendChild(linePath);
-
-    // Dashed line of cumulative discounted CF
-    let dashedPathData = '';
-    data.forEach((d, idx) => {
-        if(idx == 0) dashedPathData += `M${xScale(d)} ${discountCumYScale(d)}`;
-        else dashedPathData += `L${xScale(d)} ${discountCumYScale(d)}`;
-    });
-    let dashedLinePath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    dashedLinePath.setAttribute("class", "dashed-line");
-    dashedLinePath.setAttribute("d", dashedPathData);
-    svgElement.appendChild(dashedLinePath);
-
-    // Payback mark
-    if(paybackMonth != null){
-        let verticalMark = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        verticalMark.setAttribute("x1", xScale(data[paybackMonth]));
-        verticalMark.setAttribute("y1", 0);
-        verticalMark.setAttribute("x2", xScale(data[paybackMonth]));
-        verticalMark.setAttribute("y2", 300);
-        verticalMark.setAttribute("stroke", "black");
-        verticalMark.setAttribute("stroke-width", "2");
-        svgElement.appendChild(verticalMark);
-        
-        let paybackLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        paybackLabel.setAttribute("class", "label");
-        paybackLabel.setAttribute("x", xScale(data[paybackMonth]) + barWidth / 2);
-        paybackLabel.setAttribute("y", 320);
-        paybackLabel.textContent = `Окупаемость`;
-        svgElement.appendChild(paybackLabel);
+    
+    function drawChart(rows, pb, H) {
+      var W = 960, HH = 340, L = 80, R = 30, T = 20, B = 40, pw = W - L - R, ph = HH - T - B, mx = 0, mn = 0;
+      rows.forEach(function(r) { mx = Math.max(mx, r.cum, r.income); mn = Math.min(mn, r.cum, -r.cost); });
+      if (mx === mn) { mx = 1; mn = -1; }
+      var y = function(v) { return T + ph * (mx - v) / (mx - mn); },
+          x = function(t) { return L + pw * t / H; },
+          bw = Math.max(3, pw / (H + 1) * 0.34);
+      var s = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 " + W + " " + HH + "\" width=\"100%\" font-family=\"Arial\"><rect width=\"" + W + "\" height=\"" + HH + "\" fill=\"#fff\"/>";
+      s += "<line x1=\"" + L + "\" x2=\"" + (W - R) + "\" y1=\"" + y(0) + "\" y2=\"" + y(0) + "\" stroke=\"#999\"/>";
+      rows.forEach(function(r) {
+        var cx = x(r.t);
+        if (r.income > 0) s += "<rect x=\"" + (cx - bw) + "\" y=\"" + y(r.income) + "\" width=\"" + bw + "\" height=\"" + (y(0) - y(r.income)) + "\" fill=\"#2a9d5c\" fill-opacity=\"0.5\"/>";
+        if (r.cost > 0) s += "<rect x=\"" + cx + "\" y=\"" + y(0) + "\" width=\"" + bw + "\" height=\"" + (y(-r.cost) - y(0)) + "\" fill=\"#555\" fill-opacity=\"0.4\"/>";
+      });
+      s += "<path d=\"" + rows.map(function(r, i) { return (i ? "L" : "M") + x(r.t).toFixed(1) + " " + y(r.cum).toFixed(1); }).join(" ") + "\" fill=\"none\" stroke=\"#1e7a47\" stroke-width=\"3\"/>";
+      s += "<path d=\"" + rows.map(function(r, i) { return (i ? "L" : "M") + x(r.t).toFixed(1) + " " + y(r.cum_disc).toFixed(1); }).join(" ") + "\" fill=\"none\" stroke=\"#1e7a47\" stroke-width=\"2\" stroke-dasharray=\"6 5\"/>";
+      if (pb !== null) s += "<line x1=\"" + x(pb) + "\" x2=\"" + x(pb) + "\" y1=\"" + T + "\" y2=\"" + (T + ph) + "\" stroke=\"#c33\" stroke-dasharray=\"4 4\"/><text x=\"" + (x(pb) + 6) + "\" y=\"" + (T + 14) + "\" font-size=\"13\" fill=\"#c33\">окупаемость: месяц " + pb + "</text>";
+      for (var t = 0; t <= H; t += 3) s += "<text x=\"" + x(t) + "\" y=\"" + (HH - 14) + "\" font-size=\"12\" text-anchor=\"middle\">" + t + "</text>";
+      s += "<text x=\"" + (L - 6) + "\" y=\"" + (y(mx) + 12) + "\" font-size=\"12\" text-anchor=\"end\">" + money(mx) + "</text><text x=\"" + (L - 6) + "\" y=\"" + y(mn) + "\" font-size=\"12\" text-anchor=\"end\">" + money(mn) + "</text>";
+      document.getElementById("chart").innerHTML = s + "</svg>";
     }
-
-    // Table output
-    let table = `<table>
-                    <tr><th>Месяц</th><th>Доход</th><th>Затраты</th><th>Поток</th><th>Накопл. поток</th><th>Дисконт.</th></tr>`;
-    data.forEach(row => {
-        table += `<tr>
-                     <td>${row.t}</td>
-                     <td>${row.income.toLocaleString()}</td>
-                     <td>${row.cost.toLocaleString()}</td>
-                     <td>${row.cashFlow.toLocaleString()}</td>
-                     <td>${row.cumulativeCF.toLocaleString()}</td>
-                     <td>${row.discountedCashFlow.toLocaleString()}</td>
-                 </tr>`
-    });
-    table += '</table>';
-    resultDiv.insertAdjacentHTML('beforeend', table);
-}
-
-// Save SVG to file
-document.body.onclick = e => {
-    if(e.target.id === 'saveSVG') {
-        let serializer = new XMLSerializer();
-        let source = '<?xml version="1.0" standalone="no"?>\n' +
-                     '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">' +
-                     serializer.serializeToString(document.querySelector('svg'));
-                     
-        let blob = new Blob([source], {type: 'image/svg+xml;charset=utf-8'});
-        let url = window.URL.createObjectURL(blob);
-        let link = document.createElement('a');
-        link.href = url;
-        link.download = 'npv.svg';
-        link.click();
-    }
-};
-
-document.body.insertAdjacentHTML('beforeend', '<button id="saveSVG">Сохранить SVG</button>');
-</script>
-
+    
+    document.getElementById("calc").onclick = calc;
+    document.getElementById("save").onclick = function() {
+      var svg = document.querySelector("#chart svg");
+      if (!svg) return;
+      var blob = new Blob([new XMLSerializer().serializeToString(svg)], {type: "image/svg+xml;charset=utf-8"});
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "npv.svg";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    };
+    calc();
+  </script>
 </body>
 </html>

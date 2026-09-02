@@ -1,212 +1,155 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Инструмент расчета параметров проекта</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        .data-table { width: 100%; border-collapse: collapse; text-align: left; }
-        .data-table th, .data-table td { padding: 8px; border-bottom: 1px solid #ddd; }
-        input[type=file] { display: block; margin-top: 1em; }
-        svg { height: 200px; background-color: white; }
-        path.line { fill: none; stroke: steelblue; stroke-width: 2px; }
-        .axis { font-size: 12px; color: gray; }
-        h2 { font-weight: bold; margin-bottom: 0.5em; }
-        .params-output { font-size: 1.5em; line-height: 1.5; }
-        button { cursor: pointer; }
-    </style>
+<meta charset="utf-8">
+<title>Параметры проекта: Накопительный счёт: удержание закрываемых счетов</title>
+<style>
+body { font-family: Arial, sans-serif; max-width: 900px; margin: 24px auto; padding: 0 16px; color: #222; }
+.drop { border: 2px dashed #999; border-radius: 12px; padding: 24px; text-align: center; color: #555; }
+.drop.over { border-color: #2a9d5c; background: #f0faf4; }
+table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+td, th { border-bottom: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+.tile { display: inline-block; min-width: 200px; margin: 8px 16px 8px 0; }
+.tile b { display: block; font-size: 26px; }
+.line { font-family: monospace; background: #f4f4f4; padding: 8px 10px; border-radius: 8px; }
+#status { color: #b33; }
+</style>
 </head>
 <body>
-<h1>Расчет параметров проекта</h1>
-<p>Выберите три файла:</p>
-<input type="file" id="files-input" multiple accept=".csv"/>
-<div id="status"></div>
-<div class="params-output" style="display:none;">
-    <h2>Параметры проекта:</h2>
-    <table class="data-table">
-        <tr><th>Название параметра</th><th>Значение</th></tr>
-        <tr><td>Изменение показателя (delta)</td><td id="delta-value">...</td></tr>
-        <tr><td>Объём (volume)</td><td id="volume-value">...</td></tr>
-        <tr><td>Стоимость единицы (price)</td><td id="price-value">...</td></tr>
-    </table>
-    <br/>
-    <span id="copy-string">delta=...; volume=...; price=...</span>&nbsp;<button onclick="copyToClipboard()">Копировать параметры</button>
-    <br/><strong>Маржинальный доход от удержанных счетов (в месяц):</strong> <span id="marjinal-income">...</span> рублей.<br/>
+<h1>Параметры проекта: Накопительный счёт: удержание закрываемых счетов</h1>
+<div class="drop" id="drop">Перетащите сюда файлы closures_dm.csv, linked_crm.csv, margin_fin.csv или 
+<label><u>выберите их</u><input type="file" id="files" multiple accept=".csv" style="display:none"></label>
 </div>
-<br/>
-<h2>Таблица входов:</h2>
-<table class="data-table" id="inputs-table">
-    <thead><tr><th>id</th><th>Название</th><th>Значение</th><th>Из файла</th></tr></thead>
-    <tbody></tbody>
-</table>
-
+<p id="status"></p>
+<div id="out"></div>
+<div id="chart"></div>
 <script>
-function readCsv(file, callback) {
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        var csvData = e.target.result.replace(/^\uFEFF/, "").split("\n").map(row => row.split(";"));
-        // Удаляем последнюю строку, если она пустая
-        if (!csvData[csvData.length - 1][0]) csvData.pop();
-        callback(csvData);
+var FILES = ["closures_dm.csv", "linked_crm.csv", "margin_fin.csv"];
+var tables = {};
+function parseCsv(text) {
+  var lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter(function(l) { return l.trim() !== ""; });
+  var head = lines[0].split(";").map(function(h) { return h.trim(); }), rows = [];
+  for (var i = 1; i < lines.length; i++) {
+    var cells = lines[i].split(";");
+    var row = {};
+    for (var j = 0; j < head.length; j++) {
+      var v = (cells[j] || "").trim();
+      var n = parseFloat(v.replace(",", "."));
+      row[head[j]] = (v !== "" && !isNaN(n)) ? n : v;
+    }
+    rows.push(row);
+  }
+  return rows;
+}
+function computeInputs(tables) {
+  // closures — Закрытия счетов в месяц (счетов в месяц):
+  // Среднее значение столбца 'закрытые_счета' за последние 12 строк (месяцев)
+  var closuresRows = tables["closures_dm.csv"];
+  var last12Closures = closuresRows.slice(-12);
+  var sumClosedAccounts = last12Closures.reduce((sum, row) => sum + row["закрытые_счета"], 0);
+  var closures = sumClosedAccounts / last12Closures.length;
+  
+  // linked — Доля закрытий после обращения (доля от 0 до 1):
+  // Сумма столбца 'закрытий_после_обращения' ÷ сумму столбца 'закрытых_счетов_всего'
+  var linkedRows = tables["linked_crm.csv"];
+  var totalLinkedClosures = linkedRows.reduce((sum, row) => sum + row["закрытий_после_обращения"], 0);
+  var totalAllClosures = linkedRows.reduce((sum, row) => sum + row["закрытых_счетов_всего"], 0);
+  var linked = totalLinkedClosures / totalAllClosures;
+  
+  // margin — Маржа на счёт в месяц (руб.):
+  // Средний остаток тыс. руб. × 1000 × годовая ставка ÷ 100 ÷ 12
+  var marginRow = tables["margin_fin.csv"][0];
+  var avgBalance = marginRow["средний_остаток_тыс_руб"];
+  var annualRate = marginRow["маржа_проц_годовых"];
+  var margin = avgBalance * 1000 * annualRate / 100 / 12;
+  
+  return { closures: closures, linked: linked, margin: margin };
+}
+function fmt(v) { return (v === null || v === undefined || isNaN(v)) ? "—" : String(Math.round(v * 100) / 100).replace(".", ","); }
+function render() {
+  var missing = FILES.filter(function(f) { return !tables[f]; });
+  if (missing.length) { document.getElementById("status").textContent = "Ожидаются файлы: " + missing.join(", "); return; }
+  var x = computeInputs(tables);
+  var delta = x.closures * x.linked * 1/3;
+  var volume = 1;
+  var price = x.margin;
+  var h = "<h2>Входы</h2><table><tr><th>Вход</th><th>Значение</th></tr>";
+  h += "<tr><td>Закрытия счетов в месяц (closures)</td><td>" + fmt(x.closures) + " счетов в месяц</td></tr>";
+  h += "<tr><td>Доля закрытий после обращения (linked)</td><td>" + fmt(x.linked) + " доля от 0 до 1</td></tr>";
+  h += "<tr><td>Маржа на счёт в месяц (margin)</td><td>" + fmt(x.margin) + " руб.</td></tr>";
+  h += "</table><h2>Параметры финансовой модели</h2>";
+  h += "<div class=tile><b>" + fmt(delta) + "</b>Изменение показателя, предотвращённых закрытий в месяц</div>";
+  h += "<div class=tile><b>" + fmt(volume) + "</b>Объём, —</div>";
+  h += "<div class=tile><b>" + fmt(price) + "</b>Стоимость единицы, руб. маржи на счёт в месяц</div>";
+  h += "<p>Маржинальный доход от удержанных счетов: <b>" + fmt(delta * volume * price) + "</b> руб. в месяц на когорту</p>";
+  h += "<p class=line>delta=" + delta + "; volume=" + volume + "; price=" + price + "</p>";
+  document.getElementById("status").textContent = "";
+  document.getElementById("out").innerHTML = h;
+  drawChart();
+}
+function drawChart() {
+  var rows = tables[FILES[0]];
+  if (!rows || rows[0]["месяц"] === undefined) return;
+  var col = Object.keys(rows[0]).filter(function(k) { return k !== "месяц" && typeof rows[0][k] === "number"; })[0];
+  if (!col) return;
+  var by = {}, order = [];
+  rows.forEach(function(r) {
+    var m = String(r["месяц"]);
+    if (by[m] === undefined) { by[m] = 0; order.push(m); }
+    by[m] += r[col];
+  });
+  var ys = order.map(function(m) { return by[m]; }),
+      W = 860,
+      H = 260,
+      L = 60,
+      B = 40,
+      mx = Math.max.apply(null, ys),
+      mn = Math.min.apply(null, ys);
+  if (mx === mn) { mx += 1; mn -= 1; }
+  var X = function(i) { return L + (W - L - 20) * i / Math.max(1, ys.length - 1); },
+      Y = function(v) { return 20 + (H - 20 - B) * (mx - v) / (mx - mn); };
+  var d = ys.map(function(v, i) { return (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1); }).join(" ");
+  var s = "<h2>" + col + " по месяцам</h2><svg viewBox=\"0 0 " + W + " " + H + "\" width=\"100%\" xmlns=\"http://www.w3.org/2000/svg\">";
+  s += "<path d=\"" + d + "\" fill=\"none\" stroke=\"#2a9d5c\" stroke-width=\"3\"/>";
+  s += "<text x=\"" + (L - 6) + "\" y=\"24\" font-size=\"12\" text-anchor=\"end\">" + fmt(mx) + "</text>";
+  s += "<text x=\"" + (L - 6) + "\" y=\"" + (H - B) + "\" font-size=\"12\" text-anchor=\"end\">" + fmt(mn) + "</text>";
+  order.forEach(function(m, i) {
+    if (i % 3 === 0 || i === order.length - 1)
+      s += "<text x=\"" + X(i).toFixed(1) + "\" y=\"" + (H - 12) + "\" font-size=\"11\" text-anchor=\"middle\">" + m + "</text>";
+  });
+  document.getElementById("chart").innerHTML = s + "</svg>";
+}
+function readFiles(list) {
+  Array.prototype.slice.call(list).forEach(function(file) {
+    if (FILES.indexOf(file.name) < 0) {
+      document.getElementById("status").textContent = "Файл не из списка: " + file.name;
+      return;
+    }
+    var rd = new FileReader();
+    rd.onload = function() {
+      tables[file.name] = parseCsv(rd.result);
+      render();
     };
-    reader.readAsText(file);
+    rd.readAsText(file, "utf-8");
+  });
 }
-
-document.getElementById('files-input').onchange = function(event) {
-    document.getElementById('status').innerHTML = '';
-    var files = event.target.files;
-    var fileNames = ['closures_dm.csv', 'linked_crm.csv', 'margin_fin.csv'];
-    var results = {};
-    
-    for(var i = 0; i < files.length; i++) {
-        var filename = files[i].name;
-        
-        if(!fileNames.includes(filename)) {
-            document.getElementById('status').innerHTML += '<p>Файл "' + filename + '" не из списка.</p>';
-            continue;
-        }
-        
-        readCsv(files[i], function(data) {
-            processFile(filename, data, results);
-            
-            if(Object.keys(results).length === 3) {
-                calculateProjectParameters(results);
-            } else {
-                updateStatus(results);
-            }
-        });
-    }
-};
-
-function processFile(filename, data, results) {
-    switch(filename) {
-        case 'closures_dm.csv':
-            var closedSum = 0;
-            var lastRows = data.slice(-12);
-            for(var j = 1; j < lastRows.length; j++) {
-                closedSum += parseFloat(lastRows[j][1].replace(',', '.'));
-            }
-            results['closures'] = closedSum / Math.min(12, lastRows.length - 1);
-            break;
-        case 'linked_crm.csv':
-            var totalClosed = 0;
-            var afterCallClosed = 0;
-            for(var k = 1; k < data.length; k++) {
-                totalClosed += parseFloat(data[k][1].replace(',', '.'));
-                afterCallClosed += parseFloat(data[k][2].replace(',', '.'));
-            }
-            results['linked'] = afterCallClosed / totalClosed;
-            break;
-        case 'margin_fin.csv':
-            var avgBalance = parseFloat(data.find(r => r[0] == 'средний_остаток_тыс_руб')[1].replace(',', '.')) * 1000;
-            var interestRate = parseFloat(data.find(r => r[0] == 'маржа_проц_годовых')[1].replace(',', '.')) / 100;
-            var accountLifeMonths = parseInt(data.find(r => r[0] == 'срок_жизни_счёта_мес')[1]);
-            results['margin'] = avgBalance * interestRate / accountLifeMonths;
-            break;
-    }
-}
-
-function calculateProjectParameters(results) {
-    var delta = results.closures * results.linked / 3;
-    var volume = 1;
-    var price = results.margin;
-    var marjIncome = delta * price;
-    
-    document.getElementById('delta-value').textContent = delta.toFixed(2);
-    document.getElementById('volume-value').textContent = volume;
-    document.getElementById('price-value').textContent = price.toFixed(2);
-    document.getElementById('marjinal-income').textContent = marjIncome.toFixed(2);
-    document.getElementById('copy-string').textContent = `delta=${delta.toFixed(2)}; volume=${volume}; price=${price.toFixed(2)}`;
-    document.querySelector('.params-output').style.display = 'block';
-    
-    renderInputsTable(results);
-    drawClosuresChart(results.closures_data);
-}
-
-function renderInputsTable(results) {
-    var tableBody = document.getElementById('inputs-table').tBodies[0];
-    while(tableBody.firstChild) tableBody.removeChild(tableBody.firstChild);
-    
-    Object.entries(results).forEach(([key, value]) => {
-        var tr = document.createElement('tr');
-        tr.innerHTML = `<td>${key}</td><td>${value.toFixed ? value.toFixed(2) : value}</td><td>из ${getFilenameForInput(key)}</td>`;
-        tableBody.appendChild(tr);
-    });
-}
-
-function getFilenameForInput(inputName) {
-    return {'closures': 'closures_dm.csv',
-            'linked': 'linked_crm.csv',
-            'margin': 'margin_fin.csv'}[inputName];
-}
-
-function copyToClipboard() {
-    navigator.clipboard.writeText(document.getElementById('copy-string').textContent)
-      .then(() => console.log('Скопировано!'))
-      .catch(err => console.error('Ошибка копирования:', err));
-}
-
-function drawClosuresChart(closuresData) {
-    var minValue = Infinity;
-    var maxValue = -Infinity;
-    var xScale = d3.scaleBand().domain(d3.range(closuresData.length)).range([0, window.innerWidth]).paddingInner(0.1);
-    var yScale = d3.scaleLinear().range([window.innerHeight - 50, 10]);
-    
-    closuresData.forEach(function(row) {
-        var val = parseFloat(row[1].replace(',', '.'));
-        minValue = Math.min(minValue, val);
-        maxValue = Math.max(maxValue, val);
-    });
-    
-    yScale.domain([minValue, maxValue]);
-    
-    var chartSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    chartSvg.setAttribute('width', '100%');
-    chartSvg.setAttribute('height', window.innerHeight);
-    document.body.appendChild(chartSvg);
-    
-    var linePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    linePath.setAttribute('class', 'line');
-    linePath.setAttribute('d', 'M' + xScale(0) + ',' + yScale(parseFloat(closuresData[0][1].replace(',', '.'))));
-    
-    closuresData.forEach(function(row, index) {
-        var val = parseFloat(row[1].replace(',', '.'));
-        linePath.setAttribute('d', linePath.getAttribute('d') + (' L' + xScale(index) + ',' + yScale(val)));
-    });
-    
-    chartSvg.appendChild(linePath);
-    
-    var axisLeft = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    axisLeft.textContent = `${maxValue}`;
-    axisLeft.setAttribute('x', '-10');
-    axisLeft.setAttribute('y', '10');
-    axisLeft.setAttribute('transform', 'rotate(-90)');
-    axisLeft.classList.add('axis');
-    chartSvg.appendChild(axisLeft);
-    
-    var axisRight = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    axisRight.textContent = `${minValue}`;
-    axisRight.setAttribute('x', '-10');
-    axisRight.setAttribute('y', window.innerHeight - 40);
-    axisRight.setAttribute('transform', 'rotate(-90)');
-    axisRight.classList.add('axis');
-    chartSvg.appendChild(axisRight);
-}
-
-function updateStatus(results) {
-    var statusDiv = document.getElementById('status');
-    statusDiv.innerHTML = '';
-    fileNames.forEach(name => {
-        var p = document.createElement('p');
-        p.textContent = name + ': ';
-        if(results[name.replace('.csv','')] !== undefined) {
-            p.textContent += 'загружено';
-        } else {
-            p.textContent += 'не загружено';
-        }
-        statusDiv.appendChild(p);
-    });
-}
+var drop = document.getElementById("drop");
+drop.addEventListener("dragover", function(e) {
+  e.preventDefault();
+  drop.className = "drop over";
+});
+drop.addEventListener("dragleave", function() {
+  drop.className = "drop";
+});
+drop.addEventListener("drop", function(e) {
+  e.preventDefault();
+  drop.className = "drop";
+  readFiles(e.dataTransfer.files);
+});
+document.getElementById("files").addEventListener("change", function() {
+  readFiles(this.files);
+});
+render();
 </script>
 </body>
 </html>

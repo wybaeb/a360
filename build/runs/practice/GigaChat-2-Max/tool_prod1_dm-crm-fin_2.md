@@ -1,51 +1,111 @@
 # промпт
 
 ```
-Сделай одностраничный HTML-инструмент: расчёт параметров проекта «Накопительный счёт: удержание закрываемых счетов» по нескольким выгрузкам.
+Допиши мини-инструмент: одностраничный HTML-файл, который читает несколько CSV-выгрузок, считает входы дерева метрик проекта «Накопительный счёт: удержание закрываемых счетов» и параметры финансовой модели. Основа файла ниже уже готова: чтение файлов, перетаскивание, вывод и график написаны. Нужно заполнить функцию computeInputs — расчёт каждого входа по описанию — и вернуть файл целиком, ничего больше не меняя.
 
-Данные: 3 CSV-файла, кодировка UTF-8 с меткой порядка байтов, разделитель — точка с запятой, десятичный знак — запятая. Пользователь выбирает все файлы сразу одной кнопкой (input type="file" multiple accept=".csv"); файл распознаётся по имени. Файлы читаются в браузере и никуда не отправляются.
+Данные: 3 CSV-файла, кодировка UTF-8 с меткой порядка байтов, разделитель — точка с запятой, десятичный знак — запятая. В функцию computeInputs файлы приходят объектом tables: ключ — имя файла, значение — массив строк; строка — объект с ключами из заголовка файла, числа уже переведены в числа, месяц — строка вида «2025-01», порядок строк как в файле.
 
-Файл 1 «closures_dm.csv» — вход closures («Закрытия счетов в месяц», счетов в месяц). Первые строки файла:
+Файл 1 «closures_dm.csv» — вход closures («Закрытия счетов в месяц», счетов в месяц). Первые строки:
 ﻿месяц;закрытые_счета;активные_счета
 2024-01;1521;60452
 2024-02;1449;63243
 2024-03;1509;67165
 Расчёт входа closures: среднее значение столбца закрытые_счета за последние 12 строк (месяцев).
 
-Файл 2 «linked_crm.csv» — вход linked («Доля закрытий после обращения», доля от 0 до 1). Первые строки файла:
+Файл 2 «linked_crm.csv» — вход linked («Доля закрытий после обращения», доля от 0 до 1). Первые строки:
 ﻿месяц;закрытых_счетов_всего;закрытий_после_обращения
 2024-01;1521;266
 2024-02;1449;224
 2024-03;1509;222
 Расчёт входа linked: сумма столбца закрытий_после_обращения ÷ сумма столбца закрытых_счетов_всего по всем строкам.
 
-Файл 3 «margin_fin.csv» — вход margin («Маржа на счёт в месяц», руб.). Первые строки файла:
+Файл 3 «margin_fin.csv» — вход margin («Маржа на счёт в месяц», руб.). Первые строки:
 ﻿параметр;значение
 средний_остаток_тыс_руб;220
 маржа_проц_годовых;3
 срок_жизни_счёта_мес;12
 Расчёт входа margin: средний_остаток_тыс_руб × 1000 × маржа_проц_годовых ÷ 100 ÷ 12.
 
-Итоговые параметры проекта — посчитать из входов и вывести крупно, каждый с названием и единицей:
-- delta — Изменение показателя (предотвращённых закрытий в месяц) = closures × linked × 1/3; треть связанных с обращениями закрытий предотвращается — допущение
-- volume — Объём (—) = 1; множитель не используется
-- price — Стоимость единицы (руб. маржи на счёт в месяц) = margin
-Под параметрами — одна строка для копирования в следующий инструмент, ровно в таком виде: «delta=<число>; volume=<число>; price=<число>» с точкой в качестве десятичного знака, и кнопка «Копировать параметры» (navigator.clipboard.writeText с запасным вариантом через выделение текста).
-Итоговая метрика: Маржинальный доход от удержанных счетов (руб. в месяц на когорту) = delta × price — показать значение рядом с параметрами.
-Ниже — таблица входов: id, название, значение, из какого файла посчитано.
-График: значения входа closures по месяцам (если в файле есть столбец месяц) — линия, нарисованная inline SVG без внешних библиотек: ось месяцев внизу, подписи минимума и максимума слева, ширина 100 %.
+Правила для computeInputs: столбцы брать по названию из заголовка, например row["название_столбца"]; «последние 12 строк» — последние 12 элементов массива (arr.slice(-12)); при свёртке по месяцам сначала сложить значения строк с одинаковым месяцем, потом взять последние 12 месяцев по порядку; если файла нет — оставить null; имена переменных латиницей, комментарии по-русски; без async, fetch и внешних библиотек.
 
-Требования к коду:
-— один HTML-файл без внешних библиотек и без запросов в сеть;
-— имена файлов ровно такие, как указано выше: closures_dm.csv, linked_crm.csv, margin_fin.csv; порядок выбора любой; до выбора всех 3 файлов показывать список ожидаемых имён и отмечать, какие уже загружены; если имя файла не из списка — сообщение «файл не из списка» с именем (текстом на странице, без alert);
-— файлы читать через FileReader.readAsText; у первого заголовка срезать метку кодировки: replace(/^\uFEFF/, ""); строки делить по переводу строки, пустые пропускать; числа разбирать после замены запятой на точку: parseFloat(s.replace(",", "."));
-— столбцы находить по названию из заголовка, а не по номеру;
-— месяц — строка, в объект даты не превращать;
-— имена переменных и функций — английские слова латиницей, русский — только в подписях;
-— async и await не использовать;
-— если для расчёта не хватает файла, показывать, какого именно, и не выдавать NaN.
-
-Проверь себя: на этих выгрузках closures около 1 866, linked около 0,1593, margin около 550.
+Основа файла:
+```html
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><title>Параметры проекта: Накопительный счёт: удержание закрываемых счетов</title>
+<style>body{font-family:Arial,sans-serif;max-width:900px;margin:24px auto;padding:0 16px;color:#222}.drop{border:2px dashed #999;border-radius:12px;padding:24px;text-align:center;color:#555}.drop.over{border-color:#2a9d5c;background:#f0faf4}table{border-collapse:collapse;width:100%;margin:12px 0}td,th{border-bottom:1px solid #ddd;padding:6px 8px;text-align:left}.tile{display:inline-block;min-width:200px;margin:8px 16px 8px 0}.tile b{display:block;font-size:26px}.line{font-family:monospace;background:#f4f4f4;padding:8px 10px;border-radius:8px}#status{color:#b33}</style></head><body>
+<h1>Параметры проекта: Накопительный счёт: удержание закрываемых счетов</h1>
+<div class="drop" id="drop">Перетащите сюда файлы closures_dm.csv, linked_crm.csv, margin_fin.csv или <label><u>выберите их</u><input type="file" id="files" multiple accept=".csv" style="display:none"></label></div>
+<p id="status"></p><div id="out"></div><div id="chart"></div>
+<script>
+var FILES = ["closures_dm.csv","linked_crm.csv","margin_fin.csv"];
+var tables = {};
+function parseCsv(text) {
+  var lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter(function (l) { return l.trim() !== ""; });
+  var head = lines[0].split(";").map(function (h) { return h.trim(); }), rows = [];
+  for (var i = 1; i < lines.length; i++) {
+    var cells = lines[i].split(";"), row = {};
+    for (var j = 0; j < head.length; j++) { var v = (cells[j] || "").trim(); var n = parseFloat(v.replace(",", ".")); row[head[j]] = (v !== "" && !isNaN(n)) ? n : v; }
+    rows.push(row);
+  }
+  return rows;
+}
+function computeInputs(tables) {
+  // closures — Закрытия счетов в месяц (счетов в месяц): среднее значение столбца закрытые_счета за последние 12 строк (месяцев)
+  var closures = null; // ЗАПОЛНИТЬ по описанию выше из tables["closures_dm.csv"]
+  // linked — Доля закрытий после обращения (доля от 0 до 1): сумма столбца закрытий_после_обращения ÷ сумма столбца закрытых_счетов_всего по всем строкам
+  var linked = null; // ЗАПОЛНИТЬ по описанию выше из tables["linked_crm.csv"]
+  // margin — Маржа на счёт в месяц (руб.): средний_остаток_тыс_руб × 1000 × маржа_проц_годовых ÷ 100 ÷ 12
+  var margin = null; // ЗАПОЛНИТЬ по описанию выше из tables["margin_fin.csv"]
+  return { closures: closures, linked: linked, margin: margin };
+}
+function fmt(v) { return (v === null || v === undefined || isNaN(v)) ? "—" : String(Math.round(v * 100) / 100).replace(".", ","); }
+function render() {
+  var missing = FILES.filter(function (f) { return !tables[f]; });
+  if (missing.length) { document.getElementById("status").textContent = "Ожидаются файлы: " + missing.join(", "); return; }
+  var x = computeInputs(tables);
+  var delta = x.closures * x.linked * 1/3;
+  var volume = 1;
+  var price = x.margin;
+  var h = "<h2>Входы</h2><table><tr><th>Вход</th><th>Значение</th></tr>";
+  h += "<tr><td>Закрытия счетов в месяц (closures)</td><td>" + fmt(x.closures) + " счетов в месяц</td></tr>";
+  h += "<tr><td>Доля закрытий после обращения (linked)</td><td>" + fmt(x.linked) + " доля от 0 до 1</td></tr>";
+  h += "<tr><td>Маржа на счёт в месяц (margin)</td><td>" + fmt(x.margin) + " руб.</td></tr>";
+  h += "</table><h2>Параметры финансовой модели</h2>";
+  h += "<div class=tile><b>" + fmt(delta) + "</b>Изменение показателя, предотвращённых закрытий в месяц</div>";
+  h += "<div class=tile><b>" + fmt(volume) + "</b>Объём, —</div>";
+  h += "<div class=tile><b>" + fmt(price) + "</b>Стоимость единицы, руб. маржи на счёт в месяц</div>";
+  h += "<p>Маржинальный доход от удержанных счетов: <b>" + fmt(delta * volume * price) + "</b> руб. в месяц на когорту</p>";
+  h += "<p class=line>delta=" + delta + "; volume=" + volume + "; price=" + price + "</p>";
+  document.getElementById("status").textContent = ""; document.getElementById("out").innerHTML = h;
+  drawChart();
+}
+function drawChart() {
+  var rows = tables[FILES[0]]; if (!rows || rows[0]["месяц"] === undefined) return;
+  var col = Object.keys(rows[0]).filter(function (k) { return k !== "месяц" && typeof rows[0][k] === "number"; })[0]; if (!col) return;
+  var by = {}, order = []; rows.forEach(function (r) { var m = String(r["месяц"]); if (by[m] === undefined) { by[m] = 0; order.push(m); } by[m] += r[col]; });
+  var ys = order.map(function (m) { return by[m]; }), W = 860, H = 260, L = 60, B = 40, mx = Math.max.apply(null, ys), mn = Math.min.apply(null, ys); if (mx === mn) { mx += 1; mn -= 1; }
+  var X = function (i) { return L + (W - L - 20) * i / Math.max(1, ys.length - 1); }, Y = function (v) { return 20 + (H - 20 - B) * (mx - v) / (mx - mn); };
+  var d = ys.map(function (v, i) { return (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1); }).join(" ");
+  var s = "<h2>" + col + " по месяцам</h2><svg viewBox=\"0 0 " + W + " " + H + "\" width=\"100%\" xmlns=\"http://www.w3.org/2000/svg\">";
+  s += "<path d=\"" + d + "\" fill=\"none\" stroke=\"#2a9d5c\" stroke-width=\"3\"/>";
+  s += "<text x=\"" + (L - 6) + "\" y=\"24\" font-size=\"12\" text-anchor=\"end\">" + fmt(mx) + "</text><text x=\"" + (L - 6) + "\" y=\"" + (H - B) + "\" font-size=\"12\" text-anchor=\"end\">" + fmt(mn) + "</text>";
+  order.forEach(function (m, i) { if (i % 3 === 0 || i === order.length - 1) s += "<text x=\"" + X(i).toFixed(1) + "\" y=\"" + (H - 12) + "\" font-size=\"11\" text-anchor=\"middle\">" + m + "</text>"; });
+  document.getElementById("chart").innerHTML = s + "</svg>";
+}
+function readFiles(list) {
+  Array.prototype.slice.call(list).forEach(function (file) {
+    if (FILES.indexOf(file.name) < 0) { document.getElementById("status").textContent = "Файл не из списка: " + file.name; return; }
+    var rd = new FileReader(); rd.onload = function () { tables[file.name] = parseCsv(rd.result); render(); }; rd.readAsText(file, "utf-8");
+  });
+}
+var drop = document.getElementById("drop");
+drop.addEventListener("dragover", function (e) { e.preventDefault(); drop.className = "drop over"; });
+drop.addEventListener("dragleave", function () { drop.className = "drop"; });
+drop.addEventListener("drop", function (e) { e.preventDefault(); drop.className = "drop"; readFiles(e.dataTransfer.files); });
+document.getElementById("files").addEventListener("change", function () { readFiles(this.files); });
+render();
+</script></body></html>
+```
 
 Ответ — только полный HTML-файл в тройных кавычках, без пояснений.
 ```
@@ -54,229 +114,91 @@
 
 ```html
 <!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <title>Расчёт параметров проекта Накопительный счёт</title>
-  <style>
-    body { font-family: Arial, sans-serif; }
-    h1 { text-align: center; color: #333; }
-    .result { display: flex; justify-content: space-between; align-items: baseline; font-size: 2x; padding-top: 2rem; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
-    th, td { border: 1px solid #ddd; padding: 0.5rem; text-align: left; }
-    tbody tr:nth-child(even) { background-color: #f2f2f2; }
-    svg { height: 200px; width: 100%; fill: none; stroke-width: 2; stroke-linecap: round; }
-    path.line { stroke: steelblue; }
-    .axis { font-size: smaller; }
-    button { cursor: pointer; padding: 0.5em 1em; }
-    pre { white-space: nowrap; overflow-x: auto; }
-  </style>
-</head>
-<body>
-<h1>Расчёт параметров проекта «Накопительный счёт: удержание закрываемых счетов»</h1>
-<div>
-  <label for="files">Выберите три файла:</label><br>
-  <input type="file" id="files" name="files[]" multiple accept=".csv"><br>
-  <div id="status"></div>
-</div>
-<div class="result">
-  <p>Изменение показателя (предотвращённых закрытий в месяц): <span id="delta"></span></p>
-  <p>Объём (-): <span id="volume"></span></p>
-  <p>Стоимость единицы (руб. маржи на счёт в месяц): <span id="price"></span></p>
-  <p>Маржинальный доход от удержанных счетов (руб. в месяц на когорту): <span id="income"></span></p>
-</div>
-<p>Для следующего инструмента:</p>
-<pre contenteditable id="copyable"></pre>
-<button onclick="copyToClipboard()">Копировать параметры</button>
-<br><table id="inputsTable">
-  <thead><tr><th>id</th><th>Название</th><th>Значение</th><th>Источник</th></tr></thead>
-  <tbody></tbody>
-</table>
-<div style="width: 100%;" id="chartContainer"></div>
+<html lang="ru"><head><meta charset="utf-8"><title>Параметры проекта: Накопительный счёт: удержание закрываемых счетов</title>
+<style>body{font-family:Arial,sans-serif;max-width:900px;margin:24px auto;padding:0 16px;color:#222}.drop{border:2px dashed #999;border-radius:12px;padding:24px;text-align:center;color:#555}.drop.over{border-color:#2a9d5c;background:#f0faf4}table{border-collapse:collapse;width:100%;margin:12px 0}td,th{border-bottom:1px solid #ddd;padding:6px 8px;text-align:left}.tile{display:inline-block;min-width:200px;margin:8px 16px 8px 0}.tile b{display:block;font-size:26px}.line{font-family:monospace;background:#f4f4f4;padding:8px 10px;border-radius:8px}#status{color:#b33}</style></head><body>
+<h1>Параметры проекта: Накопительный счёт: удержание закрываемых счетов</h1>
+<div class="drop" id="drop">Перетащите сюда файлы closures_dm.csv, linked_crm.csv, margin_fin.csv или <label><u>выберите их</u><input type="file" id="files" multiple accept=".csv" style="display:none"></label></div>
+<p id="status"></p><div id="out"></div><div id="chart"></div>
 <script>
-function loadFiles(files) {
-  var expectedNames = ["closures_dm.csv", "linked_crm.csv", "margin_fin.csv"];
-  var loadedFiles = {};
-  
-  document.getElementById("status").innerHTML = "";
-  if (!files || files.length !== 3) return showError("Нужно выбрать ровно три файла.");
-  
-  for(var i=0; i<files.length; ++i){
-    var fileName = files[i].name.trim();
-    if(expectedNames.includes(fileName)) {
-      loadedFiles[fileName] = true;
-    } else {
-      showError(`Файл ${fileName} не из списка.`);
-      return;
-    }
+var FILES = ["closures_dm.csv","linked_crm.csv","margin_fin.csv"];
+var tables = {};
+function parseCsv(text) {
+  var lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter(function (l) { return l.trim() !== ""; });
+  var head = lines[0].split(";").map(function (h) { return h.trim(); }), rows = [];
+  for (var i = 1; i < lines.length; i++) {
+    var cells = lines[i].split(";"), row = {};
+    for (var j = 0; j < head.length; j++) { var v = (cells[j] || "").trim(); var n = parseFloat(v.replace(",", ".")); row[head[j]] = (v !== "" && !isNaN(n)) ? n : v; }
+    rows.push(row);
   }
+  return rows;
+}
+function computeInputs(tables) {
+  // closures — Закрытия счетов в месяц (счетов в месяц): среднее значение столбца закрытые_счета за последние 12 строк (месяцев)
+  var closuresTable = tables["closures_dm.csv"];
+  var closuresRows = closuresTable.slice(-12);
+  var sumClosures = closuresRows.reduce((sum, row) => sum + row["закрытые_счета"], 0);
+  var closures = sumClosures / Math.min(closuresRows.length, 12);
   
-  function processFile(file, cb) {
-    var reader = new FileReader();
-    reader.onload = function(event) {
-      var csvData = event.target.result.replace(/^\uFEFF/, "").split("\n");
-      var rows = [];
-      for(var j=0; j<csvData.length; ++j) {
-        var row = csvData[j];
-        if(row.trim()) rows.push(row.split(';'));
-      }
-      
-      cb(rows);
-    };
-    reader.readAsText(file);
-  }
+  // linked — Доля закрытий после обращения (доля от 0 до 1): сумма столбца закрытий_после_обращения ÷ сумма столбца закрытых_счетов_всего по всем строкам
+  var linkedTable = tables["linked_crm.csv"];
+  var totalClosedAfterContact = linkedTable.reduce((sum, row) => sum + row["закрытий_после_обращения"], 0);
+  var totalClosedAccounts = linkedTable.reduce((sum, row) => sum + row["закрытых_счетов_всего"], 0);
+  var linked = totalClosedAfterContact / totalClosedAccounts;
   
-  var closureRows, linkedRows, marginRows;
+  // margin — Маржа на счёт в месяц (руб.): средний_остаток_тыс_руб × 1000 × маржа_проц_годовых ÷ 100 ÷ 12
+  var marginTable = tables["margin_fin.csv"];
+  var avgBalance = marginTable.find(row => row["параметр"] == "средний_остаток_тыс_руб")["значение"];
+  var annualMarginRate = marginTable.find(row => row["параметр"] == "маржа_проц_годовых")["значение"];
+  var accountLifetimeMonths = marginTable.find(row => row["параметр"] == "срок_жизни_счёта_мес")["значение"];
+  var margin = avgBalance * 1000 * annualMarginRate / 100 / 12;
   
-  // Чтение файлов последовательно
-  processFile(files[0], function(closureData) {
-    closureRows = closureData;
-    
-    processFile(files[1], function(linkedData) {
-      linkedRows = linkedData;
-      
-      processFile(files[2], function(marginData) {
-        marginRows = marginData;
-        
-        calculateParameters(closureRows, linkedRows, marginRows);
-      });
-    });
+  return { closures: closures, linked: linked, margin: margin };
+}
+function fmt(v) { return (v === null || v === undefined || isNaN(v)) ? "—" : String(Math.round(v * 100) / 100).replace(".", ","); }
+function render() {
+  var missing = FILES.filter(function (f) { return !tables[f]; });
+  if (missing.length) { document.getElementById("status").textContent = "Ожидаются файлы: " + missing.join(", "); return; }
+  var x = computeInputs(tables);
+  var delta = x.closures * x.linked * 1/3;
+  var volume = 1;
+  var price = x.margin;
+  var h = "<h2>Входы</h2><table><tr><th>Вход</th><th>Значение</th></tr>";
+  h += "<tr><td>Закрытия счетов в месяц (closures)</td><td>" + fmt(x.closures) + " счетов в месяц</td></tr>";
+  h += "<tr><td>Доля закрытий после обращения (linked)</td><td>" + fmt(x.linked) + " доля от 0 до 1</td></tr>";
+  h += "<tr><td>Маржа на счёт в месяц (margin)</td><td>" + fmt(x.margin) + " руб.</td></tr>";
+  h += "</table><h2>Параметры финансовой модели</h2>";
+  h += "<div class=tile><b>" + fmt(delta) + "</b>Изменение показателя, предотвращённых закрытий в месяц</div>";
+  h += "<div class=tile><b>" + fmt(volume) + "</b>Объём, —</div>";
+  h += "<div class=tile><b>" + fmt(price) + "</b>Стоимость единицы, руб. маржи на счёт в месяц</div>";
+  h += "<p>Маржинальный доход от удержанных счетов: <b>" + fmt(delta * volume * price) + "</b> руб. в месяц на когорту</p>";
+  h += "<p class=line>delta=" + delta + "; volume=" + volume + "; price=" + price + "</p>";
+  document.getElementById("status").textContent = ""; document.getElementById("out").innerHTML = h;
+  drawChart();
+}
+function drawChart() {
+  var rows = tables[FILES[0]]; if (!rows || rows[0]["месяц"] === undefined) return;
+  var col = Object.keys(rows[0]).filter(function (k) { return k !== "месяц" && typeof rows[0][k] === "number"; })[0]; if (!col) return;
+  var by = {}, order = []; rows.forEach(function (r) { var m = String(r["месяц"]); if (by[m] === undefined) { by[m] = 0; order.push(m); } by[m] += r[col]; });
+  var ys = order.map(function (m) { return by[m]; }), W = 860, H = 260, L = 60, B = 40, mx = Math.max.apply(null, ys), mn = Math.min.apply(null, ys); if (mx === mn) { mx += 1; mn -= 1; }
+  var X = function (i) { return L + (W - L - 20) * i / Math.max(1, ys.length - 1); }, Y = function (v) { return 20 + (H - 20 - B) * (mx - v) / (mx - mn); };
+  var d = ys.map(function (v, i) { return (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1); }).join(" ");
+  var s = "<h2>" + col + " по месяцам</h2><svg viewBox=\"0 0 " + W + " " + H + "\" width=\"100%\" xmlns=\"http://www.w3.org/2000/svg\">";
+  s += "<path d=\"" + d + "\" fill=\"none\" stroke=\"#2a9d5c\" stroke-width=\"3\"/>";
+  s += "<text x=\"" + (L - 6) + "\" y=\"24\" font-size=\"12\" text-anchor=\"end\">" + fmt(mx) + "</text><text x=\"" + (L - 6) + "\" y=\"" + (H - B) + "\" font-size=\"12\" text-anchor=\"end\">" + fmt(mn) + "</text>";
+  order.forEach(function (m, i) { if (i % 3 === 0 || i === order.length - 1) s += "<text x=\"" + X(i).toFixed(1) + "\" y=\"" + (H - 12) + "\" font-size=\"11\" text-anchor=\"middle\">" + m + "</text>"; });
+  document.getElementById("chart").innerHTML = s + "</svg>";
+}
+function readFiles(list) {
+  Array.prototype.slice.call(list).forEach(function (file) {
+    if (FILES.indexOf(file.name) < 0) { document.getElementById("status").textContent = "Файл не из списка: " + file.name; return; }
+    var rd = new FileReader(); rd.onload = function () { tables[file.name] = parseCsv(rd.result); render(); }; rd.readAsText(file, "utf-8");
   });
 }
-
-// Выдать ошибку на экран
-function showError(message) {
-  document.getElementById("status").textContent += message + "\n";
-}
-
-// Найти индекс колонки по её заголовку
-function findColumnIndex(headers, columnName) {
-  for(var i=0; i<headers.length; ++i)
-    if(headers[i].trim().toLowerCase() === columnName.toLowerCase())
-      return i;
-  return -1;
-}
-
-// Расчёт показателей
-function calculateParameters(closureRows, linkedRows, marginRows) {
-  try {
-    const headersClosure = closureRows.shift(); 
-    const closedColIdx = findColumnIndex(headersClosure, 'закрытые_счета');
-    const activeColIdx = findColumnIndex(headersClosure, 'активные_счета');
-    
-    const lastTwelveMonthsClosedSum = closureRows.slice(-12).reduce((sum, row) => sum + parseFloat(row[closedColIdx].replace(',', '.')), 0);
-    const closures = Math.round(lastTwelveMonthsClosedSum / 12 * 10)/10;
-    
-    const headersLinked = linkedRows.shift();
-    const totalClosedColIdx = findColumnIndex(headersLinked, 'закрытых_счетов_всего');
-    const afterCallClosedColIdx = findColumnIndex(headersLinked, 'закрытий_после_обращения');
-    
-    let totalClosedSum = 0, afterCallClosedSum = 0;
-    linkedRows.forEach(function(row) {
-      totalClosedSum += parseFloat(row[totalClosedColIdx].replace(',', '.'));
-      afterCallClosedSum += parseFloat(row[afterCallClosedColIdx].replace(',', '.'));
-    });
-    const linked = afterCallClosedSum / totalClosedSum;
-    
-    const headersMargin = marginRows.shift();
-    const avgBalanceColIdx = findColumnIndex(headersMargin, 'средний_остаток_тыс_руб');
-    const rateColIdx = findColumnIndex(headersMargin, 'маржа_проц_годовых');
-    const lifeSpanColIdx = findColumnIndex(headersMargin, 'срок_жизни_счёта_мес');
-    
-    const avgBalance = parseFloat(marginRows[0][avgBalanceColIdx].replace(',', '.')) * 1000;
-    const annualRate = parseFloat(marginRows[0][rateColIdx].replace(',', '.')) / 100;
-    const lifeSpanInMonths = parseFloat(marginRows[0][lifeSpanColIdx].replace(',', '.'));
-    const margin = avgBalance * annualRate / lifeSpanInMonths;
-    
-    const delta = closures * linked / 3;
-    const volume = 1;
-    const price = margin;
-    const income = delta * price;
-    
-    document.getElementById("delta").textContent = delta.toFixed(2);
-    document.getElementById("volume").textContent = volume;
-    document.getElementById("price").textContent = price.toFixed(2);
-    document.getElementById("income").textContent = income.toFixed(2);
-    
-    document.getElementById("copyable").textContent = `delta=${delta}; volume=${volume}; price=${price}`;
-    
-    renderInputsTable(delta, volume, price, closures, linked, margin);
-    drawChart(closureRows, headersClosure);
-  } catch(err) {
-    console.error(err);
-    showError("Ошибка обработки данных.");
-  }
-}
-
-// Отрисовка таблицы исходных значений
-function renderInputsTable(delta, volume, price, closures, linked, margin) {
-  var inputsTBody = document.querySelector("#inputsTable > tbody");
-  while(inputsTBody.firstChild) inputsTBody.removeChild(inputsTBody.firstChild);
-  
-  addRow("delta", "Изменение показателя", delta, "");
-  addRow("volume", "Объём", volume, "");
-  addRow("price", "Стоимость единицы", price, "");
-  addRow("closures", "Среднее количество закрытий", closures, "closures_dm.csv");
-  addRow("linked", "Доля закрытий после обращений", linked, "linked_crm.csv");
-  addRow("margin", "Маржа на счет в месяц", margin, "margin_fin.csv");
-  
-  function addRow(id, title, value, source) {
-    var row = document.createElement("tr");
-    row.innerHTML = `<td>${id}</td><td>${title}</td><td>${value}</td><td>${source}</td>`;
-    inputsTBody.appendChild(row);
-  }
-}
-
-// Копирование в буфер обмена
-function copyToClipboard() {
-  navigator.clipboard && navigator.clipboard.writeText(document.getElementById("copyable").textContent)
-    ? showError("Параметры скопированы.")
-    : fallbackCopyToClipboard();
-}
-
-// Альтернативное копирование путём выделения текста
-function fallbackCopyToClipboard() {
-  var range = document.createRange();
-  range.selectNodeContents(document.getElementById("copyable"));
-  window.getSelection().removeAllRanges();
-  window.getSelection().addRange(range);
-  document.execCommand("copy");
-  window.getSelection().removeAllRanges();
-  showError("Параметры скопированы вручную.");
-}
-
-// График закрытия счетов по месяцам
-function drawChart(data, headers) {
-  var monthColIdx = findColumnIndex(headers, 'месяц');
-  var closedColIdx = findColumnIndex(headers, 'закрытые_счета');
-  
-  var months = data.map(r => r[monthColIdx]);
-  var values = data.map(r => parseFloat(r[closedColIdx].replace(',', '.')));
-  
-  var minValue = Math.min(...values), maxValue = Math.max(...values);
-  var chartWidth = document.body.clientWidth;
-  var chartHeight = 200;
-  var xStep = chartWidth / (months.length - 1);
-  
-  var yScaleFactor = chartHeight / (maxValue - minValue);
-  
-  var points = values.map((v,i) => `${i*xStep},${chartHeight-(v-minValue)*yScaleFactor}`);
-  
-  var svg = '<svg viewBox="0 0 '+chartWidth+' '+chartHeight+'">' +
-            '<path d="M' + points.join(' L') + '" class="line"/>' +
-            '<g transform="translate(0,'+chartHeight+') scale(1,-1)" class="axis">'+
-              '<text x="'+chartWidth*0.02+'" y="'+(minValue*yScaleFactor)+'" dy="-.35em">'+minValue+'</text>'+
-              '<text x="'+chartWidth*0.02+'" y="'+(maxValue*yScaleFactor)+'" dy="-.35em">'+maxValue+'</text>'+
-            '</g>'+
-          '</svg>';
-  
-  document.getElementById("chartContainer").innerHTML = svg;
-}
-
-document.getElementById("files").onchange = function(evt) {
-  loadFiles(this.files);
-};
-</script>
-</body>
-</html>
+var drop = document.getElementById("drop");
+drop.addEventListener("dragover", function (e) { e.preventDefault(); drop.className = "drop over"; });
+drop.addEventListener("dragleave", function () { drop.className = "drop"; });
+drop.addEventListener("drop", function (e) { e.preventDefault(); drop.className = "drop"; readFiles(e.dataTransfer.files); });
+document.getElementById("files").addEventListener("change", function () { readFiles(this.files); });
+render();
+</script></body></html>
 ```
