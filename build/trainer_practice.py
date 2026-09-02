@@ -300,13 +300,25 @@ HTML = f"""
 
 <!-- ─── Шаг 5 ─────────────────────────────────────────────────────────── -->
 <div class="step" id="st5">
-<div class="sthead"><span class="snum">Шаг 5</span><h3>Презентация проекта</h3></div>
-<p class="sub">Шесть слайдов по структуре презентации проекта: проблема и метрики, дерево и данные, инструмент
-и параметры, финансовая модель с графиком, вывод и следующий шаг. Слайды листаются здесь и скачиваются
-одним HTML-файлом, который открывается в любом браузере без интернета.</p>
+<div class="sthead"><span class="snum">Шаг 5</span><h3>Заключение и презентация проекта</h3></div>
+<p class="sub">Заключение по проекту пишет ассистент по всем результатам: конфигурация источников, параметры из инструмента,
+финансовая модель. Затем шесть слайдов по структуре презентации проекта: проблема и метрики, дерево и данные,
+параметры, финансовая модель с графиком, заключение. Слайды листаются здесь и скачиваются одним HTML-файлом.</p>
 <p class="links">Из курса: <a href="longread_project.html#prezentaciya">Структура презентации проекта</a>
 <a href="longread_project.html#pismo">Письмо команде</a></p>
-<div class="part"><h4><span class="n">1</span>Слайды</h4>
+<div class="part"><h4><span class="n">1</span>Промпт на заключение</h4>{_пром(5)}
+<p class="hint" style="margin-top:8px">Промпт содержит все результаты шагов 2–4. Ответ ассистента вставьте ниже.</p></div>
+<div class="part"><h4><span class="n">2</span>Ответ ассистента</h4>
+<textarea class="fld" data-bind="concl" style="width:100%;min-height:110px;font:inherit;font-size:14.5px;padding:9px 11px;border:1px solid var(--line);border-radius:10px" placeholder="Вставьте ответ целиком"></textarea>
+<div style="margin-top:8px"><button class="btn" type="button" id="bConcl">Разобрать ответ</button><span class="msg" id="conclMsg" style="display:inline-block;margin:0 0 0 12px"></span></div>
+<div class="grid" style="margin-top:10px">
+<div class="fld"><label>Вывод</label><textarea data-bind="c.conclusion"></textarea></div>
+<div class="fld"><label>Эффект для бизнеса</label><textarea data-bind="c.effect"></textarea></div>
+<div class="fld"><label>Первое действие</label><textarea data-bind="c.action"></textarea></div>
+<div class="fld"><label>Когда пересматриваем</label><textarea data-bind="c.review"></textarea></div>
+</div>
+</div>
+<div class="part"><h4><span class="n">3</span>Слайды</h4>
 <div class="slides"><div class="slide" id="slide"></div>
 <div class="slnav"><button type="button" id="slPrev">← Назад</button><span id="slPos"></span><button type="button" id="slNext">Вперёд →</button></div></div>
 <p class="msg" id="dlMsg"></p>
@@ -336,7 +348,7 @@ var cur=null, st=null, dir=DIRS[0], ptext={}, slideNo=0;
 
 function V(){return VARS.filter(function(v){return v.id===cur})[0]}
 function key(){return 'a360_practice_'+cur}
-function blank(v){var s={step:1,frame:{},action:v.frame.action,chosen:{},paramsLine:'',delta:'',volume:'',price:'',code3:'',code4:'',fin:JSON.parse(JSON.stringify(v.fin)),res:{payback:'',npv:'',year1:''},svg:''};
+function blank(v){var s={step:1,frame:{},action:v.frame.action,chosen:{},paramsLine:'',delta:'',volume:'',price:'',code3:'',code4:'',concl:'',c:{conclusion:'',effect:'',action:'',review:''},fin:JSON.parse(JSON.stringify(v.fin)),res:{payback:'',npv:'',year1:''},svg:''};
   FRAME.forEach(function(f){s.frame[f[0]]=v.frame[f[0]]});v.inputs.forEach(function(i){s.chosen[i.id]=i.sources[0].id});return s}
 function load(id){cur=id;var v=V(),s=null;try{var raw=localStorage.getItem(key());if(raw)s=JSON.parse(raw)}catch(e){}
   st=s||blank(v);var b=blank(v);for(var k in b)if(st[k]===undefined)st[k]=b[k];dir=v.direction}
@@ -346,7 +358,7 @@ function set(path,v){var p=path.split('.'),o=st;for(var i=0;i<p.length-1;i++){if
 function params(){return {delta:C.num(st.delta),volume:C.num(st.volume),price:C.num(st.price)}}
 function paramsOk(){var p=params();return !isNaN(p.delta)&&!isNaN(p.volume)&&!isNaN(p.price)}
 function finP(){var f=st.fin,p=params();return {kind:V().fin.kind,delta:p.delta||0,volume:p.volume||0,price:p.price||0,ramp:C.num(f.ramp)||0,keep:C.num(f.keep)||0,capex:C.num(f.capex)||0,opex:C.num(f.opex)||0,horizon:Math.max(1,Math.round(C.num(f.horizon)||24)),rate:C.num(f.rate)||0}}
-function done(n){switch(n){case 1:return true;case 2:return true;case 3:return paramsOk();case 4:return !!(st.svg||C.clean(st.res.npv));case 5:return !!st.svg}return false}
+function done(n){switch(n){case 1:return true;case 2:return true;case 3:return paramsOk();case 4:return !!(st.svg||C.clean(st.res.npv));case 5:return !!(st.svg&&C.clean(st.c.conclusion))}return false}
 
 // ── выбор варианта ───────────────────────────────────────────────────────
 function renderPicker(){
@@ -370,6 +382,7 @@ function afterChange(bind){
   if(bind==='delta'||bind==='volume'||bind==='price'||bind==='paramsLine'){renderCtrl3();renderPrompt(4);renderCtrl4()}
 
   if(bind.indexOf('fin.')===0){renderPrompt(4);renderCtrl4()}
+  if(bind.indexOf('c.')===0){renderSlide()}
   renderStepper();
 }
 
@@ -461,7 +474,8 @@ window.__assemble=assemble;
 window.__reference=function(n){return n===3?C.toolReference(V(),st.chosen,filesObj()):C.npvReference(V(),params())};
 function renderPrompt(n){var pv=$('pv'+n);if(!pv)return;var txt;
   if(n===3){txt=C.toolPrompt(V(),st.chosen,filesObj());$('ps3').textContent='Промпт собран для файлов '+chosenRows().map(function(r){return r.source.file}).join(', ')+' и содержит основу инструмента. Если в ассистенте есть выбор модели — выбирайте самую сильную.'}
-  else{var p=params();if(!paramsOk()){txt='';$('ps4').textContent='Сначала введите параметры на шаге 3.'}else{var r=C.npvPrompt(V(),p);txt=r.text;$('ps4').textContent='Параметры шага 3 и условия варианта подставлены в основу инструмента. Контрольные значения расчёта — под полями результата.'}}
+  else if(n===4){var p=params();if(!paramsOk()){txt='';$('ps4').textContent='Сначала введите параметры на шаге 3.'}else{var r=C.npvPrompt(V(),p);txt=r.text;$('ps4').textContent='Параметры шага 3 и условия варианта подставлены в основу инструмента. Контрольные значения расчёта — под полями результата.'}}
+  else{if(!paramsOk()){txt='';$('ps5').textContent='Сначала введите параметры на шаге 3.'}else{txt=C.conclusionPrompt(V(),conclCtx());$('ps5').textContent='В промпт подставлены конфигурация источников, значения входов, параметры и результат финансовой модели.'}}
   ptext[n]=txt;pv.textContent=txt}
 function renderCtrl3(){var v=V(),rows=chosenRows(),exp={};rows.forEach(function(r){exp[r.input.id]=r.source.expect});
   var keys=Object.keys(exp),delta=v.params.delta.formula,vol=v.params.volume.formula,pr=v.params.price.formula;
@@ -484,7 +498,13 @@ function sanitizeSvg(t){var s=String(t||'');var i=s.indexOf('<svg');if(i<0)retur
 function renderSvg(){$('svgBox').innerHTML=st.svg?'<div class="vis">'+st.svg+'<p class="hint" style="margin:8px 0 0">График загружен и попадёт на слайд финансовой модели.</p></div>':'<p class="hint">После загрузки график появится здесь.</p>'}
 $('svgFile').addEventListener('change',function(){var f=this.files&&this.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){st.svg=sanitizeSvg(rd.result);if(!st.svg)alert('В файле не найден элемент svg');save();renderSvg();renderStepper()};rd.readAsText(f)});
 
-// ── шаг 5: презентация ───────────────────────────────────────────────────
+// ── шаг 5: заключение и презентация ─────────────────────────────────────
+function conclCtx(){var v=V(),e=C.economy(v,st.chosen),inputs={};e.rows.forEach(function(r){inputs[r.input.id]=r.source.expect});
+  var f=st.fin,fp=finP(),r=C.totals(fp);var res={payback:C.clean(st.res.payback)?C.num(st.res.payback):r.payback,npv:C.clean(st.res.npv)?C.num(st.res.npv):r.npv,year1:C.clean(st.res.year1)?C.num(st.res.year1):r.year1};
+  if(C.clean(st.res.payback)&&/не/.test(st.res.payback))res.payback=null;
+  return {frame:st.frame,action:st.action,eco:e,inputs:inputs,params:params(),fin:{ramp:C.num(f.ramp),keep:C.num(f.keep),capex:C.num(f.capex),opex:C.num(f.opex),horizon:C.num(f.horizon),rate:C.num(f.rate)},res:res}}
+function parseConcl(){var r=C.parseConclusion(st.concl),m=$('conclMsg');['conclusion','effect','action','review'].forEach(function(k){if(r.fields[k]!==undefined)st.c[k]=r.fields[k]});save();fillInputs($('st5'));
+  m.textContent=r.found?'Разобрано: '+r.found+' из '+r.total+(r.found<r.total?' — остальное впишите вручную':''):'Не удалось разобрать: вставьте ответ целиком или заполните поля вручную';m.className='msg '+(r.found?'ok':'warn');renderSlide();renderStepper()}
 function slides(){var v=V(),e=C.economy(v,st.chosen),p=params(),f=st.frame,r=paramsOk()?C.totals(finP()):null,S=[];
   S.push({h:v.title,b:'<p><b>Направление:</b> '+esc(v.direction)+'</p><p><b>Проблема.</b> '+esc(f.problem)+'</p><p><b>Что меняем.</b> '+esc(st.action)+'</p>'});
   S.push({h:'Метрики и данные',b:'<p><b>Метрика.</b> '+esc(f.metric)+'</p><p><b>Данные.</b> '+esc(f.data)+'</p><p><b>Инструмент.</b> '+esc(f.tool)+'</p>'});
@@ -495,7 +515,7 @@ function slides(){var v=V(),e=C.economy(v,st.chosen),p=params(),f=st.frame,r=par
     '<p><b>Окупаемость:</b> '+(C.clean(st.res.payback)||(r?(r.payback===null?'не достигается':'месяц '+r.payback):'—'))+' · <b>NPV за '+st.fin.horizon+' мес.:</b> '+(C.clean(st.res.npv)?C.money(C.num(st.res.npv)):(r?C.money(r.npv):'—'))+' · <b>Доход за первый год:</b> '+(C.clean(st.res.year1)?C.money(C.num(st.res.year1)):(r?C.money(r.year1):'—'))+'</p>'+
     '<p>Затраты: единовременно '+C.money(C.num(st.fin.capex)||0)+', ежемесячно '+C.money(C.num(st.fin.opex)||0)+'; выход на уровень '+st.fin.ramp+' мес., срок сохранения '+st.fin.keep+' мес., ставка '+C.fr((C.num(st.fin.rate)||0)*100,1)+' %.</p>';
   S.push({h:'Финансовая модель: эффект для бизнеса',b:(st.svg||'')+fin});
-  S.push({h:'Вывод и следующий шаг',b:'<p><b>Вывод.</b> '+esc(f.conclusion)+'</p><p><b>Эффект.</b> '+esc(f.effect)+'</p><p><b>Первое действие.</b> '+esc(st.action)+' — первая сверка метрики по полной выгрузке через '+e.tte+' дн. после старта; условие пересмотра: значение параметра «изменение показателя» ниже пессимистичного.</p>'});
+  var c=st.c||{};S.push({h:'Заключение и следующий шаг',b:'<p><b>Вывод.</b> '+esc(C.or(c.conclusion,'— заключение ассистента ещё не вставлено (шаг 5)'))+'</p><p><b>Эффект для бизнеса.</b> '+esc(C.or(c.effect,'—'))+'</p><p><b>Первое действие.</b> '+esc(C.or(c.action,'—'))+'</p><p><b>Когда пересматриваем.</b> '+esc(C.or(c.review,'—'))+'</p>'});
   return S}
 function renderSlide(){var S=slides();if(slideNo<0)slideNo=0;if(slideNo>=S.length)slideNo=S.length-1;var s=S[slideNo];
   $('slide').innerHTML='<div class="h">'+esc(s.h)+'</div><div class="b">'+s.b+'</div>';$('slPos').textContent='Слайд '+(slideNo+1)+' из '+S.length}
@@ -516,11 +536,12 @@ function copyText(txt,btn,lbl){function done(){btn.textContent='Скопиров
 document.addEventListener('click',function(e){var t=e.target.closest('button');if(!t)return;
   if(t.dataset.go){go(+t.dataset.go);return}
   if(t.dataset.copy){e.stopImmediatePropagation();copyText(ptext[+t.dataset.copy]||'',t,'Копировать промпт');return}
+  if(t.id==='bConcl'){parseConcl();return}
   if(t.id==='bToolRef'){downloadHtml(C.toolReference(V(),st.chosen,filesObj()),'инструмент_'+cur+'.html');return}
   if(t.id==='bFinRef'){if(!paramsOk()){alert('Сначала введите параметры на шаге 3');return}downloadHtml(C.npvReference(V(),params()),'финмодель_'+cur+'.html');return}
 });
 function renderStep(n){fillInputs($('st'+n));
-  switch(n){case 1:renderFrame();break;case 2:renderTree();renderEco();break;case 3:renderFiles();renderPrompt(3);renderCtrl3();break;case 4:renderPrompt(4);renderCtrl4();renderSvg();break;case 5:slideNo=0;renderSlide();break}}
+  switch(n){case 1:renderFrame();break;case 2:renderTree();renderEco();break;case 3:renderFiles();renderPrompt(3);renderCtrl3();break;case 4:renderPrompt(4);renderCtrl4();renderSvg();break;case 5:renderPrompt(5);slideNo=0;renderSlide();break}}
 function renderAll(){fillInputs(document);renderPicker();renderStepper();go(st.step||1)}
 var first=null;try{first=localStorage.getItem('a360_practice_last')}catch(e){}
 load(first&&VARS.some(function(v){return v.id===first})?first:VARS[0].id);

@@ -25,6 +25,7 @@
     return fi(x) + ' руб.';
   }
   function clean(s) { return String(s == null ? '' : s).replace(/\s+/g, ' ').trim(); }
+  function or(v, d) { var c = clean(v); return c ? c : d; }
   function num(v) {
     if (typeof v === 'number') return v;
     var s = String(v == null ? '' : v).replace(/[\s  ]/g, '').replace(',', '.');
@@ -415,6 +416,46 @@
     return html.replace(/function effectFlows\(p\) \{[\s\S]*?\n\}/, fn);
   }
 
+  // ── промпт 3: заключение по результатам ────────────────────────────────
+  // ctx: {frame, action, eco, inputs:{id:value}, params:{delta,volume,price}, fin:{...}, res:{payback,npv,year1}}
+  function conclusionPrompt(variant, ctx) {
+    var L = [], e = ctx.eco;
+    L.push('Ты — аналитик данных банка. По результатам расчётов ниже напиши заключение по проекту «' + variant.title + '». Используй только приведённые числа, ничего не пересчитывай и не добавляй; деловой язык, без оценок и призывов.');
+    L.push('');
+    L.push('Проблема: ' + ctx.frame.problem);
+    L.push('Что меняем: ' + ctx.action);
+    L.push('Итоговая метрика эффекта: ' + variant.metric.name + ' (' + variant.metric.unit + ') = ' + variant.metric.formula + '.');
+    L.push('');
+    L.push('Конфигурация источников данных (выбор участника):');
+    e.rows.forEach(function (r) { L.push('- ' + r.input.name + ' (' + r.input.id + ') — источник «' + r.source.name + '», первое значение через ' + r.source.days + ' дн., стоимость за пилот ' + (r.source.cost ? fi(r.source.cost) + ' руб.' : '0 руб.') + '; значение по выгрузке: ' + fmtv(ctx.inputs[r.input.id]) + ' ' + r.input.unit.replace(/\.$/, '') + '.'); });
+    L.push('Срок первого проверенного значения метрики: ' + e.tte + ' дн.; стоимость данных за пилот: ' + (e.cost ? fi(e.cost) + ' руб.' : '0 руб.') + '; интегральная оценка конфигурации: ' + e.score + ' из 100 (лучшая возможная: ' + e.bestTte + ' дн. и ' + fi(e.bestCost) + ' руб.).');
+    L.push('');
+    L.push('Параметры финансовой модели из мини-инструмента: изменение показателя ' + fmtv(ctx.params.delta) + ' (' + variant.params.delta.unit + '; ' + variant.params.delta.note + '), объём ' + fmtv(ctx.params.volume) + ' (' + variant.params.volume.unit + '), стоимость единицы ' + fmtv(ctx.params.price) + ' (' + variant.params.price.unit + ').');
+    L.push('Условия: выход на уровень ' + ctx.fin.ramp + ' мес., срок сохранения эффекта ' + ctx.fin.keep + ' мес., единовременные затраты ' + fi(ctx.fin.capex) + ' руб., ежемесячные ' + fi(ctx.fin.opex) + ' руб., горизонт ' + ctx.fin.horizon + ' мес., ставка ' + fr(ctx.fin.rate * 100, 1) + ' % годовых.');
+    L.push('Результат финансовой модели: доход за первый год ' + money(ctx.res.year1).replace(/\.$/, '') + '; окупаемость — ' + (ctx.res.payback === null ? 'не достигается в горизонте' : 'месяц ' + ctx.res.payback) + '; NPV за ' + ctx.fin.horizon + ' мес. ' + money(ctx.res.npv).replace(/\.$/, '') + '.');
+    L.push('');
+    L.push('Ответь строго в формате ниже — четыре строки, каждая начинается с названия поля и двоеточия, без вступления и пояснений:');
+    L.push('Вывод: <что показали данные и расчёт — 1–2 предложения с числами: параметры эффекта, окупаемость, NPV>');
+    L.push('Эффект для бизнеса: <в чём эффект и на каком допущении он держится; какое допущение проверить в первую очередь>');
+    L.push('Первое действие: <что сделать на следующей неделе и какие данные начать собирать — исходя из выбранной конфигурации источников>');
+    L.push('Когда пересматриваем: <через сколько дней первая сверка метрики по полной выгрузке (исходя из срока первого значения) и при каком значении параметров решение пересматривается>');
+    return L.join('\n');
+  }
+  function parseConclusion(text) {
+    var spec = [['conclusion', ['вывод']], ['effect', ['эффект для бизнеса', 'эффект']], ['action', ['первое действие', 'действие']], ['review', ['когда пересматриваем', 'пересмотр', 'когда']]];
+    var out = {}, orphans = [], lines = String(text || '').split(/\r?\n/);
+    for (var i = 0; i < lines.length; i++) {
+      var l = clean(lines[i]).replace(/^[-*•>#:\d.)\s]+/, '').replace(/\*\*|__/g, '').trim(); if (!l) continue;
+      var m = l.match(/^([^:]{2,40}):\s*(.*)$/), hit = null;
+      if (m) { var k = m[1].toLowerCase().replace(/ё/g, 'е').trim(); spec.forEach(function (sp) { if (!hit) sp[1].forEach(function (a) { if (!hit && k.indexOf(a) === 0) hit = sp[0]; }); }); }
+      if (hit) { var v = clean(m[2]).replace(/^[«"]|[»"]$/g, ''); out[hit] = v; }
+      else orphans.push(l);
+    }
+    var missing = spec.filter(function (sp) { return out[sp[0]] === undefined; });
+    for (var q = 0; q < missing.length && q < orphans.length; q++) out[missing[q][0]] = orphans[q].replace(/^[^:]{2,40}:\s*/, '');
+    return { fields: out, found: spec.filter(function (sp) { return out[sp[0]]; }).length, total: 4 };
+  }
+
   // Извлечь HTML из ответа модели: между ``` или от <!DOCTYPE до </html>.
   function extractHtml(text) {
     var s = String(text || '');
@@ -430,7 +471,7 @@
     return null;
   }
 
-  return { fi: fi, fr: fr, fmtv: fmtv, money: money, clean: clean, num: num,
+  return { fi: fi, fr: fr, fmtv: fmtv, money: money, clean: clean, or: or, num: num,
     economy: economy, flows: flows, totals: totals,
-    toolPrompt: toolPrompt, npvPrompt: npvPrompt, toolReference: toolReference, npvReference: npvReference, calcPrompt: calcPrompt, modelPrompt: modelPrompt, extractHtml: extractHtml, extractJs: extractJs, parseParams: parseParams };
+    toolPrompt: toolPrompt, npvPrompt: npvPrompt, toolReference: toolReference, npvReference: npvReference, conclusionPrompt: conclusionPrompt, parseConclusion: parseConclusion, calcPrompt: calcPrompt, modelPrompt: modelPrompt, extractHtml: extractHtml, extractJs: extractJs, parseParams: parseParams };
 });
