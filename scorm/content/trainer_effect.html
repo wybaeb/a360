@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Тренажёр: финансовая модель эффекта · Аналитика 360</title>
+<style>
+:root{
+  --acc:#20BA72; --acc-soft:rgba(32,186,114,.10); --acc-line:rgba(32,186,114,.30);
+  --bg:#ffffff; --surf:#f4f8f6; --elev:#e9f3ee; --line:rgba(46,54,65,.13);
+  --ink:#2E3641; --ink2:rgba(46,54,65,.74); --ink3:rgba(46,54,65,.48);
+  --warn:#E4572E; --warn-soft:rgba(228,87,46,.09);
+  --font:'SB Sans Text','Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'SFMono-Regular',Consolas,'Liberation Mono',monospace;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth}
+body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 22px}
+/* overflow-wrap нужен ссылкам-адресам в списках источников: у длинного URL нет
+   точек переноса, на узком экране он уходит за край, а html/body{overflow-x:clip}
+   выше не даёт его прокрутить — текст пропадал совсем. break-word рвёт только
+   слово, которое иначе не помещается, и не влияет на расчёт min-content. */
+a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line);
+  overflow-wrap:break-word}
+a:hover{border-bottom-color:var(--acc)}
+
+header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
+  border-bottom:1px solid var(--line)}
+
+/* Хлебная крошка: лёгкая строка над шапкой. Фон тот же, что у верха градиента
+   шапки, поэтому крошка визуально сливается с ней в один блок. */
+.crumbs{background:var(--elev);font-size:13.5px;color:var(--ink3)}
+.crumbs .wrap{padding-top:14px;padding-bottom:2px;display:flex;align-items:baseline;gap:8px}
+.crumbs a{color:#128a53;border-bottom:1px solid transparent;font-weight:600}
+.crumbs a:hover{border-bottom-color:var(--acc)}
+.crumbs .sep{color:var(--ink3);font-size:11px}
+.crumbs .here{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eyebrow{color:var(--acc);font-weight:800;font-size:12.5px;letter-spacing:.14em;
+  text-transform:uppercase;margin-bottom:14px}
+h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 16px}
+.lead{font-size:clamp(16.5px,2vw,19px);color:var(--ink2);margin:0 0 22px}
+.meta{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;
+  font-size:13.5px;color:var(--ink2)}
+.chip b{color:var(--ink)}
+
+section{padding:44px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-size:clamp(22px,3vw,30px);font-weight:800;margin:0 0 8px;line-height:1.18}
+h2 .num{color:var(--acc);margin-right:.4em;font-variant-numeric:tabular-nums}
+h3{font-size:19px;font-weight:800;margin:30px 0 10px}
+h4{font-size:16px;font-weight:800;margin:22px 0 8px;color:var(--ink2)}
+p{margin:0 0 15px}
+ul,ol{margin:0 0 15px;padding-left:22px}
+li{margin-bottom:7px}
+.sub{color:var(--ink3);margin:0 0 22px;font-size:15.5px}
+
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:20px 22px;margin:0 0 18px}
+.card.acc{background:var(--acc-soft);border-color:var(--acc-line)}
+.card.warn{background:var(--warn-soft);border-color:rgba(228,87,46,.28)}
+.card h4{margin-top:0}
+.card p:last-child,.card ul:last-child,.card ol:last-child{margin-bottom:0}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0 0 15px;font-size:15.5px}
+.kv dt{color:var(--ink3)}
+.kv dd{margin:0;font-weight:600}
+
+table{border-collapse:collapse;width:100%;font-size:15px;margin:0 0 15px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{font-weight:800;color:var(--ink2);font-size:13.5px;text-transform:uppercase;
+  letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 15px}
+.scroll table{margin:0}
+
+pre{background:#20262e;color:#e7edf3;border-radius:12px;padding:16px 18px;overflow-x:auto;
+  font-family:var(--mono);font-size:13.5px;line-height:1.55;margin:0 0 15px}
+code{font-family:var(--mono);font-size:.9em;background:var(--elev);padding:2px 6px;
+  border-radius:5px}
+pre code{background:none;padding:0;font-size:1em}
+
+.prompt{position:relative;background:#20262e;color:#e7edf3;border-radius:12px;
+  padding:16px 18px;margin:0 0 14px}
+/* Промпт должен быть виден целиком: участник его читает, а не только копирует.
+   pre-wrap переносит длинные строки, но сохраняет переводы строк — innerText
+   в кнопке копирования отдаёт ровно исходный текст. */
+.prompt pre{margin:0;padding:0;background:none;max-height:none;
+  white-space:pre-wrap;overflow-wrap:anywhere}
+.prompt{padding-top:46px}
+.copy{position:absolute;top:10px;right:10px;background:var(--acc);color:#fff;border:0;
+  border-radius:8px;padding:7px 13px;font:600 13px var(--font);cursor:pointer}
+.copy:hover{filter:brightness(1.08)}
+.copy.done{background:#0f7a46}
+
+figure{margin:0 0 18px}
+figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+figure.fig{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:18px 18px 12px;margin:22px 0}
+figure.fig svg{max-width:100%;height:auto}
+figure.fig figcaption{padding-top:6px;border-top:1px solid var(--line);margin-top:12px}
+
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;
+  border-radius:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;
+  display:flex;align-items:center;justify-content:center}
+
+/* Раскрывающийся блок: три вспомогательных промпта не должны спорить за внимание
+   с главным, но и прятать их насовсем нельзя — по ним разбирают проверку. */
+details.more{border:1px solid var(--line);border-radius:14px;padding:0 22px;
+  margin:0 0 18px;background:var(--surf)}
+details.more>summary{cursor:pointer;font-weight:800;padding:16px 0;list-style:none;
+  color:var(--ink2)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸";color:var(--acc);margin-right:8px}
+details.more[open]>summary::before{content:"▾"}
+details.more[open]{padding-bottom:14px}
+details.more>summary:hover{color:var(--ink)}
+
+.toc{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+  margin:0 0 8px}
+.toc ol{margin:0;padding-left:20px}
+.toc a{border:0}
+.toc a:hover{border-bottom:1px solid var(--acc)}
+
+footer{padding:36px 0 60px;color:var(--ink3);font-size:14.5px}
+/* Сноска на источник: верхний индекс, чтобы номер не читался как часть текста */
+a.fn{border:0;font-size:.72em;vertical-align:super;font-weight:700;padding-left:2px}
+a.fn:hover{border:0;text-decoration:underline}
+.tag{display:inline-block;background:var(--elev);border-radius:6px;padding:1px 8px;
+  font-size:13px;color:var(--ink2);font-weight:600}
+@media(max-width:600px){
+  body{font-size:16px}
+  .kv{grid-template-columns:1fr}
+}
+</style>
+</head><body>
+<nav class="crumbs" aria-label="Навигация"><div class="wrap"><a href="index.html">Материалы</a><span class="sep">▸</span><span class="here">Тренажёр: финансовая модель эффекта</span></div></nav>
+
+<style>
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.tabs button{background:var(--surf);border:1px solid var(--line);border-radius:10px;
+  padding:8px 14px;font:inherit;font-size:15px;color:var(--ink);cursor:pointer}
+.tabs button.on{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}
+.note{background:var(--acc-soft);border-left:3px solid var(--acc);border-radius:0 10px 10px 0;
+  padding:12px 16px;margin:0 0 18px;font-size:15px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 22px}
+@media(max-width:720px){.grid{grid-template-columns:1fr}}
+.fld label{display:block;font-size:13.5px;color:var(--ink3);margin:0 0 3px}
+.fld input,.fld select{width:100%;box-sizing:border-box;font:inherit;font-size:15.5px;
+  padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+.fld .u{font-size:13px;color:var(--ink3);margin-top:3px}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}
+@media(max-width:720px){.kpi{grid-template-columns:1fr 1fr}}
+.kpi>div{background:var(--surf);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi .l{font-size:13px;color:var(--ink3)}
+.kpi .v{font-size:22px;font-weight:800;margin-top:4px;line-height:1.15}
+.kpi .v.neg{color:var(--warn)}
+.kpi .s{font-size:13px;color:var(--ink3);margin-top:3px}
+.chart svg{width:100%;height:auto;display:block}
+.verdict{font-size:16.5px;font-weight:700;margin:10px 0 0}
+.verdict.neg{color:var(--warn)}
+table.sens td:first-child{font-weight:600}
+table.sens{font-size:14.5px}
+table.sens td{white-space:nowrap}
+table.sens td:first-child{white-space:normal;min-width:150px}
+table.sens input{width:78px;font:inherit;font-size:14.5px;padding:4px 6px;
+  border:1px solid var(--line);border-radius:6px}
+.flip{color:var(--warn);font-weight:700}
+.keep{color:#0f7a46;font-weight:700}
+.kind{display:flex;gap:16px;flex-wrap:wrap;font-size:15px;margin:6px 0 2px}
+.kind label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.ff{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:12px 16px;margin:0 0 14px;font-size:15.5px;overflow-x:auto}
+.ff b{color:#0f7a46}
+</style>
+
+<header><div class="wrap">
+  <div class="eyebrow">Тренажёр</div>
+  <h1>Финансовая модель эффекта</h1>
+  <p class="lead">Эффект проекта считается по формуле «изменение показателя ×
+     объём × стоимость единицы» и разворачивается во времени: выход
+     на уровень, срок сохранения, затраты, горизонт. Тренажёр показывает
+     поток эффекта по месяцам, окупаемость и чистую приведённую стоимость,
+     а затем проверяет чувствительность: какое допущение и при каком
+     значении меняет вывод. Три кейса курса — заготовками, свой проект —
+     вводится в те же поля.</p>
+  <div class="meta">
+    <span class="chip">Расчёт <b>в браузере</b></span>
+    <span class="chip">Метод <b>поток эффекта, NPV, чувствительность</b></span>
+    <span class="chip">Теория <b><a href="longread_finmodel.html">«Финансовая модель проекта»</a></b></span>
+  </div>
+</div></header>
+
+<section><div class="wrap">
+<h2><span class="num">1</span>Кейс и множители эффекта</h2>
+<div class="tabs" id="tabs"></div>
+<h3 id="t-name" style="margin:6px 0 8px"></h3>
+<div class="note" id="t-note"></div>
+<div class="ff"><b>Эффект в месяц</b> = Δ × V × P; поток по месяцам —
+с выходом на уровень за T месяцев и сроком сохранения R; из потока
+вычитаются затраты C₀ и c; накопленный поток даёт окупаемость, накопленный
+дисконтированный — NPV за горизонт H. Формулы —
+в разделе «Поток эффекта во времени» материала
+<a href="longread_finmodel.html#potok">«Финансовая модель проекта»</a>.</div>
+<div class="card" style="padding:18px 20px">
+<div class="kind"><span style="color:var(--ink3)">Тип эффекта:</span><label><input type="radio" name="kind" id="k-cohort"> накопление когорт (удержанные счета, активированные карты — каждая единица приносит доход, пока остаётся в портфеле)</label><label><input type="radio" name="kind" id="k-level"> постоянный поток (восстановленный объём, сокращённые расходы — эффект действует, пока сохраняется)</label></div><div class="grid" style="margin-top:12px"><div class="fld"><label for="f-delta">Изменение показателя (Δ)</label><input id="f-delta" type="text" inputmode="decimal"><div class="u" id="u-delta"></div><input id="e-delta" placeholder="единица измерения" style="margin-top:4px;font-size:13.5px;display:none"></div><div class="fld"><label for="f-volume">Объём (V)</label><input id="f-volume" type="text" inputmode="decimal"><div class="u" id="u-volume"></div><input id="e-volume" placeholder="единица измерения" style="margin-top:4px;font-size:13.5px;display:none"></div><div class="fld"><label for="f-price">Стоимость единицы в месяц (P), руб.</label><input id="f-price" type="text" inputmode="decimal"><div class="u" id="u-price"></div><input id="e-price" placeholder="единица измерения" style="margin-top:4px;font-size:13.5px;display:none"></div><div class="fld"><label for="f-ramp">Выход на полный уровень (T), мес.</label><input id="f-ramp" type="text" inputmode="decimal"></div><div class="fld"><label for="f-keep">Срок сохранения (R), мес.</label><input id="f-keep" type="text" inputmode="decimal"></div><div class="fld"><label for="f-capex">Единовременные затраты (C₀), руб.</label><input id="f-capex" type="text" inputmode="decimal"></div><div class="fld"><label for="f-opex">Ежемесячные затраты (c), руб.</label><input id="f-opex" type="text" inputmode="decimal"></div><div class="fld"><label for="f-horizon">Горизонт расчёта (H), мес.</label><input id="f-horizon" type="text" inputmode="decimal"></div><div class="fld"><label for="f-rate">Ставка дисконтирования, % годовых</label><input id="f-rate" type="text" inputmode="decimal"></div></div>
+<p class="sub" style="margin:12px 0 0">Значения в полях — базовые. Изменение
+любого поля пересчитывает всё ниже. <button type="button" id="reset"
+style="font:inherit;font-size:13.5px;padding:3px 10px;border:1px solid var(--line);
+border-radius:6px;background:#fff;cursor:pointer">Вернуть значения кейса</button></p>
+</div>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">2</span>Поток эффекта, окупаемость и NPV</h2>
+<div class="kpi">
+  <div><div class="l">Эффект на полном уровне</div><div class="v" id="k-full"></div><div class="s" id="k-full-s"></div></div>
+  <div><div class="l">Доход за первый год</div><div class="v" id="k-y1"></div><div class="s" id="k-y1-s"></div></div>
+  <div><div class="l">Окупаемость</div><div class="v" id="k-pb"></div><div class="s" id="k-pb-s"></div></div>
+  <div><div class="l">NPV за горизонт</div><div class="v" id="k-npv"></div><div class="s" id="k-npv-s"></div></div>
+</div>
+<div class="chart card" id="chart" style="padding:14px 12px 8px"></div>
+<p class="verdict" id="verdict"></p>
+<p class="sub">Сплошная линия — накопленный поток без дисконтирования:
+точка пересечения нуля — окупаемость. Пунктирная — тот же поток
+с дисконтированием; её значение в последнем месяце — NPV.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">3</span>Проверка чувствительности</h2>
+<p>Каждое допущение по очереди ставится в пессимистичное и оптимистичное
+значение при базовых остальных; NPV пересчитывается. Последняя колонка
+отвечает на единственный вопрос проверки: <b>меняется ли вывод</b>
+(знак NPV), а не на сколько меняется число. Пессимистичные
+и оптимистичные значения редактируются.</p>
+<div class="scroll" id="sens-wrap">
+<table class="sens">
+<thead><tr><th>Допущение</th><th>Базовое</th><th>Пессимистичное</th><th>NPV</th>
+<th>Оптимистичное</th><th>NPV</th><th>Вывод</th></tr></thead>
+<tbody id="sens-body"></tbody>
+</table>
+</div>
+<p id="sens-text" style="font-weight:600"></p>
+<div class="chart card" id="tornado" style="padding:12px"></div>
+<p class="sub">Диаграмма «торнадо»: допущения упорядочены по размаху
+влияния; серая часть — сдвиг NPV при пессимистичном значении, зелёная —
+при оптимистичном; красная — пессимистичное значение меняет знак NPV.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">4</span>Текст для слайда «Эффект для бизнеса»</h2>
+<p>Итог расчёта в виде, который переносится на последний слайд презентации
+проекта: формула с множителями, сроки, затраты, окупаемость, NPV
+и допущения с результатом проверки.</p>
+<div class="prompt"><button class="copy" type="button">Копировать</button>
+<pre id="slide-text"></pre></div>
+<p class="sub" style="margin-bottom:0">Структура слайда и чек-лист
+презентации — в материале <a href="longread_project.html#prezentaciya">«Каркас
+проекта»</a>; тот же расчёт в тетради с кодом — в репозитории практики,
+папка финансовой модели эффекта.</p>
+</div></section>
+
+<script>
+(function(){
+var P={"savings": {"tab": "Накопительный счёт", "name": "Накопительный счёт: удержание закрываемых счетов", "kind": "cohort", "note": "Инструмент корреляций показал связь закрытий и жалоб (0,96 по месячным итогам); гипотеза проекта — ускоренный разбор обращений предотвращает треть связанных с ними закрытий, то есть около 100 счетов в месяц. Каждый удержанный счёт приносит маржу на остаток, пока остаётся открытым.", "delta": 100, "delta_unit": "предотвращённых закрытий в месяц", "volume": 1, "volume_unit": "—", "price": 550, "price_unit": "руб. маржи на счёт в месяц (220 тыс. руб. × 3 п. п. ÷ 12)", "ramp": 3, "keep": 12, "capex": 600000, "opex": 50000, "horizon": 24, "rate": 0.15, "assumptions": [{"key": "delta", "name": "Предотвращённых закрытий в месяц", "base": 100, "pess": 35, "opt": 130}, {"key": "price", "name": "Маржа на счёт в месяц, руб.", "base": 550, "pess": 400, "opt": 650}, {"key": "keep", "name": "Срок сохранения счёта, мес.", "base": 12, "pess": 4, "opt": 18}, {"key": "capex", "name": "Единовременные затраты, руб.", "base": 600000, "pess": 900000, "opt": 450000}, {"key": "opex", "name": "Ежемесячные затраты, руб.", "base": 50000, "pess": 80000, "opt": 35000}]}, "cards": {"tab": "Карточный бизнес", "name": "Карточный бизнес: активация выпущенных карт", "kind": "cohort", "note": "Доля активации карт за 30 дней — 81 %; в регионах с долгой доставкой ниже. Гипотеза проекта — сокращение срока доставки поднимает активацию до 85 %: при 350 выпусках в месяц это 14 дополнительных активных карт ежемесячно.", "delta": 0.04, "delta_unit": "прирост доли активации (81 % → 85 %)", "volume": 350, "volume_unit": "карт выпускается в месяц", "price": 258, "price_unit": "руб. дохода активной карты в месяц (3 100 руб. в год ÷ 12)", "ramp": 2, "keep": 24, "capex": 120000, "opex": 4000, "horizon": 24, "rate": 0.15, "assumptions": [{"key": "delta", "name": "Прирост доли активации", "base": 0.04, "pess": 0.015, "opt": 0.06}, {"key": "price", "name": "Доход активной карты в месяц, руб.", "base": 258, "pess": 180, "opt": 320}, {"key": "keep", "name": "Срок жизни активной карты, мес.", "base": 24, "pess": 12, "opt": 36}, {"key": "capex", "name": "Единовременные затраты, руб.", "base": 120000, "pess": 200000, "opt": 90000}, {"key": "opex", "name": "Ежемесячные затраты, руб.", "base": 4000, "pess": 8000, "opt": 3000}]}, "ops": {"tab": "Портфель операций", "name": "Портфель операций: восстановление объёма", "kind": "level", "note": "После снятия сезонности виден спад и начавшееся восстановление объёма операций; прогноз модели с проверенной ошибкой даёт восстановление около 0,8 млн руб. в день. Эффект действует как поток, пока объём держится на восстановленном уровне.", "delta": 800000, "delta_unit": "руб. в день восстановленного объёма", "volume": 30, "volume_unit": "дней в месяце", "price": 0.005, "price_unit": "доля комиссии (0,5 % от объёма)", "ramp": 4, "keep": 18, "capex": 250000, "opex": 20000, "horizon": 24, "rate": 0.15, "assumptions": [{"key": "delta", "name": "Восстановленный объём, руб. в день", "base": 800000, "pess": 350000, "opt": 1000000}, {"key": "price", "name": "Средняя комиссия, доля", "base": 0.005, "pess": 0.0035, "opt": 0.006}, {"key": "keep", "name": "Срок сохранения эффекта, мес.", "base": 18, "pess": 6, "opt": 24}, {"key": "capex", "name": "Единовременные затраты, руб.", "base": 250000, "pess": 450000, "opt": 200000}, {"key": "opex", "name": "Ежемесячные затраты, руб.", "base": 20000, "pess": 40000, "opt": 15000}]}, "custom": {"tab": "Свой проект", "name": "Свой проект", "kind": "cohort", "note": "Значения из вашего каркаса проекта: изменение показателя — из вывода, объём — из данных, стоимость единицы — из финансовой модели. Всё, что не подтверждено данными, — допущение: задайте ему пессимистичное и оптимистичное значение в таблице ниже. Введённые значения сохраняются в вашем браузере.", "delta": 1, "delta_unit": "изменение показателя в месяц", "volume": 1, "volume_unit": "объём (единиц, к которым применяется изменение)", "price": 1000, "price_unit": "руб. на единицу в месяц", "ramp": 3, "keep": 12, "capex": 0, "opex": 0, "horizon": 24, "rate": 0.15, "assumptions": [{"key": "delta", "name": "Изменение показателя", "base": 1, "pess": 0.5, "opt": 1.3}, {"key": "price", "name": "Стоимость единицы, руб. в месяц", "base": 1000, "pess": 700, "opt": 1200}, {"key": "keep", "name": "Срок сохранения, мес.", "base": 12, "pess": 6, "opt": 18}, {"key": "capex", "name": "Единовременные затраты, руб.", "base": 0, "pess": 0, "opt": 0}, {"key": "opex", "name": "Ежемесячные затраты, руб.", "base": 0, "pess": 0, "opt": 0}]}};
+var NB=' ';
+var $=function(id){return document.getElementById(id)};
+var cur='savings', st={};
+function clone(o){return JSON.parse(JSON.stringify(o))}
+function fi(x){var s=String(Math.round(Math.abs(x))).replace(/\B(?=(\d{3})+(?!\d))/g,NB);return (x<0?'−':'')+s}
+function fr(x,d){var s=Number(x).toFixed(d).replace('.',',');return s}
+function money(x){var a=Math.abs(x);
+  if(a>=1e6) return (x<0?'−':'')+fr(a/1e6,a>=1e7?1:2)+' млн руб.';
+  if(a>=1e4) return (x<0?'−':'')+fi(a/1e3)+' тыс. руб.';
+  return fi(x)+' руб.'}
+function num(v){var s=String(v).replace(/\s| /g,'').replace(',','.');var n=parseFloat(s);return isNaN(n)?0:n}
+
+// ── модель: повторяет finmodel_core.py ─────────────────────────────────────
+function ramp(t,T){return T<=0?1:Math.min(t/T,1)}
+function flows(p){
+  var H=Math.round(p.horizon),T=p.ramp,R=p.keep,full=p.delta*p.volume;
+  var m=Math.pow(1+p.rate,1/12)-1,rows=[],cum=0,cumd=0;
+  for(var t=0;t<=H;t++){
+    var inc=0,units=0,cost;
+    if(t===0){cost=p.capex}
+    else{
+      cost=p.opex;
+      if(p.kind==='cohort'){for(var k=Math.max(1,t-R+1);k<=t;k++)units+=full*ramp(k,T)}
+      else{units=(t<=R)?full*ramp(t,T):0}
+      inc=units*p.price;
+    }
+    var cf=inc-cost;cum+=cf;var disc=cf/Math.pow(1+m,t);cumd+=disc;
+    rows.push({t:t,units:units,income:inc,cost:cost,cf:cf,cum:cum,disc:disc,cum_disc:cumd});
+  }
+  return rows;
+}
+function totals(p){
+  var rows=flows(p),pb=null,pbd=null,y1=0,inc=0,cost=0;
+  for(var i=0;i<rows.length;i++){var r=rows[i];
+    if(r.t>0&&pb===null&&r.cum>=0)pb=r.t;
+    if(r.t>0&&pbd===null&&r.cum_disc>=0)pbd=r.t;
+    if(r.t>=1&&r.t<=12)y1+=r.income; inc+=r.income; cost+=r.cost;}
+  return {rows:rows,npv:rows[rows.length-1].cum_disc,cum:rows[rows.length-1].cum,
+    payback:pb,payback_disc:pbd,year1:y1,full_month:p.delta*p.volume*p.price,
+    income:inc,cost:cost,horizon:Math.round(p.horizon)};
+}
+function sensitivity(p,ass){
+  var base=totals(p).npv,out=[];
+  for(var i=0;i<ass.length;i++){var a=ass[i];
+    var q=clone(p);q[a.key]=a.pess;var np=totals(q).npv;
+    q=clone(p);q[a.key]=a.opt;var no=totals(q).npv;
+    out.push({key:a.key,name:a.name,base:a.base,pess:a.pess,opt:a.opt,npv_pess:np,npv_opt:no,
+      flips:(np<0)!==(base<0),span:Math.abs(no-np)});}
+  out.sort(function(a,b){return b.span-a.span});
+  return out;
+}
+
+// ── состояние и форма ──────────────────────────────────────────────────────
+function load(id){
+  var s=clone(P[id]);
+  if(id==='custom'){try{var saved=localStorage.getItem('a360_effect_custom');
+    if(saved){var o=JSON.parse(saved);for(var k in o)s[k]=o[k];}}catch(e){}}
+  return s;
+}
+function save(){if(cur!=='custom')return;try{localStorage.setItem('a360_effect_custom',JSON.stringify(st))}catch(e){}}
+var FIELDS=['delta','volume','price','ramp','keep','capex','opex','horizon'];
+function fill(){
+  $('t-name').textContent=st.name;
+  $('t-note').innerHTML=st.note;
+  var custom=cur==='custom';
+  for(var i=0;i<FIELDS.length;i++){var f=FIELDS[i];$('f-'+f).value=st[f];}
+  $('f-rate').value=Math.round(st.rate*1000)/10;
+  $('u-delta').textContent=st.delta_unit;$('u-volume').textContent=st.volume_unit;$('u-price').textContent=st.price_unit;
+  $('k-cohort').checked=st.kind==='cohort';$('k-level').checked=st.kind==='level';
+  ['delta','volume','price'].forEach(function(f){$('u-'+f).style.display='';
+    var e=$('e-'+f);if(e){e.style.display=custom?'':'none';e.value=st[f+'_unit'];}});
+  var tb=$('sens-body');tb.innerHTML='';
+  st.assumptions.forEach(function(a,i){
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+a.name+'</td><td class="c-base"></td>'
+      +'<td><input data-i="'+i+'" data-k="pess" value="'+a.pess+'"></td><td class="c-np"></td>'
+      +'<td><input data-i="'+i+'" data-k="opt" value="'+a.opt+'"></td><td class="c-no"></td><td class="c-fl"></td>';
+    tb.appendChild(tr);
+  });
+  Array.prototype.forEach.call(tb.querySelectorAll('input'),function(inp){
+    inp.oninput=function(){var a=st.assumptions[+inp.dataset.i];a[inp.dataset.k]=num(inp.value);save();render();};
+  });
+}
+function readForm(){
+  for(var i=0;i<FIELDS.length;i++){var f=FIELDS[i];st[f]=num($('f-'+f).value);}
+  st.rate=num($('f-rate').value)/100;
+  st.kind=$('k-level').checked?'level':'cohort';
+  if(cur==='custom'){['delta','volume','price'].forEach(function(f){st[f+'_unit']=$('e-'+f).value;$('u-'+f).textContent=st[f+'_unit'];});}
+  // базовые значения допущений следуют за формой
+  st.assumptions.forEach(function(a){a.base=st[a.key]});
+  save();render();
+}
+function params(){return {kind:st.kind,delta:st.delta,volume:st.volume,price:st.price,ramp:st.ramp,
+  keep:st.keep,capex:st.capex,opex:st.opex,horizon:st.horizon,rate:st.rate}}
+
+// ── вывод ──────────────────────────────────────────────────────────────────
+function tx(x,y,t,fs,w,f,a,o){return '<text x="'+x+'" y="'+y+'" font-size="'+fs+'"'+(w?' font-weight="'+w+'"':'')
+  +' fill="'+f+'"'+(a?' text-anchor="'+a+'"':'')+(o?' fill-opacity="'+o+'"':'')+'>'+t+'</text>'}
+function chart(res){
+  var rows=res.rows,W=960,H=340,L=78,R=48,T=18,B=44,pw=W-L-R,ph=H-T-B;
+  var mx=0,mn=0;rows.forEach(function(r){mx=Math.max(mx,r.cum,r.income);mn=Math.min(mn,r.cum,-r.cost)});
+  if(mx===mn){mx=1;mn=-1}
+  var pad=(mx-mn)*0.08;mx+=pad;mn-=pad;
+  var y=function(v){return T+ph*(mx-v)/(mx-mn)},x=function(t){return L+pw*t/res.horizon};
+  var bw=Math.max(3,pw/(res.horizon+1)*0.34),s=[];
+  s.push('<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" font-family="inherit">');
+  // сетка
+  var step=niceStep((mx-mn)/5);
+  for(var v=Math.ceil(mn/step)*step;v<=mx;v+=step){
+    s.push('<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(v).toFixed(1)+'" y2="'+y(v).toFixed(1)+'" stroke="#2E3641" stroke-opacity="'+(Math.abs(v)<1e-9?0.45:0.10)+'"/>');
+    s.push(tx(L-8,y(v)+4,money(v).replace(' руб.',''),12,null,'#2E3641','end',0.7));
+  }
+  // столбики: доход (зелёный) и затраты (серый, вниз)
+  rows.forEach(function(r){var cx=x(r.t);
+    if(r.income>0)s.push('<rect x="'+(cx-bw).toFixed(1)+'" y="'+y(r.income).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(y(0)-y(r.income)).toFixed(1)+'" fill="#20BA72" fill-opacity="0.55"/>');
+    if(r.cost>0)s.push('<rect x="'+cx.toFixed(1)+'" y="'+y(0).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(y(-r.cost)-y(0)).toFixed(1)+'" fill="#2E3641" fill-opacity="0.35"/>');
+  });
+  // накопленный поток
+  var d='';rows.forEach(function(r,i){d+=(i?'L':'M')+x(r.t).toFixed(1)+' '+y(r.cum).toFixed(1)+' '});
+  s.push('<path d="'+d+'" fill="none" stroke="#159A5C" stroke-width="3"/>');
+  var dd='';rows.forEach(function(r,i){dd+=(i?'L':'M')+x(r.t).toFixed(1)+' '+y(r.cum_disc).toFixed(1)+' '});
+  s.push('<path d="'+dd+'" fill="none" stroke="#159A5C" stroke-width="2" stroke-dasharray="6 5" stroke-opacity="0.8"/>');
+  if(res.payback!==null){var px=x(res.payback);
+    s.push('<line x1="'+px.toFixed(1)+'" x2="'+px.toFixed(1)+'" y1="'+T+'" y2="'+(T+ph)+'" stroke="#D2564A" stroke-width="1.5" stroke-dasharray="4 4"/>');
+    s.push(tx(px+6,T+14,'окупаемость: месяц '+res.payback,13,'700','#D2564A'));}
+  // ось месяцев
+  var mstep=res.horizon>24?6:3;
+  for(var t=0;t<=res.horizon;t+=mstep)s.push(tx(x(t),H-B+18,String(t),12,null,'#2E3641','middle',0.7));
+  s.push(tx(W-R+12,H-B+18,'мес.',12,null,'#2E3641','start',0.5));
+  // легенда
+  var ly=H-8;
+  s.push('<rect x="'+L+'" y="'+(ly-10)+'" width="12" height="10" fill="#20BA72" fill-opacity="0.55"/>'+tx(L+18,ly,'доход в месяц',12.5,null,'#2E3641',null,0.8));
+  s.push('<rect x="'+(L+130)+'" y="'+(ly-10)+'" width="12" height="10" fill="#2E3641" fill-opacity="0.35"/>'+tx(L+148,ly,'затраты',12.5,null,'#2E3641',null,0.8));
+  s.push('<line x1="'+(L+230)+'" x2="'+(L+256)+'" y1="'+(ly-5)+'" y2="'+(ly-5)+'" stroke="#159A5C" stroke-width="3"/>'+tx(L+262,ly,'накопленный поток',12.5,null,'#2E3641',null,0.8));
+  s.push('<line x1="'+(L+400)+'" x2="'+(L+426)+'" y1="'+(ly-5)+'" y2="'+(ly-5)+'" stroke="#159A5C" stroke-width="2" stroke-dasharray="6 5"/>'+tx(L+432,ly,'то же с дисконтированием (NPV на конце)',12.5,null,'#2E3641',null,0.8));
+  s.push('</svg>');
+  return s.join('');
+}
+function niceStep(raw){var p=Math.pow(10,Math.floor(Math.log10(raw)));var m=raw/p;var c=m<1.5?1:m<3.5?2:m<7.5?5:10;return c*p}
+function tornado(sens,base){
+  var W=960,rowH=34,L=300,R=190,T=26,H=T+rowH*sens.length+14,pw=W-L-R,s=[];
+  var mx=0;sens.forEach(function(r){mx=Math.max(mx,Math.abs(r.npv_pess-base),Math.abs(r.npv_opt-base))});
+  if(mx===0)mx=1;
+  var x0=L+pw/2,sc=(pw/2-8)/mx;
+  s.push('<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" font-family="inherit">');
+  s.push(tx(x0,16,'NPV при базовых значениях: '+money(base),12.5,'700','#2E3641','middle'));
+  s.push('<line x1="'+x0+'" x2="'+x0+'" y1="'+T+'" y2="'+(H-10)+'" stroke="#2E3641" stroke-opacity="0.45"/>');
+  sens.forEach(function(r,i){var y=T+i*rowH+6,h=rowH-12;
+    var dp=r.npv_pess-base,dop=r.npv_opt-base;
+    s.push(tx(L-12,y+h/2+4,r.name,13.5,null,'#2E3641','end'));
+    var xp=x0+Math.min(0,dp)*sc,wp=Math.abs(dp)*sc;
+    s.push('<rect x="'+xp.toFixed(1)+'" y="'+y+'" width="'+wp.toFixed(1)+'" height="'+h+'" rx="4" fill="'+(r.flips?'#D2564A':'#2E3641')+'" fill-opacity="'+(r.flips?0.8:0.35)+'"/>');
+    var xo=x0+Math.min(0,dop)*sc,wo=Math.abs(dop)*sc;
+    s.push('<rect x="'+xo.toFixed(1)+'" y="'+y+'" width="'+wo.toFixed(1)+'" height="'+h+'" rx="4" fill="#20BA72" fill-opacity="0.6"/>');
+    var xr=Math.max(xo+wo,xp+wp,x0)+8;
+    s.push(tx(xr,y+h/2+4,money(r.npv_pess).replace(' руб.','')+' → '+money(r.npv_opt).replace(' руб.',''),11.5,null,'#2E3641','start',0.75));
+  });
+  s.push('</svg>');
+  return s.join('');
+}
+function render(){
+  var p=params(),res=totals(p),sens=sensitivity(p,st.assumptions);
+  $('k-full').textContent=money(res.full_month)+' в мес.';
+  $('k-full-s').textContent=st.kind==='cohort'?'одна месячная когорта на полном уровне':'на полном уровне';
+  $('k-y1').textContent=money(res.year1);
+  $('k-y1-s').textContent='затраты за год: '+money(p.capex+12*p.opex);
+  $('k-pb').textContent=res.payback===null?'нет':res.payback+' мес.';
+  $('k-pb-s').textContent=res.payback===null?'в горизонте '+res.horizon+' мес. не окупается':
+    (res.payback_disc===null?'с дисконтированием — за горизонтом':'с дисконтированием — '+res.payback_disc+' мес.');
+  var kn=$('k-npv');kn.textContent=money(res.npv);kn.className='v'+(res.npv<0?' neg':'');
+  $('k-npv-s').textContent='за '+res.horizon+' мес. при ставке '+fr(p.rate*100,1)+' %';
+  $('chart').innerHTML=chart(res);
+  var v=$('verdict');
+  if(res.npv>=0){v.className='verdict';v.textContent='Вывод при базовых значениях: проект окупается'+(res.payback!==null?' за '+res.payback+' мес.':'')+', NPV за горизонт положительный.'}
+  else{v.className='verdict neg';v.textContent='Вывод при базовых значениях: NPV за горизонт отрицательный — проект не окупается в выбранном горизонте.'}
+  // таблица чувствительности
+  var trs=$('sens-body').querySelectorAll('tr');
+  st.assumptions.forEach(function(a,i){var tr=trs[i],r=null;
+    for(var j=0;j<sens.length;j++)if(sens[j].key===a.key)r=sens[j];
+    tr.querySelector('.c-base').textContent=fmtv(a.base);
+    tr.querySelector('.c-np').textContent=money(r.npv_pess);
+    tr.querySelector('.c-no').textContent=money(r.npv_opt);
+    var fl=tr.querySelector('.c-fl');fl.innerHTML=r.flips?'<span class="flip">меняется</span>':'<span class="keep">сохраняется</span>';
+  });
+  $('tornado').innerHTML=tornado(sens,res.npv);
+  var crit=sens.filter(function(r){return r.flips});
+  $('sens-text').textContent=crit.length?
+    'Вывод меняется при пессимистичном значении: '+crit.map(function(r){return r.name.toLowerCase()+' ('+fmtv(r.pess)+')'}).join('; ')+'. Это допущение подтверждается данными в первую очередь.':
+    'Ни одно допущение по отдельности не меняет вывод. Самое влиятельное — '+sens[0].name.toLowerCase()+': разброс NPV '+money(sens[0].span).replace(' руб.','')+' руб.';
+  // текст слайда
+  var lines=[];
+  lines.push('ЭФФЕКТ ДЛЯ БИЗНЕСА · '+st.name);
+  lines.push('');
+  lines.push('Формула: '+fmtv(p.delta)+' ('+st.delta_unit+') × '+fmtv(p.volume)+' ('+st.volume_unit+') × '+fmtv(p.price)+' ('+st.price_unit+') = '+money(res.full_month)+' в месяц на полном уровне'+(st.kind==='cohort'?' на каждую месячную когорту':'')+'.');
+  lines.push('Выход на уровень: '+p.ramp+' мес.; срок сохранения: '+p.keep+' мес.; горизонт: '+res.horizon+' мес.');
+  lines.push('Затраты: единовременно '+money(p.capex)+', ежемесячно '+money(p.opex)+'.');
+  lines.push('Доход за первый год: '+money(res.year1)+'. Окупаемость: '+(res.payback===null?'не достигается в горизонте':res.payback+' мес.')+'. NPV за горизонт при ставке '+fr(p.rate*100,1)+' %: '+money(res.npv)+'.');
+  lines.push('');
+  lines.push('Допущения и чувствительность:');
+  sens.forEach(function(r){lines.push('— '+r.name+': базовое '+fmtv(r.base)+', пессимистичное '+fmtv(r.pess)+' → NPV '+money(r.npv_pess)+' (вывод '+(r.flips?'меняется':'сохраняется')+')')});
+  $('slide-text').textContent=lines.join('\n');
+}
+function fmtv(v){var a=Math.abs(v);if(a>=1000)return fi(v);if(a>=1&&Number.isInteger(v))return String(v);return String(Math.round(v*10000)/10000).replace('.',',')}
+
+// ── привязка ───────────────────────────────────────────────────────────────
+var tabs=$('tabs');
+Object.keys(P).forEach(function(id){var b=document.createElement('button');b.type='button';b.textContent=P[id].tab;
+  b.dataset.id=id;b.onclick=function(){cur=id;st=load(id);
+    Array.prototype.forEach.call(tabs.children,function(c){c.className=c.dataset.id===id?'on':''});
+    fill();render();};tabs.appendChild(b);});
+tabs.firstChild.className='on';
+FIELDS.concat(['rate']).forEach(function(f){$('f-'+f).oninput=readForm});
+['delta','volume','price'].forEach(function(f){var e=$('e-'+f);if(e)e.oninput=readForm});
+$('k-cohort').onchange=readForm;$('k-level').onchange=readForm;
+$('reset').onclick=function(){try{localStorage.removeItem('a360_effect_custom')}catch(e){};st=load(cur);fill();render();};
+st=load(cur);fill();render();
+})();
+</script>
+
+
+<script>
+// Кнопка «скопировать промпт»: сначала пробуем Clipboard API, при отказе —
+// старый execCommand. В LMS страница часто открыта в iframe без разрешения
+// на буфер обмена, и без запасного пути кнопка молча ничего не делает.
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.copy'); if(!b) return;
+  var t=b.parentNode.querySelector('pre').innerText;
+  function done(){b.textContent='Скопировано';b.classList.add('done');
+    setTimeout(function(){b.textContent='Копировать';b.classList.remove('done')},1800);}
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(done,fallback);
+  } else { fallback(); }
+  function fallback(){
+    var a=document.createElement('textarea');a.value=t;a.style.position='fixed';
+    a.style.opacity=0;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');done();}catch(_e){b.textContent='Выделите вручную';}
+    document.body.removeChild(a);
+  }
+});
+</script>
+</body></html>

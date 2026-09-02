@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Финансовая модель проекта: эффект, допущения, чувствительность · Аналитика 360</title>
+<style>
+:root{
+  --acc:#20BA72; --acc-soft:rgba(32,186,114,.10); --acc-line:rgba(32,186,114,.30);
+  --bg:#ffffff; --surf:#f4f8f6; --elev:#e9f3ee; --line:rgba(46,54,65,.13);
+  --ink:#2E3641; --ink2:rgba(46,54,65,.74); --ink3:rgba(46,54,65,.48);
+  --warn:#E4572E; --warn-soft:rgba(228,87,46,.09);
+  --font:'SB Sans Text','Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'SFMono-Regular',Consolas,'Liberation Mono',monospace;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth}
+body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 22px}
+/* overflow-wrap нужен ссылкам-адресам в списках источников: у длинного URL нет
+   точек переноса, на узком экране он уходит за край, а html/body{overflow-x:clip}
+   выше не даёт его прокрутить — текст пропадал совсем. break-word рвёт только
+   слово, которое иначе не помещается, и не влияет на расчёт min-content. */
+a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line);
+  overflow-wrap:break-word}
+a:hover{border-bottom-color:var(--acc)}
+
+header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
+  border-bottom:1px solid var(--line)}
+
+/* Хлебная крошка: лёгкая строка над шапкой. Фон тот же, что у верха градиента
+   шапки, поэтому крошка визуально сливается с ней в один блок. */
+.crumbs{background:var(--elev);font-size:13.5px;color:var(--ink3)}
+.crumbs .wrap{padding-top:14px;padding-bottom:2px;display:flex;align-items:baseline;gap:8px}
+.crumbs a{color:#128a53;border-bottom:1px solid transparent;font-weight:600}
+.crumbs a:hover{border-bottom-color:var(--acc)}
+.crumbs .sep{color:var(--ink3);font-size:11px}
+.crumbs .here{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eyebrow{color:var(--acc);font-weight:800;font-size:12.5px;letter-spacing:.14em;
+  text-transform:uppercase;margin-bottom:14px}
+h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 16px}
+.lead{font-size:clamp(16.5px,2vw,19px);color:var(--ink2);margin:0 0 22px}
+.meta{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;
+  font-size:13.5px;color:var(--ink2)}
+.chip b{color:var(--ink)}
+
+section{padding:44px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-size:clamp(22px,3vw,30px);font-weight:800;margin:0 0 8px;line-height:1.18}
+h2 .num{color:var(--acc);margin-right:.4em;font-variant-numeric:tabular-nums}
+h3{font-size:19px;font-weight:800;margin:30px 0 10px}
+h4{font-size:16px;font-weight:800;margin:22px 0 8px;color:var(--ink2)}
+p{margin:0 0 15px}
+ul,ol{margin:0 0 15px;padding-left:22px}
+li{margin-bottom:7px}
+.sub{color:var(--ink3);margin:0 0 22px;font-size:15.5px}
+
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:20px 22px;margin:0 0 18px}
+.card.acc{background:var(--acc-soft);border-color:var(--acc-line)}
+.card.warn{background:var(--warn-soft);border-color:rgba(228,87,46,.28)}
+.card h4{margin-top:0}
+.card p:last-child,.card ul:last-child,.card ol:last-child{margin-bottom:0}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0 0 15px;font-size:15.5px}
+.kv dt{color:var(--ink3)}
+.kv dd{margin:0;font-weight:600}
+
+table{border-collapse:collapse;width:100%;font-size:15px;margin:0 0 15px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{font-weight:800;color:var(--ink2);font-size:13.5px;text-transform:uppercase;
+  letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 15px}
+.scroll table{margin:0}
+
+pre{background:#20262e;color:#e7edf3;border-radius:12px;padding:16px 18px;overflow-x:auto;
+  font-family:var(--mono);font-size:13.5px;line-height:1.55;margin:0 0 15px}
+code{font-family:var(--mono);font-size:.9em;background:var(--elev);padding:2px 6px;
+  border-radius:5px}
+pre code{background:none;padding:0;font-size:1em}
+
+.prompt{position:relative;background:#20262e;color:#e7edf3;border-radius:12px;
+  padding:16px 18px;margin:0 0 14px}
+/* Промпт должен быть виден целиком: участник его читает, а не только копирует.
+   pre-wrap переносит длинные строки, но сохраняет переводы строк — innerText
+   в кнопке копирования отдаёт ровно исходный текст. */
+.prompt pre{margin:0;padding:0;background:none;max-height:none;
+  white-space:pre-wrap;overflow-wrap:anywhere}
+.prompt{padding-top:46px}
+.copy{position:absolute;top:10px;right:10px;background:var(--acc);color:#fff;border:0;
+  border-radius:8px;padding:7px 13px;font:600 13px var(--font);cursor:pointer}
+.copy:hover{filter:brightness(1.08)}
+.copy.done{background:#0f7a46}
+
+figure{margin:0 0 18px}
+figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+figure.fig{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:18px 18px 12px;margin:22px 0}
+figure.fig svg{max-width:100%;height:auto}
+figure.fig figcaption{padding-top:6px;border-top:1px solid var(--line);margin-top:12px}
+
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;
+  border-radius:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;
+  display:flex;align-items:center;justify-content:center}
+
+/* Раскрывающийся блок: три вспомогательных промпта не должны спорить за внимание
+   с главным, но и прятать их насовсем нельзя — по ним разбирают проверку. */
+details.more{border:1px solid var(--line);border-radius:14px;padding:0 22px;
+  margin:0 0 18px;background:var(--surf)}
+details.more>summary{cursor:pointer;font-weight:800;padding:16px 0;list-style:none;
+  color:var(--ink2)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸";color:var(--acc);margin-right:8px}
+details.more[open]>summary::before{content:"▾"}
+details.more[open]{padding-bottom:14px}
+details.more>summary:hover{color:var(--ink)}
+
+.toc{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+  margin:0 0 8px}
+.toc ol{margin:0;padding-left:20px}
+.toc a{border:0}
+.toc a:hover{border-bottom:1px solid var(--acc)}
+
+footer{padding:36px 0 60px;color:var(--ink3);font-size:14.5px}
+/* Сноска на источник: верхний индекс, чтобы номер не читался как часть текста */
+a.fn{border:0;font-size:.72em;vertical-align:super;font-weight:700;padding-left:2px}
+a.fn:hover{border:0;text-decoration:underline}
+.tag{display:inline-block;background:var(--elev);border-radius:6px;padding:1px 8px;
+  font-size:13px;color:var(--ink2);font-weight:600}
+@media(max-width:600px){
+  body{font-size:16px}
+  .kv{grid-template-columns:1fr}
+}
+</style>
+</head><body>
+<nav class="crumbs" aria-label="Навигация"><div class="wrap"><a href="index.html">Материалы</a><span class="sep">▸</span><span class="here">Финансовая модель проекта</span></div></nav>
+
+<style>
+.term{border-left:3px solid var(--acc);background:var(--acc-soft);
+  border-radius:0 10px 10px 0;padding:12px 16px;margin:16px 0}
+.term b{color:#0f7a46}
+.src li{margin:0 0 14px}
+.src .what{color:var(--ink3);font-size:14.5px;display:block;margin-top:3px}
+.formula{margin:20px 0;padding:16px 20px;background:var(--card);
+  border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+.formula .f{font-family:Georgia,'Times New Roman',serif;font-size:19px;
+  text-align:center;white-space:nowrap;letter-spacing:.02em}
+.formula .f i{font-style:italic}
+.formula .why{color:var(--ink3);font-size:14.5px;margin-top:10px;
+  text-align:center}
+.frac{display:inline-block;vertical-align:middle;text-align:center;
+  margin:0 3px}
+.frac span{display:block;padding:0 6px}
+.frac span:first-child{border-bottom:1.2px solid var(--ink);
+  padding-bottom:2px}
+.frac span:last-child{padding-top:2px}
+.steps li{margin:0 0 10px}
+.ff{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:14px 18px;margin:16px 0;font-size:16px;overflow-x:auto}
+.ff b{color:#0f7a46}
+.flip{color:var(--warn);font-weight:700}
+.keep{color:#0f7a46;font-weight:700}
+.err td:first-child{font-weight:700}
+</style>
+
+<header><div class="wrap">
+  <div class="eyebrow">Материалы практической части</div>
+  <h1>Финансовая модель проекта</h1>
+  <p class="lead">Эффект проекта — изменение показателя, переведённое
+     в деньги. Здесь описано, как это делается: формула эффекта и её
+     множители, разделение данных и допущений, затраты, поток эффекта
+     во времени, окупаемость и чистая приведённая стоимость, проверка
+     чувствительности и сценарии. Каждый раздел заканчивается тем, как
+     расчёт выполнен в тренажёре и тетради на кейсе накопительного счёта.</p>
+  <div class="meta">
+    <span class="chip">Чтение <b>20 минут</b></span>
+    <span class="chip">Формул <b>пять, все на уровне арифметики</b></span>
+    <span class="chip">Расчёт <b><a href="trainer_effect.html">тренажёр «Финансовая модель эффекта»</a></b></span>
+  </div>
+</div></header>
+
+<section><div class="wrap">
+<h2 id="formula"><span class="num">1</span>Эффект как произведение</h2>
+<p>Любой эффект проекта на уровне одного месяца раскладывается на три
+множителя: насколько изменился показатель, к какому объёму это изменение
+применяется и сколько стоит одна единица.</p>
+<div class="formula"><div class="f"><i>E</i><sub>мес</sub> = Δ × <i>V</i> × <i>P</i></div><div class="why">Δ — изменение показателя; V — объём, к которому оно применяется; P — стоимость единицы в месяц</div></div>
+<p>У каждого множителя есть единица измерения, и произведение единиц
+обязано дать «рублей в месяц». Это первая проверка расчёта: если единицы
+не сходятся, один из множителей взят не в том периоде или не в той
+размерности.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>Кейс</th><th>Δ</th><th>V</th><th>P</th><th>E<sub>мес</sub></th></tr></thead>
+<tbody>
+<tr><td>Накопительный счёт</td><td>100 предотвращённых закрытий в месяц</td>
+<td>1 (единица — счёт)</td><td>550 руб. маржи на счёт в месяц</td>
+<td>55 тыс. руб. на месячную когорту</td></tr>
+<tr><td>Карточный бизнес</td><td>+4 п. п. доли активации</td>
+<td>350 карт в месяц</td><td>258 руб. дохода на активную карту в месяц</td>
+<td>3,6 тыс. руб. на месячную когорту</td></tr>
+<tr><td>Портфель операций</td><td>0,8 млн руб. в день объёма</td>
+<td>30 дней</td><td>0,5 % комиссии</td><td>120 тыс. руб. в месяц</td></tr>
+</tbody></table>
+</div>
+<p class="sub">В первых двух кейсах единицы эффекта остаются в портфеле
+и приносят доход дальше — эффект накапливается по когортам; в третьем
+эффект действует как поток. Различие разбирается в разделе «Поток
+эффекта во времени».</p>
+</div></section>
+
+<section><div class="wrap">
+<h2 id="dopushcheniya"><span class="num">2</span>Множители: данные и допущения</h2>
+<p>Каждый множитель либо получен из данных, либо является допущением.
+Это различие важнее точности числа: множитель из данных проверяется
+пересчётом, допущение — только дальнейшим сбором данных или пилотом.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>Множитель</th><th>Откуда обычно берётся</th><th>Пример из кейса счёта</th></tr></thead>
+<tbody>
+<tr><td>Δ — изменение показателя</td>
+<td>гипотеза проекта: целевое значение минус текущее; текущее — из данных,
+целевое — допущение до пилота</td>
+<td>треть закрытий, связанных с жалобами, предотвратима — допущение;
+число закрытий в месяц — из выгрузки</td></tr>
+<tr><td>V — объём</td><td>данные: выпуск, поток, база</td>
+<td>единица эффекта — один счёт</td></tr>
+<tr><td>P — стоимость единицы</td>
+<td>финансовая служба: маржа, комиссия, стоимость операции; часто
+допущение по справочной ставке</td>
+<td>средний остаток 220 тыс. руб. из выгрузки × маржа 3 п. п.
+по справочной ставке</td></tr>
+</tbody></table>
+</div>
+<div class="term"><b>Допущение записывается как объект,</b> а не как число
+в формуле: значение и единица · источник · диапазон от пессимистичного
+до оптимистичного · кто подтверждает и когда заменяется фактом.
+Допущение без диапазона не проверяется на чувствительность, допущение
+без срока замены остаётся в модели навсегда.</div>
+<p>Правило выбора диапазона: пессимистичное значение — то, при котором
+проект ещё имеет смысл обсуждать, а не наихудшее мыслимое; оптимистичное —
+подтверждённый где-либо уровень, а не желаемый. Диапазон, взятый
+как «±30 %» для всех допущений подряд, проверку не заменяет:
+у разных допущений разная неопределённость.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2 id="zatraty"><span class="num">3</span>Затраты проекта</h2>
+<p>Эффект сравнивается с затратами двух видов:</p>
+<ul>
+  <li><b>Единовременные (C₀)</b> — доработка систем, договор на выгрузку,
+      запуск пилота; относятся к месяцу 0.</li>
+  <li><b>Ежемесячные (c)</b> — сопровождение, дополнительные операции,
+      стоимость сбора данных; относятся к каждому месяцу горизонта.</li>
+</ul>
+<p>Стоимость данных — отдельная строка затрат, которую часто пропускают:
+регулярная выгрузка от подрядчика, ручная сверка, поддержание
+кодификатора. Как оценивается цена сбора для каждой метрики —
+в разделе <a href="longread_metrics.html#eco-tte">«Экономика данных»</a>
+справочника: единовременные и ежемесячные затраты сбора и время
+до проверенного сигнала. Метрика с высокой ценой сбора удорожает проект
+целиком, и это должно быть видно в модели, а не в примечании.</p>
+<div class="formula"><div class="f"><i>CF</i><sub>0</sub> = −<i>C</i><sub>0</sub>;&nbsp;&nbsp;&nbsp;<i>CF</i><sub><i>t</i></sub> = <i>E</i><sub><i>t</i></sub> − <i>c</i>,&nbsp; <i>t</i> = 1 … <i>H</i></div><div class="why">чистый поток месяца: доход месяца минус ежемесячные затраты; H — горизонт расчёта в месяцах</div></div>
+</div></section>
+
+<section><div class="wrap">
+<h2 id="potok"><span class="num">4</span>Поток эффекта во времени</h2>
+<p>Эффект первого месяца редко равен полному: изменение внедряется
+постепенно, единицы эффекта накапливаются, а затем эффект затухает.
+Три параметра описывают это:</p>
+<ol class="steps">
+  <li><b>Выход на уровень (T)</b> — за сколько месяцев эффект достигает
+      полного значения; до этого он растёт линейно: в месяце
+      <i>t</i> достигнута доля min(<i>t</i>/<i>T</i>, 1).</li>
+  <li><b>Срок сохранения (R)</b> — сколько месяцев единица эффекта
+      или поток приносят доход. Удержанный счёт со временем закрывается
+      по другим причинам; восстановленный объём держится до следующего
+      изменения условий.</li>
+  <li><b>Тип эффекта</b> — накопление когорт или постоянный поток.</li>
+</ol>
+<p><b>Накопление когорт.</b> Каждый месяц появляется новая группа единиц
+эффекта (удержанные счета, активированные карты); каждая единица приносит
+<i>P</i> в месяц в течение <i>R</i> месяцев. Доход месяца <i>t</i> —
+сумма по всем живым когортам:</p>
+<div class="formula"><div class="f"><i>E</i><sub><i>t</i></sub> = <i>P</i> × Σ<sub><i>k</i></sub> Δ<i>V</i> × min(<i>k</i>/<i>T</i>, 1),&nbsp;&nbsp; <i>k</i> = max(1, <i>t</i>−<i>R</i>+1) … <i>t</i></div><div class="why">когорта k живёт R месяцев; после месяца R поток выходит на постоянный уровень R × ΔV × P</div></div>
+<p><b>Постоянный поток.</b> Эффект действует как уровень: восстановленный
+объём, сокращённые расходы. Доход месяца — полный эффект с поправкой
+на выход на уровень, пока <i>t</i> ≤ <i>R</i>:</p>
+<div class="formula"><div class="f"><i>E</i><sub><i>t</i></sub> = Δ<i>V</i><i>P</i> × min(<i>t</i>/<i>T</i>, 1),&nbsp;&nbsp; <i>t</i> ≤ <i>R</i>;&nbsp;&nbsp; <i>E</i><sub><i>t</i></sub> = 0,&nbsp; <i>t</i> &gt; <i>R</i></div></div>
+<p><b>Накопленный поток и окупаемость.</b> Сумма чистых потоков с месяца 0
+по месяц <i>t</i> — накопленный поток; первый месяц, в котором он
+становится неотрицательным, — срок окупаемости. Окупаемость проста
+для объяснения, но не учитывает, что происходит после неё и сколько
+стоят деньги во времени, — поэтому решение принимается по NPV, а срок
+окупаемости сопровождает его.</p>
+<p class="sub">В тренажёре: тип эффекта переключается, T и R задаются
+в полях; на графике столбцы — доход и затраты месяца, сплошная линия —
+накопленный поток, пересечение нуля — окупаемость.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2 id="npv"><span class="num">5</span>Дисконтирование и NPV</h2>
+<p>Рубль через два года стоит меньше рубля сегодня: он мог быть вложен
+в другой проект. Ставка дисконтирования <i>r</i> — годовая доходность,
+которой измеряется эта альтернатива; для расчёта по месяцам она
+переводится в месячную:</p>
+<div class="formula"><div class="f"><i>m</i> = (1 + <i>r</i>)<sup>1/12</sup> − 1</div><div class="why">при r = 15 % годовых m ≈ 1,17 % в месяц</div></div>
+<p>Чистая приведённая стоимость — сумма чистых потоков за горизонт,
+каждый из которых уменьшен в (1 + <i>m</i>)<sup><i>t</i></sup> раз:</p>
+<div class="formula"><div class="f"><i>NPV</i> = Σ<sub><i>t</i>=0</sub><sup><i>H</i></sup> <span class="frac"><span><i>CF</i><sub><i>t</i></sub></span><span>(1 + <i>m</i>)<sup><i>t</i></sup></span></span></div><div class="why">правило принятия: NPV за горизонт ≥ 0; горизонт и ставка задаются инвестиционными правилами организации, а не проектом</div></div>
+<p>Пороговое значение метрики проекта выводится из этого правила
+в обратную сторону: какое минимальное Δ даёт NPV = 0 на заданном
+горизонте. Так целевой уровень показателя перестаёт быть пожеланием
+и становится расчётной величиной. Термины дисконтирования —
+в разделе <a href="longread_metrics.html#npv-terms">«NPV»</a>
+справочника; горизонт пилота и накопление наблюдений —
+в тренажёре <a href="trainer_accum.html">«Срок эксперимента»</a>.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2 id="chuvstvitelnost"><span class="num">6</span>Проверка чувствительности и сценарии</h2>
+<p>Модель с допущениями отвечает не на вопрос «сколько», а на вопрос
+«при каких условиях». Проверка чувствительности делает эти условия
+явными: каждое допущение по очереди ставится в пессимистичное значение
+при базовых остальных, NPV пересчитывается, и записывается ответ —
+<b>меняется ли вывод</b>.</p>
+<ol class="steps">
+  <li>Перечислить допущения с диапазонами (раздел «Множители»).</li>
+  <li>Для каждого посчитать NPV при пессимистичном и при оптимистичном
+      значении; остальные — базовые.</li>
+  <li>Упорядочить допущения по размаху NPV — это диаграмма «торнадо».</li>
+  <li>Отметить допущения, при пессимистичном значении которых NPV меняет
+      знак: они подтверждаются данными в первую очередь, до запуска.</li>
+</ol>
+<p><b>Сценарии</b> — тот же расчёт, но несколько допущений меняются
+вместе: пессимистичный, базовый, оптимистичный. Сценарий отвечает
+на вопрос о диапазоне исхода, проверка «по одному» — на вопрос
+о приоритете: какое допущение уточнять первым. Оба нужны, заменять один
+другим нельзя: в сценарии влияние отдельного допущения не видно.</p>
+<p class="sub">Метод «одно допущение за раз» не учитывает совместного
+влияния допущений; для модели из трёх множителей и двух затрат этого
+достаточно, для моделей с десятками параметров применяются методы
+глобального анализа чувствительности (источники в конце).</p>
+</div></section>
+
+<section><div class="wrap">
+<h2 id="primer"><span class="num">7</span>Пример расчёта: накопительный счёт</h2>
+<p>Кейс <a href="case_report.html">страницы анализа</a>: закрытия
+и жалобы изменяются согласованно, гипотеза проекта — ускоренный разбор
+обращений предотвращает около 100 закрытий в месяц. Параметры модели:</p>
+<div class="scroll">
+<table>
+<thead><tr><th>Параметр</th><th>Значение</th><th>Происхождение</th></tr></thead>
+<tbody>
+<tr><td>Δ × V</td><td>100 удержанных счетов в месяц</td><td>допущение: треть закрытий, связанных с жалобами</td></tr>
+<tr><td>P</td><td>550 руб. на счёт в месяц</td><td>остаток 220 тыс. руб. (данные) × 3 п. п. (справочная ставка) ÷ 12</td></tr>
+<tr><td>T / R</td><td>3 мес. / 12 мес.</td><td>допущения: срок внедрения и срок сохранения счёта</td></tr>
+<tr><td>C₀ / c</td><td>600 тыс. руб. / 50 тыс. руб. в месяц</td><td>допущения: доработка очереди обращений, дополнительные операторы</td></tr>
+<tr><td>H / r</td><td>24 мес. / 15 %</td><td>инвестиционные правила</td></tr>
+</tbody></table>
+</div>
+<p>Поток по месяцам (когорты накапливаются до месяца 12,
+затем уровень постоянный):</p>
+<div class="scroll">
+<table>
+<thead><tr><th>Месяц</th><th>Счетов в портфеле</th><th>Доход, руб.</th>
+<th>Затраты, руб.</th><th>Чистый поток</th><th>Накопленный</th>
+<th>Накопленный с дисконтом</th></tr></thead>
+<tbody><tr><td>0</td><td>0</td><td>0</td><td>600 000</td><td>-600 000</td><td>-600 000</td><td>-600 000</td></tr><tr><td>1</td><td>33</td><td>18 333</td><td>50 000</td><td>-31 667</td><td>-631 667</td><td>-631 300</td></tr><tr><td>2</td><td>100</td><td>55 000</td><td>50 000</td><td>5 000</td><td>-626 667</td><td>-626 415</td></tr><tr><td>3</td><td>200</td><td>110 000</td><td>50 000</td><td>60 000</td><td>-566 667</td><td>-568 475</td></tr><tr><td>6</td><td>500</td><td>275 000</td><td>50 000</td><td>225 000</td><td>-56 667</td><td>-88 513</td></tr><tr><td>12</td><td>1 100</td><td>605 000</td><td>50 000</td><td>555 000</td><td>2 448 333</td><td>2 144 511</td></tr><tr><td>18</td><td>1 200</td><td>660 000</td><td>50 000</td><td>610 000</td><td>6 090 000</td><td>5 184 840</td></tr><tr><td>24</td><td>1 200</td><td>660 000</td><td>50 000</td><td>610 000</td><td>9 750 000</td><td>8 034 655</td></tr></tbody>
+</table>
+</div>
+<div class="ff"><b>Итог при базовых значениях:</b> доход за первый год
+3,6 млн руб., окупаемость — месяц 7, NPV
+за 24 месяцев 8,0 млн руб. при ставке
+15 %.</div>
+<p>Проверка чувствительности — каждое допущение по очереди:</p>
+<div class="scroll">
+<table>
+<thead><tr><th>Допущение</th><th>Базовое</th><th>Пессимистичное</th><th>NPV</th>
+<th>Оптимистичное</th><th>NPV</th><th>Вывод</th></tr></thead>
+<tbody><tr><td>Предотвращённых закрытий в месяц</td><td>100</td><td>35</td><td>1,7 млн руб.</td><td>130</td><td>10,9 млн руб.</td><td><span class="keep">сохраняется</span></td></tr><tr><td>Срок сохранения счёта, мес.</td><td>12</td><td>4</td><td>2,4 млн руб.</td><td>18</td><td>10,3 млн руб.</td><td><span class="keep">сохраняется</span></td></tr><tr><td>Маржа на счёт в месяц, руб.</td><td>550</td><td>400</td><td>5,4 млн руб.</td><td>650</td><td>9,8 млн руб.</td><td><span class="keep">сохраняется</span></td></tr><tr><td>Ежемесячные затраты, руб.</td><td>50 000</td><td>80 000</td><td>7,4 млн руб.</td><td>35 000</td><td>8,3 млн руб.</td><td><span class="keep">сохраняется</span></td></tr><tr><td>Единовременные затраты, руб.</td><td>600 000</td><td>900 000</td><td>7,7 млн руб.</td><td>450 000</td><td>8,2 млн руб.</td><td><span class="keep">сохраняется</span></td></tr></tbody>
+</table>
+</div>
+<p>Самое влиятельное допущение — предотвращённых закрытий в месяц: между
+пессимистичным и оптимистичным значением NPV различается
+на 9,2 млн руб.. Ни одно допущение по отдельности не делает NPV
+отрицательным, поэтому проект защищён от ошибки в любом одном допущении;
+одновременное пессимистичное значение доли предотвратимых закрытий
+и срока сохранения — пессимистичный сценарий — проверяется
+в тренажёре.</p>
+<p class="sub">Тот же расчёт: в <a href="trainer_effect.html">тренажёре</a>
+(заготовка «Накопительный счёт») и в
+<a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/4.4_финмодель_эффекта/4.4.1_финмодель_эффекта.ipynb">тетради практики</a> с кодом — там множители
+считаются из выгрузки, а не вводятся вручную.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2 id="oshibki"><span class="num">8</span>Типичные ошибки финансовой модели</h2>
+<div class="scroll">
+<table class="err">
+<thead><tr><th>Ошибка</th><th>В чём проявляется</th><th>Как обнаруживается</th></tr></thead>
+<tbody>
+<tr><td>Эффект на несобираемых данных</td>
+<td>множитель взят из оценки, которую нечем проверить после запуска</td>
+<td>у каждого множителя назван источник и дата первой сверки</td></tr>
+<tr><td>Двойной счёт</td>
+<td>две метрики, измеряющие один процесс (закрытия и жалобы при корреляции
+0,96), включены в эффект обе</td>
+<td>дерево метрик: единица эффекта входит в доход один раз</td></tr>
+<tr><td>Полный эффект с первого месяца</td>
+<td>выход на уровень принят мгновенным; окупаемость завышена</td>
+<td>T задан явно; доход первого месяца меньше полного</td></tr>
+<tr><td>Бессрочный эффект</td>
+<td>срок сохранения не задан; удержанный счёт живёт вечно</td>
+<td>R задан явно и входит в проверку чувствительности</td></tr>
+<tr><td>Сезонность в множителе</td>
+<td>Δ снято по сильному сезонному месяцу и распространено на год</td>
+<td>изменение считается на очищенном от сезонности ряде —
+<a href="case_deviations.html">кейс анализа отклонений</a></td></tr>
+<tr><td>Допущения без диапазона</td>
+<td>проверка чувствительности невозможна; спор о числе вместо
+проверки вывода</td>
+<td>у каждого допущения пессимистичное и оптимистичное значение</td></tr>
+<tr><td>Затраты без данных</td>
+<td>цена сбора метрики не включена; проект дешевле, чем есть</td>
+<td>строка затрат на данные по справочнику экономики данных</td></tr>
+</tbody></table>
+</div>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">9</span>Источники</h2>
+<ol class='src'><li><a href="https://pages.stern.nyu.edu/~adamodar/">A. Damodaran. Investment Valuation, 3-е издание, Wiley, 2012 — гл. 2 и 5</a><span class="what">дисконтированный денежный поток, ставка дисконтирования, NPV</span></li><li><a href="https://www.mheducation.com/highered/product/principles-corporate-finance-brealey-myers/M9781260013900.html">R. Brealey, S. Myers, F. Allen. Principles of Corporate Finance, 13-е издание, McGraw-Hill, 2020 — гл. 5–6 и 10</a><span class="what">критерии NPV и окупаемости; анализ чувствительности и сценариев</span></li><li><a href="https://www.wiley.com/en-us/How+to+Measure+Anything-p-9781118539279">D. Hubbard. How to Measure Anything, 3-е издание, Wiley, 2014 — гл. 6–7</a><span class="what">ценность информации: какое допущение уточнять первым</span></li><li><a href="https://onlinelibrary.wiley.com/doi/book/10.1002/9780470725184">A. Saltelli et al. Global Sensitivity Analysis: The Primer, Wiley, 2008 — гл. 1</a><span class="what">метод «одно допущение за раз» и его границы</span></li></ol>
+</div></section>
+
+<script>
+// Кнопка «скопировать промпт»: сначала пробуем Clipboard API, при отказе —
+// старый execCommand. В LMS страница часто открыта в iframe без разрешения
+// на буфер обмена, и без запасного пути кнопка молча ничего не делает.
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.copy'); if(!b) return;
+  var t=b.parentNode.querySelector('pre').innerText;
+  function done(){b.textContent='Скопировано';b.classList.add('done');
+    setTimeout(function(){b.textContent='Копировать';b.classList.remove('done')},1800);}
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(done,fallback);
+  } else { fallback(); }
+  function fallback(){
+    var a=document.createElement('textarea');a.value=t;a.style.position='fixed';
+    a.style.opacity=0;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');done();}catch(_e){b.textContent='Выделите вручную';}
+    document.body.removeChild(a);
+  }
+});
+</script>
+</body></html>

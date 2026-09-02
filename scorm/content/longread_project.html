@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Каркас проекта: от проблемы до эффекта · Аналитика 360</title>
+<style>
+:root{
+  --acc:#20BA72; --acc-soft:rgba(32,186,114,.10); --acc-line:rgba(32,186,114,.30);
+  --bg:#ffffff; --surf:#f4f8f6; --elev:#e9f3ee; --line:rgba(46,54,65,.13);
+  --ink:#2E3641; --ink2:rgba(46,54,65,.74); --ink3:rgba(46,54,65,.48);
+  --warn:#E4572E; --warn-soft:rgba(228,87,46,.09);
+  --font:'SB Sans Text','Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'SFMono-Regular',Consolas,'Liberation Mono',monospace;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth}
+body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 22px}
+/* overflow-wrap нужен ссылкам-адресам в списках источников: у длинного URL нет
+   точек переноса, на узком экране он уходит за край, а html/body{overflow-x:clip}
+   выше не даёт его прокрутить — текст пропадал совсем. break-word рвёт только
+   слово, которое иначе не помещается, и не влияет на расчёт min-content. */
+a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line);
+  overflow-wrap:break-word}
+a:hover{border-bottom-color:var(--acc)}
+
+header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
+  border-bottom:1px solid var(--line)}
+
+/* Хлебная крошка: лёгкая строка над шапкой. Фон тот же, что у верха градиента
+   шапки, поэтому крошка визуально сливается с ней в один блок. */
+.crumbs{background:var(--elev);font-size:13.5px;color:var(--ink3)}
+.crumbs .wrap{padding-top:14px;padding-bottom:2px;display:flex;align-items:baseline;gap:8px}
+.crumbs a{color:#128a53;border-bottom:1px solid transparent;font-weight:600}
+.crumbs a:hover{border-bottom-color:var(--acc)}
+.crumbs .sep{color:var(--ink3);font-size:11px}
+.crumbs .here{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eyebrow{color:var(--acc);font-weight:800;font-size:12.5px;letter-spacing:.14em;
+  text-transform:uppercase;margin-bottom:14px}
+h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 16px}
+.lead{font-size:clamp(16.5px,2vw,19px);color:var(--ink2);margin:0 0 22px}
+.meta{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;
+  font-size:13.5px;color:var(--ink2)}
+.chip b{color:var(--ink)}
+
+section{padding:44px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-size:clamp(22px,3vw,30px);font-weight:800;margin:0 0 8px;line-height:1.18}
+h2 .num{color:var(--acc);margin-right:.4em;font-variant-numeric:tabular-nums}
+h3{font-size:19px;font-weight:800;margin:30px 0 10px}
+h4{font-size:16px;font-weight:800;margin:22px 0 8px;color:var(--ink2)}
+p{margin:0 0 15px}
+ul,ol{margin:0 0 15px;padding-left:22px}
+li{margin-bottom:7px}
+.sub{color:var(--ink3);margin:0 0 22px;font-size:15.5px}
+
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:20px 22px;margin:0 0 18px}
+.card.acc{background:var(--acc-soft);border-color:var(--acc-line)}
+.card.warn{background:var(--warn-soft);border-color:rgba(228,87,46,.28)}
+.card h4{margin-top:0}
+.card p:last-child,.card ul:last-child,.card ol:last-child{margin-bottom:0}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0 0 15px;font-size:15.5px}
+.kv dt{color:var(--ink3)}
+.kv dd{margin:0;font-weight:600}
+
+table{border-collapse:collapse;width:100%;font-size:15px;margin:0 0 15px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{font-weight:800;color:var(--ink2);font-size:13.5px;text-transform:uppercase;
+  letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 15px}
+.scroll table{margin:0}
+
+pre{background:#20262e;color:#e7edf3;border-radius:12px;padding:16px 18px;overflow-x:auto;
+  font-family:var(--mono);font-size:13.5px;line-height:1.55;margin:0 0 15px}
+code{font-family:var(--mono);font-size:.9em;background:var(--elev);padding:2px 6px;
+  border-radius:5px}
+pre code{background:none;padding:0;font-size:1em}
+
+.prompt{position:relative;background:#20262e;color:#e7edf3;border-radius:12px;
+  padding:16px 18px;margin:0 0 14px}
+/* Промпт должен быть виден целиком: участник его читает, а не только копирует.
+   pre-wrap переносит длинные строки, но сохраняет переводы строк — innerText
+   в кнопке копирования отдаёт ровно исходный текст. */
+.prompt pre{margin:0;padding:0;background:none;max-height:none;
+  white-space:pre-wrap;overflow-wrap:anywhere}
+.prompt{padding-top:46px}
+.copy{position:absolute;top:10px;right:10px;background:var(--acc);color:#fff;border:0;
+  border-radius:8px;padding:7px 13px;font:600 13px var(--font);cursor:pointer}
+.copy:hover{filter:brightness(1.08)}
+.copy.done{background:#0f7a46}
+
+figure{margin:0 0 18px}
+figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+figure.fig{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:18px 18px 12px;margin:22px 0}
+figure.fig svg{max-width:100%;height:auto}
+figure.fig figcaption{padding-top:6px;border-top:1px solid var(--line);margin-top:12px}
+
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;
+  border-radius:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;
+  display:flex;align-items:center;justify-content:center}
+
+/* Раскрывающийся блок: три вспомогательных промпта не должны спорить за внимание
+   с главным, но и прятать их насовсем нельзя — по ним разбирают проверку. */
+details.more{border:1px solid var(--line);border-radius:14px;padding:0 22px;
+  margin:0 0 18px;background:var(--surf)}
+details.more>summary{cursor:pointer;font-weight:800;padding:16px 0;list-style:none;
+  color:var(--ink2)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸";color:var(--acc);margin-right:8px}
+details.more[open]>summary::before{content:"▾"}
+details.more[open]{padding-bottom:14px}
+details.more>summary:hover{color:var(--ink)}
+
+.toc{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+  margin:0 0 8px}
+.toc ol{margin:0;padding-left:20px}
+.toc a{border:0}
+.toc a:hover{border-bottom:1px solid var(--acc)}
+
+footer{padding:36px 0 60px;color:var(--ink3);font-size:14.5px}
+/* Сноска на источник: верхний индекс, чтобы номер не читался как часть текста */
+a.fn{border:0;font-size:.72em;vertical-align:super;font-weight:700;padding-left:2px}
+a.fn:hover{border:0;text-decoration:underline}
+.tag{display:inline-block;background:var(--elev);border-radius:6px;padding:1px 8px;
+  font-size:13px;color:var(--ink2);font-weight:600}
+@media(max-width:600px){
+  body{font-size:16px}
+  .kv{grid-template-columns:1fr}
+}
+</style>
+</head><body>
+<nav class="crumbs" aria-label="Навигация"><div class="wrap"><a href="index.html">Материалы</a><span class="sep">▸</span><span class="here">Каркас проекта</span></div></nav>
+
+<style>
+.chain{display:grid;gap:10px;margin:20px 0}
+.chain div{background:var(--surf);border:1px solid var(--line);
+  border-radius:12px;padding:12px 16px;font-size:15.5px}
+.chain b{color:#0f7a46}
+.src li{margin:0 0 14px}
+.src .what{color:var(--ink3);font-size:14.5px;display:block;margin-top:3px}
+.frame th{width:22%}
+.frame td:first-child{font-weight:700;white-space:nowrap}
+.was td:first-child{color:var(--warn)}
+.was td:last-child{color:#0f7a46}
+.letter{background:var(--surf);border:1px solid var(--line);border-radius:12px;
+  padding:18px 22px;margin:16px 0;font-size:15.5px;line-height:1.55}
+.letter p{margin:0 0 10px}
+.check li{margin:0 0 8px}
+</style>
+
+<header><div class="wrap">
+  <div class="eyebrow">Материалы практической части</div>
+  <h1>Каркас проекта: от проблемы до эффекта</h1>
+  <p class="lead">Проект изменений собирается по одному каркасу из семи
+     элементов: проблема, метрика, данные, инструмент, анализ, вывод, эффект.
+     Каркас одновременно служит планом работы и структурой презентации проекта.
+     Здесь описан каждый элемент, приведены три заполненных каркаса
+     на кейсах курса, структура презентации с чек-листом и структура
+     письма команде.</p>
+  <div class="meta">
+    <span class="chip">Чтение <b>15 минут</b></span>
+    <span class="chip">Формат <b>шаблон и примеры</b></span>
+    <span class="chip">Шаблоны <b>в репозитории практики</b></span>
+  </div>
+</div></header>
+
+<section><div class="wrap">
+<h2 id="karkas"><span class="num">1</span>Семь элементов каркаса</h2>
+<p>Каждый элемент отвечает на один вопрос. Если ответа нет, элемент
+не пропускается, а записывается как открытый: какие данные или решения
+нужны, чтобы его заполнить. У каждого элемента есть материал курса,
+где он разобран подробно.</p>
+<div class="chain">
+<div><b>1 · Проблема.</b> Что именно не так и в каком показателе это видно.
+Проблема формулируется языком подразделения и подтверждается данными,
+а не впечатлением — критерии в разделе «Формулировка проблемы» ниже.</div>
+<div><b>2 · Метрика.</b> Чем измеряется результат и какие показатели
+его предсказывают: 1–2 запаздывающие метрики результата и опережающие
+драйверы — <a href="trainer_tree.html">тренажёр «Дерево метрик»</a>
+и <a href="longread_metrics.html">справочник метрик</a>.</div>
+<div><b>3 · Данные.</b> Откуда берётся каждая метрика: что уже собирается,
+чего нет и каким путём получать — <a href="trainer_map.html">тренажёр
+«Карта источников»</a>, <a href="longread_metrics.html#eco-tte">экономика
+данных</a> в справочнике.</div>
+<div><b>4 · Инструмент.</b> Чем выполняется расчёт: таблица, BI, ассистент,
+Python — по задаче, а не по привычке —
+<a href="longread_tools.html">«Инструменты анализа»</a>.</div>
+<div><b>5 · Анализ.</b> Что сделано с данными: очистка, свёртка, расчёт,
+проверка результата — <a href="longread_eda.html">«Разведочный анализ»</a>,
+<a href="guide_mini.html">мини-инструменты</a>,
+<a href="longread_math.html">«Математические основы»</a>.</div>
+<div><b>6 · Вывод.</b> Что утверждается и с какой уверенностью: факт,
+интерпретация, гипотеза — разделены —
+<a href="longread.html">«Ошибки вывода»</a>,
+<a href="theory_stats.html">«Связь и причинность»</a>.</div>
+<div><b>7 · Эффект.</b> Изменение показателя в деньгах с помеченными
+допущениями и проверкой чувствительности —
+<a href="longread_finmodel.html">«Финансовая модель проекта»</a>
+и <a href="trainer_effect.html">тренажёр «Финансовая модель эффекта»</a>.</div>
+</div>
+<p class="sub">Порядок элементов — порядок работы. Эффект считается последним,
+потому что каждый его множитель берётся из предыдущих элементов: изменение
+показателя — из метрики и вывода, объём — из данных, стоимость единицы —
+из финансовой модели.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">2</span>Объект изменений: три оси</h2>
+<p>Объект проекта — то, что участник может изменить своим решением. Объекты
+разделяются по трём осям; у каждой оси свой тип метрики результата
+и свой типовой кейс курса.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>Ось</th><th>Что является объектом</th><th>Метрика результата</th>
+<th>Разобранный кейс</th></tr></thead>
+<tbody>
+<tr><td><b>Продукт</b></td>
+<td>продукт или его функция: условия, канал продажи, сопровождение</td>
+<td>конверсия, активация, удержание, доход на клиента</td>
+<td><a href="case_cards.html">карточный бизнес</a>,
+<a href="case_report.html">накопительный счёт</a></td></tr>
+<tr><td><b>Процесс</b></td>
+<td>сквозной процесс с этапами и участниками</td>
+<td>срок этапа, операций на сотрудника, доля возвратов на доработку</td>
+<td><a href="case_pipeline.html">кредитный конвейер</a></td></tr>
+<tr><td><b>Бизнес-инициатива</b></td>
+<td>решение уровня подразделения или портфеля: запуск, остановка,
+перераспределение ресурсов</td>
+<td>объём, маржа, окупаемость портфеля</td>
+<td><a href="case_portfolio.html">портфель инициатив</a>,
+<a href="case_deviations.html">портфель операций</a></td></tr>
+</tbody></table>
+</div>
+<p>Уровень объекта задаёт уровень расчёта: для одного продукта эффект
+считается по продукту, для портфеля — как сумма эффектов по инициативам
+с учётом сроков их запуска. Выбор объекта проверяется одним вопросом:
+есть ли у участника полномочия изменить его в течение следующих месяцев.
+Если полномочий нет, объект сужается до той части, где они есть.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2 id="problema"><span class="num">3</span>Формулировка проблемы</h2>
+<p>Проблема считается сформулированной, когда выполнены четыре условия:</p>
+<ol class="steps">
+  <li><b>Названа величина.</b> Указан показатель, его текущее значение
+      и период измерения.</li>
+  <li><b>Подтверждена данными.</b> Значение получено расчётом по выгрузке,
+      а не по впечатлению; источник назван.</li>
+  <li><b>Названо целевое состояние.</b> Какое значение показателя считается
+      решением проблемы и к какому сроку.</li>
+  <li><b>Есть владелец изменения.</b> Указано, кто принимает решение
+      об изменении объекта.</li>
+</ol>
+<p>Типичные формулировки до и после проверки по этим условиям:</p>
+<div class="scroll">
+<table class="was">
+<thead><tr><th>До</th><th>После</th></tr></thead>
+<tbody>
+<tr><td>«Клиенты уходят»</td>
+<td>«Закрытия накопительных счетов выросли с 1 500 до 2 000 в месяц за год;
+целевой уровень — 1 800 в месяц через два квартала»</td></tr>
+<tr><td>«Карты плохо активируются»</td>
+<td>«Доля активации за 30 дней — 81 % при 350 выпусках в месяц;
+целевой уровень — 85 % по итогам пилота ускоренной доставки»</td></tr>
+<tr><td>«Обороты просели»</td>
+<td>«Очищенный от сезонности объём операций снизился на 12 % к уровню
+годовой давности; целевое состояние — восстановление до прежнего уровня
+в течение двух кварталов»</td></tr>
+</tbody></table>
+</div>
+<p class="sub">Формулировка после проверки уже содержит первую метрику
+и первое допущение (целевой уровень) — из неё вырастает остальной
+каркас.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2 id="primery"><span class="num">4</span>Три заполненных каркаса</h2>
+<p>Примеры собраны на кейсах курса; расчёт эффекта в каждом совпадает
+с примерами материала <a href="longread_effect.html">«Повторение
+основ»</a>. Это образцы заполнения, а не образцы проектов: в реальном
+проекте объёмы и стоимости берутся из данных подразделения.</p>
+
+<h3>Каркас 1 · Карточный бизнес: активация выпущенных карт</h3>
+<div class="scroll"><table class="frame"><thead><tr><th>Элемент</th><th>Заполнение</th></tr></thead><tbody><tr><td>Проблема</td><td>Пятая часть выпущенных карт не активируется в первые 30 дней; по очищенной выгрузке процессинга доля активации — 81 %, при этом срок доставки в проблемных регионах вдвое выше среднего.</td></tr><tr><td>Метрика</td><td>Результат: доля активированных карт за 30 дней (запаздывающая). Драйверы: срок доставки, доля заявок с ошибками (опережающие).</td></tr><tr><td>Данные</td><td>Есть: выгрузка процессинга (выпуск, активация), транзакционная витрина. Нет: регулярной выгрузки сроков доставки от подрядчика — заказать по договору, до получения использовать выборочную сверку.</td></tr><tr><td>Инструмент</td><td>Таблица с очисткой по сценарию ассистента для выгрузки; мини-инструмент трендов для контроля доли активации по месяцам.</td></tr><tr><td>Анализ</td><td>Очистка дублей и статусов; доля активации по регионам и срокам доставки; связь срока доставки с активацией по месячным итогам.</td></tr><tr><td>Вывод</td><td>Факт: активация ниже в регионах с долгой доставкой. Интерпретация: часть неактивированных карт не доехала вовремя. Гипотеза: сокращение срока доставки на неделю поднимает активацию до 85 %.</td></tr><tr><td>Эффект</td><td>(85 % − 81 %) × 350 карт в месяц × 3 100 руб. годового дохода активной карты ≈ +14 активных карт в месяц, порядка 0,5 млн руб. годового дохода к концу первого года; допущения — целевая доля и доход на карту.</td></tr></tbody></table></div>
+
+<h3>Каркас 2 · Накопительный счёт: удержание закрываемых счетов</h3>
+<div class="scroll"><table class="frame"><thead><tr><th>Элемент</th><th>Заполнение</th></tr></thead><tbody><tr><td>Проблема</td><td>Закрытия накопительных счетов растут быстрее открытий; по месячным итогам закрытия и жалобы изменяются согласованно (коэффициент корреляции 0,96).</td></tr><tr><td>Метрика</td><td>Результат: число закрытий в месяц и остаток портфеля (запаздывающие). Драйвер: число жалоб и срок их разбора (опережающие).</td></tr><tr><td>Данные</td><td>Есть: продуктовая витрина по месяцам, регионам и каналам. Нет: причин закрытий в структурированном виде — заказать выгрузку обращений у владельца процесса; до получения доля предотвратимых закрытий остаётся допущением.</td></tr><tr><td>Инструмент</td><td>Мини-инструменты корреляций и трендов на месячной выгрузке; полная страница анализа для разреза по каналам.</td></tr><tr><td>Анализ</td><td>Свёртка по месяцам; корреляции пар показателей; тренд закрытий с выбросами; сравнение каналов по доле закрытий.</td></tr><tr><td>Вывод</td><td>Факт: закрытия и жалобы движутся вместе. Интерпретация: часть закрытий — реакция на неразобранные обращения. Гипотеза: сокращение срока разбора жалоб предотвращает треть связанных с ними закрытий.</td></tr><tr><td>Эффект</td><td>100 предотвращённых закрытий в месяц × средний остаток 220 тыс. руб. × маржа 3 п. п. ≈ 0,7 млн руб. в год на каждую месячную когорту удержанных счетов; допущения — доля предотвратимых закрытий и срок сохранения счёта.</td></tr></tbody></table></div>
+
+<h3>Каркас 3 · Портфель операций: восстановление объёма</h3>
+<div class="scroll"><table class="frame"><thead><tr><th>Элемент</th><th>Заполнение</th></tr></thead><tbody><tr><td>Проблема</td><td>Дневной объём операций портфеля после снятия сезонности показал просадку, которую линия тренда по исходному ряду скрывала.</td></tr><tr><td>Метрика</td><td>Результат: очищенный от сезонности месячный объём операций (запаздывающая). Драйверы: доступность сервиса, число активных клиентов (опережающие).</td></tr><tr><td>Данные</td><td>Есть: дневной ряд операционной системы. Нет: признака причины просадки в самом ряду — сопоставить с журналом инцидентов и изменений тарифов.</td></tr><tr><td>Инструмент</td><td>Тетрадь анализа отклонений: разложение сезонности, три модели прогноза, выбор по проверенной ошибке.</td></tr><tr><td>Анализ</td><td>Снятие трёх сезонных ритмов; тренд в одинаковом окне до и после; скользящая проверка моделей; полоса прогноза.</td></tr><tr><td>Вывод</td><td>Факт: очищенный объём падал и восстанавливается. Интерпретация: просадка не сезонная. Гипотеза: восстановление до прежнего уровня продолжится при сохранении текущих условий.</td></tr><tr><td>Эффект</td><td>0,8 млн руб. в день восстановленного объёма × 30 дней × средняя комиссия 0,5 % ≈ 120 тыс. руб. в месяц, порядка 1,4 млн руб. комиссионного дохода в год; пессимистичный вариант — по нижней границе полосы прогноза.</td></tr></tbody></table></div>
+
+<div class="card acc">
+<h4>Что общего у трёх каркасов</h4>
+<ul style="margin-bottom:0">
+  <li>Проблема содержит число, источник и целевой уровень.</li>
+  <li>В метриках разделены результат и драйверы: результат измеряет,
+      драйверы позволяют вмешаться.</li>
+  <li>В данных отдельно записано, чего нет, и что делается до получения:
+      допущение помечено как допущение.</li>
+  <li>Вывод разделён на факт, интерпретацию и гипотезу; эффект посчитан
+      по гипотезе, а не по факту.</li>
+</ul>
+</div>
+<p class="sub">Те же три каркаса в текстовом виде —
+<a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/4.1_каркас_проекта/4.1.3_примеры_каркасов.md">файл примеров в репозитории практики</a>.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">5</span>Ключевые метрики и план по данным</h2>
+<p>Из дерева метрик в проект переходят одна-две метрики результата и те
+драйверы, на которые направлено изменение. Остальные метрики дерева
+остаются контрольными: по ним проверяется, что улучшение результата
+не достигнуто за счёт ухудшения соседнего показателя.</p>
+<p>Для каждой выбранной метрики заполняется план по данным:</p>
+<div class="scroll">
+<table>
+<thead><tr><th>Вопрос</th><th>Варианты ответа</th><th>Где разобрано</th></tr></thead>
+<tbody>
+<tr><td>Собирается ли метрика сейчас</td>
+<td>регулярно · по запросу · не собирается</td>
+<td><a href="trainer_map.html">тренажёр «Карта источников»</a></td></tr>
+<tr><td>Каким путём получать</td>
+<td>готовая витрина · выгрузка по договору · новый сбор</td>
+<td><a href="longread_metrics.html#eco-tte">экономика данных: время,
+стоимость, качество</a></td></tr>
+<tr><td>Сколько ждать первого проверенного значения</td>
+<td>дни · недели · месяцы</td>
+<td><a href="trainer_accum.html">тренажёр «Срок эксперимента»</a></td></tr>
+<tr><td>Достаточно ли наблюдений для вывода</td>
+<td>объём выборки под допустимую погрешность</td>
+<td><a href="trainer_sample.html">тренажёр «Расчёт выборки»</a></td></tr>
+</tbody></table>
+</div>
+<p class="sub">Метрика, у которой нет ответа на первый вопрос, в проект
+не входит: эффект на несобираемых данных нельзя ни подтвердить,
+ни опровергнуть.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">6</span>Выбор инструмента</h2>
+<p>Инструмент подбирается по задаче анализа, объёму данных и тому, кто
+будет повторять расчёт. Сравнительная рамка —
+в материале <a href="longread_tools.html">«Инструменты анализа»</a>;
+для проекта достаточно короткого правила:</p>
+<div class="scroll">
+<table>
+<thead><tr><th>Задача</th><th>Инструмент</th><th>Материал</th></tr></thead>
+<tbody>
+<tr><td>Разовая проверка гипотезы на выгрузке до сотен тысяч строк</td>
+<td>таблица + сценарий от ассистента</td>
+<td><a href="case_cards.html">кейс «Карточный бизнес»</a></td></tr>
+<tr><td>Повторяющийся расчёт на новых выгрузках</td>
+<td>мини-инструмент</td>
+<td><a href="guide_mini.html">«Мини-инструменты»</a></td></tr>
+<tr><td>Постоянное наблюдение за метрикой</td>
+<td>панель в BI</td>
+<td><a href="case_pipeline.html">кейс «Кредитный конвейер»</a>,
+<a href="case_dashboard.html">кейс «Дашборд по описанию»</a></td></tr>
+<tr><td>Методы: сегментация, сезонность, прогноз</td>
+<td>тетрадь Python с кодом от ассистента</td>
+<td><a href="case_clusters.html">кейс «Сегментация»</a>,
+<a href="case_deviations.html">кейс «Анализ отклонений»</a></td></tr>
+</tbody></table>
+</div>
+</div></section>
+
+<section><div class="wrap">
+<h2 id="prezentaciya"><span class="num">7</span>Презентация проекта: структура и чек-лист</h2>
+<p>Презентация повторяет каркас: один слайд на элемент, 5–7 слайдов.
+Порядок изложения — от вывода к основаниям: первый содержательный слайд
+называет проблему и ожидаемый эффект, остальные показывают, на чём
+он держится.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>Слайд</th><th>Содержание</th><th>Что должно быть видно</th></tr></thead>
+<tbody>
+<tr><td>1 · Проблема</td><td>объект, показатель, текущее и целевое значение</td>
+<td>число, источник, срок</td></tr>
+<tr><td>2 · Метрики</td><td>фрагмент дерева: результат и драйверы</td>
+<td>стрелки от драйверов к результату, единицы измерения</td></tr>
+<tr><td>3 · Данные</td><td>план по данным для каждой метрики</td>
+<td>что есть, чего нет, как и когда получить</td></tr>
+<tr><td>4 · Инструмент</td><td>чем выполняется расчёт и кто повторяет</td>
+<td>одна строка обоснования</td></tr>
+<tr><td>5 · Анализ и вывод</td><td>результат расчёта и вывод</td>
+<td>факт, интерпретация и гипотеза — раздельно</td></tr>
+<tr><td>6 · Эффект</td><td>формула эффекта с множителями и допущениями</td>
+<td>эффект в год, окупаемость, самое чувствительное допущение</td></tr>
+<tr><td>7 · Следующий шаг</td><td>первое действие, срок, ответственный</td>
+<td>что начинается на следующей неделе</td></tr>
+</tbody></table>
+</div>
+<h3>Чек-лист перед показом</h3>
+<ul class="check">
+  <li>Проблема содержит число, источник и целевой уровень.</li>
+  <li>В дереве есть и результат, и драйверы; у каждой метрики — единица
+      измерения и период.</li>
+  <li>По каждой метрике понятно, откуда данные, и отмечено, чего нет.</li>
+  <li>Эффект посчитан только на данных, которые собираются или будут
+      собираться; допущения помечены.</li>
+  <li>Названо допущение, на котором вывод меняется, и его пессимистичное
+      значение.</li>
+  <li>Слайдов 5–7, каркас соблюдён; слайд «Эффект» читается без ведущего.</li>
+</ul>
+<p class="sub">Шаблон презентации в текстовом виде —
+<a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/4.1_каркас_проекта/4.1.1_шаблон_презентации_проекта.md">в репозитории практики</a>: заполняется по разделам
+и переносится в любой редактор презентаций.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2 id="pismo"><span class="num">8</span>Письмо команде</h2>
+<p>Итоговый артефакт программы — короткое письмо руководителя своей команде:
+что меняется в работе подразделения по итогам проекта. Письмо пишется
+после презентации и опирается на неё; объём — одна страница. Структура:</p>
+<ol class="steps">
+  <li><b>Что меняем и почему.</b> Объект и проблема — одним абзацем,
+      с числом.</li>
+  <li><b>По какому показателю судим.</b> Метрика результата, текущее
+      и целевое значение, срок.</li>
+  <li><b>Какие данные начинаем собирать.</b> Чего не хватало и как
+      это появится; кто отвечает.</li>
+  <li><b>Первое действие.</b> Что делается на следующей неделе
+      и кем.</li>
+  <li><b>Когда пересматриваем.</b> Дата первой сверки метрики
+      и условие, при котором решение отменяется.</li>
+</ol>
+<h3>Пример письма (учебный кейс накопительного счёта)</h3>
+<div class="letter">
+<p><b>Что меняем и почему.</b> Закрытия накопительных счетов выросли
+с 1 500 до 2 000 в месяц за год. По месячным итогам закрытия изменяются
+согласованно с числом жалоб; часть закрытий приходится на клиентов
+с неразобранными обращениями. Меняем порядок разбора обращений
+по накопительным счетам: срок ответа сокращается с пяти рабочих дней
+до двух.</p>
+<p><b>По какому показателю судим.</b> Число закрытий в месяц: сейчас 2 000,
+цель — 1 900 через квартал и 1 800 через два. Контрольная метрика —
+средний остаток по активным счетам: он не должен снизиться.</p>
+<p><b>Какие данные начинаем собирать.</b> Причины закрытий в
+структурированном виде: с первого числа следующего месяца оператор
+выбирает причину из списка при закрытии счёта. Ответственный —
+руководитель операционной поддержки.</p>
+<p><b>Первое действие.</b> На следующей неделе обращения по накопительным
+счетам выделяются в отдельную очередь с контролем срока в два дня.</p>
+<p><b>Когда пересматриваем.</b> Первая сверка — через месяц по выгрузке
+за полный месяц. Если закрытия не снизились при выполненном сроке
+ответа, гипотеза о связи закрытий с обращениями отклоняется, очередь
+возвращается в общий порядок.</p>
+</div>
+<p class="sub">Шаблон письма —
+<a href="https://github.com/wybaeb/bank-analytics-workshop/blob/master/4.1_каркас_проекта/4.1.2_шаблон_письма_команде.md">в репозитории практики</a>. Письмо не содержит
+расчёта: расчёт остаётся в презентации, письмо содержит решения.</p>
+</div></section>
+
+<section><div class="wrap">
+<h2><span class="num">9</span>Источники</h2>
+<ol class='src'><li><a href="https://hbr.org/1992/01/the-balanced-scorecard-measures-that-drive-performance-2">R. Kaplan, D. Norton. The Balanced Scorecard — Measures that Drive Performance. Harvard Business Review, 1992</a><span class="what">опережающие и запаздывающие показатели как основа системы метрик</span></li><li><a href="https://www.wiley.com/en-us/How+to+Measure+Anything-p-9781118539279">D. Hubbard. How to Measure Anything, 3-е издание, Wiley, 2014 — гл. 3–4</a><span class="what">определение измеряемой величины через решение, которое она поддерживает</span></li><li><a href="https://www.pearson.com/en-gb/subject-catalog/p/pyramid-principle-the-logic-in-writing-and-thinking/P200000005432">B. Minto. The Pyramid Principle, 3-е издание, Pearson, 2009</a><span class="what">порядок изложения: вывод — основания — данные</span></li><li><a href="https://protect.gost.ru/document.aspx?control=7&id=257943">ГОСТ Р 71484.2-2024. Качество данных. Часть 2. Показатели качества данных</a><span class="what">показатели, по которым оценивается пригодность источника для проекта</span></li></ol>
+</div></section>
+
+<script>
+// Кнопка «скопировать промпт»: сначала пробуем Clipboard API, при отказе —
+// старый execCommand. В LMS страница часто открыта в iframe без разрешения
+// на буфер обмена, и без запасного пути кнопка молча ничего не делает.
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.copy'); if(!b) return;
+  var t=b.parentNode.querySelector('pre').innerText;
+  function done(){b.textContent='Скопировано';b.classList.add('done');
+    setTimeout(function(){b.textContent='Копировать';b.classList.remove('done')},1800);}
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(done,fallback);
+  } else { fallback(); }
+  function fallback(){
+    var a=document.createElement('textarea');a.value=t;a.style.position='fixed';
+    a.style.opacity=0;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');done();}catch(_e){b.textContent='Выделите вручную';}
+    document.body.removeChild(a);
+  }
+});
+</script>
+</body></html>
