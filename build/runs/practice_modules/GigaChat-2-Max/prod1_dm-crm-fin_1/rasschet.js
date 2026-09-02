@@ -1,35 +1,35 @@
 window.computeInputs = function (tables) {
-  // Расчёт closures: среднее значение столбца 'закрытые_счета' за последние 12 месяцев
-  var closuresData = tables['closures_dm.csv']; var closuresVal = null;
-  if (closuresData) {
-    var lastMonths = closuresData.slice(-12);
-    var sumClosedAccounts = 0;
-    for (var i = 0; i < lastMonths.length; i++) {
-      sumClosedAccounts += lastMonths[i]['закрытые_счета'];
+  var f1 = tables["closures_dm.csv"]; var closures = null;
+  if (f1) {
+    var last = f1.slice(-12);        // берем последние 12 записей
+    var sum = 0;
+    for (var i = 0; i < last.length; i++) {
+      sum += last[i]["закрытые_счета"];
     }
-    closuresVal = Math.round(sumClosedAccounts / lastMonths.length); // округляем до целого
+    closures = Math.round(sum / last.length);
   }
   
-  // Расчёт linked: сумма 'закрытий_после_обращения' ÷ сумму 'закрытых_счетов_всего'
-  var linkedData = tables['linked_crm.csv']; var linkedVal = null;
-  if (linkedData) {
-    var totalAfterCallClosures = 0, totalAllClosures = 0;
-    for (var j = 0; j < linkedData.length; j++) {
-      totalAfterCallClosures += linkedData[j]['закрытий_после_обращения'];
-      totalAllClosures += linkedData[j]['закрытых_счетов_всего'];
+  var f2 = tables["linked_crm.csv"]; var linked = null;
+  if (f2) {
+    var totalClosed = 0;
+    var closedAfterContact = 0;
+    for (var j = 0; j < f2.length; j++) {
+      totalClosed += f2[j]["закрытых_счетов_всего"];
+      closedAfterContact += f2[j]["закрытий_после_обращения"];
     }
-    linkedVal = totalAllClosures > 0 ? totalAfterCallClosures / totalAllClosures : null;
+    linked = totalClosed > 0 ? closedAfterContact / totalClosed : null;
   }
-
-  // Расчёт margin: средний остаток × 1000 × процентная ставка ÷ 100 ÷ срок жизни счёта
-  var marginData = tables['margin_fin.csv']; var marginVal = null;
-  if (marginData) {
+  
+  var f3 = tables["margin_fin.csv"]; var margin = null;
+  if (f3) {
     var params = {};
-    for (var k = 0; k < marginData.length; k++) {
-      params[marginData[k]['параметр']] = marginData[k]['значение'];
+    for (var k = 0; k < f3.length; k++) {
+      params[f3[k]["параметр"]] = f3[k]["значение"];
     }
-    marginVal = Math.round(params['средний_остаток_тыс_руб'] * 1000 * params['маржа_проц_годовых'] / 100 / params['срок_жизни_счёта_мес']);
+    margin = params["средний_остаток_тыс_руб"] * 1000 *
+             params["маржа_проц_годовых"] / 100 /
+             params["срок_жизни_счёта_мес"];
   }
-
-  return { closures: closuresVal, linked: linkedVal, margin: marginVal };
-}
+  
+  return { closures: closures, linked: linked, margin: margin };
+};

@@ -1,12 +1,16 @@
 {
  "GigaChat-2/calc_prod1_dm-crm-fin_1": {
-  "sec": 34,
+  "sec": 4,
   "js": true,
   "errors": 0,
   "err0": "",
-  "status": "Ожидаются файлы: closures_abs.csv, linked_survey.csv, margin_rates.csv",
-  "params": null,
-  "ok": false
+  "status": "Функция computeInputs не вернула значения для: margin. Скопируйте ассистенту: «computeInputs возвращает не все входы; ну",
+  "params": {
+   "delta": 99.0972,
+   "volume": 1,
+   "price": 550
+  },
+  "ok": true
  },
  "GigaChat-2/model_prod1_1": {
   "sec": 3,
@@ -19,11 +23,11 @@
   "ok": true
  },
  "GigaChat-2/calc_prod1_dm-crm-fin_2": {
-  "sec": 4,
+  "sec": 3,
   "js": true,
   "errors": 0,
   "err0": "",
-  "status": "Файлы загружены, расчёт выполнен.",
+  "status": "Функция computeInputs не вернула значения для: margin. Скопируйте ассистенту: «computeInputs возвращает не все входы; ну",
   "params": {
    "delta": 99.0972,
    "volume": 1,
@@ -42,13 +46,17 @@
   "ok": true
  },
  "GigaChat-2/calc_prod1_dm-crm-fin_3": {
-  "sec": 4,
+  "sec": 3,
   "js": true,
   "errors": 0,
   "err0": "",
-  "status": "Функция computeInputs не вернула значения для: margin. Скопируйте ассистенту: «computeInputs возвращает не все входы; ну",
-  "params": null,
-  "ok": false
+  "status": "Файлы загружены; расчёт ассистента совпадает с контрольным.",
+  "params": {
+   "delta": 99.0972,
+   "volume": 1,
+   "price": 550
+  },
+  "ok": true
  },
  "GigaChat-2/model_prod1_3": {
   "sec": 3,
@@ -61,11 +69,11 @@
   "ok": true
  },
  "GigaChat-2-Max/calc_prod1_dm-crm-fin_1": {
-  "sec": 14,
+  "sec": 8,
   "js": true,
   "errors": 0,
   "err0": "",
-  "status": "Файлы загружены, расчёт выполнен.",
+  "status": "Файлы загружены; расчёт ассистента совпадает с контрольным.",
   "params": {
    "delta": 99.1105,
    "volume": 1,
@@ -84,11 +92,11 @@
   "ok": true
  },
  "GigaChat-2-Max/calc_prod1_dm-crm-fin_2": {
-  "sec": 9,
+  "sec": 7,
   "js": true,
   "errors": 0,
   "err0": "",
-  "status": "Файлы загружены, расчёт выполнен.",
+  "status": "Файлы загружены; расчёт ассистента совпадает с контрольным.",
   "params": {
    "delta": 99.1105,
    "volume": 1,
@@ -107,11 +115,11 @@
   "ok": true
  },
  "GigaChat-2-Max/calc_prod1_dm-crm-fin_3": {
-  "sec": 10,
+  "sec": 8,
   "js": true,
   "errors": 0,
   "err0": "",
-  "status": "Файлы загружены, расчёт выполнен.",
+  "status": "Файлы загружены; расчёт ассистента совпадает с контрольным.",
   "params": {
    "delta": 99.1105,
    "volume": 1,
@@ -127,6 +135,162 @@
   "status": "Расчёт ассистента совпадает с контрольным расчётом каркаса.",
   "npvOk": true,
   "paybackOk": true,
+  "ok": true
+ },
+ "GigaChat-2/calc_proc1_dm-dm2-fin_1": {
+  "sec": 4,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Файлы загружены; расчёт ассистента совпадает с контрольным.",
+  "params": {
+   "delta": 173.9312,
+   "volume": 1,
+   "price": 1458.3333
+  },
+  "ok": true
+ },
+ "GigaChat-2/calc_proc1_dm-dm2-fin_2": {
+  "sec": 4,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Функция computeInputs не вернула значения для: income. Скопируйте ассистенту: «computeInputs возвращает не все входы; ну",
+  "params": {
+   "delta": 173.9312,
+   "volume": 1,
+   "price": 1458.3333
+  },
+  "ok": true
+ },
+ "GigaChat-2/calc_proc1_dm-dm2-fin_3": {
+  "sec": 4,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Файлы загружены; расчёт ассистента совпадает с контрольным.",
+  "params": {
+   "delta": 173.9312,
+   "volume": 1,
+   "price": 1458.3333
+  },
+  "ok": true
+ },
+ "GigaChat-2-Max/calc_proc1_dm-dm2-fin_1": {
+  "sec": 9,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Файлы загружены; расчёт ассистента совпадает с контрольным.",
+  "params": {
+   "delta": 173.9413,
+   "volume": 1,
+   "price": 1458.3333
+  },
+  "ok": true
+ },
+ "GigaChat-2-Max/calc_proc1_dm-dm2-fin_2": {
+  "sec": 9,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Файлы загружены; расчёт ассистента совпадает с контрольным.",
+  "params": {
+   "delta": 173.9413,
+   "volume": 1,
+   "price": 1458.3333
+  },
+  "ok": true
+ },
+ "GigaChat-2-Max/calc_proc1_dm-dm2-fin_3": {
+  "sec": 8,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Файлы загружены; расчёт ассистента совпадает с контрольным.",
+  "params": {
+   "delta": 173.9413,
+   "volume": 1,
+   "price": 1458.3333
+  },
+  "ok": true
+ },
+ "GigaChat-2/calc_biz1_dm-dm2-fin_1": {
+  "sec": 3,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Ошибка в rasschet.js: r.объём_операций_млн_руб.replace is not a function. Скопируйте ассистенту: «В функции computeInput",
+  "params": {
+   "delta": 329.3044,
+   "volume": 1000000,
+   "price": 0.005
+  },
+  "ok": true
+ },
+ "GigaChat-2/calc_biz1_dm-dm2-fin_2": {
+  "sec": 3,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Файлы загружены; расчёт ассистента совпадает с контрольным.",
+  "params": {
+   "delta": 329.3044,
+   "volume": 1000000,
+   "price": 0.005
+  },
+  "ok": true
+ },
+ "GigaChat-2/calc_biz1_dm-dm2-fin_3": {
+  "sec": 4,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Ошибка в rasschet.js: r.объём_операций_млн_руб.replace is not a function. Скопируйте ассистенту: «В функции computeInput",
+  "params": {
+   "delta": 329.3044,
+   "volume": 1000000,
+   "price": 0.005
+  },
+  "ok": true
+ },
+ "GigaChat-2-Max/calc_biz1_dm-dm2-fin_1": {
+  "sec": 7,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Файлы загружены; расчёт ассистента совпадает с контрольным.",
+  "params": {
+   "delta": 329.3044,
+   "volume": 1000000,
+   "price": 0.005
+  },
+  "ok": true
+ },
+ "GigaChat-2-Max/calc_biz1_dm-dm2-fin_2": {
+  "sec": 8,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Файлы загружены; расчёт ассистента совпадает с контрольным.",
+  "params": {
+   "delta": 329.3044,
+   "volume": 1000000,
+   "price": 0.005
+  },
+  "ok": true
+ },
+ "GigaChat-2-Max/calc_biz1_dm-dm2-fin_3": {
+  "sec": 7,
+  "js": true,
+  "errors": 0,
+  "err0": "",
+  "status": "Файлы загружены; расчёт ассистента совпадает с контрольным.",
+  "params": {
+   "delta": 329.3044,
+   "volume": 1000000,
+   "price": 0.005
+  },
   "ok": true
  }
 }

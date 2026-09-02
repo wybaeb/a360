@@ -1,52 +1,28 @@
-/**
- * Расчёт входных параметров инструмента 'Накопительный счёт'
- */
 window.computeInputs = function (tables) {
-  /**
-   * Считаем средние закрытия счетов за последние 12 месяцев
-   */
-  const closureFile = tables['closures_dm.csv'];
-  let closureVal = null;
-  if (closureFile) {
-    const last12 = closureFile.slice(-12);
-    let sum = 0;
-    for (let i = 0; i < last12.length; i++) {
-      sum += parseFloat(last12[i]['закрытые_счета']);
-    }
-    closureVal = sum / last12.length;
+  var f1 = tables['closures_dm.csv'];
+  var closures = null;
+  if (f1) {
+    const data = f1.map(row => parseFloat(row['закрытые_счета']));
+    let last12 = data.slice(-12);
+    closures = last12.reduce((sum, val) => sum + val, 0) / last12.length;
   }
   
-  /**
-   * Рассчитываем долю обращений клиентов при закрытии счета
-   */
-  const linkedFile = tables['linked_crm.csv'];
-  let linkedVal = null;
-  if (linkedFile) {
-    let numerator = 0;
-    let denominator = 0;
-    for (const row of linkedFile) {
-      numerator += parseFloat(row['закрытий_после_обращения']);
-      denominator += parseFloat(row['закрытых_счетов_всего']);
-    }
-    linkedVal = denominator > 0 ? numerator / denominator : null;
+  var f2 = tables['linked_crm.csv'];
+  var linked = null;
+  if (f2) {
+    const totals = f2.map(row => [parseFloat(row['закрытых_счетов_всего']), parseFloat(row['закрытий_после_обращения'])]);
+    const sums = totals.reduce((acc, [total, closed]) => [acc[0] + total, acc[1] + closed], [0, 0]);
+    linked = sums[1] / sums[0];
   }
 
-  /**
-   * Вычисляем ежемесячную маржу накопительного счёта
-   */
-  const marginFile = tables['margin_fin.csv'];
-  let marginVal = null;
-  if (marginFile) {
-    const rows = marginFile;
-    const avgBalance = parseFloat(rows[0]['средний_остаток_тыс_руб']) * 1000;
-    const annualInterestRate = parseFloat(rows[0]['маржа_проц_годовых']);
-    const months = parseInt(rows[0]['срок_жизни_счёта_мес']);
-    marginVal = avgBalance * annualInterestRate / 100 / months;
+  var f3 = tables['margin_fin.csv'];
+  var margin = null;
+  if (f3) {
+    const params = f3.find(row => row['параметр'] === 'средний_остаток_тыс_руб');
+    const averageBalance = parseFloat(params['значение']);
+    margin = averageBalance * 1000 * parseFloat(f3.find(row => row['параметр'] === 'маржа_проц_годовых')['значение']) /
+      100 / 12;
   }
 
-  return {
-    closures: closureVal,
-    linked: linkedVal,
-    margin: marginVal
-  };
+  return { closures: closures, linked: linked, margin: margin };
 }

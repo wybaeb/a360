@@ -85,8 +85,16 @@ function parseCsv(text) {{
     }}
     rows.push(row);
   }}
+  // Таблица параметров (параметр;значение): каждая строка дополнительно получает все параметры
+  // полями — код ассистента часто читает их как «широкую» строку rows[0]['имя_параметра'].
+  if (head.length === 2 && head[0] === 'параметр' && head[1] === 'значение') {{
+    var wide = {{}}; rows.forEach(function (r) {{ wide[r['параметр']] = r['значение']; }});
+    rows.forEach(function (r) {{ Object.keys(wide).forEach(function (k) {{ if (r[k] === undefined) r[k] = wide[k]; }}); }});
+  }}
   return rows;
 }}
+// Код ассистента иногда вызывает replace у уже разобранного числа — не падаем.
+if (!Number.prototype.replace) Number.prototype.replace = function () {{ return String(this); }};
 function fmt(v) {{
   if (v === null || v === undefined || isNaN(v)) return '—';
   var a = Math.abs(v);

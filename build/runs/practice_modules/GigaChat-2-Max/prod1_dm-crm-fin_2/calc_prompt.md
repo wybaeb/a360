@@ -48,6 +48,18 @@ window.computeInputs = function (tables) {
   return { a: aVal, b: bVal, c: cVal };
 };
 
+
+Каркас файла для этого проекта — заполни места, отмеченные многоточием, по расчётам выше и верни файл целиком:
+window.computeInputs = function (tables) {
+  var f1 = tables["closures_dm.csv"]; var closures = null;
+  if (f1) { ... }   // среднее значение столбца закрытые_счета за последние 12 строк (месяцев)
+  var f2 = tables["linked_crm.csv"]; var linked = null;
+  if (f2) { ... }   // сумма столбца закрытий_после_обращения ÷ сумма столбца закрытых_счетов_всего по всем строкам
+  var f3 = tables["margin_fin.csv"]; var margin = null;
+  if (f3) { ... }   // средний_остаток_тыс_руб × 1000 × маржа_проц_годовых ÷ 100 ÷ 12
+  return { closures: closures, linked: linked, margin: margin };
+};
+
 Проверь себя: на этих файлах closures ≈ 1 866, linked ≈ 0,1593, margin ≈ 550.
 
 Ответ — только код файла rasschet.js в тройных кавычках.
@@ -57,39 +69,34 @@ window.computeInputs = function (tables) {
 
 ```javascript
 window.computeInputs = function (tables) {
-  // Закрытия счетов в месяц (среднее за последние 12 месяцев)
-  var cl = tables["closures_dm.csv"];
-  var closures = null;
-  if (cl) {
-    var last12 = cl.slice(-12);
-    var sumClosures = 0;
-    for (var i = 0; i < last12.length; i++) sumClosures += last12[i]["закрытые_счета"];
-    closures = Math.round(sumClosures / last12.length); // округляем до целого
+  var f1 = tables["closures_dm.csv"]; var closures = null;
+  if (f1) {
+    var last = f1.slice(-12); var sum = 0;
+    for (var i = 0; i < last.length; i++) sum += last[i]["закрытые_счета"];
+    closures = Math.round(sum / last.length);
   }
   
-  // Доля закрытий после обращения (сумма по столбцам)
-  var lnk = tables["linked_crm.csv"];
-  var linked = null;
-  if (lnk) {
-    var totalClosed = 0, closedAfterContact = 0;
-    for (var j = 0; j < lnk.length; j++) {
-      totalClosed += lnk[j]["закрытых_счетов_всего"];
-      closedAfterContact += lnk[j]["закрытий_после_обращения"];
+  var f2 = tables["linked_crm.csv"]; var linked = null;
+  if (f2) {
+    var numerator = 0, denominator = 0;
+    for (var j = 0; j < f2.length; j++) {
+      numerator += f2[j]["закрытий_после_обращения"];
+      denominator += f2[j]["закрытых_счетов_всего"];
     }
-    linked = totalClosed > 0 ? closedAfterContact / totalClosed : null;
+    linked = denominator > 0 ? numerator / denominator : null;
   }
   
-  // Маржа на счет в месяц (по параметрам)
-  var mrg = tables["margin_fin.csv"];
-  var margin = null;
-  if (mrg && mrg.length === 3) {
+  var f3 = tables["margin_fin.csv"]; var margin = null;
+  if (f3) {
     var params = {};
-    for (var k = 0; k < mrg.length; k++) params[mrg[k]["параметр"]] = mrg[k]["значение"];
-    margin = params["средний_остаток_тыс_руб"] * 1000 
-           * params["маржа_проц_годовых"] / 100 
-           / params["срок_жизни_счёта_мес"];
+    for (var k = 0; k < f3.length; k++)
+      params[f3[k]["параметр"]] = f3[k]["значение"];
+    
+    margin = params["средний_остаток_тыс_руб"] * 1000 *
+             params["маржа_проц_годовых"] / 100 /
+             params["срок_жизни_счёта_мес"];
   }
   
   return { closures: closures, linked: linked, margin: margin };
-}
+};
 ```

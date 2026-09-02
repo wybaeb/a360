@@ -209,6 +209,16 @@
     L.push('  return { a: aVal, b: bVal, c: cVal };');
     L.push('};');
     L.push('');
+    L.push('');
+    L.push('Каркас файла для этого проекта — заполни места, отмеченные многоточием, по расчётам выше и верни файл целиком:');
+    L.push('window.computeInputs = function (tables) {');
+    eco.rows.forEach(function (r, i) {
+      L.push('  var f' + (i + 1) + ' = tables["' + r.source.file + '"]; var ' + r.input.id + ' = null;');
+      L.push('  if (f' + (i + 1) + ') { ... }   // ' + r.source.calc);
+    });
+    L.push('  return { ' + eco.rows.map(function (r) { return r.input.id + ': ' + r.input.id; }).join(', ') + ' };');
+    L.push('};');
+    L.push('');
     L.push('Проверь себя: на этих файлах ' + eco.rows.map(function (r) { return r.input.id + ' ≈ ' + fmtv(r.source.expect); }).join(', ') + '.');
     L.push('');
     L.push('Ответ — только код файла rasschet.js в тройных кавычках.');

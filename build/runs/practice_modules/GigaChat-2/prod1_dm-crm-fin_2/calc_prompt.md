@@ -48,6 +48,18 @@ window.computeInputs = function (tables) {
   return { a: aVal, b: bVal, c: cVal };
 };
 
+
+Каркас файла для этого проекта — заполни места, отмеченные многоточием, по расчётам выше и верни файл целиком:
+window.computeInputs = function (tables) {
+  var f1 = tables["closures_dm.csv"]; var closures = null;
+  if (f1) { ... }   // среднее значение столбца закрытые_счета за последние 12 строк (месяцев)
+  var f2 = tables["linked_crm.csv"]; var linked = null;
+  if (f2) { ... }   // сумма столбца закрытий_после_обращения ÷ сумма столбца закрытых_счетов_всего по всем строкам
+  var f3 = tables["margin_fin.csv"]; var margin = null;
+  if (f3) { ... }   // средний_остаток_тыс_руб × 1000 × маржа_проц_годовых ÷ 100 ÷ 12
+  return { closures: closures, linked: linked, margin: margin };
+};
+
 Проверь себя: на этих файлах closures ≈ 1 866, linked ≈ 0,1593, margin ≈ 550.
 
 Ответ — только код файла rasschet.js в тройных кавычках.
@@ -56,54 +68,40 @@ window.computeInputs = function (tables) {
 # ответ
 
 ```
-/**
- * Расчёт параметров накопительного счёта: удержание закрываемых счетов
- */
 window.computeInputs = function (tables) {
-  /**
-   * Расчёт параметра 'closures' (закрытие счетов)
-   */
-  const closuresFile = tables['closures_dm.csv'];
-  let closuresVal = null;
-  if (closuresFile) {
-    const data = closuresFile.slice(-12); // берём последние 12 месяцев
-    const sums = data.reduce((acc, item) => acc + parseFloat(item['закрытые_счета']), 0);
-    closuresVal = sums / data.length;
+  var f1 = tables['closures_dm.csv'];
+  var closures = null;
+  if (f1) {
+    const rows = f1.slice(-12);  // берем последние 12 месяцев
+    let sumClosed = 0;
+    for (let r of rows) {
+      sumClosed += parseFloat(r['закрытые_счета']);
+    }
+    closures = sumClosed / rows.length;
   }
   
-  /**
-   * Расчёт параметра 'linked' (доля закрытия после обращения)
-   */
-  const linkedFile = tables['linked_crm.csv'];
-  let linkedVal = null;
-  if (linkedFile) {
-    const totals = linkedFile.map(row => [row['закрытых_счетов_всего'], row['закрытий_после_обращения']]);
-    const sumAllClosed = totals.reduce((prev, [total]) => prev + total, 0);
-    const sumLinked = totals.reduce((prev, [, linked]) => prev + linked, 0);
-    linkedVal = sumAllClosed > 0 ? sumLinked / sumAllClosed : null;
-  }
-
-  /**
-   * Расчёт параметра 'margin' (маржа счета)
-   */
-  const marginFile = tables['margin_fin.csv'];
-  let marginVal = null;
-  if (marginFile) {
-    const params = marginFile.find(row => row['параметр'] === 'средний_остаток_тыс_руб');
-    const rate = marginFile.find(row => row['параметр'] === 'маржа_проц_годовых');
-    const duration = marginFile.find(row => row['параметр'] === 'срок_жизни_счёта_мес');
-    if (params && rate && duration) {
-      const averageBalance = parseFloat(params['значение']) * 1000;
-      const annualRate = parseFloat(rate['значение']);
-      const term = parseInt(duration['значение']);
-      marginVal = averageBalance * annualRate / 100 / term;
+  var f2 = tables['linked_crm.csv'];
+  var linked = null;
+  if (f2) {
+    let totalClosed = 0;
+    let closedAfter = 0;
+    for (const row of f2) {
+      totalClosed += parseFloat(row['закрытых_счетов_всего']);
+      closedAfter += parseFloat(row['закрытий_после_обращения']);
     }
+    linked = closedAfter / totalClosed;
   }
 
-  return {
-    closures: closuresVal,
-    linked: linkedVal,
-    margin: marginVal
-  };
+  var f3 = tables['margin_fin.csv'];
+  var margin = null;
+  if (f3) {
+    const data = f3[0];
+    const avgBalance = parseFloat(data['средний_остаток_тыс_руб']) * 1000;
+    const interestRate = parseFloat(data['маржа_проц_годовых']) / 100;
+    const lifeTime = parseInt(data['срок_жизни_счёта_мес']);
+    margin = avgBalance * interestRate / 12 / lifeTime;
+  }
+
+  return { closures: closures, linked: linked, margin: margin };
 }
 ```
