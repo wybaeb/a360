@@ -21,6 +21,8 @@ HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parent
 CORE = (HERE / "src" / "practice_core.js").read_text(encoding="utf-8")
 VARIANTS = json.loads((HERE / "src" / "practice_variants.json").read_text(encoding="utf-8"))
+TOOL_TPL = (HERE / "src" / "practice_tool_template.html").read_text(encoding="utf-8")
+FIN_TPL = (HERE / "src" / "practice_fin_template.html").read_text(encoding="utf-8")
 
 
 def _samples():
@@ -145,16 +147,16 @@ HTML = f"""
 <li><b>Выберите вариант</b> — направление и номер. Каркас проекта по варианту заполнен, его можно уточнить.</li>
 <li><b>Соберите конфигурацию</b> дерева: для каждого входа итоговой метрики выберите источник данных.
     Страница показывает срок первого значения, стоимость и интегральную оценку конфигурации.</li>
-<li><b>Скачайте каркас мини-инструмента и файлы</b> выбранных источников в одну папку, скопируйте промпт. Ассистент
-    возвращает файл расчёта: сохраните его рядом с каркасом как rasschet.js, откройте каркас, выберите файлы — инструмент
-    посчитает параметры проекта и сверит расчёт ассистента с контрольным.</li>
-<li><b>Финансовая модель:</b> второй каркас и второй промпт с параметрами — ассистент возвращает файл расчёта потока
-    model.js; каркас показывает окупаемость, NPV и график SVG с кнопкой сохранения. Загрузите SVG сюда.</li>
+<li><b>Скачайте файлы</b> выбранных источников и скопируйте промпт. Ассистент возвращает код расчёта: вставьте его
+    в тренажёр и нажмите «Скачать мой мини-инструмент» — получится один HTML-файл. Откройте его, выберите файлы одной
+    кнопкой — инструмент посчитает параметры проекта и сверит расчёт ассистента с контрольным.</li>
+<li><b>Финансовая модель:</b> второй промпт с параметрами — ассистент возвращает код расчёта потока; вставьте его,
+    скачайте инструмент финансовой модели, откройте: окупаемость, NPV, график SVG с кнопкой сохранения. Загрузите SVG сюда.</li>
 <li><b>Презентация</b> собирается из всего сделанного: слайды листаются здесь и скачиваются одним HTML-файлом.</li>
 </ol>
-<p class="sub" style="margin:10px 0 0">Введённое сохраняется в браузере отдельно для каждого варианта. Как сохранить ответ
-ассистента файлом — в материале <a href="guide_mini.html">«Мини-инструменты»</a>. Если файл расчёта не собрался,
-каркас показывает контрольный расчёт, и занятие продолжается.</p>
+<p class="sub" style="margin:10px 0 0">Введённое сохраняется в браузере отдельно для каждого варианта. Скачанный инструмент открывается
+двойным щелчком в любом браузере. Если код ассистента не собрался, инструмент показывает контрольный расчёт,
+и занятие продолжается.</p>
 </div>
 
 <h3>Вариант</h3>
@@ -207,21 +209,26 @@ HTML = f"""
 <!-- ─── Шаг 3 ─────────────────────────────────────────────────────────── -->
 <div class="step" id="st3">
 <div class="sthead"><span class="snum">Шаг 3</span><h3>Мини-инструмент расчёта параметров</h3></div>
-<p class="sub">Мини-инструмент состоит из готового каркаса и файла расчёта. Каркас читает несколько CSV одной кнопкой,
-считает три параметра финансовой модели и рисует график; файл расчёта <b>rasschet.js</b> по формулам дерева пишет ассистент
-по промпту ниже. Расчёт выполняется в браузере, данные никуда не отправляются.</p>
+<p class="sub">Мини-инструмент читает несколько CSV одной кнопкой, считает входы дерева и три параметра финансовой модели,
+рисует график. Расчёт входов по формулам дерева пишет ассистент по промпту ниже; тренажёр собирает из его ответа готовый
+инструмент одним файлом. Расчёт выполняется в браузере, данные никуда не отправляются.</p>
 <p class="links">Из курса: <a href="guide_mini.html">Мини-инструменты: как создать и открыть</a>
 <a href="case_report.html">Мини-инструменты корреляций и трендов</a>
 <a href="longread_finmodel.html#formula">Формула эффекта</a></p>
-<div class="part"><h4><span class="n">1</span>Скачайте каркас и файлы выбранных источников</h4>
-<p class="hint">Всё — в одну папку. Имена файлов должны остаться такими же: каркас распознаёт файл по имени.</p>
+<div class="part"><h4><span class="n">1</span>Скачайте файлы выбранных источников</h4>
+<p class="hint">Имена файлов должны остаться такими же: инструмент распознаёт файл по имени.</p>
 <div class="files" id="files"></div>
 </div>
-<div class="part"><h4><span class="n">2</span>Промпт на файл расчёта</h4>{_пром(3)}
-<p class="hint" style="margin-top:8px">Вставьте промпт в новый чат ассистента. Ответ (только код) сохраните в ту же папку файлом
-<b>rasschet.js</b>, откройте каркас <b>инструмент_параметров.html</b> в браузере и выберите скачанные CSV одной кнопкой. Если каркас
-сообщает об ошибке — скопируйте его сообщение ассистенту и замените файл расчёта.</p></div>
-<div class="part"><h4><span class="n">3</span>Параметры из инструмента</h4>
+<div class="part"><h4><span class="n">2</span>Промпт на расчёт</h4>{_пром(3)}
+<p class="hint" style="margin-top:8px">Вставьте промпт в новый чат ассистента и скопируйте его ответ целиком.</p></div>
+<div class="part"><h4><span class="n">3</span>Соберите мини-инструмент</h4>
+<div class="fld"><label>Ответ ассистента (код расчёта)</label><textarea data-bind="code3" style="min-height:110px;font-family:var(--mono);font-size:13px" placeholder="window.computeInputs = function (tables) {{ … }}"></textarea></div>
+<p class="msg" id="code3msg"></p>
+<button class="btn" type="button" id="bTool">Скачать мой мини-инструмент</button>
+<p class="hint" style="margin-top:8px">Откройте скачанный файл в браузере и выберите CSV-файлы одной кнопкой. Инструмент покажет входы, параметры,
+итоговую метрику и сверит расчёт ассистента с контрольным; при расхождении — готовое сообщение для ассистента.</p>
+</div>
+<div class="part"><h4><span class="n">4</span>Параметры из инструмента</h4>
 <p class="hint">Скопируйте строку параметров из инструмента и вставьте сюда — или впишите числа вручную.</p>
 <div class="fld"><label>Строка параметров</label><input data-bind="paramsLine" placeholder="delta=…; volume=…; price=…"></div>
 <div class="grid">
@@ -237,8 +244,8 @@ HTML = f"""
 <!-- ─── Шаг 4 ─────────────────────────────────────────────────────────── -->
 <div class="step" id="st4">
 <div class="sthead"><span class="snum">Шаг 4</span><h3>Мини-инструмент финансовой модели</h3></div>
-<p class="sub">Каркас финансовой модели показывает поля параметров и условий, таблицу потока по месяцам, окупаемость, NPV
-и график SVG с кнопкой сохранения; файл расчёта потока <b>model.js</b> по формулам финансовой модели пишет ассистент.</p>
+<p class="sub">Инструмент финансовой модели показывает поля параметров и условий, таблицу потока по месяцам, окупаемость, NPV
+и график SVG с кнопкой сохранения; расчёт потока по формулам финансовой модели пишет ассистент, тренажёр собирает инструмент одним файлом.</p>
 <p class="links">Из курса: <a href="longread_finmodel.html#potok">Поток эффекта во времени</a>
 <a href="longread_finmodel.html#npv">NPV и правило принятия</a>
 <a href="trainer_effect.html">Тренажёр «Финансовая модель эффекта»</a></p>
@@ -252,11 +259,15 @@ HTML = f"""
 <div class="fld"><label>Ставка дисконтирования, доля в год</label><input data-bind="fin.rate"></div>
 </div>
 </div>
-<div class="part"><h4><span class="n">2</span>Каркас и промпт на файл расчёта</h4>
-<div class="files" id="files4"></div>{_пром(4)}
-<p class="hint" style="margin-top:8px">Ответ сохраните рядом с каркасом файлом <b>model.js</b>, откройте <b>финмодель.html</b>,
-введите параметры из шага 3 и нажмите «Рассчитать». Кнопка «Сохранить SVG» сохраняет график файлом npv.svg — загрузите его ниже.</p></div>
-<div class="part"><h4><span class="n">3</span>Результат инструмента</h4>
+<div class="part"><h4><span class="n">2</span>Промпт на расчёт потока</h4>{_пром(4)}</div>
+<div class="part"><h4><span class="n">3</span>Соберите инструмент финансовой модели</h4>
+<div class="fld"><label>Ответ ассистента (код расчёта потока)</label><textarea data-bind="code4" style="min-height:110px;font-family:var(--mono);font-size:13px" placeholder="window.effectFlows = function (p) {{ … }}"></textarea></div>
+<p class="msg" id="code4msg"></p>
+<button class="btn" type="button" id="bFin">Скачать мой инструмент финансовой модели</button>
+<p class="hint" style="margin-top:8px">Откройте файл: параметры шага 3 и условия уже подставлены, нажмите «Рассчитать». Кнопка «Сохранить SVG»
+сохраняет график файлом npv.svg — загрузите его ниже.</p>
+</div>
+<div class="part"><h4><span class="n">4</span>Результат инструмента</h4>
 <div class="grid">
 <div class="fld"><label>Окупаемость, месяц</label><input data-bind="res.payback"></div>
 <div class="fld"><label>NPV за горизонт, руб.</label><input data-bind="res.npv"></div>
@@ -297,7 +308,7 @@ HTML = f"""
 UI = r"""
 <script>
 (function(){
-var C=window.PracticeCore, VARS=__VARIANTS__, SAMPLES=__SAMPLES__;
+var C=window.PracticeCore, VARS=__VARIANTS__, SAMPLES=__SAMPLES__, TOOL_TPL=__TOOL_TPL__, FIN_TPL=__FIN_TPL__;
 var $=function(id){return document.getElementById(id)};
 var esc=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')};
 var DIRS=['продукт','процесс','бизнес-инициатива'];
@@ -307,7 +318,7 @@ var cur=null, st=null, dir=DIRS[0], ptext={}, slideNo=0;
 
 function V(){return VARS.filter(function(v){return v.id===cur})[0]}
 function key(){return 'a360_practice_'+cur}
-function blank(v){var s={step:1,frame:{},action:v.frame.action,chosen:{},paramsLine:'',delta:'',volume:'',price:'',fin:JSON.parse(JSON.stringify(v.fin)),res:{payback:'',npv:'',year1:''},svg:''};
+function blank(v){var s={step:1,frame:{},action:v.frame.action,chosen:{},paramsLine:'',delta:'',volume:'',price:'',code3:'',code4:'',fin:JSON.parse(JSON.stringify(v.fin)),res:{payback:'',npv:'',year1:''},svg:''};
   FRAME.forEach(function(f){s.frame[f[0]]=v.frame[f[0]]});v.inputs.forEach(function(i){s.chosen[i.id]=i.sources[0].id});return s}
 function load(id){cur=id;var v=V(),s=null;try{var raw=localStorage.getItem(key());if(raw)s=JSON.parse(raw)}catch(e){}
   st=s||blank(v);var b=blank(v);for(var k in b)if(st[k]===undefined)st[k]=b[k];dir=v.direction}
@@ -339,6 +350,7 @@ document.addEventListener('input',function(e){var el=e.target;if(!el.dataset||!e
   save();afterChange(el.dataset.bind)});
 function afterChange(bind){
   if(bind==='delta'||bind==='volume'||bind==='price'||bind==='paramsLine'){renderCtrl3();renderPrompt(4);renderCtrl4()}
+  if(bind==='code3')codeState(3);if(bind==='code4')codeState(4);
   if(bind.indexOf('fin.')===0){renderPrompt(4);renderCtrl4()}
   renderStepper();
 }
@@ -387,8 +399,22 @@ function renderEco(){var v=V(),e=C.economy(v,st.chosen);
 function chosenRows(){return C.economy(V(),st.chosen).rows}
 function filesObj(){var o={};chosenRows().forEach(function(r){o[r.source.file]={text:SAMPLES[cur+'/'+r.source.file]||''}});return o}
 function fileLink(name,label){return '<a class="f" href="practice_data/'+encodeURIComponent(cur)+'/'+encodeURIComponent(name)+'" download="'+esc(name)+'">⬇ '+esc(label||name)+'</a>'}
-function renderFiles(){var h=fileLink('инструмент_параметров.html','инструмент_параметров.html — каркас');chosenRows().forEach(function(r){h+=fileLink(r.source.file)});$('files').innerHTML=h+'<p class="hint" style="margin-top:4px">Каркас и '+chosenRows().length+' файла данных; разделитель — точка с запятой, десятичный знак — запятая.</p>';
-  var f4=$('files4');if(f4)f4.innerHTML=fileLink('финмодель.html','финмодель.html — каркас финансовой модели')}
+function renderFiles(){var h='';chosenRows().forEach(function(r){h+=fileLink(r.source.file)});$('files').innerHTML=h+'<p class="hint" style="margin-top:4px">'+chosenRows().length+' файла данных; разделитель — точка с запятой, десятичный знак — запятая.</p>'}
+// ── сборка мини-инструментов одним файлом ────────────────────────────────
+function moduleCode(txt,fn){var c=String(txt||'');var m=c.match(/```(?:javascript|js)?\s*([\s\S]*?)```/i);if(m)c=m[1];c=c.trim();
+  if(c&&c.indexOf('window.'+fn)<0){if(new RegExp('function\\s+'+fn+'\\s*\\(').test(c))c+='\nwindow.'+fn+' = '+fn+';';}
+  return c.replace(/<\/script/gi,'<\\/script')}
+function codeState(n){var fn=n===3?'computeInputs':'effectFlows',c=moduleCode(get('code'+n),fn),el=$('code'+n+'msg');
+  if(!C.clean(get('code'+n))){el.textContent='Код ещё не вставлен: инструмент можно скачать и так — он покажет контрольный расчёт, а расчёт ассистента добавите позже.';el.className='msg';return c}
+  if(c.indexOf('window.'+fn)<0){el.textContent='В ответе не найдена функция '+fn+'. Проверьте, что вставлен ответ целиком; попросите ассистента вернуть файл с объявлением window.'+fn+'. Инструмент всё равно соберётся с контрольным расчётом.';el.className='msg warn';return c}
+  el.textContent='Функция '+fn+' найдена — инструмент готов к сборке.';el.className='msg ok';return c}
+function toolMeta(){var v=V(),files=[],inputs=[],ref={};v.inputs.forEach(function(i){i.sources.forEach(function(s){files.push({file:s.file,input:i.name,id:i.id});ref[s.file]=s.ref});inputs.push({id:i.id,name:i.name,unit:i.unit,file:i.sources.map(function(s){return s.file}).join(' / ')})});
+  return {title:v.title,metric:v.metric,params:v.params,inputs:inputs,files:files,ref:ref}}
+function finMeta(){var v=V(),f=st.fin,p=params();return {title:v.title,kind:v.fin.kind,defaults:{delta:paramsOk()?p.delta:'',volume:paramsOk()?p.volume:'',price:paramsOk()?p.price:'',ramp:f.ramp,keep:f.keep,capex:f.capex,opex:f.opex,horizon:f.horizon,rate:f.rate},units:{delta:v.params.delta.unit,volume:v.params.volume.unit,price:v.params.price.unit}}}
+function assemble(n){var tpl=n===3?TOOL_TPL:FIN_TPL,meta=n===3?toolMeta():finMeta(),code=moduleCode(get('code'+n),n===3?'computeInputs':'effectFlows');
+  return tpl.split('__TITLE__').join(esc(V().title)).split('__META__').join(JSON.stringify(meta).replace(/<\//g,'<\\/')).split('__MODULE__').join(code)}
+function downloadHtml(html,name){var a=document.createElement('a');var blob=new Blob([html],{type:'text/html;charset=utf-8'});a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a)}
+window.__assemble=assemble;
 function renderPrompt(n){var pv=$('pv'+n);if(!pv)return;var txt;
   if(n===3){txt=C.calcPrompt(V(),st.chosen,filesObj());$('ps3').textContent='Промпт учитывает выбранные источники: '+chosenRows().map(function(r){return r.source.file}).join(', ')+'. Если в ассистенте есть выбор модели — выбирайте самую сильную.'}
   else{var p=params();if(!paramsOk()){txt='';$('ps4').textContent='Сначала введите параметры на шаге 3.'}else{var r=C.modelPrompt(V(),p);txt=r.text;$('ps4').textContent='Формулы потока — те же, что в материале «Финансовая модель проекта». Контрольные значения расчёта — под полями результата.'}}
@@ -445,9 +471,11 @@ function copyText(txt,btn,lbl){function done(){btn.textContent='Скопиров
   if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(txt).then(done,fb)}else{fb()}}
 document.addEventListener('click',function(e){var t=e.target.closest('button');if(!t)return;
   if(t.dataset.go){go(+t.dataset.go);return}
-  if(t.dataset.copy){e.stopImmediatePropagation();copyText(ptext[+t.dataset.copy]||'',t,'Копировать промпт');return}});
+  if(t.dataset.copy){e.stopImmediatePropagation();copyText(ptext[+t.dataset.copy]||'',t,'Копировать промпт');return}
+  if(t.id==='bTool'){codeState(3);downloadHtml(assemble(3),'инструмент_параметров_'+cur+'.html');return}
+  if(t.id==='bFin'){codeState(4);downloadHtml(assemble(4),'финмодель_'+cur+'.html');return}});
 function renderStep(n){fillInputs($('st'+n));
-  switch(n){case 1:renderFrame();break;case 2:renderTree();renderSrcs();renderEco();break;case 3:renderFiles();renderPrompt(3);renderCtrl3();break;case 4:renderFiles();renderPrompt(4);renderCtrl4();renderSvg();break;case 5:slideNo=0;renderSlide();break}}
+  switch(n){case 1:renderFrame();break;case 2:renderTree();renderSrcs();renderEco();break;case 3:renderFiles();renderPrompt(3);codeState(3);renderCtrl3();break;case 4:renderPrompt(4);codeState(4);renderCtrl4();renderSvg();break;case 5:slideNo=0;renderSlide();break}}
 function renderAll(){fillInputs(document);renderPicker();renderStepper();go(st.step||1)}
 var first=null;try{first=localStorage.getItem('a360_practice_last')}catch(e){}
 load(first&&VARS.some(function(v){return v.id===first})?first:VARS[0].id);
@@ -463,4 +491,5 @@ def _json(o):
 
 
 BODY = (CSS + HTML + "<script>\n" + CORE.replace("</", "<\\/") + "\n</script>"
-        + UI.replace("__VARIANTS__", _json(VARIANTS)).replace("__SAMPLES__", _json(_samples())))
+        + UI.replace("__VARIANTS__", _json(VARIANTS)).replace("__SAMPLES__", _json(_samples()))
+        .replace("__TOOL_TPL__", _json(TOOL_TPL)).replace("__FIN_TPL__", _json(FIN_TPL)))

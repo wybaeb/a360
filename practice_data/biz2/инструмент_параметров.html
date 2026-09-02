@@ -23,7 +23,7 @@
   .line{font-family:ui-monospace,Consolas,monospace;background:#f4f8f6;border:1px solid #d9e2dd;border-radius:8px;padding:8px 10px;display:inline-block;margin:6px 8px 6px 0}
 </style></head><body><div class="wrap">
 <h1>Параметры проекта: Партнёрская программа: вторая карта для активных клиентов</h1>
-<p class="sub">Каркас мини-инструмента. Расчёт входов — в файле <b>rasschet.js</b>, который пишет ассистент и который лежит рядом с этим файлом.
+<p class="sub">Мини-инструмент проекта: расчёт входов написан ассистентом по формулам дерева, каркас сверяет его с контрольным расчётом.
 Выберите файлы выбранных источников одной кнопкой — инструмент посчитает входы, параметры и итоговую метрику. Данные никуда не отправляются.</p>
 <div class="card"><h3>1 · Файлы источников</h3>
 <input type="file" id="files" multiple accept=".csv">
@@ -97,7 +97,7 @@ function compute() {
   });
   var inputs = null, note = '';
   if (typeof window.computeInputs !== 'function') {
-    note = 'Рядом с этим файлом нет rasschet.js или в нём не объявлена функция window.computeInputs. Показан контрольный расчёт каркаса; сохраните ответ ассистента как rasschet.js в эту папку и обновите страницу, чтобы сверить его расчёт.';
+    note = 'В этом файле нет расчёта ассистента (функция computeInputs не объявлена). Показан контрольный расчёт каркаса; вставьте ответ ассистента в тренажёр и скачайте инструмент заново, чтобы сверить его расчёт.';
   } else {
     try { inputs = window.computeInputs(tables); }
     catch (e) { note = 'Ошибка в rasschet.js: ' + e.message + '. Скопируйте ассистенту: «В функции computeInputs ошибка: ' + e.message + '. Исправь и верни файл целиком». Показан контрольный расчёт каркаса.'; inputs = null; }
@@ -167,6 +167,9 @@ document.getElementById('files').addEventListener('change', function () {
 });
 renderExpected(); compute();
 </script>
-<script src="rasschet.js"></script>
+<script>
+/* ── расчёт входов, написанный ассистентом ───────────────────────────── */
+
+</script>
 <script>compute();</script>
 </body></html>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Мини-инструмент: финансовая модель · Кредитный конвейер: срок рассмотрения заявки</title>
+<title>Мини-инструмент: финансовая модель · __TITLE__</title>
 <style>
   body{margin:0;background:#fff;color:#2E3641;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:16px;line-height:1.5}
   .wrap{max-width:960px;margin:0 auto;padding:24px 18px}
@@ -22,7 +22,7 @@
   .files span.got{background:#e3f2ea;border-color:#20BA72}
   .line{font-family:ui-monospace,Consolas,monospace;background:#f4f8f6;border:1px solid #d9e2dd;border-radius:8px;padding:8px 10px;display:inline-block;margin:6px 8px 6px 0}
 </style></head><body><div class="wrap">
-<h1>Финансовая модель эффекта: Кредитный конвейер: срок рассмотрения заявки</h1>
+<h1>Финансовая модель эффекта: __TITLE__</h1>
 <p class="sub">Мини-инструмент финансовой модели: расчёт потока по месяцам написан ассистентом, каркас сверяет его с контрольным расчётом.
 Введите параметры проекта из инструмента параметров, проверьте условия и нажмите «Рассчитать».</p>
 <div class="card"><h3>1 · Параметры и условия</h3>
@@ -37,7 +37,7 @@
 <div class="card" id="tab" style="display:none"><h3>3 · Поток по месяцам</h3><div style="overflow-x:auto"><table id="rows"></table></div></div>
 </div>
 <script>
-var META = {"title": "Кредитный конвейер: срок рассмотрения заявки", "kind": "cohort", "defaults": {"delta": "", "volume": "", "price": "", "ramp": 3, "keep": 24, "capex": 900000, "opex": 80000, "horizon": 24, "rate": 0.15}, "units": {"delta": "сохранённых выдач в месяц", "volume": "—", "price": "руб. дохода с выдачи в месяц"}};
+var META = __META__;
 var FIELDS = [['delta', 'Изменение показателя в месяц', META.units.delta], ['volume', 'Объём', META.units.volume], ['price', 'Стоимость единицы, руб. в месяц', META.units.price],
   ['ramp', 'Выход на полный уровень, мес.', ''], ['keep', 'Срок сохранения эффекта, мес.', ''], ['capex', 'Единовременные затраты, руб.', ''],
   ['opex', 'Ежемесячные затраты, руб.', ''], ['horizon', 'Горизонт, мес.', ''], ['rate', 'Ставка дисконтирования, доля в год', '']];
@@ -116,7 +116,7 @@ form();
 </script>
 <script>
 /* ── расчёт потока по месяцам, написанный ассистентом ────────────────── */
-
+__MODULE__
 </script>
 <script>calc();</script>
 </body></html>

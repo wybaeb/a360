@@ -54,7 +54,7 @@ TOOL = """<!DOCTYPE html>
 <title>Мини-инструмент: параметры проекта · {title}</title>
 <style>{css}</style></head><body><div class="wrap">
 <h1>Параметры проекта: {title}</h1>
-<p class="sub">Каркас мини-инструмента. Расчёт входов — в файле <b>rasschet.js</b>, который пишет ассистент и который лежит рядом с этим файлом.
+<p class="sub">Мини-инструмент проекта: расчёт входов написан ассистентом по формулам дерева, каркас сверяет его с контрольным расчётом.
 Выберите файлы выбранных источников одной кнопкой — инструмент посчитает входы, параметры и итоговую метрику. Данные никуда не отправляются.</p>
 <div class="card"><h3>1 · Файлы источников</h3>
 <input type="file" id="files" multiple accept=".csv">
@@ -128,7 +128,7 @@ function compute() {{
   }});
   var inputs = null, note = '';
   if (typeof window.computeInputs !== 'function') {{
-    note = 'Рядом с этим файлом нет rasschet.js или в нём не объявлена функция window.computeInputs. Показан контрольный расчёт каркаса; сохраните ответ ассистента как rasschet.js в эту папку и обновите страницу, чтобы сверить его расчёт.';
+    note = 'В этом файле нет расчёта ассистента (функция computeInputs не объявлена). Показан контрольный расчёт каркаса; вставьте ответ ассистента в тренажёр и скачайте инструмент заново, чтобы сверить его расчёт.';
   }} else {{
     try {{ inputs = window.computeInputs(tables); }}
     catch (e) {{ note = 'Ошибка в rasschet.js: ' + e.message + '. Скопируйте ассистенту: «В функции computeInputs ошибка: ' + e.message + '. Исправь и верни файл целиком». Показан контрольный расчёт каркаса.'; inputs = null; }}
@@ -198,7 +198,10 @@ document.getElementById('files').addEventListener('change', function () {{
 }});
 renderExpected(); compute();
 </script>
-<script src="rasschet.js"></script>
+<script>
+/* ── расчёт входов, написанный ассистентом ───────────────────────────── */
+__MODULE__
+</script>
 <script>compute();</script>
 </body></html>
 """
@@ -209,7 +212,7 @@ NPV = """<!DOCTYPE html>
 <title>Мини-инструмент: финансовая модель · {title}</title>
 <style>{css}</style></head><body><div class="wrap">
 <h1>Финансовая модель эффекта: {title}</h1>
-<p class="sub">Каркас мини-инструмента. Расчёт потока по месяцам — в файле <b>model.js</b>, который пишет ассистент и который лежит рядом.
+<p class="sub">Мини-инструмент финансовой модели: расчёт потока по месяцам написан ассистентом, каркас сверяет его с контрольным расчётом.
 Введите параметры проекта из инструмента параметров, проверьте условия и нажмите «Рассчитать».</p>
 <div class="card"><h3>1 · Параметры и условия</h3>
 <div id="form"></div>
@@ -252,7 +255,7 @@ function summary(rows) {{ var pb = null, y1 = 0; rows.forEach(function (r) {{ if
 function calc() {{
   var p = params(), ref = refFlows(p), rs = summary(ref), rows = null, note = '';
   if (typeof window.effectFlows !== 'function') {{
-    note = 'Рядом с этим файлом нет model.js или в нём не объявлена функция window.effectFlows. Показан контрольный расчёт каркаса; сохраните ответ ассистента как model.js в эту папку и обновите страницу, чтобы сверить его расчёт.';
+    note = 'В этом файле нет расчёта ассистента (функция effectFlows не объявлена). Показан контрольный расчёт каркаса; вставьте ответ ассистента в тренажёр и скачайте инструмент заново, чтобы сверить его расчёт.';
   }} else {{
     try {{ rows = window.effectFlows(p); }} catch (e) {{ note = 'Ошибка в model.js: ' + e.message + '. Скопируйте ассистенту: «В функции effectFlows ошибка: ' + e.message + '. Исправь и верни файл целиком». Показан контрольный расчёт.'; rows = null; }}
     if (rows && (!rows.length || rows.length !== Math.round(p.horizon) + 1 || typeof rows[0].cum !== 'number' || typeof rows[rows.length - 1].cum_disc !== 'number')) {{ note = 'effectFlows должна вернуть массив из horizon + 1 строк с полями t, income, cost, cf, cum, cum_disc — скопируйте это ассистенту. Показан контрольный расчёт.'; rows = null; }}
@@ -300,7 +303,10 @@ document.getElementById('save').onclick = function () {{
 document.getElementById('calc').onclick = calc;
 form();
 </script>
-<script src="model.js"></script>
+<script>
+/* ── расчёт потока по месяцам, написанный ассистентом ────────────────── */
+__MODULE__
+</script>
 <script>calc();</script>
 </body></html>
 """
@@ -314,7 +320,13 @@ def _meta_tool(v):
     )
 
 
+TPL = ROOT / "build" / "src"
+
+
 def main():
+    # Шаблоны для тренажёра: META и модуль подставляет страница при скачивании.
+    (TPL / "practice_tool_template.html").write_text(TOOL.replace("{title}", "__TITLE__").replace("{css}", CSS.replace("{", "{{").replace("}", "}}")).replace("{meta}", "__META__").replace("{{", "{").replace("}}", "}"), encoding="utf-8")
+    (TPL / "practice_fin_template.html").write_text(NPV.replace("{title}", "__TITLE__").replace("{css}", CSS.replace("{", "{{").replace("}", "}}")).replace("{meta}", "__META__").replace("{{", "{").replace("}}", "}"), encoding="utf-8")
     for v in VARIANTS:
         d = DATA / v["id"]
         # каркас параметров: файлы известны только по выбранной конфигурации,
@@ -332,13 +344,13 @@ def main():
             for s in i["sources"]:
                 ref[s["file"]] = s["ref"]
         meta = dict(title=v["title"], metric=v["metric"], params=v["params"], inputs=inputs, files=files, ref=ref)
-        html = TOOL.format(title=v["title"], css=CSS, meta=json.dumps(meta, ensure_ascii=False).replace("</", "<\\/"))
+        html = TOOL.format(title=v["title"], css=CSS, meta=json.dumps(meta, ensure_ascii=False).replace("</", "<\\/")).replace("__MODULE__", "")
         (d / "инструмент_параметров.html").write_text(html, encoding="utf-8")
         f = v["fin"]
         defaults = dict(delta="", volume="", price="", ramp=f["ramp"], keep=f["keep"], capex=f["capex"], opex=f["opex"], horizon=f["horizon"], rate=f["rate"])
         meta2 = dict(title=v["title"], kind=f["kind"], defaults=defaults,
                      units=dict(delta=v["params"]["delta"]["unit"], volume=v["params"]["volume"]["unit"], price=v["params"]["price"]["unit"]))
-        html2 = NPV.format(title=v["title"], css=CSS, meta=json.dumps(meta2, ensure_ascii=False).replace("</", "<\\/"))
+        html2 = NPV.format(title=v["title"], css=CSS, meta=json.dumps(meta2, ensure_ascii=False).replace("</", "<\\/")).replace("__MODULE__", "")
         (d / "финмодель.html").write_text(html2, encoding="utf-8")
         print(v["id"], "каркасы записаны")
 

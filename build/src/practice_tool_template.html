@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Мини-инструмент: параметры проекта · Накопительный счёт: удержание закрываемых счетов</title>
+<title>Мини-инструмент: параметры проекта · __TITLE__</title>
 <style>
   body{margin:0;background:#fff;color:#2E3641;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:16px;line-height:1.5}
   .wrap{max-width:960px;margin:0 auto;padding:24px 18px}
@@ -22,7 +22,7 @@
   .files span.got{background:#e3f2ea;border-color:#20BA72}
   .line{font-family:ui-monospace,Consolas,monospace;background:#f4f8f6;border:1px solid #d9e2dd;border-radius:8px;padding:8px 10px;display:inline-block;margin:6px 8px 6px 0}
 </style></head><body><div class="wrap">
-<h1>Параметры проекта: Накопительный счёт: удержание закрываемых счетов</h1>
+<h1>Параметры проекта: __TITLE__</h1>
 <p class="sub">Мини-инструмент проекта: расчёт входов написан ассистентом по формулам дерева, каркас сверяет его с контрольным расчётом.
 Выберите файлы выбранных источников одной кнопкой — инструмент посчитает входы, параметры и итоговую метрику. Данные никуда не отправляются.</p>
 <div class="card"><h3>1 · Файлы источников</h3>
@@ -38,7 +38,7 @@
 <div class="card" id="chartCard" style="display:none"><h3>4 · Вход по месяцам</h3><div id="chart"></div></div>
 </div>
 <script>
-var META = {"title": "Накопительный счёт: удержание закрываемых счетов", "metric": {"name": "Маржинальный доход от удержанных счетов", "unit": "руб. в месяц на когорту", "formula": "delta × price"}, "params": {"delta": {"name": "Изменение показателя", "unit": "предотвращённых закрытий в месяц", "formula": "closures × linked × 1/3", "note": "треть связанных с обращениями закрытий предотвращается — допущение"}, "volume": {"name": "Объём", "unit": "—", "formula": "1", "note": "множитель не используется"}, "price": {"name": "Стоимость единицы", "unit": "руб. маржи на счёт в месяц", "formula": "margin", "note": ""}}, "inputs": [{"id": "closures", "name": "Закрытия счетов в месяц", "unit": "счетов в месяц", "file": "closures_dm.csv / closures_abs.csv"}, {"id": "linked", "name": "Доля закрытий после обращения", "unit": "доля от 0 до 1", "file": "linked_crm.csv / linked_survey.csv"}, {"id": "margin", "name": "Маржа на счёт в месяц", "unit": "руб.", "file": "margin_fin.csv / margin_rates.csv"}], "files": [{"file": "closures_dm.csv", "input": "Закрытия счетов в месяц", "id": "closures"}, {"file": "closures_abs.csv", "input": "Закрытия счетов в месяц", "id": "closures"}, {"file": "linked_crm.csv", "input": "Доля закрытий после обращения", "id": "linked"}, {"file": "linked_survey.csv", "input": "Доля закрытий после обращения", "id": "linked"}, {"file": "margin_fin.csv", "input": "Маржа на счёт в месяц", "id": "margin"}, {"file": "margin_rates.csv", "input": "Маржа на счёт в месяц", "id": "margin"}], "ref": {"closures_dm.csv": "var last = rows.slice(-12), s = 0; for (var i = 0; i < last.length; i++) s += last[i]['закрытые_счета']; return s / last.length;", "closures_abs.csv": "var by = {}, order = []; for (var i = 0; i < rows.length; i++) { var m = rows[i]['месяц']; if (by[m] === undefined) { by[m] = 0; order.push(m); } by[m] += rows[i]['закрытые_счета']; } var last = order.slice(-12), s = 0; for (var j = 0; j < last.length; j++) s += by[last[j]]; return s / last.length;", "linked_crm.csv": "var n = 0, d = 0; for (var i = 0; i < rows.length; i++) { n += rows[i]['закрытий_после_обращения']; d += rows[i]['закрытых_счетов_всего']; } return d ? n / d : null;", "linked_survey.csv": "var c = 0; for (var i = 0; i < rows.length; i++) if (rows[i]['причина_закрытия'] === 'нерешённое обращение') c++; return rows.length ? c / rows.length : null;", "margin_fin.csv": "var p = {}; for (var i = 0; i < rows.length; i++) p[rows[i]['параметр']] = rows[i]['значение']; return p['средний_остаток_тыс_руб'] * 1000 * p['маржа_проц_годовых'] / 100 / 12;", "margin_rates.csv": "var s = 0; for (var i = 0; i < rows.length; i++) { var r = rows[i]; s += ((r['ставка_размещения_проц'] - r['ставка_по_счёту_проц']) / 100 * 220000 / 12); } return s / rows.length;"}};
+var META = __META__;
 var tables = {};
 function parseCsv(text) {
   var lines = String(text).replace(/^\uFEFF/, '').split(/\r?\n/).filter(function (l) { return l.trim() !== ''; });
@@ -169,7 +169,7 @@ renderExpected(); compute();
 </script>
 <script>
 /* ── расчёт входов, написанный ассистентом ───────────────────────────── */
-
+__MODULE__
 </script>
 <script>compute();</script>
 </body></html>

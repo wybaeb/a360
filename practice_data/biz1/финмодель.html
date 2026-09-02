@@ -23,7 +23,7 @@
   .line{font-family:ui-monospace,Consolas,monospace;background:#f4f8f6;border:1px solid #d9e2dd;border-radius:8px;padding:8px 10px;display:inline-block;margin:6px 8px 6px 0}
 </style></head><body><div class="wrap">
 <h1>Финансовая модель эффекта: Портфель платёжных операций: восстановление объёма</h1>
-<p class="sub">Каркас мини-инструмента. Расчёт потока по месяцам — в файле <b>model.js</b>, который пишет ассистент и который лежит рядом.
+<p class="sub">Мини-инструмент финансовой модели: расчёт потока по месяцам написан ассистентом, каркас сверяет его с контрольным расчётом.
 Введите параметры проекта из инструмента параметров, проверьте условия и нажмите «Рассчитать».</p>
 <div class="card"><h3>1 · Параметры и условия</h3>
 <div id="form"></div>
@@ -66,7 +66,7 @@ function summary(rows) { var pb = null, y1 = 0; rows.forEach(function (r) { if (
 function calc() {
   var p = params(), ref = refFlows(p), rs = summary(ref), rows = null, note = '';
   if (typeof window.effectFlows !== 'function') {
-    note = 'Рядом с этим файлом нет model.js или в нём не объявлена функция window.effectFlows. Показан контрольный расчёт каркаса; сохраните ответ ассистента как model.js в эту папку и обновите страницу, чтобы сверить его расчёт.';
+    note = 'В этом файле нет расчёта ассистента (функция effectFlows не объявлена). Показан контрольный расчёт каркаса; вставьте ответ ассистента в тренажёр и скачайте инструмент заново, чтобы сверить его расчёт.';
   } else {
     try { rows = window.effectFlows(p); } catch (e) { note = 'Ошибка в model.js: ' + e.message + '. Скопируйте ассистенту: «В функции effectFlows ошибка: ' + e.message + '. Исправь и верни файл целиком». Показан контрольный расчёт.'; rows = null; }
     if (rows && (!rows.length || rows.length !== Math.round(p.horizon) + 1 || typeof rows[0].cum !== 'number' || typeof rows[rows.length - 1].cum_disc !== 'number')) { note = 'effectFlows должна вернуть массив из horizon + 1 строк с полями t, income, cost, cf, cum, cum_disc — скопируйте это ассистенту. Показан контрольный расчёт.'; rows = null; }
@@ -114,6 +114,9 @@ document.getElementById('save').onclick = function () {
 document.getElementById('calc').onclick = calc;
 form();
 </script>
-<script src="model.js"></script>
+<script>
+/* ── расчёт потока по месяцам, написанный ассистентом ────────────────── */
+
+</script>
 <script>calc();</script>
 </body></html>
