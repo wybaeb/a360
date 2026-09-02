@@ -1,98 +1,33 @@
 {
- "GigaChat-2/tool_prod1_dm-crm-fin_1": {
-  "sec": 17,
-  "html": true,
-  "errors": 1,
-  "err0": "SyntaxError: Unexpected token '}'",
-  "params": null,
-  "svg": false,
-  "deltaOk": false,
-  "priceOk": false,
-  "ok": false,
-  "textLen": 153
- },
- "GigaChat-2/npv_prod1_1": {
-  "sec": 18,
-  "html": true,
-  "errors": 2,
-  "err0": "TypeError: rampShareK.reduce is not a function",
-  "svg": false,
-  "saveBtn": true,
-  "npvOk": false,
-  "paybackOk": false,
-  "ok": false
- },
- "GigaChat-2/tool_prod1_dm-crm-fin_2": {
-  "sec": 18,
-  "html": true,
-  "errors": 1,
-  "err0": "TypeError: files.forEach is not a function",
-  "params": null,
-  "svg": false,
-  "deltaOk": false,
-  "priceOk": false,
-  "ok": false,
-  "textLen": 219
- },
- "GigaChat-2/npv_prod1_2": {
-  "sec": 23,
-  "html": true,
-  "errors": 1,
-  "err0": "SyntaxError: Unexpected token '}'",
-  "svg": false,
-  "saveBtn": true,
-  "npvOk": false,
-  "paybackOk": false,
-  "ok": false
- },
- "GigaChat-2/tool_prod1_dm-crm-fin_3": {
-  "sec": 18,
-  "html": true,
-  "errors": 1,
-  "err0": "SyntaxError: Unexpected token '!'",
-  "params": null,
-  "svg": false,
-  "deltaOk": false,
-  "priceOk": false,
-  "ok": false,
-  "textLen": 153
- },
- "GigaChat-2/npv_prod1_3": {
-  "sec": 20,
-  "html": true,
-  "errors": 2,
-  "err0": "TypeError: (1 + ((1 + p.rate) ** 0.08333333333333333)).pow is not a function\nfile:///root/work/sessions/max--76387277381017/a360/build/runs/practice/GigaChat-2/npv_prod1_3.html:72:114",
-  "svg": false,
-  "saveBtn": true,
-  "npvOk": false,
-  "paybackOk": false,
-  "ok": false
- },
  "GigaChat-2-Max/tool_prod1_dm-crm-fin_1": {
-  "sec": 46,
+  "sec": 48,
   "html": true,
   "errors": 0,
   "err0": "",
-  "params": null,
+  "params": {
+   "delta": 99.09718651127399,
+   "volume": 1,
+   "price": 550
+  },
   "svg": true,
-  "deltaOk": false,
-  "priceOk": false,
-  "ok": false,
-  "textLen": 639
+  "deltaOk": true,
+  "priceOk": true,
+  "ok": true,
+  "textLen": 650
  },
  "GigaChat-2-Max/npv_prod1_1": {
-  "sec": 50,
+  "sec": 53,
   "html": true,
-  "errors": 2,
-  "err0": "TypeError: rampShare is not a function\nfile:///root/work/sessions/max--76387277381017/a360/build/runs/practice/GigaChat-2-Max/npv_prod1_1.html:108:75",
-  "svg": false,
+  "errors": 0,
+  "err0": "",
+  "svg": true,
   "saveBtn": true,
-  "npvOk": false,
-  "paybackOk": false,
-  "ok": false
+  "npvOk": true,
+  "paybackOk": true,
+  "ok": true
  },
  "GigaChat-2-Max/tool_prod1_dm-crm-fin_2": {
-  "sec": 45,
+  "sec": 47,
   "html": true,
   "errors": 0,
   "err0": "",
@@ -108,30 +43,34 @@
   "textLen": 650
  },
  "GigaChat-2-Max/npv_prod1_2": {
-  "sec": 48,
+  "sec": 51,
   "html": true,
   "errors": 0,
   "err0": "",
   "svg": true,
   "saveBtn": true,
   "npvOk": false,
-  "paybackOk": false,
+  "paybackOk": true,
   "ok": false
  },
  "GigaChat-2-Max/tool_prod1_dm-crm-fin_3": {
-  "sec": 47,
+  "sec": 50,
   "html": true,
   "errors": 0,
   "err0": "",
-  "params": null,
+  "params": {
+   "delta": 99.09718651127399,
+   "volume": 1,
+   "price": 550
+  },
   "svg": true,
-  "deltaOk": false,
-  "priceOk": false,
-  "ok": false,
-  "textLen": 639
+  "deltaOk": true,
+  "priceOk": true,
+  "ok": true,
+  "textLen": 650
  },
  "GigaChat-2-Max/npv_prod1_3": {
-  "sec": 53,
+  "sec": 51,
   "html": true,
   "errors": 0,
   "err0": "",
@@ -140,5 +79,78 @@
   "npvOk": true,
   "paybackOk": true,
   "ok": true
+ },
+ "GigaChat-2/tool_prod1_dm-crm-fin_1": {
+  "sec": 19,
+  "html": true,
+  "errors": 1,
+  "err0": "TypeError: files.forEach is not a function",
+  "params": null,
+  "svg": false,
+  "deltaOk": false,
+  "priceOk": false,
+  "ok": false,
+  "textLen": 219
+ },
+ "GigaChat-2/npv_prod1_1": {
+  "sec": 19,
+  "html": true,
+  "errors": 1,
+  "err0": "SyntaxError: Unexpected token '}'",
+  "svg": false,
+  "saveBtn": true,
+  "npvOk": false,
+  "paybackOk": false,
+  "ok": false
+ },
+ "GigaChat-2/tool_prod1_dm-crm-fin_2": {
+  "sec": 18,
+  "html": true,
+  "errors": 0,
+  "err0": "",
+  "params": {
+   "delta": 99.09718651127399,
+   "volume": 1,
+   "price": 550
+  },
+  "svg": true,
+  "deltaOk": true,
+  "priceOk": true,
+  "ok": true,
+  "textLen": 647
+ },
+ "GigaChat-2/npv_prod1_2": {
+  "sec": 19,
+  "html": true,
+  "errors": 2,
+  "err0": "TypeError: Assignment to constant variable.\nfile:///root/work/sessions/max--76387277381017/a360/build/runs/practice/GigaChat-2/npv_prod1_2.html:107:11",
+  "svg": false,
+  "saveBtn": true,
+  "npvOk": true,
+  "paybackOk": false,
+  "ok": false
+ },
+ "GigaChat-2/tool_prod1_dm-crm-fin_3": {
+  "sec": 17,
+  "html": true,
+  "errors": 1,
+  "err0": "TypeError: files.forEach is not a function",
+  "params": null,
+  "svg": false,
+  "deltaOk": false,
+  "priceOk": false,
+  "ok": false,
+  "textLen": 219
+ },
+ "GigaChat-2/npv_prod1_3": {
+  "sec": 19,
+  "html": true,
+  "errors": 2,
+  "err0": "TypeError: p.income is not a function\nfile:///root/work/sessions/max--76387277381017/a360/build/runs/practice/GigaChat-2/npv_prod1_3.html:102:24",
+  "svg": false,
+  "saveBtn": true,
+  "npvOk": false,
+  "paybackOk": false,
+  "ok": false
  }
 }

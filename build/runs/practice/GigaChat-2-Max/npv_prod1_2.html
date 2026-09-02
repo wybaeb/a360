@@ -10,28 +10,31 @@ document.getElementById("form").innerHTML = FIELDS.map(function (f) { return "<l
 function num(v) { var n = parseFloat(String(v).replace(",", ".")); return isNaN(n) ? 0 : n; }
 function money(x) { var a = Math.abs(x), s = a >= 1e6 ? (a / 1e6).toFixed(2).replace(".", ",") + " млн руб." : Math.round(a).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " руб."; return (x < 0 ? "−" : "") + s; }
 function effectFlows(p) {
-  var rows = [], rampShare = function (t) { return p.ramp == 0 ? 1 : Math.min(t / p.ramp, 1); },
-      full = p.delta * p.volume,
-      m = Math.pow(1 + p.rate, 1 / 12) - 1,
-      cum = 0, cumDisc = 0;
+  var rows = [], full = p.delta * p.volume, rampShare = function (t) { return p.ramp == 0 ? 1 : Math.min(t / p.ramp, 1); },
+      m = Math.pow(1 + p.rate, 1 / 12) - 1, cum = 0, cumDisc = 0,
+      units = Array.from({ length: p.horizon + 1 }, (_, i) => i === 0 ? 0 : 
+        [...Array(i)].reduce((sum, _, j) => sum + (j >= Math.max(1, i - p.keep + 1) ? full * rampShare(j + 1) : 0), 0)),
+      income = units.map(u => u * p.price),
+      cost = Array.from({ length: p.horizon + 1 }, (_, i) => i === 0 ? p.capex : p.opex),
+      cf = income.map((_, i) => income[i] - cost[i]),
+      disc = cf.map((_, i) => cf[i] / Math.pow(1 + m, i));
   
-  for (var t = 0; t <= p.horizon; t++) {
-    var income = t == 0 ? 0 : Array.from({length:t}, (_,k)=>full*rampShare(Math.min(k,t))).slice(Math.max(0,t-p.keep+1)).reduce((acc,v)=>acc+v,0)*p.price,
-        cost = t == 0 ? p.capex : p.opex,
-        cf = income - cost,
-        disc = cf / Math.pow(1+m,t),
-        row = {t:t, income:income, cost:cost, cf:cf};
-    
-    cum += cf;
-    cumDisc += disc;
+  for (let t = 0; t <= p.horizon; t++) {
+    let row = {};
+    row.t = t;
+    row.income = income[t];
+    row.cost = cost[t];
+    row.cf = cf[t];
+    cum += row.cf;
     row.cum = cum;
+    cumDisc += disc[t];
     row.cum_disc = cumDisc;
     rows.push(row);
   }
   return rows;
 }
 function calc() {
-  var p = {}; FIELDS.forEach(function (f) { p[f[0]] = num(document.getElementById("f-" + f[0]).value); });
+  var p = { kind: "cohort" }; FIELDS.forEach(function (f) { p[f[0]] = num(document.getElementById("f-" + f[0]).value); });
   var rows = effectFlows(p);
   if (!rows || rows.length !== Math.round(p.horizon) + 1) { document.getElementById("status").textContent = "Функция effectFlows должна вернуть horizon + 1 строк"; return; }
   var pb = null, y1 = 0; rows.forEach(function (r) { if (r.t > 0 && pb === null && r.cum >= 0) pb = r.t; if (r.t >= 1 && r.t <= 12) y1 += r.income; });

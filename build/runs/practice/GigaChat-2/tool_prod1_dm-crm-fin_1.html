@@ -4,120 +4,113 @@
   <meta charset="utf-8">
   <title>Параметры проекта: Накопительный счёт: удержание закрываемых счетов</title>
   <style>
-    body{
-      font-family: Arial, sans-serif;
-      max-width: 900px;
-      margin: 24px auto;
-      padding: 0 16px;
-      color: #222
-    }
-    .drop{
-      border: 2px dashed #999;
-      border-radius: 12px;
-      padding: 24px;
-      text-align: center;
-      color: #555
-    }
-    .drop.over{
-      border-color: #2a9d5c;
-      background: #f0faf4
-    }
-    table{
-      border-collapse: collapse;
-      width: 100%;
-      margin: 12px 0
-    }
-    td, th{
-      border-bottom: 1px solid #ddd;
-      padding: 6px 8px;
-      text-align: left
-    }
-    .tile{
-      display: inline-block;
-      min-width: 200px;
-      margin: 8px 16px 8px 0
-    }
-    .tile b{
-      display: block;
-      font-size: 26px
-    }
-    .line{
-      font-family: monospace;
-      background: #f4f4f4;
-      padding: 8px 10px;
-      border-radius: 8px
-    }
-    #status{
-      color: #b33
-    }
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 24px auto; padding: 0 16px; color: #222 }
+    .drop { border: 2px dashed #999; border-radius: 12px; padding: 24px; text-align: center; color: #555 }
+    .drop.over { border-color: #2a9d5c; background: #f0faf4 }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0 }
+    td, th { border-bottom: 1px solid #ddd; padding: 6px 8px; text-align: left }
+    .tile { display: inline-block; min-width: 200px; margin: 8px 16px 8px 0 }
+    .tile b { display: block; font-size: 26px }
+    .line { font-family: monospace; background: #f4f4f4; padding: 8px 10px; border-radius: 8px }
+    #status { color: #b33 }
   </style>
 </head>
 <body>
   <h1>Параметры проекта: Накопительный счёт: удержание закрываемых счетов</h1>
   <div class="drop" id="drop">Перетащите сюда файлы closures_dm.csv, linked_crm.csv, margin_fin.csv или 
     <label><u>выберите их</u>
-      <input type="file" id="files" multiple accept=".csv" style="display:none"></label>
+      <input type="file" id="files" multiple accept=".csv" style="display: none"></label>
   </div>
   <p id="status"></p>
   <div id="out"></div>
   <div id="chart"></div>
   
   <script>
-    const FILES = ["closures_dm.csv", "linked_crm.csv", "margin_fin.csv"];
-    let tables = {};
+    var FILES = ["closures_dm.csv", "linked_crm.csv", "margin_fin.csv"];
+    var tables = {};
     
     function parseCsv(text) {
-      const lines = text.replace(/\uFEFF/, '').split(/\r?\n/)
-        .filter(l => l.trim() !== '');
-      const head = lines[0].split(';').map(h => h.trim());
-      const rows = [];
-      for (let i = 1; i < lines.length; i++) {
-        const cells = lines[i].split(';');
-        const row = {};
-        for (let j = 0; j < head.length; j++) {
-          const v = (cells[j] || '').trim();
-          const n = parseFloat(v.replace(',', '.'));
-          row[head[j]] = (v !== '' && !isNaN(n)) ? n : v;
+      var lines = text.replace(/^\uFEFF/, "")
+        .split(/\r?\n/)
+        .filter(function(l) { return l.trim() !== ""; });
+      var head = lines[0].split(";")
+        .map(function(h) { return h.trim(); }),
+        rows = [];
+      for (var i = 1; i < lines.length; i++) {
+        var cells = lines[i].split(";");
+        var row = {};
+        for (var j = 0; j < head.length; j++) {
+          var v = (cells[j] || "").trim();
+          var n = parseFloat(v.replace(",", "."));
+          row[head[j]] = (v !== "" && !isNaN(n)) ? n : v;
         }
         rows.push(row);
       }
+      if (head.length === 2 && head[0] === "параметр") {
+        var wide = {};
+        rows.forEach(function(r) { wide[r["параметр"]] = r["значение"]; });
+        rows.forEach(function(r) {
+          for (var k in wide) if (r[k] === undefined) r[k] = wide[k];
+        });
+      }
       return rows;
     }
-
+    
+    if (!Number.prototype.replace) Number.prototype.replace = function() { return String(this); };
+    if (typeof FileList !== "undefined" && !FileList.prototype.forEach) FileList.prototype.forEach =
+      Array.prototype.forEach;
+    
     function computeInputs(tables) {
-      // Расчёт closures
-      const closuresArr = tables['closures_dm.csv'].slice(-12).map(row => row['закрытые_счета']);
-      const closures = closuresArr.reduce((acc, curr) => acc + curr) / closuresArr.length;
+      // closures — Закрытия счетов в месяц (счетов в месяц): среднее значение столбца закрытые_счета за последние 12 строк (месяцев)
+      var closures = null;
+      if (tables["closures_dm.csv"]) {
+        var rows = tables["closures_dm.csv"];
+        var lastTwelveRows = rows.slice(-12);
+        closures = lastTwelveRows.reduce((acc, row) => acc + row.closed_accounts, 0) / 12;
+      }
       
-      // Расчёт linked
-      const linkedSums = tables['linked_crm.csv'].map(row => row['закрытий_после_обращения']);
-      const totalClosed = tables['linked_crm.csv'].map(row => row['закрытых_счетов_всего']).reduce((sum, val) => sum + val);
-      const linked = linkedSums.reduce((acc, curr) => acc + curr) / totalClosed;
+      // linked — Доля закрытий после обращения (доля от 0 до 1): сумма столбца закрытий_после_обращения ÷ сумма столбца закрытых_счетов_всего по всем строкам
+      var linked = null;
+      if (tables["linked_crm.csv"]) {
+        var totalClosedAccounts = tables["linked_crm.csv"].reduce(
+          (acc, row) => acc + row.closed_accounts_total,
+          0
+        );
+        var closedAfterContact = tables["linked_crm.csv"].reduce(
+          (acc, row) => acc + row.closed_after_contact,
+          0
+        );
+        linked = closedAfterContact / totalClosedAccounts;
+      }
       
-      // Расчёт margin
-      const avgBalance = tables['margin_fin.csv'][0]['средний_остаток_тыс_руб'] * 1000;
-      const interestRate = tables['margin_fin.csv'][0]['маржа_проц_годовых'];
-      const monthsInYear = tables['margin_fin.csv'][0]['срок_жизни_счёта_мес'];
-      const margin = avgBalance * interestRate / 100 / monthsInYear;
+      // margin — Маржа на счёт в месяц (руб.): средний_остаток_тыс_руб × 1000 × маржа_проц_годовых ÷ 100 ÷ 12
+      var margin = null;
+      if (tables["margin_fin.csv"]) {
+        var data = tables["margin_fin.csv"][0];
+        var avgBalance = data.avg_balance_thousand_rub * 1000;
+        var annualInterestRate = data.interest_rate_percentage_yearly;
+        var monthsInLife = data.life_span_months;
+        margin = avgBalance * annualInterestRate / 100 / monthsInLife;
+      }
       
-      return { closures, linked, margin };
+      return { closures: closures, linked: linked, margin: margin };
     }
-
+    
     function fmt(v) {
-      return (v === null || v === undefined || isNaN(v)) ? '—' : `${Math.round(v * 100) / 100}.`.replace('.', ',');
+      return (v === null || v === undefined || isNaN(v)) ? "—" : String(Math.round(v * 100) / 100).replace(".", ",");
     }
-
+    
     function render() {
-      const missing = FILES.filter(f => !tables[f]);
-      if (missing.length > 0) {
-        document.getElementById('status').textContent = `Ожидаются файлы: ${missing.join(', ')}`;
+      var missing = FILES.filter(f => !tables[f]);
+      if (missing.length) {
+        document.getElementById("status").textContent = "Ожидаются файлы: " + missing.join(", ");
         return;
       }
-      const inputs = computeInputs(tables);
-      const delta = inputs.closures * inputs.linked * 1/3;
-      const volume = 1;
-      const price = inputs.margin;
-      const html = `
+      var inputs = computeInputs(tables);
+      var delta = inputs.closures * inputs.linked * 1 / 3;
+      var volume = 1;
+      var price = inputs.margin;
+      var h = `
         <h2>Входы</h2>
         <table>
           <tr>
@@ -144,88 +137,65 @@
         <p>Маржинальный доход от удержанных счетов: <b>${fmt(delta * volume * price)}</b> руб. в месяц на когорту</p>
         <p class="line">delta=${delta}; volume=${volume}; price=${price}</p>
       `;
-      document.getElementById('status').textContent = '';
-      document.getElementById('out').innerHTML = html;
+      document.getElementById("status").textContent = "";
+      document.getElementById("out").innerHTML = h;
       drawChart();
     }
-
+    
     function drawChart() {
-      const rows = tables[FILES[0]];
-      if (!rows || rows[0]['месяц'] === undefined) return;
-      const col = Object.keys(rows[0]).filter(k => k !== 'месяц' && typeof rows[0][k] === 'number')[0];
-      const data = rows.map(row => [row['месяц'], row[col]]);
-      const chartData = data.map(([month, value]) => ({ month, value }));
-      const svg = d3.select('#chart')
-        .append('svg')
-        .attr('viewBox', '0 0 860 260')
-        .attr('width', '100%');
-      const xScale = d3.scaleBand().domain(chartData.map(d => d.month)).range([60, 800]);
-      const yScale = d3.scaleLinear()
-        .domain([d3.min(chartData, d => d.value), d3.max(chartData, d => d.value)])
-        .range([20, 240]);
-      const line = d3.line()
-        .x(d => xScale(d.month))
-        .y(d => yScale(d.value));
-      svg.append('path')
-        .datum(chartData)
-        .attr('d', line)
-        .attr('fill', 'none')
-        .attr('stroke', '#2a9d5c')
-        .attr('stroke-width', 3);
-      svg.append('text')
-        .attr('x', 6)
-        .attr('y', 24)
-        .attr('font-size', '12')
-        .attr('text-anchor', 'end')
-        .text(fmt(d3.max(chartData, d => d.value)));
-      svg.append('text')
-        .attr('x', 6)
-        .attr('y', 240)
-        .attr('font-size', '12')
-        .attr('text-anchor', 'end')
-        .text(fmt(d3.min(chartData, d => d.value)));
-      svg.selectAll('.month')
-        .data(chartData)
-        .enter()
-        .append('text')
-        .attr('class', 'month')
-        .attr('x', d => xScale(d.month) + xScale.bandwidth() / 2)
-        .attr('y', 240)
-        .attr('text-anchor', 'middle')
-        .text(d => d.month);
+      var rows = tables[FILES[0]];
+      if (!rows || rows[0]["month"] === undefined) return;
+      var col = Object.keys(rows[0])
+        .filter(k => k !== "month" && typeof rows[0][k] === "number")[0];
+      if (!col) return;
+      var by = {}, order = [];
+      rows.forEach(r => {
+        var month = String(r["month"]);
+        if (by[month] === undefined) {
+          by[month] = 0;
+          order.push(month);
+        }
+        by[month] += r[col];
+      });
+      var ys = order.map(m => by[m]), W = 860, H = 260, L = 60, B = 40, mx = Math.max(...ys),
+        mn = Math.min(...ys);
+      if (mx === mn) { mx += 1; mn -= 1; }
+      var X = i => L + (W - L - 20) * i / Math.max(1, ys.length - 1);
+      var Y = v => 20 + (H - 20 - B) * (mx - v) / (mx - mn);
+      var d = ys.map((v, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1)).join(" ");
+      var svg = `<h2>${col} по месяцам</h2>
+        <svg viewBox="0 0 ${W} ${H}" width="100%" xmlns="http://www.w3.org/2000/svg">
+          <path d="${d}" fill="none" stroke="#2a9d5c" stroke-width="3"/>
+          <text x="${L - 6}" y="24" font-size="12" text-anchor="end">${fmt(mx)}</text>
+          <text x="${L - 6}" y="${H - B}" font-size="12" text-anchor="end">${fmt(mn)}</text>
+          ${order.map(m => m % 3 === 0 || m === order.length - 1 ? `<text x="${X(m)}" y="${H - 12}" font-size="11" text-anchor="middle">${m}</text>` : "")}
+        </svg>`;
+      document.getElementById("chart").innerHTML = svg;
     }
-
+    
     function readFiles(files) {
       files.forEach(file => {
-        if (FILES.includes(file.name)) {
-          const reader = new FileReader();
-          reader.onload = ev => {
-            tables[file.name] = parseCsv(ev.target.result);
-            render();
-          };
-          reader.readAsText(file, 'utf-8');
-        } else {
-          document.getElementById('status').textContent = `Файл не поддерживается: ${file.name}`;
+        if (FILES.indexOf(file.name) < 0) {
+          document.getElementById("status").textContent = "Файл не из списка: " + file.name;
+          return;
         }
+        const reader = new FileReader();
+        reader.onload = function() { tables[file.name] = parseCsv(reader.result); render(); };
+        reader.readAsText(file, "utf-8");
       });
     }
-
-    const dropEl = document.getElementById('drop');
-    dropEl.addEventListener('dragover', event => {
-      event.preventDefault();
-      dropEl.className = 'drop over';
+    
+    var drop = document.getElementById("drop");
+    drop.addEventListener("dragover", e => { e.preventDefault(); drop.className = "drop over"; });
+    drop.addEventListener("dragleave", () => drop.className = "drop");
+    drop.addEventListener("drop", e => {
+      e.preventDefault();
+      drop.className = "drop";
+      readFiles(e.dataTransfer.files);
     });
-    dropEl.addEventListener('dragleave', () => dropEl.className = 'drop');
-    dropEl.addEventListener('drop', event => {
-      event.preventDefault();
-      dropEl.className = 'drop';
-      readFiles(event.dataTransfer.files);
-    });
-    document.getElementById('files').addEventListener('change', () => readFiles(this.files));
-
+    document.getElementById("files").addEventListener("change", () => readFiles(this.files));
+    
     render();
-  }
-
   </script>
 </body>
 </html>

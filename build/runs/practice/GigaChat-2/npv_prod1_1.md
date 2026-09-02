@@ -35,7 +35,7 @@ function effectFlows(p) {
   return rows;
 }
 function calc() {
-  var p = {}; FIELDS.forEach(function (f) { p[f[0]] = num(document.getElementById("f-" + f[0]).value); });
+  var p = { kind: "cohort" }; FIELDS.forEach(function (f) { p[f[0]] = num(document.getElementById("f-" + f[0]).value); });
   var rows = effectFlows(p);
   if (!rows || rows.length !== Math.round(p.horizon) + 1) { document.getElementById("status").textContent = "Функция effectFlows должна вернуть horizon + 1 строк"; return; }
   var pb = null, y1 = 0; rows.forEach(function (r) { if (r.t > 0 && pb === null && r.cum >= 0) pb = r.t; if (r.t >= 1 && r.t <= 12) y1 += r.income; });
@@ -72,24 +72,67 @@ calc();
 
 # ответ
 
-$$
-```html
+"""
 <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="utf-8">
   <title>Финансовая модель: Накопительный счёт: удержание закрываемых счетов</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 960px; margin: 24px auto; padding: 0 16px; color: #222 }
-    label { display: inline-block; margin: 0 14px 10px 0; font-size: 14px }
-    label span { display: block; color: #666; font-size: 12px }
-    input { font: inherit; padding: 5px 8px; width: 140px }
-    button { font: inherit; padding: 8px 16px; border: 0; border-radius: 8px; background: #2a9d5c; color: #fff; cursor: pointer }
-    .tile { display: inline-block; min-width: 220px; margin: 8px 16px 8px 0 }
-    .tile b { display: block; font-size: 26px }
-    table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 14px }
-    td, th { border-bottom: 1px solid #ddd; padding: 5px 8px; text-align: left }
-    #status { color: #b33 }
+    body{
+      font-family: Arial, sans-serif;
+      max-width: 960px;
+      margin: 24px auto;
+      padding: 0 16px;
+      color: #222
+    }
+    label{
+      display: inline-block;
+      margin: 0 14px 10px 0;
+      font-size: 14px
+    }
+    label span{
+      display: block;
+      color: #666;
+      font-size: 12px
+    }
+    input{
+      font: inherit;
+      padding: 5px 8px;
+      width: 140px
+    }
+    button{
+      font: inherit;
+      padding: 8px 16px;
+      border: 0;
+      border-radius: 8px;
+      background: #2a9d5c;
+      color: #fff;
+      cursor: pointer
+    }
+    .tile{
+      display: inline-block;
+      min-width: 220px;
+      margin: 8px 16px 8px 0
+    }
+    .tile b{
+      display: block;
+      font-size: 26px
+    }
+    table{
+      border-collapse: collapse;
+      width: 100%;
+      margin: 12px 0;
+      font-size: 14px
+    }
+    td, th{
+      border-bottom: 1px solid #ddd;
+      padding: 5px 8px;
+      text-align: left
+    }
+    #status{
+      color: #b33
+    }
   </style>
 </head>
 <body>
@@ -101,6 +144,7 @@ $$
   <div id="out"></div>
   <div id="chart"></div>
   <div id="tab"></div>
+
   <script>
     const FIELDS = [
       ["delta", "Изменение показателя в месяц, предотвращённых закрытий в месяц", 100],
@@ -113,99 +157,102 @@ $$
       ["horizon", "Горизонт, мес.", 24],
       ["rate", "Ставка дисконтирования, доля в год", 0.15]
     ];
-    document.getElementById("form").innerHTML =
+
+    document.getElementById('form').innerHTML =
       FIELDS.map(f => `<label>${f[1]}<span>${f[0]}</span><input id="f-${f[0]}" value="${f[2]}"></label>`).join('');
+
     function num(v) {
-      var n = parseFloat(String(v).replace(',', '.'));
+      let n = parseFloat(String(v).replace(',', '.'));
       return isNaN(n) ? 0 : n;
     }
+
     function money(x) {
-      var a = Math.abs(x),
+      const a = Math.abs(x),
         s = a >= 1e6 ? `${(a / 1e6).toFixed(2).replace('.', ',')} млн руб.` :
           Math.round(a).toString().replace(/B(?=(\d{3})+(?!\d))/g, ' ') + ' руб.';
-      return (x < 0 ? '−' : '') + s;
+      return (x < 0 ? '-' : '') + s;
     }
+
     function effectFlows(p) {
-      const rampShare = t => Math.min(t / p.ramp, 1);
-      const full = p.delta * p.volume;
-      let rows = [];
-      for (let t = 0; t <= p.horizon; t++) {
-        const rampShareK = k => rampShare(Math.max(1, t - p.keep + 1 + k));
-        const units = full * rampShareK.reduce((sum, k) => sum + rampShareK(k), 0);
-        const income = units * p.price;
-        const cost = t === 0 ? p.capex : p.opex;
-        const cf = income - cost;
-        const cum = rows.length > 0 ? rows[rows.length - 1].cum + cf : 0;
-        const cumDisc = cf / Math.pow(1 + Math.pow(1 + p.rate, 1 / 12) - 1, t);
-        rows.push({ t, income, cost, cf, cum, cumDisc });
-      }
+      const rows = [];
+      const m = (1 + p.rate)**(1/12) - 1,
+        full = p.delta * p.volume,
+        rampShare = (t) => Math.min(t / p.ramp, 1),
+        units = (t) =>
+          Array.from({ length: t }, (_, k) => rampShare(Math.max(1, t - p.keep + 1 + k)))
+            .reduce((acc, share) => acc + full * share, 0),
+        income = (t) => units(t) * p.price,
+        cost = (t) => t === 0 ? p.capex : p.opex,
+        cf = (t) => income(t) - cost(t),
+        cum = (t) => rows.slice(0, t + 1).reduce((acc, row) => acc + row.cf, 0),
+        cumDisc = (t) => cum(t) / (1 + m)**t;
+
+      for (let t = 0; t <= p.horizon; ++t)
+        rows.push({
+          t, income: income(t), cost: cost(t), cf: cf(t), cum: cum(t), cumDisc: cumDisc(t)
+        });
+
       return rows;
     }
+
     function calc() {
-      const p = {};
+      const p = { kind: 'cohort' };
       FIELDS.forEach(f => p[f[0]] = num(document.getElementById(`f-${f[0]}`).value));
       const rows = effectFlows(p);
       if (!rows || rows.length !== Math.round(p.horizon) + 1)
         document.getElementById('status').textContent = 'Функция effectFlows должна вернуть horizon + 1 строк';
       else {
-        const pb = rows.findIndex(r => r.t > 0 && r.cum >= 0);
-        const y1 = rows.slice(1, 13).reduce((acc, r) => acc + r.income, 0);
+        const pb = null, y1 = 0;
+        rows.forEach(row => row.t >= 1 && row.t <= 12 && (y1 += row.income));
+        const npv = rows[rows.length - 1].cumDisc;
         document.getElementById('status').textContent = '';
-        document.getElementById('out').innerHTML =
-          '<div class="tile"><b>' + money(y1) + '</b> Доход за первый год</div>'
-          + '<div class="tile"><b>' + (pb === -1 ? 'не достигается' : `месяц ${pb + 1}`) + '</b> Окупаемость</div>'
-          + '<div class="tile"><b>' + money(rows[rows.length - 1].cumDisc) + '</b> NPV за ' + Math.round(p.horizon) + ' мес.</div>';
+        document.getElementById('out').innerHTML = `
+          <div class="tile"><b>${money(y1)}</b>Доход за первый год</div>
+          <div class="tile"><b>${
+            pb === null ? 'не достигается' : `месяц ${pb}`
+          }</b>Окупаемость</div>
+          <div class="tile"><b>${money(npv)}</b>NPV за ${Math.round(p.horizon)} мес.</div>
+        `;
         const tab = '<table><tr><th>Мес.</th><th>Доход</th><th>Затраты</th><th>Поток</th><th>Накопленный</th><th>Накопленный дисконтированный</th></tr>';
         rows.forEach(row => tab += `<tr><td>${row.t}</td><td>${money(row.income)}</td><td>${money(row.cost)}</td><td>${money(row.cf)}</td><td>${money(row.cum)}</td><td>${money(row.cumDisc)}</td></tr>`);
         document.getElementById('tab').innerHTML = tab + '</table>';
         drawChart(rows, pb, Math.round(p.horizon));
       }
     }
+
     function drawChart(rows, pb, H) {
-      const W = 960,
-        HH = 340,
-        L = 80,
-        R = 30,
-        T = 20,
-        B = 40,
-        pw = W - L - R,
-        ph = HH - T - B,
-        mx = Math.max(...rows.map(r => r.cum)),
-        mn = Math.min(...rows.map(r => r.cum));
-      if (mx === mn) { mx = 1; mn = -1; }
-      const y = v => T + ph * (mx - v) / (mx - mn),
-        x = t => L + pw * t / H,
-        bw = Math.max(3, pw / (H + 1) * 0.34);
-      const s = `
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${HH}" width="100%" font-family="Arial">
-          <rect width="${W}" height="${HH}" fill="#fff"/>
-          <line x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}" stroke="#999"/>
-          ${rows.map(r =>
-            r.income > 0 ?
-              `<rect x="${x(r.t) - bw}" y="${y(r.income)}" width="${bw}" height="${y(0) - y(r.income)}" fill="#2a9d5c" fill-opacity="0.5"/>`
-            : ''
-          ).filter(Boolean).join('')}
-          ${rows.map(r =>
-            r.cost > 0 ?
-              `<rect x="${x(r.t)}" y="${y(0)}" width="${bw}" height="${y(-r.cost) - y(0)}" fill="#555" fill-opacity="0.4"/>`
-            : ''
-          ).filter(Boolean).join('')}
-          <path d="${rows.map((r, i) => (i ? 'L' : 'M') + x(r.t).toFixed(1) + ' ' + y(r.cum).toFixed(1)).join('')} fill="none" stroke="#1e7a47" stroke-width="3"/>
-          <path d="${rows.map((r, i) => (i ? 'L' : 'M') + x(r.t).toFixed(1) + ' ' + y(r.cumDisc).toFixed(1)).join('')} fill="none" stroke="#1e7a47" stroke-width="2" stroke-dasharray="6 5"/>
-          ${pb !== null ? `<line x1="${x(pb)}" x2="${x(pb)}" y1="${T}" y2="${T + ph}" stroke="#c33" stroke-dasharray="4 4"
-            <text x="${x(pb) + 6}" y="${T + 14}" font-size="13" fill="#c33">окупаемость: месяц ${pb}</text>` : ''}
-          ${Array.from(Array(H + 1).keys()).map(i => i % 3 === 0 ? `<text x="${x(i)}" y="${HH - 14}" font-size="12" text-anchor="middle">${i}</text>` : '')
-            .filter(Boolean).join('')}
-          <text x="${L - 6}" y="${y(mx) + 12}" font-size="12" text-anchor="end">${money(mx)}</text>
-          <text x="${L - 6}" y="${y(mn)}" font-size="12" text-anchor="end">${money(mn)}</text>
-        </svg>`;
+      const W = 960, HH = 340, L = 80, R = 30, T = 20, B = 40, pw = W - L - R, ph = HH - T - B,
+        mx = Math.max(...rows.map(r => r.cum)), mn = Math.min(...rows.map(r => r.cum)),
+        y = v => T + ph * (mx - v) / (mx - mn), x = t => L + pw * t / H, bw = Math.max(3, pw / (H + 1) * 0.34);
+
+      const s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${HH}" width="100%" font-family="Arial">
+        <rect width="${W}" height="${HH}" fill="#fff"/>
+        <line x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}" stroke="#999"/>
+        ${rows.map(row => {
+          const cx = x(row.t);
+          if (row.income > 0)
+            return `<rect x="${cx - bw}" y="${y(row.income)}" width="${bw}" height="${y(0) - y(row.income)}" fill="#2a9d5c" fill-opacity="0.5"/>`;
+          if (row.cost > 0)
+            return `<rect x="${cx}" y="${y(0)}" width="${bw}" height="${y(-row.cost) - y(0)}" fill="#555" fill-opacity="0.4"/>`;
+        }).join('')}
+        <path d="${rows.map((row, idx) => (idx ? 'L' : 'M') + x(row.t).toFixed(1) + ' ' + y(row.cum).toFixed(1)).join('')}"
+              fill="none" stroke="#1e7a47" stroke-width="3"/>
+        <path d="${rows.map((row, idx) => (idx ? 'L' : 'M') + x(row.t).toFixed(1) + ' ' + y(row.cumDisc).toFixed(1)).join('')}"
+              fill="none" stroke="#1e7a47" stroke-width="2" stroke-dasharray="6 5"/>
+        ${pb !== null ? `<line x1="${x(pb)}" x2="${x(pb)}" y1="${T}" y2="${T + ph}" stroke="#c33" stroke-dasharray="4 4"
+                         /><text x="${x(pb) + 6}" y="${T + 14}" font-size="13" fill="#c33">окупаемость: месяц ${pb}</text>` : ''}
+        ${Array.from({length: H}, (_, t) => t % 3 === 0).map(t => `<text x="${x(t)}" y="${HH - 14}" font-size="12" text-anchor="middle">${t}</text>`).join('')}
+        <text x="${L - 6}" y="${y(mx) + 12}" font-size="12" text-anchor="end">${money(mx)}</text>
+        <text x="${L - 6}" y="${y(mn)}" font-size="12" text-anchor="end">${money(mn)}</text>
+      </svg>`;
       document.getElementById('chart').innerHTML = s;
     }
+
     document.getElementById('calc').onclick = calc;
     document.getElementById('save').onclick = () => {
       const svg = document.querySelector('#chart svg');
       if (!svg) return;
-      const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml;charset=utf-8' });
+      const blob = new Blob([new XMLSerializer().serializeToString(svg)], {type: 'image/svg+xml;charset=utf-8'});
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = 'npv.svg';
@@ -214,8 +261,8 @@ $$
       document.body.removeChild(a);
     };
     calc();
+  }
   </script>
 </body>
 </html>
-``` 
-$$
+"""

@@ -47,14 +47,17 @@ function parseCsv(text) {
     for (var j = 0; j < head.length; j++) { var v = (cells[j] || "").trim(); var n = parseFloat(v.replace(",", ".")); row[head[j]] = (v !== "" && !isNaN(n)) ? n : v; }
     rows.push(row);
   }
+  if (head.length === 2 && head[0] === "параметр") { var wide = {}; rows.forEach(function (r) { wide[r["параметр"]] = r["значение"]; }); rows.forEach(function (r) { for (var k in wide) if (r[k] === undefined) r[k] = wide[k]; }); }
   return rows;
 }
+if (!Number.prototype.replace) Number.prototype.replace = function () { return String(this); };
 function computeInputs(tables) {
   // closures — Закрытия счетов в месяц (счетов в месяц): среднее значение столбца закрытые_счета за последние 12 строк (месяцев)
   var closures = null; // ЗАПОЛНИТЬ по описанию выше из tables["closures_dm.csv"]
   // linked — Доля закрытий после обращения (доля от 0 до 1): сумма столбца закрытий_после_обращения ÷ сумма столбца закрытых_счетов_всего по всем строкам
   var linked = null; // ЗАПОЛНИТЬ по описанию выше из tables["linked_crm.csv"]
   // margin — Маржа на счёт в месяц (руб.): средний_остаток_тыс_руб × 1000 × маржа_проц_годовых ÷ 100 ÷ 12
+  // файл margin_fin.csv — таблица параметр;значение: значение параметра — tables["margin_fin.csv"][0]["имя_параметра"]
   var margin = null; // ЗАПОЛНИТЬ по описанию выше из tables["margin_fin.csv"]
   return { closures: closures, linked: linked, margin: margin };
 }
@@ -130,27 +133,28 @@ function parseCsv(text) {
     for (var j = 0; j < head.length; j++) { var v = (cells[j] || "").trim(); var n = parseFloat(v.replace(",", ".")); row[head[j]] = (v !== "" && !isNaN(n)) ? n : v; }
     rows.push(row);
   }
+  if (head.length === 2 && head[0] === "параметр") { var wide = {}; rows.forEach(function (r) { wide[r["параметр"]] = r["значение"]; }); rows.forEach(function (r) { for (var k in wide) if (r[k] === undefined) r[k] = wide[k]; }); }
   return rows;
 }
+if (!Number.prototype.replace) Number.prototype.replace = function () { return String(this); };
 function computeInputs(tables) {
   // closures — Закрытия счетов в месяц (счетов в месяц): среднее значение столбца закрытые_счета за последние 12 строк (месяцев)
-  var closuresTable = tables["closures_dm.csv"];
-  var closuresRows = closuresTable.slice(-12);
-  var sumClosures = closuresRows.reduce((sum, row) => sum + row["закрытые_счета"], 0);
-  var closures = sumClosures / Math.min(closuresRows.length, 12);
+  var closuresRows = tables["closures_dm.csv"] || [], last12 = closuresRows.slice(-12);
+  var sumClosedAccounts = last12.reduce((sum, row) => sum + row["закрытые_счета"], 0);
+  var closures = (last12.length > 0) ? sumClosedAccounts / last12.length : null;
   
   // linked — Доля закрытий после обращения (доля от 0 до 1): сумма столбца закрытий_после_обращения ÷ сумма столбца закрытых_счетов_всего по всем строкам
-  var linkedTable = tables["linked_crm.csv"];
-  var totalClosedAfterContact = linkedTable.reduce((sum, row) => sum + row["закрытий_после_обращения"], 0);
-  var totalClosedAccounts = linkedTable.reduce((sum, row) => sum + row["закрытых_счетов_всего"], 0);
-  var linked = totalClosedAfterContact / totalClosedAccounts;
+  var linkedRows = tables["linked_crm.csv"] || [], totalClosedAfterContact = linkedRows.reduce((sum, row) => sum + row["закрытий_после_обращения"], 0),
+      totalClosedAll = linkedRows.reduce((sum, row) => sum + row["закрытых_счетов_всего"], 0);
+  var linked = (totalClosedAll > 0) ? totalClosedAfterContact / totalClosedAll : null;
   
   // margin — Маржа на счёт в месяц (руб.): средний_остаток_тыс_руб × 1000 × маржа_проц_годовых ÷ 100 ÷ 12
-  var marginTable = tables["margin_fin.csv"];
-  var avgBalance = marginTable.find(row => row["параметр"] == "средний_остаток_тыс_руб")["значение"];
-  var annualMarginRate = marginTable.find(row => row["параметр"] == "маржа_проц_годовых")["значение"];
-  var accountLifetimeMonths = marginTable.find(row => row["параметр"] == "срок_жизни_счёта_мес")["значение"];
-  var margin = avgBalance * 1000 * annualMarginRate / 100 / 12;
+  var marginRow = tables["margin_fin.csv"] && tables["margin_fin.csv"].length > 0 ? tables["margin_fin.csv"][0] : {},
+      avgBalanceThousandRubles = marginRow["средний_остаток_тыс_руб"],
+      annualMarginPercent = marginRow["маржа_проц_годовых"];
+  var margin = (avgBalanceThousandRubles && annualMarginPercent) 
+               ? avgBalanceThousandRubles * 1000 * annualMarginPercent / 100 / 12 
+               : null;
   
   return { closures: closures, linked: linked, margin: margin };
 }

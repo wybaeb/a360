@@ -35,7 +35,7 @@ function effectFlows(p) {
   return rows;
 }
 function calc() {
-  var p = {}; FIELDS.forEach(function (f) { p[f[0]] = num(document.getElementById("f-" + f[0]).value); });
+  var p = { kind: "cohort" }; FIELDS.forEach(function (f) { p[f[0]] = num(document.getElementById("f-" + f[0]).value); });
   var rows = effectFlows(p);
   if (!rows || rows.length !== Math.round(p.horizon) + 1) { document.getElementById("status").textContent = "Функция effectFlows должна вернуть horizon + 1 строк"; return; }
   var pb = null, y1 = 0; rows.forEach(function (r) { if (r.t > 0 && pb === null && r.cum >= 0) pb = r.t; if (r.t >= 1 && r.t <= 12) y1 += r.income; });
@@ -72,188 +72,156 @@ calc();
 
 # ответ
 
-**"»​<!DOCTYPE html>  
-<html lang="ru">  
-<head>  
-  <meta charset="utf-8">  
-  <title>Финансовая модель: Накопительный счёт: удержание закрываемых счетов</title>  
-  <style>  
-    body {  
-      font-family: Arial, sans-serif;  
-      max-width: 960px;  
-      margin: 24px auto;  
-      padding: 0 16px;  
-      color: #222;  
-    }  
-    label {  
-      display: inline-block;  
-      margin: 0 14px 10px 0;  
-      font-size: 14px;  
-    }  
-    label span {  
-      display: block;  
-      color: #666;  
-      font-size: 12px;  
-    }  
-    input {  
-      font: inherit;  
-      padding: 5px 8px;  
-      width: 140px;  
-    }  
-    button {  
-      font: inherit;  
-      padding: 8px 16px;  
-      border: 0;  
-      border-radius: 8px;  
-      background: #2a9d5c;  
-      color: #fff;  
-      cursor: pointer;  
-    }  
-    .tile {  
-      display: inline-block;  
-      min-width: 220px;  
-      margin: 8px 16px 8px 0;  
-    }  
-    .tile b {  
-      display: block;  
-      font-size: 26px;  
-    }  
-    table {  
-      border-collapse: collapse;  
-      width: 100%;  
-      margin: 12px 0;  
-      font-size: 14px;  
-    }  
-    td, th {  
-      border-bottom: 1px solid #ddd;  
-      padding: 5px 8px;  
-      text-align: left;  
-    }  
-    #status {  
-      color: #b33;  
-    }  
-  </style>  
-</head>  
-<body>  
-  <h1>Финансовая модель эффекта: Накопительный счёт: удержание закрываемых счетов</h1>  
-  <div id="form"></div>  
-  <button type="button" id="calc">Рассчитать</button>  
-  <button type="button" id="save">Сохранить SVG</button>  
-  <p id="status"></p>  
-  <div id="out"></div>  
-  <div id="chart"></div>  
-  <div id="tab"></div>  
-  <script>  
-    var FIELDS = [[ "delta", "Изменение показателя в месяц, предотвращённых закрытий в месяц", 100 ],  
-                  [ "volume", "Объём, —", 1 ],  
-                  [ "price", "Стоимость единицы, руб. в месяц", 550 ],  
-                  [ "ramp", "Выход на полный уровень, мес.", 3 ],  
-                  [ "keep", "Срок сохранения эффекта, мес.", 12 ],  
-                  [ "capex", "Единовременные затраты, руб.", 600000 ],  
-                  [ "opex", "Ежемесячные затраты, руб.", 50000 ],  
-                  [ "horizon", "Горизонт, мес.", 24 ],  
-                  [ "rate", "Ставка дисконтирования, доля в год", 0.15 ] ];  
-    document.getElementById("form").innerHTML = FIELDS.map(function(f) {  
-      return "<label>" + f[1] + "<span>" + f[0] + "</span><input id=\"f-" + f[0] + "\" value=\"" + f[2] + "\"></label>";  
-    }).join("");  
-    function num(v) {  
-      var n = parseFloat(String(v).replace(",", "."));  
-      return isNaN(n) ? 0 : n;  
-    }  
-    function money(x) {  
-      var a = Math.abs(x),  
-          s = a >= 1e6 ? (a / 1e6).toFixed(2).replace(".", ",") + " млн руб." :  
-               Math.round(a).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " руб.";  
-      return (x < 0 ? "−" : "") + s;  
-    }  
-    function effectFlows(p) {  
-      // --- ЗАПОЛНЕНИЕ ПО ФОРМУЛАМ:   
-      var rows = [];  
-      var m = (1 + p.rate)**(1/12) - 1;  
-      for (var t = 0; t <= p.horizon; t++) {  
-        var rampShare = Math.min(t/p.ramp, 1);  
-        var full = p.delta * p.volume;  
-        var units = 0;  
-        for (var k = Math.max(1, t - p.keep + 1); k <= t; k++) {  
-          units += full * rampShare * k;  
-        }  
-        var income = units * p.price;  
-        var cost = (t == 0 ? p.capex : p.opex);  
-        var cf = income - cost;  
-        var cum = (t > 0 ? rows[t-1].cum : 0) + cf;  
-        var cumDisc = (t > 0 ? rows[t-1].cum_disc : 0) + cf/(1+m)**t;  
-        rows.push({ t: t, income: income, cost: cost, cf: cf, cum: cum, cum_disc: cumDisc });  
-      }  
-      return rows;  
-    }  
-    function calc() {  
-      var p = {};  
-      FIELDS.forEach(function(f) { p[f[0]] = num(document.getElementById("f-" + f[0]).value); });  
-      var rows = effectFlows(p);  
-      if (!rows || rows.length !== Math.round(p.horizon) + 1) {  
-        document.getElementById("status").textContent = "Функция effectFlows должна вернуть horizon + 1 строк";  
-        return;  
-      }  
-      var pb = null, y1 = 0;  
-      rows.forEach(function(r) {  
-        if (r.t > 0 && pb === null && r.cum >= 0)  
-          pb = r.t;  
-        if (r.t >= 1 && r.t <= 12)  
-          y1 += r.income;  
-      });  
-      var npv = rows[rows.length - 1].cum_disc;  
-      document.getElementById("status").textContent = "";  
-      document.getElementById("out").innerHTML =  
-        "<div class=tile><b>" + money(y1) + "</b>Доход за первый год</div>" +  
-        "<div class=tile><b>" + (pb === null ? "не достигается" : "месяц " + pb) + "</b>Окупаемость</div>" +  
-        "<div class=tile><b>" + money(npv) + "</b>NPV за " + Math.round(p.horizon) + " мес.</div>";  
-      var t = "<table><tr><th>Мес.</th><th>Доход</th><th>Затраты</th><th>Поток</th><th>Накопленный</th><th>Накопленный дисконтированный</th></tr>";  
-      rows.forEach(function(r) {  
-        t += "<tr><td>" + r.t + "</td><td>" + money(r.income) + "</td><td>" + money(r.cost) + "</td><td>" + money(r.cf) + "</td><td>" + money(r.cum) + "</td><td>" + money(r.cum_disc) + "</td></tr>";  
-      });  
-      document.getElementById("tab").innerHTML = t + "</table>";  
-      drawChart(rows, pb, Math.round(p.horizon));  
-    }  
-    function drawChart(rows, pb, H) {  
-      var W = 960, HH = 340, L = 80, R = 30, T = 20, B = 40, pw = W - L - R, ph = HH - T - B, mx = 0, mn = 0;  
-      rows.forEach(function(r) { mx = Math.max(mx, r.cum, r.income); mn = Math.min(mn, r.cum, -r.cost); });  
-      if (mx === mn) { mx = 1; mn = -1; }  
-      var y = function(v) { return T + ph * (mx - v) / (mx - mn); };  
-      var x = function(t) { return L + pw * t / H; };  
-      var bw = Math.max(3, pw / (H + 1) * 0.34);  
-      var s = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 " + W + " " + HH + "\" width=\"100%\" font-family=\"Arial\"><rect width=\"" + W + "\" height=\"" + HH + "\" fill=\"#fff\"/>"  
-              + "<line x1=\"" + L + "\" x2=\"" + (W - R) + "\" y1=\"" + y(0) + "\" y2=\"" + y(0) + "\" stroke=\"#999\"/>"  
-              + rows.map(function(r) {  
-                if (r.income > 0)  
-                  s += "<rect x=\"" + (x(r.t) - bw) + "\" y=\"" + y(r.income) + "\" width=\"" + bw + "\" height=\"" + (y(0) - y(r.income)) + "\" fill=\"#2a9d5c\" fill-opacity=\"0.5\"/>";  
-                if (r.cost > 0)  
-                  s += "<rect x=\"" + x(r.t) + "\" y=\"" + y(0) + "\" width=\"" + bw + "\" height=\"" + (y(-r.cost) - y(0)) + "\" fill=\"#555\" fill-opacity=\"0.4\"/>";  
-              }).join("")  
-              + "<path d=\"" + rows.map(function(r, i) { return (i ? "L" : "M") + x(r.t).toFixed(1) + " " + y(r.cum).toFixed(1); }).join(" ") + "\" fill=\"none\" stroke=\"#1e7a47\" stroke-width=\"3\"/>"  
-              + "<path d=\"" + rows.map(function(r, i) { return (i ? "L" : "M") + x(r.t).toFixed(1) + " " + y(r.cum_disc).toFixed(1); }).join(" ") + "\" fill=\"none\" stroke=\"#1e7a47\" stroke-width=\"2\" stroke-dasharray=\"6 5\"/"  
-              + (pb !== null ? ("<line x1=\"" + x(pb) + "\" x2=\"" + x(pb) + "\" y1=\"" + T + "\" y2=\"" + (T + ph) + "\" stroke=\"#c33\" stroke-dasharray=\"4 4\"/>" + "<text x=\"" + (x(pb) + 6) + "\" y=\"" + (T + 14) + "\" font-size=\"13\" fill=\"#c33\">окупаемость: месяц " + pb + "</text>") : "")  
-              + "<text x=\"" + (L - 6) + "\" y=\"" + (y(mx) + 12) + "\" font-size=\"12\" text-anchor=\"end\">" + money(mx) + "</text>"  
-              + "<text x=\"" + (L - 6) + "\" y=\"" + y(mn) + "\" font-size=\"12\" text-anchor=\"end\">" + money(mn) + "</text>"  
-              + "<text x=\"" + (L + pw / 2) + "\" y=\"" + (HH - 14) + "\" font-size=\"12\" text-anchor=\"middle\">" + "Года" + "</text>"  
-              + "<text x=\"" + (L + pw / 2) + "\" y=\"" + (HH - 28) + "\" font-size=\"12\" text-anchor=\"middle\">" + "NPV" + "</text>"  
-              + "<text x=\"" + (L + pw / 2) + "\" y=\"" + (HH - 42) + "\" font-size=\"12\" text-anchor=\"middle\">" + "Дисконтированный доход" + "</text>"  
-              + "</svg>";  
-      document.getElementById("chart").innerHTML = s;  
-    }  
-    document.getElementById("calc").onclick = calc;  
-    document.getElementById("save").onclick = function() {  
-      var svg = document.querySelector("#chart svg");  
-      if (!svg) return;  
-      var blob = new Blob([new XMLSerializer().serializeToString(svg)], {type: "image/svg+xml;charset=utf-8"});  
-      var a = document.createElement("a");  
-      a.href = URL.createObjectURL(blob);  
-      a.download = "npv.svg";  
-      document.body.appendChild(a);  
-      a.click();  
-      document.body.removeChild(a);  
-    }  
-    calc();  
-  }  
-</script>  
-</body>  
-</html>»**
+$$
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Финансовая модель: Накопительный счёт: удержание закрываемых счетов</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 960px; margin: 24px auto; padding: 0 16px; color: #222 }
+    label { display: inline-block; margin: 0 14px 10px 0; font-size: 14px }
+    label span { display: block; color: #666; font-size: 12px }
+    input { font: inherit; padding: 5px 8px; width: 140px }
+    button { font: inherit; padding: 8px 16px; border: 0; border-radius: 8px; background: #2a9d5c; color: #fff; cursor: pointer }
+    .tile { display: inline-block; min-width: 220px; margin: 8px 16px 8px 0 }
+    .tile b { display: block; font-size: 26px }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 14px }
+    td, th { border-bottom: 1px solid #ddd; padding: 5px 8px; text-align: left }
+    #status { color: #b33 }
+  </style>
+</head>
+<body>
+  <h1>Финансовая модель эффекта: Накопительный счёт: удержание закрываемых счетов</h1>
+  <div id="form"></div>
+  <button type="button" id="calc">Рассчитать</button> 
+  <button type="button" id="save">Сохранить SVG</button>
+  <p id="status"></p>
+  <div id="out"></div>
+  <div id="chart"></div>
+  <div id="tab"></div>
+  <script>
+    const FIELDS = [
+      ["delta", "Изменение показателя в месяц, предотвращённых закрытий в месяц", 100],
+      ["volume", "Объём, —", 1],
+      ["price", "Стоимость единицы, руб. в месяц", 550],
+      ["ramp", "Выход на полный уровень, мес.", 3],
+      ["keep", "Срок сохранения эффекта, мес.", 12],
+      ["capex", "Единовременные затраты, руб.", 600000],
+      ["opex", "Ежемесячные затраты, руб.", 50000],
+      ["horizon", "Горизонт, мес.", 24],
+      ["rate", "Ставка дисконтирования, доля в год", 0.15]
+    ];
+    document.getElementById("form").innerHTML =
+      FIELDS.map(f => `<label>${f[1]}<span>${f[0]}</span><input id="f-${f[0]}" value="${f[2]}"></label>`).join('');
+    function num(v) {
+      let n = parseFloat(String(v).replace(',', '.'));
+      return isNaN(n) ? 0 : n;
+    }
+    function money(x) {
+      let a = Math.abs(x),
+        s = a >= 1e6 ? `${(a / 1e6).toFixed(2).replace('.', ',')} млн руб.` : Math.round(a)
+          .toString()
+          .replace(/B(?=(\d{3})+(?!\d))/g, ' ') + ' руб.';
+      return (x < 0 ? '-' : '') + s;
+    }
+    function effectFlows(p) {
+      const rampShare = t => Math.min(t / p.ramp, 1);
+      const full = p.delta * p.volume;
+      const units = t => {
+        let sum = 0;
+        for (let k = Math.max(1, t - p.keep + 1); k <= t; k++) sum += full * rampShare(k);
+        return sum;
+      };
+      const income = t => units(t) * p.price;
+      const cost = t => t >= 1 ? p.opex : p.capex;
+      const cf = t => income(t) - cost(t);
+      const cum = t => {
+        let acc = 0;
+        for (let i = 0; i <= t; i++) acc += cf(i);
+        return acc;
+      };
+      const cumDisc = t => {
+        let m = Math.pow(1 + p.rate, 1 / 12) - 1;
+        let acc = 0;
+        for (let i = 0; i <= t; i++) acc += cf(i) / Math.pow(1 + m, i);
+        return acc;
+      };
+      const rows = Array.from({ length: p.horizon + 1 }, (_, t) => ({
+        t,
+        income: income(t),
+        cost: cost(t),
+        cf: cf(t),
+        cum: cum(t),
+        cum_disc: cumDisc(t)
+      }));
+      return rows;
+    }
+    function calc() {
+      const p = { kind: 'cohort' };
+      FIELDS.forEach((f) => { p[f[0]] = num(document.getElementById(`f-${f[0]}`).value); });
+      const rows = effectFlows(p);
+      if (!rows || rows.length !== Math.round(p.horizon) + 1) {
+        document.getElementById('status').textContent = 'Функция effectFlows должна вернуть horizon + 1 строк';
+        return;
+      }
+      let pb = null, y1 = 0;
+      rows.forEach((r) => {
+        if (r.t > 0 && pb === null && r.cum >= 0) pb = r.t;
+        if (r.t >= 1 && r.t <= 12) y1 += r.income;
+      });
+      const npv = rows[rows.length - 1].cum_disc;
+      document.getElementById('status').textContent = '';
+      document.getElementById('out').innerHTML = `
+        <div class="tile"><b>${money(y1)}</b>Доход за первый год</div>
+        <div class="tile"><b>${pb === null ? 'не достигается' : `месяц ${pb}`}</b>Окупаемость</div>
+        <div class="tile"><b>${money(npv)}</b>NPV за ${Math.round(p.horizon)} мес.</div>
+      `;
+      const t = '<table><tr><th>Мес.</th><th>Доход</th><th>Затраты</th><th>Поток</th><th>Накопленный</th><th>Накопленный дисконтированный</th></tr>';
+      rows.forEach((r) => {
+        t += `<tr><td>${r.t}</td><td>${money(r.income)}</td><td>${money(r.cost)}</td><td>${money(r.cf)}</td><td>${money(r.cum)}</td><td>${money(r.cum_disc)}</td></tr>`;
+      });
+      document.getElementById('tab').innerHTML = t + '</table>';
+      drawChart(rows, pb, Math.round(p.horizon));
+    }
+    function drawChart(rows, pb, H) {
+      const W = 960, HH = 340, L = 80, R = 30, T = 20, B = 40, pw = W - L - R, ph = HH - T - B, mx = 0, mn = 0;
+      rows.forEach(r => { mx = Math.max(mx, r.cum, r.income); mn = Math.min(mn, r.cum, -r.cost); });
+      if (mx === mn) { mx = 1; mn = -1; }
+      const y = v => T + ph * (mx - v) / (mx - mn), x = t => L + pw * t / H;
+      const bw = Math.max(3, pw / (H + 1) * 0.34);
+      let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${HH}" width="100%" font-family="Arial"><rect width="${W}" height="${HH}" fill="#fff"/>`;
+      s += `<line x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}" stroke="#999"/>\n`;
+      rows.forEach(r => {
+        const cx = x(r.t);
+        if (r.income > 0) s += `<rect x="${cx - bw}" y="${y(r.income)}" width="${bw}" height="${y(0) - y(r.income)}" fill="#2a9d5c" fill-opacity="0.5"/>`;
+        if (r.cost > 0) s += `<rect x="${cx}" y="${y(0)}" width="${bw}" height="${y(-r.cost) - y(0)}" fill="#555" fill-opacity="0.4"/>`;
+      });
+      s += `<path d="${rows.map((r, i) => (i ? 'L' : 'M') + x(r.t).toFixed(1) + ' ' + y(r.cum).toFixed(1)).join(' ')}" fill="none" stroke="#1e7a47" stroke-width="3"/>`;
+      s += `<path d="${rows.map((r, i) => (i ? 'L' : 'M') + x(r.t).toFixed(1) + ' ' + y(r.cum_disc).toFixed(1)).join(' ')}" fill="none" stroke="#1e7a47" stroke-width="2" stroke-dasharray="6 5"/>`;
+      if (pb !== null) s += `<line x1="${x(pb)}" x2="${x(pb)}" y1="${T}" y2="${T + ph}" stroke="#c33" stroke-dasharray="4 4"/>
+        <text x="${x(pb) + 6}" y="${T + 14}" font-size="13" fill="#c33">окупаемость: месяц ${pb}</text>`;
+      for (let t = 0; t <= H; t += 3) s += `<text x="${x(t)}" y="${HH - 14}" font-size="12" text-anchor="middle">${t}</text>`;
+      s += `<text x="${L - 6}" y="${y(mx) + 12}" font-size="12" text-anchor="end">${money(mx)}</text>
+        <text x="${L - 6}" y="${y(mn)}" font-size="12" text-anchor="end">${money(mn)}</text>`;
+      document.getElementById('chart').innerHTML = s + '</svg>';
+    }
+    document.getElementById('calc').onclick = calc;
+    document.getElementById('save').onclick = () => {
+      const svg = document.querySelector('#chart svg');
+      if (!svg) return;
+      const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'npv.svg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    };
+    calc();
+  </script>
+</body>
+</html>
+```  
+$$

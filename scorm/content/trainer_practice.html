@@ -535,6 +535,7 @@ a.fn:hover{border:0;text-decoration:underline}
     L.push('  return rows;');
     L.push('}');
     L.push('if (!Number.prototype.replace) Number.prototype.replace = function () { return String(this); };');
+    L.push('if (typeof FileList !== "undefined" && !FileList.prototype.forEach) FileList.prototype.forEach = Array.prototype.forEach;');
     L.push('function computeInputs(tables) {');
     rows.forEach(function (r, i) {
       L.push('  // ' + r.input.id + ' — ' + r.input.name + ' (' + r.input.unit + '): ' + r.source.calc);
