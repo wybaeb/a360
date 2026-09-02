@@ -349,21 +349,24 @@ function renderFrame(){var v=V(),h='';FRAME.forEach(function(f){h+='<dt>'+f[1]+'
 
 // ── шаг 2: дерево и источники ────────────────────────────────────────────
 function tx(x,y,t,fs,w,f,a,o){return '<text x="'+x+'" y="'+y+'" font-size="'+fs+'"'+(w?' font-weight="'+w+'"':'')+' fill="'+f+'"'+(a?' text-anchor="'+a+'"':'')+(o?' fill-opacity="'+o+'"':'')+'>'+esc(t)+'</text>'}
-function wrap(t,n){var w=String(t).split(' '),out=[],c='';w.forEach(function(x){if((c+' '+x).trim().length>n){out.push(c.trim());c=x}else c+=' '+x});if(c.trim())out.push(c.trim());return out.slice(0,3)}
-function box(x,y,w,h,t,sub,fill,stroke,dash,fs){var o='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="10" fill="'+fill+'" stroke="'+stroke+'" stroke-width="2"'+(dash?' stroke-dasharray="6 4"':'')+'/>';
-  var lines=wrap(t,Math.floor(w/((fs||13)*0.58)));lines.forEach(function(l,i){o+=tx(x+w/2,y+20+i*15-(lines.length-1)*7,l,fs||13,'700','#2E3641','middle')});
-  if(sub)o+=tx(x+w/2,y+h-9,sub,10.5,null,'#2E3641','middle',0.7);return o}
+function wrap(t,n,max){var w=String(t).split(' '),out=[],c='';w.forEach(function(x){if((c+' '+x).trim().length>n&&c){out.push(c.trim());c=x}else c+=' '+x});if(c.trim())out.push(c.trim());return out.slice(0,max||3)}
+function box(x,y,w,h,t,sub,fill,stroke,dash,fs){fs=fs||13;var o='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="10" fill="'+fill+'" stroke="'+stroke+'" stroke-width="2"'+(dash?' stroke-dasharray="6 4"':'')+'/>';
+  // текст центрируется по вертикали в части ячейки над строкой подписи
+  var lh=fs*1.22,lines=wrap(t,Math.floor((w-16)/(fs*0.56)),4),subH=sub?16:0,avail=h-subH,block=lines.length*lh;
+  var y0=y+(avail-block)/2+lh*0.8;
+  lines.forEach(function(l,i){o+=tx(x+w/2,(y0+i*lh).toFixed(1),l,fs,'700','#2E3641','middle')});
+  if(sub)o+=tx(x+w/2,y+h-7,sub,10.5,null,'#2E3641','middle',0.7);return o}
 function treeSvg(v,chosen,forSlide){
-  var W=960,H=330,s=[],n=v.inputs.length,colW=W/n;
+  var W=960,H=346,s=[],n=v.inputs.length,colW=W/n;
   s.push('<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" font-family="'+(forSlide?'system-ui,Segoe UI,Roboto,Arial,sans-serif':'inherit')+'">');
-  s.push(box(W/2-190,16,380,64,v.metric.name,v.metric.unit+' · '+v.metric.formula,'#e4ecf9','#1b5fa8',false,14));
+  s.push(box(W/2-230,16,460,64,v.metric.name,v.metric.unit+' · '+v.metric.formula,'#e4ecf9','#1b5fa8',false,14));
   v.inputs.forEach(function(inp,i){var cx=colW*i+colW/2,bw=Math.min(240,colW-24);
     s.push('<line x1="'+(W/2)+'" y1="80" x2="'+cx+'" y2="118" stroke="#1b5fa8" stroke-width="2" stroke-opacity="0.7"/>');
     s.push(box(cx-bw/2,118,bw,58,inp.name,inp.unit,'#e3f2ea','#20BA72',false,12.5));
     inp.sources.forEach(function(src,j){var on=chosen[inp.id]===src.id,sw=bw/2-6,sx=cx-bw/2+j*(sw+12);
       s.push('<line x1="'+cx+'" y1="176" x2="'+(sx+sw/2)+'" y2="222" stroke="'+(on?'#20BA72':'#2E3641')+'" stroke-width="'+(on?2.5:1)+'" stroke-opacity="'+(on?0.9:0.3)+'"/>');
-      s.push(box(sx,222,sw,84,src.name,src.days+' дн. · '+(src.cost?C.fi(src.cost)+' руб.':'0 руб.'),on?'#fff':'#f4f8f6',on?'#20BA72':'#c9d3cd',!on,11));
-      if(on)s.push(tx(sx+sw/2,318,'выбран',10.5,'700','#128a53','middle'));
+      s.push(box(sx,222,sw,98,src.name,src.days+' дн. · '+(src.cost?C.fi(src.cost)+' руб.':'0 руб.'),on?'#fff':'#f4f8f6',on?'#20BA72':'#c9d3cd',!on,11));
+      if(on)s.push(tx(sx+sw/2,334,'выбран',10.5,'700','#128a53','middle'));
     });
   });
   s.push('</svg>');return s.join('');
