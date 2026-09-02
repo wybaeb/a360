@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Тренажёр: сквозная практика — проект от проблемы до эффекта · Аналитика 360</title>
+<style>
+:root{
+  --acc:#20BA72; --acc-soft:rgba(32,186,114,.10); --acc-line:rgba(32,186,114,.30);
+  --bg:#ffffff; --surf:#f4f8f6; --elev:#e9f3ee; --line:rgba(46,54,65,.13);
+  --ink:#2E3641; --ink2:rgba(46,54,65,.74); --ink3:rgba(46,54,65,.48);
+  --warn:#E4572E; --warn-soft:rgba(228,87,46,.09);
+  --font:'SB Sans Text','Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'SFMono-Regular',Consolas,'Liberation Mono',monospace;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth}
+body{margin:0;overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 22px}
+/* overflow-wrap нужен ссылкам-адресам в списках источников: у длинного URL нет
+   точек переноса, на узком экране он уходит за край, а html/body{overflow-x:clip}
+   выше не даёт его прокрутить — текст пропадал совсем. break-word рвёт только
+   слово, которое иначе не помещается, и не влияет на расчёт min-content. */
+a{color:#128a53;text-decoration:none;border-bottom:1px solid var(--acc-line);
+  overflow-wrap:break-word}
+a:hover{border-bottom-color:var(--acc)}
+
+header{padding:56px 0 40px;background:linear-gradient(180deg,var(--elev),var(--bg));
+  border-bottom:1px solid var(--line)}
+
+/* Хлебная крошка: лёгкая строка над шапкой. Фон тот же, что у верха градиента
+   шапки, поэтому крошка визуально сливается с ней в один блок. */
+.crumbs{background:var(--elev);font-size:13.5px;color:var(--ink3)}
+.crumbs .wrap{padding-top:14px;padding-bottom:2px;display:flex;align-items:baseline;gap:8px}
+.crumbs a{color:#128a53;border-bottom:1px solid transparent;font-weight:600}
+.crumbs a:hover{border-bottom-color:var(--acc)}
+.crumbs .sep{color:var(--ink3);font-size:11px}
+.crumbs .here{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eyebrow{color:var(--acc);font-weight:800;font-size:12.5px;letter-spacing:.14em;
+  text-transform:uppercase;margin-bottom:14px}
+h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;font-weight:800;margin:0 0 16px}
+.lead{font-size:clamp(16.5px,2vw,19px);color:var(--ink2);margin:0 0 22px}
+.meta{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;
+  font-size:13.5px;color:var(--ink2)}
+.chip b{color:var(--ink)}
+a.chip{border-bottom:0;color:var(--ink2)} a.chip:hover{border-color:var(--acc)}
+.mir{display:inline-block;font-size:12px;font-weight:700;line-height:1.5;padding:0 8px;
+  margin-left:5px;border:1px solid var(--acc-line);border-radius:999px;color:#128a53;
+  background:var(--acc-soft);white-space:nowrap;vertical-align:baseline}
+.mir:hover{border-color:var(--acc);background:#fff}
+.md h2{margin-top:34px}.md h3{margin-top:26px}.md img{max-width:100%;border-radius:12px}
+.md table{font-size:14.5px}.md pre{margin:0 0 16px}
+
+section{padding:44px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-size:clamp(22px,3vw,30px);font-weight:800;margin:0 0 8px;line-height:1.18}
+h2 .num{color:var(--acc);margin-right:.4em;font-variant-numeric:tabular-nums}
+h3{font-size:19px;font-weight:800;margin:30px 0 10px}
+h4{font-size:16px;font-weight:800;margin:22px 0 8px;color:var(--ink2)}
+p{margin:0 0 15px}
+ul,ol{margin:0 0 15px;padding-left:22px}
+li{margin-bottom:7px}
+.sub{color:var(--ink3);margin:0 0 22px;font-size:15.5px}
+
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:20px 22px;margin:0 0 18px}
+.card.acc{background:var(--acc-soft);border-color:var(--acc-line)}
+.card.warn{background:var(--warn-soft);border-color:rgba(228,87,46,.28)}
+.card h4{margin-top:0}
+.card p:last-child,.card ul:last-child,.card ol:last-child{margin-bottom:0}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0 0 15px;font-size:15.5px}
+.kv dt{color:var(--ink3)}
+.kv dd{margin:0;font-weight:600}
+
+table{border-collapse:collapse;width:100%;font-size:15px;margin:0 0 15px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{font-weight:800;color:var(--ink2);font-size:13.5px;text-transform:uppercase;
+  letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 15px}
+.scroll table{margin:0}
+
+pre{background:#20262e;color:#e7edf3;border-radius:12px;padding:16px 18px;overflow-x:auto;
+  font-family:var(--mono);font-size:13.5px;line-height:1.55;margin:0 0 15px}
+code{font-family:var(--mono);font-size:.9em;background:var(--elev);padding:2px 6px;
+  border-radius:5px}
+pre code{background:none;padding:0;font-size:1em}
+
+.prompt{position:relative;background:#20262e;color:#e7edf3;border-radius:12px;
+  padding:16px 18px;margin:0 0 14px}
+/* Промпт должен быть виден целиком: участник его читает, а не только копирует.
+   pre-wrap переносит длинные строки, но сохраняет переводы строк — innerText
+   в кнопке копирования отдаёт ровно исходный текст. */
+.prompt pre{margin:0;padding:0;background:none;max-height:none;
+  white-space:pre-wrap;overflow-wrap:anywhere}
+.prompt{padding-top:46px}
+.copy{position:absolute;top:10px;right:10px;background:var(--acc);color:#fff;border:0;
+  border-radius:8px;padding:7px 13px;font:600 13px var(--font);cursor:pointer}
+.copy:hover{filter:brightness(1.08)}
+.copy.done{background:#0f7a46}
+
+figure{margin:0 0 18px}
+figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+figcaption{color:var(--ink3);font-size:14px;margin-top:8px}
+figure.fig{background:var(--surf);border:1px solid var(--line);border-radius:14px;
+  padding:18px 18px 12px;margin:22px 0}
+figure.fig svg{max-width:100%;height:auto}
+figure.fig figcaption{padding-top:6px;border-top:1px solid var(--line);margin-top:12px}
+
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;
+  border-radius:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;
+  display:flex;align-items:center;justify-content:center}
+
+/* Раскрывающийся блок: три вспомогательных промпта не должны спорить за внимание
+   с главным, но и прятать их насовсем нельзя — по ним разбирают проверку. */
+details.more{border:1px solid var(--line);border-radius:14px;padding:0 22px;
+  margin:0 0 18px;background:var(--surf)}
+details.more>summary{cursor:pointer;font-weight:800;padding:16px 0;list-style:none;
+  color:var(--ink2)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸";color:var(--acc);margin-right:8px}
+details.more[open]>summary::before{content:"▾"}
+details.more[open]{padding-bottom:14px}
+details.more>summary:hover{color:var(--ink)}
+
+.toc{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+  margin:0 0 8px}
+.toc ol{margin:0;padding-left:20px}
+.toc a{border:0}
+.toc a:hover{border-bottom:1px solid var(--acc)}
+
+footer{padding:36px 0 60px;color:var(--ink3);font-size:14.5px}
+/* Сноска на источник: верхний индекс, чтобы номер не читался как часть текста */
+a.fn{border:0;font-size:.72em;vertical-align:super;font-weight:700;padding-left:2px}
+a.fn:hover{border:0;text-decoration:underline}
+.tag{display:inline-block;background:var(--elev);border-radius:6px;padding:1px 8px;
+  font-size:13px;color:var(--ink2);font-weight:600}
+@media(max-width:600px){
+  body{font-size:16px}
+  .kv{grid-template-columns:1fr}
+}
+</style>
+</head><body>
+<nav class="crumbs" aria-label="Навигация"><div class="wrap"><a href="index.html">Материалы</a><span class="sep">▸</span><span class="here">Тренажёр: сквозная практика</span></div></nav>
+
+<style>
+.pj .tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.pj .tabs button{background:var(--surf);border:1px solid var(--line);border-radius:10px;
+  padding:8px 14px;font:inherit;font-size:15px;color:var(--ink);cursor:pointer}
+.pj .tabs button.on{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}
+.pj .frame{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 6px}
+@media(max-width:720px){.pj .frame{grid-template-columns:1fr 1fr}}
+.pj .frame>div{background:var(--surf);border:1px solid var(--line);border-radius:12px;padding:9px 12px;
+  min-height:74px;cursor:pointer;font-size:13.5px;line-height:1.35}
+.pj .frame>div.ok{background:var(--acc-soft);border-color:var(--acc-line)}
+.pj .frame>div.cur{outline:2px solid var(--acc)}
+.pj .frame .l{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:800;margin-bottom:3px}
+.pj .frame .t{color:var(--ink2);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.pj .frame>div.ok .t{color:var(--ink)}
+.pj .stepper{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 22px}
+.pj .stepper button{flex:1 1 90px;background:var(--surf);border:1px solid var(--line);border-radius:10px;
+  padding:7px 8px;font:inherit;font-size:13px;color:var(--ink2);cursor:pointer;text-align:left;line-height:1.25}
+.pj .stepper button b{display:block;font-size:12px;color:var(--ink3)}
+.pj .stepper button.ok{border-color:var(--acc-line);background:var(--acc-soft);color:var(--ink)}
+.pj .stepper button.ok b{color:#128a53}
+.pj .stepper button.cur{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc);color:var(--ink)}
+.pj .step{display:none}
+.pj .step.on{display:block}
+.pj .sthead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 0 4px}
+.pj .sthead h3{margin:0;font-size:22px}
+.pj .snum{color:var(--acc);font-weight:800;font-size:13px;letter-spacing:.1em;text-transform:uppercase}
+.pj .sst{font-size:12.5px;font-weight:700;border-radius:999px;padding:2px 10px;background:var(--elev);color:var(--ink3)}
+.pj .sst.ok{background:var(--acc-soft);color:#128a53}
+.pj .part{border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin:0 0 12px;background:#fff}
+.pj .part h4{margin:0 0 8px;color:var(--ink);font-size:15px}
+.pj .part h4 .n{display:inline-block;width:22px;height:22px;border-radius:50%;background:var(--acc);color:#fff;
+  text-align:center;line-height:22px;font-size:12.5px;margin-right:8px}
+.pj .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
+@media(max-width:720px){.pj .grid{grid-template-columns:1fr}}
+.pj .fld{margin:0 0 8px}
+.pj .fld label{display:block;font-size:13px;color:var(--ink3);margin:0 0 3px}
+.pj .fld input,.pj .fld select,.pj .fld textarea{width:100%;box-sizing:border-box;font:inherit;font-size:15px;
+  padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+.pj .fld textarea{min-height:64px;resize:vertical;line-height:1.45}
+.pj .fld .u{font-size:12.5px;color:var(--ink3);margin-top:2px}
+.pj textarea.resp{width:100%;box-sizing:border-box;font:inherit;font-size:14.5px;min-height:120px;
+  padding:9px 11px;border:1px solid var(--line);border-radius:10px;resize:vertical;line-height:1.45}
+.pj .btn{border:0;border-radius:9px;background:var(--acc);color:#fff;padding:8px 16px;cursor:pointer;
+  font:inherit;font-size:14.5px;font-weight:700}
+.pj .btn.sec{background:var(--surf);color:var(--ink);border:1px solid var(--line);font-weight:600}
+.pj .btn:disabled{opacity:.45;cursor:default}
+.pj .msg{font-size:13.5px;color:var(--ink3);margin:8px 0 0}
+.pj .msg.ok{color:#128a53;font-weight:600}
+.pj .msg.warn{color:var(--warn);font-weight:600}
+.pj .nav{display:flex;justify-content:space-between;gap:10px;margin:6px 0 0}
+.pj .pctl{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:6px 0 6px;background:#20262e}
+.pj .pctl-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  padding:8px 10px;background:#20262e}
+.pj .psw{display:flex;border:1.5px solid #4a5462;border-radius:8px;overflow:hidden}
+.pj .psw button{border:0;background:transparent;color:#aeb9c6;padding:6px 13px;cursor:pointer;font:inherit;font-size:13.5px}
+.pj .psw button.on{background:var(--acc);color:#fff}
+.pj .b-cp{border:0;border-radius:8px;background:var(--acc);color:#fff;padding:7px 14px;cursor:pointer;font:inherit;font-size:13.5px}
+.pj .b-cp.done{background:#0f7a46}
+.pj .pctl pre{margin:0;padding:14px 16px;background:#20262e;color:#e7edf3;border-radius:0;
+  font:13px/1.65 var(--mono);white-space:pre-wrap;word-break:break-word;max-height:360px;overflow:auto}
+.pj .phx{background:#ffedaa;color:#8a1c4a;border-radius:3px;padding:0 3px;font-weight:600}
+.pj .phv{background:rgba(32,186,114,.18);color:#8ee7b8;border-radius:3px;padding:0 2px}
+.pj .pstate{font-size:12.5px;color:#aeb9c6;padding:8px 16px 10px;background:#20262e;margin:0;border-top:1px solid #313a46}
+.pj .vis{background:var(--surf);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0 0}
+.pj .vis svg{width:100%;height:auto;display:block}
+.pj .vis .cap{font-size:13.5px;color:var(--ink3);margin:8px 0 0}
+.pj .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px 0}
+@media(max-width:720px){.pj .kpi{grid-template-columns:1fr 1fr}}
+.pj .kpi>div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.pj .kpi .l{font-size:12.5px;color:var(--ink3)}
+.pj .kpi .v{font-size:20px;font-weight:800;margin-top:3px;line-height:1.15}
+.pj .kpi .v.neg{color:var(--warn)}
+.pj .kpi .s{font-size:12.5px;color:var(--ink3);margin-top:2px}
+.pj .rows{display:grid;grid-template-columns:130px 1fr;gap:6px 12px;font-size:15px;margin:0}
+.pj .rows dt{font-weight:800;color:var(--ink2);font-size:13px;text-transform:uppercase;letter-spacing:.04em;padding-top:3px}
+.pj .rows dd{margin:0}
+.pj .rows dd.fact{border-left:3px solid #1b5fa8;padding-left:10px}
+.pj .rows dd.interp{border-left:3px solid #b05c1c;padding-left:10px}
+.pj .rows dd.hyp{border-left:3px solid var(--acc);padding-left:10px}
+.pj .rows dd.refute{border-left:3px solid var(--warn);padding-left:10px}
+.pj .chip-st{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:1px 9px}
+.pj .st-есть{background:#e3f2ea;color:#0f7a46}
+.pj .st-частично{background:#fdeee3;color:#b05c1c}
+.pj .st-нет{background:rgba(228,87,46,.12);color:var(--warn)}
+.pj table.sm{font-size:14px}
+.pj table.sm td{white-space:nowrap}
+.pj #mtab td,.pj #dtab td{white-space:normal}
+.pj table.sm input{width:82px;font:inherit;font-size:14px;padding:4px 6px;border:1px solid var(--line);border-radius:6px}
+.pj .flip{color:var(--warn);font-weight:700}
+.pj .keep{color:#0f7a46;font-weight:700}
+.pj .slide{aspect-ratio:16/9;background:#fff;border:1px solid var(--line);border-radius:12px;padding:5% 6%;
+  display:flex;flex-direction:column;gap:2.2%;box-shadow:0 8px 24px rgba(46,54,65,.08)}
+.pj .slide .h{font-size:clamp(16px,2.6vw,26px);font-weight:800;line-height:1.15;color:var(--ink);border-bottom:3px solid var(--acc);padding-bottom:2%}
+.pj .slide .r{display:grid;grid-template-columns:110px 1fr;gap:10px;font-size:clamp(11px,1.5vw,15.5px);line-height:1.35}
+.pj .slide .r b{color:var(--acc);text-transform:uppercase;font-size:.78em;letter-spacing:.06em;padding-top:.2em}
+.pj .letter{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 22px;font-size:15.5px}
+.pj .letter p{margin:0 0 12px}
+.pj .letter b{color:var(--ink)}
+.pj .ff{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:15.5px;overflow-x:auto}
+.pj .ff b{color:#0f7a46}
+.pj .links{font-size:14px;color:var(--ink3);margin:0 0 12px}
+.pj .links a{margin-right:10px;white-space:nowrap}
+.pj .hint{font-size:13.5px;color:var(--ink3);margin:0 0 8px}
+.pj details.raw{margin:8px 0 0;font-size:13.5px}
+.pj details.raw summary{cursor:pointer;color:var(--ink3)}
+.pj details.raw table{font-size:13px;margin-top:6px}
+.pj details.raw td,.pj details.raw th{padding:4px 8px;white-space:nowrap}
+</style>
+
+<header><div class="wrap">
+  <div class="eyebrow">Тренажёр · сквозная практика</div>
+  <h1>Проект от проблемы до эффекта</h1>
+  <p class="lead">Девять коротких шагов по каркасу проекта: проблема, метрики, данные,
+     анализ, вывод, финансовая модель, слайд «Эффект для бизнеса» и письмо команде.
+     На каждом шаге страница собирает промпт из ваших полей, ассистент отвечает,
+     ответ вставляется обратно — и результат переходит на следующий шаг сам.
+     Все расчёты выполняет страница, ассистент только формулирует и выбирает.</p>
+  <div class="meta">
+    <span class="chip">Шагов: <b>9</b></span>
+    <span class="chip">Время: <b>45–60 минут</b></span>
+    <span class="chip">Нужен: <b>ассистент в браузере</b></span>
+    <span class="chip">Итог: <b>каркас, слайд, письмо</b></span>
+  </div>
+</div></header>
+
+<section><div class="wrap pj">
+<div class="card acc">
+<h4>Как проходить</h4>
+<ol style="margin:0;padding-left:22px">
+<li><b>Заполните поля</b> шага. В кейсах курса они уже заполнены — исправляйте, что хотите.</li>
+<li><b>Скопируйте заполненный промпт</b> кнопкой и вставьте в новый чат ассистента.
+    Если в ассистенте есть выбор модели — выбирайте самую сильную из доступных.</li>
+<li><b>Вставьте ответ</b> ассистента целиком в поле «Ответ ассистента» и нажмите «Разобрать ответ».
+    Поля результата заполнятся сами; их можно править вручную.</li>
+<li><b>Проверьте результат</b> на графике или в таблице и переходите дальше. Заполненный каркас
+    вверху растёт с каждым шагом.</li>
+</ol>
+<p class="sub" style="margin:10px 0 0">Всё введённое сохраняется в вашем браузере отдельно для каждого кейса.
+Если ответ не разобрался — впишите результат в поля вручную: разбор нужен для удобства, а не для проверки.</p>
+</div>
+
+<h3>Кейс</h3>
+<div class="tabs" id="tabs"></div>
+<p class="hint" id="caseNote"></p>
+
+<h3>Каркас проекта</h3>
+<div class="frame" id="frame"></div>
+<p class="hint">Семь элементов каркаса и письмо. Ячейка заполняется, когда пройден её шаг; нажатие открывает шаг.</p>
+
+<div class="stepper" id="stepper"></div>
+
+<!-- ─── Шаг 1 ─────────────────────────────────────────────────────────── -->
+<div class="step" id="st1">
+<div class="sthead"><span class="snum">Шаг 1</span><h3>Объект изменений и проблема</h3><span class="sst" id="ss1"></span></div>
+<p class="sub">Объект — то, что можно изменить своим решением: продукт, процесс или инициатива.
+Проблема сформулирована, если в ней есть показатель с числом, источник, целевой уровень и то, что меняем.</p>
+<p class="links">Из курса: <a href="longread_project.html">Каркас проекта</a>
+<a href="longread_project.html#problema">Формулировка проблемы</a>
+<a href="longread_effect.html">Повторение основ</a></p>
+<div class="part"><h4><span class="n">1</span>Заполните</h4>
+<div class="grid">
+<div class="fld"><label>Ось объекта</label><select data-bind="s1.axis" ></select></div>
+<div class="fld"><label>Объект изменений</label><input data-bind="s1.object" placeholder="например: накопительный счёт для физических лиц"></div>
+</div>
+<div class="fld"><label>Что вы наблюдаете — одной фразой</label><textarea data-bind="s1.observation" ></textarea></div>
+<div class="fld"><label>Что вы предполагаете изменить</label><input data-bind="s1.action_in" placeholder="одно действие, которое в силах объекта изменений"></div>
+<div class="grid">
+<div class="fld"><label>Откуда данные</label><input data-bind="s1.source" placeholder="витрина, выгрузка, отчёт"></div>
+<div class="fld"><label>Показатель, который беспокоит</label><select data-bind="s1.focus" ></select></div>
+</div>
+<div id="tblBox"><div class="fld"><label>Небольшая таблица данных</label><textarea data-bind="s1.tableText" style="min-height:110px;font-family:var(--mono);font-size:13px"></textarea><div class="u">Первая строка — названия столбцов, первый столбец — месяц или срез; разделитель — точка с запятой или табуляция (вставка из Excel). До 40 строк.</div></div></div>
+<details class="raw" id="tblView"><summary>Показать таблицу данных</summary><div class="scroll" id="tblHtml"></div></details>
+<div class="vis" id="v1"></div>
+</div>
+<div class="part"><h4><span class="n">2</span>Промпт для ассистента</h4><div class="pctl"><div class="pctl-head"><div class="psw" role="group" aria-label="Режим промпта"><button type="button" data-sw="tpl" data-n="1">Шаблон</button><button type="button" class="on" data-sw="fill" data-n="1">Заполненный</button></div><button class="b-cp" type="button" data-copy="1">Копировать заполненный промпт</button></div><pre id="pv1"></pre><p class="pstate" id="ps1"></p></div></div>
+<div class="part"><h4><span class="n">3</span>Ответ ассистента</h4><p class="hint">Ожидается пять строк: Проблема, Показатель, Источник, Целевое значение, Что меняем.</p><textarea class="resp" id="resp1" data-bind="s1.resp" placeholder="Вставьте ответ ассистента целиком"></textarea><div style="margin-top:8px"><button class="btn" type="button" data-parse="1">Разобрать ответ</button><span class="msg" id="pm1" style="display:inline-block;margin:0 0 0 12px"></span></div></div>
+<div class="part"><h4><span class="n">4</span>Результат: проблема</h4>
+<div class="fld"><label>Проблема</label><textarea data-bind="s1.problem" ></textarea></div>
+<div class="grid">
+<div class="fld"><label>Показатель</label><input data-bind="s1.metric" ></div>
+<div class="fld"><label>Источник</label><input data-bind="s1.source2" ></div>
+<div class="fld"><label>Целевое значение</label><input data-bind="s1.target" ></div>
+<div class="fld"><label>Что меняем</label><input data-bind="s1.action" ></div>
+</div>
+<p class="hint" id="chk1"></p>
+</div>
+<div class="nav"><span></span><button class="btn" type="button" data-go="2">Дальше: шаг 2 →</button></div>
+</div>
+
+<!-- ─── Шаг 2 ─────────────────────────────────────────────────────────── -->
+<div class="step" id="st2">
+<div class="sthead"><span class="snum">Шаг 2</span><h3>Метрики: результат и драйверы</h3><span class="sst" id="ss2"></span></div>
+<p class="sub">Результат — запаздывающая метрика, по которой судят об итоге. Драйверы — опережающие:
+наблюдаются раньше и на них действует изменение. Контрольная метрика не должна ухудшиться.</p>
+<p class="links">Из курса: <a href="trainer_tree.html">Тренажёр «Дерево метрик»</a>
+<a href="longread_metrics.html#tree">Опережающие и запаздывающие</a>
+<a href="longread_project.html#metriki">Ключевые метрики проекта</a></p>
+<div class="part"><h4><span class="n">1</span>Заполните</h4>
+<p class="hint">Проблема и изменение берутся из шага 1. Показатели таблицы подставляются сами.</p>
+<div class="fld"><label>Другие показатели, которые подразделение может наблюдать</label><textarea data-bind="s2.other" ></textarea><div class="u">через точку с запятой; сюда попадают опережающие метрики, которых нет в таблице</div></div>
+</div>
+<div class="part"><h4><span class="n">2</span>Промпт для ассистента</h4><div class="pctl"><div class="pctl-head"><div class="psw" role="group" aria-label="Режим промпта"><button type="button" data-sw="tpl" data-n="2">Шаблон</button><button type="button" class="on" data-sw="fill" data-n="2">Заполненный</button></div><button class="b-cp" type="button" data-copy="2">Копировать заполненный промпт</button></div><pre id="pv2"></pre><p class="pstate" id="ps2"></p></div></div>
+<div class="part"><h4><span class="n">3</span>Ответ ассистента</h4><p class="hint">Ожидается четыре строки: Результат, Драйвер 1, Драйвер 2, Контрольная — поля через вертикальную черту.</p><textarea class="resp" id="resp2" data-bind="s2.resp" placeholder="Вставьте ответ ассистента целиком"></textarea><div style="margin-top:8px"><button class="btn" type="button" data-parse="2">Разобрать ответ</button><span class="msg" id="pm2" style="display:inline-block;margin:0 0 0 12px"></span></div></div>
+<div class="part"><h4><span class="n">4</span>Результат: дерево метрик</h4>
+<div class="scroll"><table class="sm"><thead><tr><th>Роль</th><th>Метрика</th><th>Единица</th><th>Частота</th><th>Пояснение</th></tr></thead>
+<tbody id="mtab"></tbody></table></div>
+<div class="vis" id="v2"></div>
+</div>
+<div class="nav"><button class="btn sec" type="button" data-go="1">← Шаг 1</button><button class="btn" type="button" data-go="3">Дальше: шаг 3 →</button></div>
+</div>
+
+<!-- ─── Шаг 3 ─────────────────────────────────────────────────────────── -->
+<div class="step" id="st3">
+<div class="sthead"><span class="snum">Шаг 3</span><h3>Данные: что есть, чего нет</h3><span class="sst" id="ss3"></span></div>
+<p class="sub">План по данным: для каждой метрики — собирается ли она сейчас, из какого источника,
+как получить первое проверенное значение и через сколько. То, чего нет, помечается: это будущее допущение.</p>
+<p class="links">Из курса: <a href="trainer_map.html">Тренажёр «Карта источников»</a>
+<a href="longread_data.html">Роль данных</a>
+<a href="longread_metrics.html#eco">Экономика данных</a></p>
+<div class="part"><h4><span class="n">1</span>Заполните</h4>
+<div class="fld"><label>Источники, которые есть у подразделения</label><textarea data-bind="s3.sources" ></textarea><div class="u">система, что даёт, как часто обновляется; через точку с запятой</div></div>
+</div>
+<div class="part"><h4><span class="n">2</span>Промпт для ассистента</h4><div class="pctl"><div class="pctl-head"><div class="psw" role="group" aria-label="Режим промпта"><button type="button" data-sw="tpl" data-n="3">Шаблон</button><button type="button" class="on" data-sw="fill" data-n="3">Заполненный</button></div><button class="b-cp" type="button" data-copy="3">Копировать заполненный промпт</button></div><pre id="pv3"></pre><p class="pstate" id="ps3"></p></div></div>
+<div class="part"><h4><span class="n">3</span>Ответ ассистента</h4><p class="hint">Ожидается по одной строке на метрику: метрика | есть / частично / нет | источник | как получить | срок.</p><textarea class="resp" id="resp3" data-bind="s3.resp" placeholder="Вставьте ответ ассистента целиком"></textarea><div style="margin-top:8px"><button class="btn" type="button" data-parse="3">Разобрать ответ</button><span class="msg" id="pm3" style="display:inline-block;margin:0 0 0 12px"></span></div></div>
+<div class="part"><h4><span class="n">4</span>Результат: план по данным</h4>
+<div class="scroll"><table class="sm"><thead><tr><th>Метрика</th><th>Статус</th><th>Источник</th><th>Как получить</th><th>Срок</th></tr></thead>
+<tbody id="dtab"></tbody></table></div>
+<p class="hint" id="dmiss"></p>
+</div>
+<div class="nav"><button class="btn sec" type="button" data-go="2">← Шаг 2</button><button class="btn" type="button" data-go="4">Дальше: шаг 4 →</button></div>
+</div>
+
+<!-- ─── Шаг 4 ─────────────────────────────────────────────────────────── -->
+<div class="step" id="st4">
+<div class="sthead"><span class="snum">Шаг 4</span><h3>Анализ на данных</h3><span class="sst" id="ss4"></span></div>
+<p class="sub">Этот шаг без ассистента: расчёт выполняет страница. Связь двух показателей — коэффициент
+корреляции и линия регрессии; динамика одного показателя — тренд и сравнение с тем же месяцем прошлого года.
+Итог шага — текст с числами, который уходит ассистенту на следующем шаге.</p>
+<p class="links">Из курса: <a href="theory_stats.html">Связь и причинность</a>
+<a href="case_report.html">Мини-инструменты корреляций и трендов</a>
+<a href="longread_math.html">Математические основы</a>
+<a href="case_deviations.html">Анализ отклонений</a></p>
+<div class="part"><h4><span class="n">1</span>Выберите расчёт</h4>
+<div class="grid">
+<div class="fld"><label>Вид анализа</label><select data-bind="s4.mode" ></select></div>
+<div class="fld"><label>Показатель результата</label><select data-bind="s4.y" ></select></div>
+</div>
+<div id="xBox"><div class="fld"><label>Показатель-драйвер (по горизонтали)</label><select data-bind="s4.x" ></select></div></div>
+<div class="vis" id="v4"></div>
+</div>
+<div class="part"><h4><span class="n">2</span>Результат анализа</h4>
+<div class="fld"><label>Что показал расчёт (уходит ассистенту на шаге 5; можно дополнить)</label><textarea data-bind="s4.text" style="min-height:96px"></textarea></div>
+<div class="fld"><label>Инструмент, которым расчёт повторяется на следующей выгрузке</label><input data-bind="s4.tool" placeholder="мини-инструмент корреляций / таблица / тетрадь"></div>
+</div>
+<div class="nav"><button class="btn sec" type="button" data-go="3">← Шаг 3</button><button class="btn" type="button" data-go="5">Дальше: шаг 5 →</button></div>
+</div>
+
+<!-- ─── Шаг 5 ─────────────────────────────────────────────────────────── -->
+<div class="step" id="st5">
+<div class="sthead"><span class="snum">Шаг 5</span><h3>Вывод: факт, интерпретация, гипотеза</h3><span class="sst" id="ss5"></span></div>
+<p class="sub">Факт — то, что показали числа. Интерпретация — возможное объяснение, помеченное как предположение.
+Гипотеза — проверяемое утверждение «если …, то … изменится на … за …»; из неё берётся изменение показателя для финансовой модели.</p>
+<p class="links">Из курса: <a href="longread.html">Ошибки вывода</a>
+<a href="theory_stats.html">Связь и причинность</a>
+<a href="longread_project.html#vyvod">Вывод в каркасе проекта</a></p>
+<div class="part"><h4><span class="n">1</span>Проверьте вход</h4>
+<p class="hint">Проблема и изменение — из шага 1, результат анализа — из шага 4. Менять здесь ничего не нужно.</p>
+<p id="in5" style="font-size:14.5px;margin:0"></p>
+</div>
+<div class="part"><h4><span class="n">2</span>Промпт для ассистента</h4><div class="pctl"><div class="pctl-head"><div class="psw" role="group" aria-label="Режим промпта"><button type="button" data-sw="tpl" data-n="5">Шаблон</button><button type="button" class="on" data-sw="fill" data-n="5">Заполненный</button></div><button class="b-cp" type="button" data-copy="5">Копировать заполненный промпт</button></div><pre id="pv5"></pre><p class="pstate" id="ps5"></p></div></div>
+<div class="part"><h4><span class="n">3</span>Ответ ассистента</h4><p class="hint">Ожидается четыре строки: Факт, Интерпретация, Гипотеза, Что опровергнет.</p><textarea class="resp" id="resp5" data-bind="s5.resp" placeholder="Вставьте ответ ассистента целиком"></textarea><div style="margin-top:8px"><button class="btn" type="button" data-parse="5">Разобрать ответ</button><span class="msg" id="pm5" style="display:inline-block;margin:0 0 0 12px"></span></div></div>
+<div class="part"><h4><span class="n">4</span>Результат: вывод</h4>
+<div class="fld"><label>Факт</label><textarea data-bind="s5.fact" style="min-height:48px"></textarea></div>
+<div class="fld"><label>Интерпретация</label><textarea data-bind="s5.interp" style="min-height:48px"></textarea></div>
+<div class="fld"><label>Гипотеза</label><textarea data-bind="s5.hyp" style="min-height:48px"></textarea></div>
+<div class="fld"><label>Что опровергнет гипотезу</label><textarea data-bind="s5.refute" style="min-height:48px"></textarea></div>
+<div class="vis" id="v5"></div>
+</div>
+<div class="nav"><button class="btn sec" type="button" data-go="4">← Шаг 4</button><button class="btn" type="button" data-go="6">Дальше: шаг 6 →</button></div>
+</div>
+
+<!-- ─── Шаг 6 ─────────────────────────────────────────────────────────── -->
+<div class="step" id="st6">
+<div class="sthead"><span class="snum">Шаг 6</span><h3>Множители эффекта и допущения</h3><span class="sst" id="ss6"></span></div>
+<p class="sub">Эффект в месяц = изменение показателя × объём × стоимость единицы. Изменение берётся
+из гипотезы, объём — из данных, стоимость — из финансовой модели. Всё, что не подтверждено данными, — допущение
+с пессимистичным и оптимистичным значением: их задаёт ассистент, а проверяет шаг 7.</p>
+<p class="links">Из курса: <a href="longread_finmodel.html#formula">Формула эффекта</a>
+<a href="longread_finmodel.html#dopushcheniya">Данные и допущения</a>
+<a href="longread_effect.html">Повторение основ: примеры</a></p>
+<div class="part"><h4><span class="n">1</span>Заполните множители</h4>
+<div class="grid">
+<div class="fld"><label>Изменение показателя в месяц</label><input data-bind="s6.delta" ></div>
+<div class="fld"><label>Единица изменения</label><input data-bind="s6.udelta" placeholder="предотвращённых закрытий в месяц"></div>
+<div class="fld"><label>Объём</label><input data-bind="s6.volume" ></div>
+<div class="fld"><label>Единица объёма</label><input data-bind="s6.uvolume" placeholder="единиц, к которым применяется изменение"></div>
+<div class="fld"><label>Стоимость единицы, руб. в месяц</label><input data-bind="s6.price" ></div>
+<div class="fld"><label>Как получена стоимость</label><input data-bind="s6.uprice" placeholder="остаток × маржа ÷ 12"></div>
+<div class="fld"><label>Срок сохранения эффекта, мес.</label><input data-bind="s6.keep" ></div>
+<div class="fld"><label>Тип эффекта</label><select data-bind="s6.kind" ></select></div>
+</div>
+<div class="grid">
+<div class="fld"><label>Откуда изменение</label><input data-bind="s6.sdelta" placeholder="гипотеза (допущение)"></div>
+<div class="fld"><label>Откуда объём</label><input data-bind="s6.svolume" placeholder="данные выгрузки"></div>
+<div class="fld"><label>Откуда стоимость</label><input data-bind="s6.sprice" placeholder="допущение по тарифу"></div>
+<div class="fld"><label>Откуда срок сохранения</label><input data-bind="s6.skeep" placeholder="допущение"></div>
+</div>
+<div class="ff" id="v6f"></div>
+</div>
+<div class="part"><h4><span class="n">2</span>Промпт для ассистента</h4><div class="pctl"><div class="pctl-head"><div class="psw" role="group" aria-label="Режим промпта"><button type="button" data-sw="tpl" data-n="6">Шаблон</button><button type="button" class="on" data-sw="fill" data-n="6">Заполненный</button></div><button class="b-cp" type="button" data-copy="6">Копировать заполненный промпт</button></div><pre id="pv6"></pre><p class="pstate" id="ps6"></p></div></div>
+<div class="part"><h4><span class="n">3</span>Ответ ассистента</h4><p class="hint">Ожидается четыре строки: Изменение показателя, Объём, Стоимость единицы, Срок сохранения — базовое | пессимистичное | оптимистичное | данные или допущение | обоснование.</p><textarea class="resp" id="resp6" data-bind="s6.resp" placeholder="Вставьте ответ ассистента целиком"></textarea><div style="margin-top:8px"><button class="btn" type="button" data-parse="6">Разобрать ответ</button><span class="msg" id="pm6" style="display:inline-block;margin:0 0 0 12px"></span></div></div>
+<div class="part"><h4><span class="n">4</span>Результат: допущения</h4>
+<div class="scroll"><table class="sm"><thead><tr><th>Множитель</th><th>Базовое</th><th>Пессимистичное</th><th>Оптимистичное</th><th>Природа</th><th>Обоснование</th></tr></thead>
+<tbody id="atab"></tbody></table></div>
+<p class="hint">Значения затрат в чувствительность добавляются на шаге 7. Числа можно править прямо в таблице.</p>
+</div>
+<div class="nav"><button class="btn sec" type="button" data-go="5">← Шаг 5</button><button class="btn" type="button" data-go="7">Дальше: шаг 7 →</button></div>
+</div>
+
+<!-- ─── Шаг 7 ─────────────────────────────────────────────────────────── -->
+<div class="step" id="st7">
+<div class="sthead"><span class="snum">Шаг 7</span><h3>Поток эффекта, окупаемость и чувствительность</h3><span class="sst" id="ss7"></span></div>
+<p class="sub">Расчёт страницы: эффект разворачивается по месяцам с выходом на уровень и сроком сохранения,
+затраты вычитаются, поток дисконтируется по ставке. Каждое допущение по очереди ставится в пессимистичное
+и оптимистичное значение — видно, какое из них меняет вывод.</p>
+<p class="links">Из курса: <a href="trainer_effect.html">Тренажёр «Финансовая модель эффекта»</a>
+<a href="longread_finmodel.html#potok">Поток эффекта во времени</a>
+<a href="longread_finmodel.html#npv">NPV и правило принятия</a>
+<a href="longread_finmodel.html#chuvstvitelnost">Проверка чувствительности</a></p>
+<div class="part"><h4><span class="n">1</span>Затраты и горизонт</h4>
+<div class="grid">
+<div class="fld"><label>Выход на полный уровень, мес.</label><input data-bind="s7.ramp" ></div>
+<div class="fld"><label>Горизонт расчёта, мес.</label><input data-bind="s7.horizon" ></div>
+<div class="fld"><label>Единовременные затраты, руб.</label><input data-bind="s7.capex" ></div>
+<div class="fld"><label>Ежемесячные затраты, руб.</label><input data-bind="s7.opex" ></div>
+<div class="fld"><label>Ставка дисконтирования, % годовых</label><input data-bind="s7.rate" ></div>
+</div>
+<div class="grid">
+<div class="fld"><label>Затраты единовременные: пессимистично / оптимистично</label><input data-bind="s7.capex_p" placeholder="900000 / 450000"></div>
+<div class="fld"><label>Затраты ежемесячные: пессимистично / оптимистично</label><input data-bind="s7.opex_p" placeholder="80000 / 35000"></div>
+</div>
+</div>
+<div class="part"><h4><span class="n">2</span>Результат: поток и окупаемость</h4>
+<div class="kpi">
+<div><div class="l">Эффект в месяц</div><div class="v" id="k-full"></div><div class="s" id="k-full-s"></div></div>
+<div><div class="l">Доход за первый год</div><div class="v" id="k-y1"></div><div class="s" id="k-y1-s"></div></div>
+<div><div class="l">Окупаемость</div><div class="v" id="k-pb"></div><div class="s" id="k-pb-s"></div></div>
+<div><div class="l">NPV за горизонт</div><div class="v" id="k-npv"></div><div class="s" id="k-npv-s"></div></div>
+</div>
+<div class="vis" id="v7"></div>
+<p id="verdict7" style="font-weight:700;margin:10px 0 0"></p>
+</div>
+<div class="part"><h4><span class="n">3</span>Чувствительность</h4>
+<div class="scroll"><table class="sm"><thead><tr><th>Допущение</th><th>Базовое</th><th>Пессимистичное</th><th>NPV</th><th>Оптимистичное</th><th>NPV</th><th>Вывод</th></tr></thead>
+<tbody id="stab"></tbody></table></div>
+<div class="vis" id="v7t"></div>
+<p id="sens7" style="font-size:14.5px;margin:10px 0 0"></p>
+<div class="fld"><label>Текст расчёта (уходит ассистенту на шаге 8)</label><textarea data-bind="s7.text" style="min-height:96px;margin-top:10px"></textarea></div>
+</div>
+<div class="nav"><button class="btn sec" type="button" data-go="6">← Шаг 6</button><button class="btn" type="button" data-go="8">Дальше: шаг 8 →</button></div>
+</div>
+
+<!-- ─── Шаг 8 ─────────────────────────────────────────────────────────── -->
+<div class="step" id="st8">
+<div class="sthead"><span class="snum">Шаг 8</span><h3>Слайд «Эффект для бизнеса»</h3><span class="sst" id="ss8"></span></div>
+<p class="sub">Один слайд, который читается без ведущего: предмет в заголовке, формула с числами,
+результат, главное допущение и первое действие. Числа — только из расчёта шага 7.</p>
+<p class="links">Из курса: <a href="longread_project.html#prezentaciya">Структура презентации проекта</a>
+<a href="longread_finmodel.html#oshibki">Типичные ошибки финансовой модели</a></p>
+<div class="part"><h4><span class="n">1</span>Проверьте вход</h4>
+<p class="hint">Проблема — из шага 1, гипотеза — из шага 5, расчёт — из шага 7.</p>
+<p id="in8" style="font-size:14.5px;margin:0"></p>
+</div>
+<div class="part"><h4><span class="n">2</span>Промпт для ассистента</h4><div class="pctl"><div class="pctl-head"><div class="psw" role="group" aria-label="Режим промпта"><button type="button" data-sw="tpl" data-n="8">Шаблон</button><button type="button" class="on" data-sw="fill" data-n="8">Заполненный</button></div><button class="b-cp" type="button" data-copy="8">Копировать заполненный промпт</button></div><pre id="pv8"></pre><p class="pstate" id="ps8"></p></div></div>
+<div class="part"><h4><span class="n">3</span>Ответ ассистента</h4><p class="hint">Ожидается пять строк: Заголовок, Формула, Результат, Риск, Действие.</p><textarea class="resp" id="resp8" data-bind="s8.resp" placeholder="Вставьте ответ ассистента целиком"></textarea><div style="margin-top:8px"><button class="btn" type="button" data-parse="8">Разобрать ответ</button><span class="msg" id="pm8" style="display:inline-block;margin:0 0 0 12px"></span></div></div>
+<div class="part"><h4><span class="n">4</span>Результат: слайд</h4>
+<div class="fld"><label>Заголовок</label><input data-bind="s8.title" ></div>
+<div class="fld"><label>Формула</label><textarea data-bind="s8.formula" style="min-height:44px"></textarea></div>
+<div class="fld"><label>Результат</label><textarea data-bind="s8.result" style="min-height:44px"></textarea></div>
+<div class="fld"><label>Риск</label><textarea data-bind="s8.risk" style="min-height:44px"></textarea></div>
+<div class="fld"><label>Действие</label><textarea data-bind="s8.action" style="min-height:44px"></textarea></div>
+<div class="slide" id="v8"></div>
+<p class="hint" style="margin-top:8px">Текст слайда переносится в любой редактор презентаций: заголовок и четыре строки.</p>
+</div>
+<div class="nav"><button class="btn sec" type="button" data-go="7">← Шаг 7</button><button class="btn" type="button" data-go="9">Дальше: шаг 9 →</button></div>
+</div>
+
+<!-- ─── Шаг 9 ─────────────────────────────────────────────────────────── -->
+<div class="step" id="st9">
+<div class="sthead"><span class="snum">Шаг 9</span><h3>Письмо команде</h3><span class="sst" id="ss9"></span></div>
+<p class="sub">Итоговый артефакт: пять абзацев с решениями — что меняем и почему, по какому показателю судим,
+какие данные начинаем собирать, первое действие, когда пересматриваем. Расчёт остаётся в презентации.</p>
+<p class="links">Из курса: <a href="longread_project.html#pismo">Письмо команде: структура и пример</a>
+<a href="practice/4.1_каркас_проекта/4.1.2_шаблон_письма_команде.md.html">Шаблон письма</a></p>
+<div class="part"><h4><span class="n">1</span>Проверьте вход</h4>
+<p class="hint">Всё собрано с предыдущих шагов; данные, которых нет, — из шага 3.</p>
+<p id="in9" style="font-size:14.5px;margin:0"></p>
+</div>
+<div class="part"><h4><span class="n">2</span>Промпт для ассистента</h4><div class="pctl"><div class="pctl-head"><div class="psw" role="group" aria-label="Режим промпта"><button type="button" data-sw="tpl" data-n="9">Шаблон</button><button type="button" class="on" data-sw="fill" data-n="9">Заполненный</button></div><button class="b-cp" type="button" data-copy="9">Копировать заполненный промпт</button></div><pre id="pv9"></pre><p class="pstate" id="ps9"></p></div></div>
+<div class="part"><h4><span class="n">3</span>Ответ ассистента</h4><p class="hint">Ожидается пять абзацев, каждый начинается с названия раздела и двоеточия.</p><textarea class="resp" id="resp9" data-bind="s9.resp" placeholder="Вставьте ответ ассистента целиком"></textarea><div style="margin-top:8px"><button class="btn" type="button" data-parse="9">Разобрать ответ</button><span class="msg" id="pm9" style="display:inline-block;margin:0 0 0 12px"></span></div></div>
+<div class="part"><h4><span class="n">4</span>Результат: письмо</h4>
+<div class="letter" id="v9"></div>
+<div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+<button class="btn sec" type="button" id="bCopyLetter">Копировать письмо</button>
+<button class="btn sec" type="button" id="bCopyMd">Копировать весь проект</button>
+<button class="btn sec" type="button" id="bClear">Очистить кейс</button>
+<span class="msg" id="expMsg"></span></div>
+</div>
+<div class="nav"><button class="btn sec" type="button" data-go="8">← Шаг 8</button><button class="btn" type="button" id="bExport">Скачать проект (Markdown)</button></div>
+</div>
+
+</div></section>
+
+<footer><div class="wrap">
+  Аналитика 360 · материалы практической части. Расчёты выполняются в вашем браузере,
+  данные никуда не отправляются. Введённое сохраняется в браузере отдельно для каждого кейса.
+</div></footer>
+<script>
+/* Ядро сквозной практики «Проект от проблемы до эффекта».
+ *
+ * Один файл на страницу тренажёра (встраивается в trainer_project.html) и на
+ * прогон цепочки через API (build/check_project_chain.cjs): промпты, разбор
+ * ответов ассистента, расчёты страницы (связь, тренд, поток эффекта) и
+ * тексты, которые переходят с шага на шаг. Поэтому то, что участник копирует
+ * в ассистента, — ровно то, что прогнано через API, а не его пересказ.
+ *
+ * Принцип разделения труда: ассистент формулирует и выбирает, страница
+ * считает. Веб-версия ассистента не читает CSV и ненадёжна в арифметике,
+ * поэтому таблицы маленькие и встроены в промпт текстом, а все числа
+ * (корреляция, наклон, поток эффекта, NPV) считаются здесь.
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.ProjectCore = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+  var NB = ' ';
+
+  // ── числа и текст ──────────────────────────────────────────────────────
+  function num(v) {
+    if (typeof v === 'number') return v;
+    var s = String(v == null ? '' : v).replace(/[\s  ]/g, '').replace(',', '.');
+    var m = s.match(/-?\d+(?:\.\d+)?/);
+    return m ? parseFloat(m[0]) : NaN;
+  }
+  function firstNum(s) { var n = num(s); return isNaN(n) ? null : n; }
+  function fi(x) {
+    var s = String(Math.round(Math.abs(x))).replace(/\B(?=(\d{3})+(?!\d))/g, NB);
+    return (x < 0 ? '−' : '') + s;
+  }
+  function fr(x, d) { return Number(x).toFixed(d).replace('.', ',').replace(/^-/, '−'); }
+  function fmtv(v) {
+    if (v === null || v === undefined || isNaN(v)) return '—';
+    var a = Math.abs(v);
+    if (a >= 1000) return fi(v);
+    if (Number.isInteger(v)) return String(v);
+    return String(Math.round(v * 10000) / 10000).replace('.', ',');
+  }
+  function money(x) {
+    var a = Math.abs(x);
+    if (a >= 1e6) return (x < 0 ? '−' : '') + fr(a / 1e6, a >= 1e7 ? 1 : 2) + ' млн руб.';
+    if (a >= 1e4) return (x < 0 ? '−' : '') + fi(a / 1e3) + ' тыс. руб.';
+    return fi(x) + ' руб.';
+  }
+  function clean(s) { return String(s == null ? '' : s).replace(/\s+/g, ' ').trim(); }
+  function or(v, d) { var c = clean(v); return c ? c : d; }
+
+  // ── таблица данных ─────────────────────────────────────────────────────
+  // Первая строка — названия столбцов; разделитель — точка с запятой,
+  // табуляция (вставка из Excel) или запятая. Первый столбец — метка строки.
+  function parseTable(text) {
+    var lines = String(text || '').replace(/^﻿/, '').split(/\r?\n/)
+      .map(function (l) { return l.trim(); }).filter(Boolean);
+    if (lines.length < 2) return null;
+    var sep = lines[0].indexOf('\t') >= 0 ? '\t' : lines[0].indexOf(';') >= 0 ? ';' : ',';
+    var cols = lines[0].split(sep).map(clean);
+    var rows = [];
+    for (var i = 1; i < lines.length; i++) {
+      var cells = lines[i].split(sep).map(clean);
+      if (cells.length < 2) continue;
+      while (cells.length < cols.length) cells.push('');
+      rows.push(cells.slice(0, cols.length));
+    }
+    return rows.length ? { cols: cols, rows: rows } : null;
+  }
+  function tableText(t, max) {
+    var rows = t.rows.slice(0, max || 40);
+    return t.cols.join(';') + '\n' + rows.map(function (r) { return r.join(';'); }).join('\n');
+  }
+  function numericCols(t) {
+    var out = [];
+    for (var j = 1; j < t.cols.length; j++) {
+      var ok = 0, n = 0;
+      for (var i = 0; i < t.rows.length; i++) {
+        if (clean(t.rows[i][j]) === '') continue;
+        n++; if (!isNaN(num(t.rows[i][j]))) ok++;
+      }
+      if (n && ok >= n * 0.8) out.push(t.cols[j]);
+    }
+    return out;
+  }
+  function column(t, name) {
+    var j = t.cols.indexOf(name);
+    if (j < 0) return [];
+    return t.rows.map(function (r) { return num(r[j]); });
+  }
+  function labels(t) { return t.rows.map(function (r) { return r[0]; }); }
+  function isMonthly(t) {
+    return t.rows.length >= 6 && t.rows.every(function (r) { return /^\d{4}-\d{2}$/.test(r[0]); });
+  }
+
+  // ── статистика ─────────────────────────────────────────────────────────
+  function mean(a) { var s = 0; for (var i = 0; i < a.length; i++) s += a[i]; return a.length ? s / a.length : 0; }
+  function pairs(x, y) {
+    var px = [], py = [];
+    for (var i = 0; i < Math.min(x.length, y.length); i++) if (!isNaN(x[i]) && !isNaN(y[i])) { px.push(x[i]); py.push(y[i]); }
+    return { x: px, y: py };
+  }
+  function pearson(x, y) {
+    var p = pairs(x, y), mx = mean(p.x), my = mean(p.y), sxy = 0, sxx = 0, syy = 0;
+    for (var i = 0; i < p.x.length; i++) { var dx = p.x[i] - mx, dy = p.y[i] - my; sxy += dx * dy; sxx += dx * dx; syy += dy * dy; }
+    if (!sxx || !syy) return 0;
+    return sxy / Math.sqrt(sxx * syy);
+  }
+  function linfit(x, y) {
+    var p = pairs(x, y), mx = mean(p.x), my = mean(p.y), sxy = 0, sxx = 0;
+    for (var i = 0; i < p.x.length; i++) { sxy += (p.x[i] - mx) * (p.y[i] - my); sxx += (p.x[i] - mx) * (p.x[i] - mx); }
+    var b = sxx ? sxy / sxx : 0;
+    return { a: my - b * mx, b: b, n: p.x.length };
+  }
+  function strength(r) {
+    var a = Math.abs(r);
+    if (a >= 0.7) return 'сильная';
+    if (a >= 0.4) return 'умеренная';
+    if (a >= 0.2) return 'слабая';
+    return 'связи нет';
+  }
+  function niceStep(x) {
+    var a = Math.abs(x); if (!a) return 1;
+    var p = Math.pow(10, Math.floor(Math.log10(a)));
+    var m = a / p, c = m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10;
+    return c * p;
+  }
+
+  // Связь двух показателей: коэффициент, наклон, диапазоны, текст для промпта.
+  function analysisPair(t, xName, yName) {
+    var x = column(t, xName), y = column(t, yName), p = pairs(x, y);
+    if (p.x.length < 3) return null;
+    var r = pearson(x, y), f = linfit(x, y);
+    var step = niceStep((Math.max.apply(null, p.x) - Math.min.apply(null, p.x)) / 5);
+    var dy = f.b * step;
+    var unit = isMonthly(t) ? 'месяцам' : 'строкам таблицы';
+    var text = 'Связь показателей «' + xName + '» и «' + yName + '» по ' + p.x.length + ' ' + unit +
+      ': коэффициент корреляции Пирсона r = ' + fr(r, 2) + ' (' + strength(r) +
+      (Math.abs(r) >= 0.2 ? (r > 0 ? ' прямая' : ' обратная') : '') + ' связь). ' +
+      'По линии регрессии при увеличении «' + xName + '» на ' + fmtv(step) +
+      ' показатель «' + yName + '» в среднем ' + (dy >= 0 ? 'больше' : 'меньше') + ' на ' + fmtv(Math.abs(Math.round(dy * 100) / 100)) + '. ' +
+      'Диапазон «' + xName + '»: ' + fmtv(Math.min.apply(null, p.x)) + '–' + fmtv(Math.max.apply(null, p.x)) +
+      '; диапазон «' + yName + '»: ' + fmtv(Math.min.apply(null, p.y)) + '–' + fmtv(Math.max.apply(null, p.y)) + '.';
+    return { mode: 'pair', x: xName, y: yName, r: r, strength: strength(r), fit: f, n: p.x.length,
+      step: step, dy: dy, xs: p.x, ys: p.y, text: text };
+  }
+
+  // Динамика одного показателя: первое/последнее, тренд, сравнение годов.
+  function analysisTrend(t, yName) {
+    var y = column(t, yName), lab = labels(t), n = y.length;
+    if (n < 4) return null;
+    var idx = []; for (var i = 0; i < n; i++) idx.push(i);
+    var f = linfit(idx, y);
+    var monthly = isMonthly(t);
+    var text = 'Показатель «' + yName + '» за ' + n + (monthly ? ' месяцев' : ' периодов') + ': ' +
+      'первое значение ' + fmtv(y[0]) + ' (' + lab[0] + '), последнее ' + fmtv(y[n - 1]) + ' (' + lab[n - 1] + '), ' +
+      'изменение ' + fr((y[n - 1] / y[0] - 1) * 100, 1) + ' %. ' +
+      'Тренд по линии регрессии: ' + (f.b >= 0 ? '+' : '−') + fmtv(Math.abs(Math.round(f.b * 10) / 10)) + ' за период. ';
+    var yoy = [];
+    if (monthly && n >= 24) {
+      var last12 = y.slice(n - 12), prev12 = y.slice(n - 24, n - 12);
+      var m1 = mean(last12), m0 = mean(prev12);
+      text += 'Среднее за последние 12 месяцев ' + fmtv(Math.round(m1 * 10) / 10) + ' против ' +
+        fmtv(Math.round(m0 * 10) / 10) + ' за предыдущие 12 (' + (m1 >= m0 ? '+' : '−') + fr(Math.abs(m1 / m0 - 1) * 100, 1) + ' %). ';
+      var below = [];
+      for (var k = 12; k < n; k++) {
+        var d = y[k] / y[k - 12] - 1; yoy.push({ label: lab[k], d: d });
+        if (d < -0.05) below.push(lab[k] + ' (' + fr(d * 100, 1) + ' %)');
+      }
+      text += 'Месяцы ниже того же месяца прошлого года более чем на 5 %: ' + (below.length ? below.join(', ') : 'нет') + '.';
+    }
+    return { mode: 'trend', y: yName, ys: y, labels: lab, fit: f, n: n, yoy: yoy, text: text };
+  }
+
+  // ── финансовая модель: повторяет finmodel_core.py ─────────────────────
+  function ramp(t, T) { return T <= 0 ? 1 : Math.min(t / T, 1); }
+  function flows(p) {
+    var H = Math.round(p.horizon), T = p.ramp, R = p.keep, full = p.delta * p.volume;
+    var m = Math.pow(1 + p.rate, 1 / 12) - 1, rows = [], cum = 0, cumd = 0;
+    for (var t = 0; t <= H; t++) {
+      var inc = 0, units = 0, cost;
+      if (t === 0) { cost = p.capex; }
+      else {
+        cost = p.opex;
+        if (p.kind === 'cohort') { for (var k = Math.max(1, t - R + 1); k <= t; k++) units += full * ramp(k, T); }
+        else { units = (t <= R) ? full * ramp(t, T) : 0; }
+        inc = units * p.price;
+      }
+      var cf = inc - cost; cum += cf; var disc = cf / Math.pow(1 + m, t); cumd += disc;
+      rows.push({ t: t, units: units, income: inc, cost: cost, cf: cf, cum: cum, disc: disc, cum_disc: cumd });
+    }
+    return rows;
+  }
+  function totals(p) {
+    var rows = flows(p), pb = null, pbd = null, y1 = 0, inc = 0, cost = 0;
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      if (r.t > 0 && pb === null && r.cum >= 0) pb = r.t;
+      if (r.t > 0 && pbd === null && r.cum_disc >= 0) pbd = r.t;
+      if (r.t >= 1 && r.t <= 12) y1 += r.income; inc += r.income; cost += r.cost;
+    }
+    return { rows: rows, npv: rows[rows.length - 1].cum_disc, cum: rows[rows.length - 1].cum,
+      payback: pb, payback_disc: pbd, year1: y1, full_month: p.delta * p.volume * p.price,
+      income: inc, cost: cost, horizon: Math.round(p.horizon) };
+  }
+  function sensitivity(p, ass) {
+    var base = totals(p).npv, out = [];
+    for (var i = 0; i < ass.length; i++) {
+      var a = ass[i];
+      if (a.pess === null || a.opt === null || isNaN(a.pess) || isNaN(a.opt)) continue;
+      var q = JSON.parse(JSON.stringify(p)); q[a.key] = a.pess; var np = totals(q).npv;
+      q = JSON.parse(JSON.stringify(p)); q[a.key] = a.opt; var no = totals(q).npv;
+      out.push({ key: a.key, name: a.name, base: p[a.key], pess: a.pess, opt: a.opt, npv_pess: np, npv_opt: no,
+        flips: (np < 0) !== (base < 0), span: Math.abs(no - np) });
+    }
+    out.sort(function (a, b) { return b.span - a.span; });
+    return out;
+  }
+  // Текст расчёта — вход для промпта слайда и для письма.
+  function effectText(p, units, res, sens) {
+    var L = [];
+    L.push('Формула: ' + fmtv(p.delta) + ' (' + or(units.delta, 'изменение показателя') + ') × ' +
+      fmtv(p.volume) + ' (' + or(units.volume, 'объём') + ') × ' + fmtv(p.price) + ' руб. (' + or(units.price, 'стоимость единицы в месяц') + ') = ' +
+      money(res.full_month) + ' в месяц на полном уровне' + (p.kind === 'cohort' ? ' на каждую месячную когорту' : '') + '.');
+    L.push('Сроки: выход на уровень ' + p.ramp + ' мес.; срок сохранения эффекта ' + p.keep + ' мес.; горизонт ' + res.horizon + ' мес.; ставка дисконтирования ' + fr(p.rate * 100, 1) + ' %.');
+    L.push('Затраты: единовременно ' + money(p.capex) + ', ежемесячно ' + money(p.opex) + '.');
+    L.push('Результат: доход за первый год ' + money(res.year1) + '; окупаемость ' + (res.payback === null ? 'не достигается в горизонте' : 'на ' + res.payback + '-й месяц') + '; NPV за ' + res.horizon + ' мес. ' + money(res.npv) + '.');
+    var crit = sens.filter(function (r) { return r.flips; });
+    if (crit.length) L.push('Главное допущение: вывод меняется при пессимистичном значении — ' +
+      crit.map(function (r) { return r.name.toLowerCase() + ' = ' + fmtv(r.pess) + ' (NPV ' + money(r.npv_pess) + ')'; }).join('; ') + '.');
+    else if (sens.length) L.push('Главное допущение: ни одно допущение по отдельности не меняет вывод; самое влиятельное — ' +
+      sens[0].name.toLowerCase() + ' (пессимистичное ' + fmtv(sens[0].pess) + ' даёт NPV ' + money(sens[0].npv_pess) + ', оптимистичное ' + fmtv(sens[0].opt) + ' — ' + money(sens[0].npv_opt) + ').');
+    return L.join('\n');
+  }
+
+  // Значения показателя для промпта шага 1: ряд — первое/последнее/наибольшее/наименьшее,
+  // срезы — только наибольшее и наименьшее (порядок строк там ничего не значит).
+  function facts1(t, focus) {
+    if (!t || !focus) return '';
+    var y = column(t, focus), lab = labels(t), n = y.length; if (!n) return '';
+    var mx = 0, mn = 0; for (var i = 1; i < n; i++) { if (y[i] > y[mx]) mx = i; if (y[i] < y[mn]) mn = i; }
+    var s = '';
+    if (isMonthly(t)) s += 'первое ' + fmtv(y[0]) + ' (' + lab[0] + '), последнее ' + fmtv(y[n - 1]) + ' (' + lab[n - 1] + '), ';
+    return s + 'наибольшее ' + fmtv(y[mx]) + ' (' + lab[mx] + '), наименьшее ' + fmtv(y[mn]) + ' (' + lab[mn] + ')';
+  }
+
+  // ── промпты ────────────────────────────────────────────────────────────
+  // Сегменты: {t: текст} и {k: ключ}. Ключ подставляется значением из vals
+  // или шаблонным выражением PH[k] в [скобках].
+  var PH = {
+    axis: '[ось: продукт, процесс или бизнес-инициатива]',
+    object: '[объект изменений]',
+    observation: '[что вы наблюдаете — одной фразой]',
+    source: '[откуда данные]',
+    table: '[таблица данных: первая строка — названия столбцов]',
+    focus: '[показатель из таблицы]',
+    facts: '[значения показателя: первое, последнее, наибольшее, наименьшее — считает страница]',
+    action_in: '[что вы предполагаете изменить]',
+    problem: '[проблема из шага 1]',
+    action: '[что меняем из шага 1]',
+    columns: '[показатели из таблицы]',
+    other: '[другие показатели подразделения]',
+    metrics: '[метрики из шага 2 — по одной в строке]',
+    sources: '[источники, которые есть у подразделения]',
+    analysis: '[результат анализа из шага 4]',
+    n: '[число наблюдений]',
+    hyp: '[гипотеза из шага 5]',
+    fdelta: '[базовое изменение показателя]', udelta: '[единица]', sdelta: '[данные или допущение]',
+    fvolume: '[базовый объём]', uvolume: '[единица]', svolume: '[данные или допущение]',
+    fprice: '[базовая стоимость единицы]', uprice: '[единица]', sprice: '[данные или допущение]',
+    fkeep: '[срок сохранения, мес.]', skeep: '[данные или допущение]',
+    effect: '[расчёт из шага 7]',
+    result: '[метрика результата из шага 2]', target: '[целевое значение из шага 1]',
+    control: '[контрольная метрика из шага 2]', missing: '[данные, которых нет, из шага 3]',
+    refute: '[что опровергнет гипотезу, из шага 5]',
+    seffect: '[строка «Результат» слайда из шага 8]', risk: '[строка «Риск» из шага 8]',
+    first: '[строка «Действие» из шага 8]'
+  };
+
+  var PROMPTS = {
+    s1: [
+      { t: 'Ты — аналитик данных банка. Помоги сформулировать проблему для проекта изменений по правилам ниже. Числа бери только из таблицы, ничего не пересчитывай и не выдумывай; если чего-то нет в данных — так и напиши: нет в данных.\n\nОбъект изменений (ось «' }, { k: 'axis' }, { t: '»): ' }, { k: 'object' },
+      { t: '.\nНаблюдение руководителя: ' }, { k: 'observation' },
+      { t: '.\nИсточник данных: ' }, { k: 'source' },
+      { t: '.\n\nДанные (разделитель — точка с запятой, десятичный знак — запятая):\n' }, { k: 'table' },
+      { t: '\n\nПоказатель, который беспокоит: ' }, { k: 'focus' },
+      { t: '. Его значения по таблице (посчитаны заранее, используй их как есть): ' }, { k: 'facts' },
+      { t: '.\nЧто руководитель предполагает изменить: ' }, { k: 'action_in' },
+      { t: '.\n\nСформулированная проблема отвечает четырём условиям: содержит показатель с его значением, период и источник; называет целевой уровень; указывает, что именно можно изменить; не содержит оценок вместо чисел.\n\nОтветь строго в формате ниже — пять строк, каждая начинается с названия поля и двоеточия, без вступления, пояснений и пустых строк:\nПроблема: <одно предложение: показатель, его значения из строки «значения по таблице» с их периодами или срезами, источник>\nПоказатель: <название столбца из таблицы как есть>\nИсточник: <источник данных одной фразой>\nЦелевое значение: <число: значение показателя, к которому стремимся, и срок; если данных для цели нет — предложи число, исходя из лучшего значения в таблице, и добавь слово «допущение»>\nЧто меняем: <предполагаемое изменение из условия, сформулированное одним предложением как действие; не заменяй его другим>' }
+    ],
+    s2: [
+      { t: 'Ты — аналитик данных банка. Для проекта ниже подбери метрики по принципу дерева: результат — запаздывающая метрика, по которой судят об итоге; драйверы — опережающие метрики, которые наблюдаются раньше результата и на которые действует изменение; контрольная — метрика, которая не должна ухудшиться.\n\nПроблема: ' }, { k: 'problem' },
+      { t: '\nЧто меняем: ' }, { k: 'action' },
+      { t: '\nПоказатели, которые уже есть в данных: ' }, { k: 'columns' },
+      { t: '.\nДругие показатели, которые подразделение может наблюдать: ' }, { k: 'other' },
+      { t: '.\n\nПравила: результат — из показателей, которые есть в данных; драйверы выбирай так, чтобы изменение действовало на них напрямую; названия показателей из списков не переименовывай; показатели, которых нет ни в одном списке, не добавляй, кроме одного, если без него дерево не собирается, — тогда пометь его словом «новый».\n\nОтветь строго в формате ниже — четыре строки, поля разделены вертикальной чертой, без вступления и пояснений:\nРезультат: <название> | <единица измерения> | <как часто наблюдается> | <почему это запаздывающая метрика, до 12 слов>\nДрайвер 1: <название> | <единица измерения> | <как часто наблюдается> | <как влияет на результат, до 12 слов>\nДрайвер 2: <название> | <единица измерения> | <как часто наблюдается> | <как влияет на результат, до 12 слов>\nКонтрольная: <название> | <единица измерения> | <как часто наблюдается> | <что не должно ухудшиться, до 12 слов>' }
+    ],
+    s3: [
+      { t: 'Ты — аналитик данных банка. Составь план по данным для метрик проекта: для каждой метрики определи, собирается ли она сейчас, и как получить первое проверенное значение.\n\nМетрики проекта:\n' }, { k: 'metrics' },
+      { t: '\nИсточники, которые есть у подразделения: ' }, { k: 'sources' },
+      { t: '.\nПоказатели, которые уже есть в выгрузке первого источника (для них статус «есть», источник — эта выгрузка, срок — дни): ' }, { k: 'columns' },
+      { t: '.\n\nПравила: используй только перечисленные источники; метрика, названная так же, как показатель выгрузки, уже собирается — не проси заводить для неё новое поле; если метрику нельзя посчитать из них — статус «нет» и что нужно завести (новое поле, регулярная выгрузка, кодификатор причин); статус «частично», если данные есть, но нерегулярно или без нужного разреза; срок первого проверенного значения оценивай по частоте обновления источника.\n\nОтветь строго таблицей — по одной строке на метрику, поля разделены вертикальной чертой, без заголовка, вступления и пояснений:\n<метрика> | <есть / частично / нет> | <источник или чего не хватает> | <как получить первое значение> | <срок: дни, недели или месяцы>' }
+    ],
+    s5: [
+      { t: 'Ты — аналитик данных банка. Разложи результат анализа на факт, интерпретацию и гипотезу. Факт — только то, что показали числа; интерпретация — одно возможное объяснение, помеченное как предположение; гипотеза — проверяемое утверждение в форме «если …, то … изменится на … за …». Числа не пересчитывай и новых не добавляй.\n\nПроблема: ' }, { k: 'problem' },
+      { t: '\nЧто меняем: ' }, { k: 'action' },
+      { t: '\nРезультат анализа: ' }, { k: 'analysis' },
+      { t: '\nОграничения: связь по агрегированным данным не доказывает причину; число наблюдений — ' }, { k: 'n' },
+      { t: '.\n\nОтветь строго в формате ниже — четыре строки, каждая начинается с названия поля и двоеточия, без вступления и пояснений:\nФакт: <одно предложение с числами из результата анализа>\nИнтерпретация: <одно предложение, начинается со слова «Возможно»>\nГипотеза: <если [что меняем], то [показатель результата] изменится на [число или доля] за [срок]>\nЧто опровергнет: <какое наблюдение после изменения покажет, что гипотеза неверна>' }
+    ],
+    s6: [
+      { t: 'Ты — аналитик данных банка, проверяешь допущения финансовой модели. Формула эффекта: изменение показателя × объём × стоимость единицы в месяц. Для каждого множителя и для срока сохранения эффекта укажи, подтверждён ли он данными или это допущение, и задай пессимистичное и оптимистичное значения: пессимистичное — то, при котором проект всё ещё можно защитить, оптимистичное — реалистичный верх. Значения — числа в тех же единицах, что базовое; базовые значения не меняй и эффект не считай. Если множитель равен 1 и единица «—», он не используется: напиши для него 1 | 1 | 1 | данные | не используется.\n\nПроект: ' }, { k: 'problem' },
+      { t: '\nГипотеза: ' }, { k: 'hyp' },
+      { t: '\nМножители:\nИзменение показателя — базовое ' }, { k: 'fdelta' }, { t: ' (' }, { k: 'udelta' }, { t: '); откуда: ' }, { k: 'sdelta' },
+      { t: '\nОбъём — базовое ' }, { k: 'fvolume' }, { t: ' (' }, { k: 'uvolume' }, { t: '); откуда: ' }, { k: 'svolume' },
+      { t: '\nСтоимость единицы — базовое ' }, { k: 'fprice' }, { t: ' (' }, { k: 'uprice' }, { t: '); откуда: ' }, { k: 'sprice' },
+      { t: '\nСрок сохранения эффекта — базовое ' }, { k: 'fkeep' }, { t: ' мес.; откуда: ' }, { k: 'skeep' },
+      { t: '\n\nОтветь строго в формате ниже — четыре строки, поля разделены вертикальной чертой, без вступления и пояснений; числа пиши без единиц измерения:\nИзменение показателя: <базовое> | <пессимистичное> | <оптимистичное> | <данные или допущение> | <обоснование, до 15 слов>\nОбъём: <базовое> | <пессимистичное> | <оптимистичное> | <данные или допущение> | <обоснование, до 15 слов>\nСтоимость единицы: <базовое> | <пессимистичное> | <оптимистичное> | <данные или допущение> | <обоснование, до 15 слов>\nСрок сохранения: <базовое> | <пессимистичное> | <оптимистичное> | <данные или допущение> | <обоснование, до 15 слов>' }
+    ],
+    s8: [
+      { t: 'Ты — аналитик данных банка, готовишь слайд «Эффект для бизнеса» для презентации проекта. Используй только числа из расчёта ниже, не пересчитывай их и не добавляй новых; язык деловой, без оценок и призывов.\n\nПроект: ' }, { k: 'problem' },
+      { t: '\nГипотеза: ' }, { k: 'hyp' },
+      { t: '\nРасчёт: ' }, { k: 'effect' },
+      { t: '\n\nОтветь строго в формате ниже — пять строк, каждая начинается с названия поля и двоеточия, без вступления и пояснений:\nЗаголовок: <название проекта в 5–8 слов; называет предмет, а не вывод>\nФормула: <строка «Формула» из расчёта, без изменений>\nРезультат: <строка «Результат» из расчёта, без изменений>\nРиск: <допущение из строки «Главное допущение» расчёта и его пессимистичное значение>\nДействие: <что сделать в первую очередь, чтобы подтвердить это допущение данными: какую выгрузку или сверку заказать>' }
+    ],
+    s9: [
+      { t: 'Ты — аналитик данных банка, помогаешь руководителю написать письмо команде по итогам проекта. Письмо содержит решения, а не расчёт. Используй только сведения ниже, числа не меняй и не добавляй; деловой язык, без лозунгов и оценок людей; объём — до 250 слов.\n\nСведения о проекте:\nПроблема: ' }, { k: 'problem' },
+      { t: '\nЧто меняем: ' }, { k: 'action' },
+      { t: '\nМетрика результата: ' }, { k: 'result' },
+      { t: '\nЦелевое значение: ' }, { k: 'target' },
+      { t: '\nКонтрольная метрика: ' }, { k: 'control' },
+      { t: '\nДанные, которых нет: ' }, { k: 'missing' },
+      { t: '\nГипотеза: ' }, { k: 'hyp' },
+      { t: '\nЧто опровергнет гипотезу: ' }, { k: 'refute' },
+      { t: '\nЭффект: ' }, { k: 'seffect' },
+      { t: '\nГлавное допущение: ' }, { k: 'risk' },
+      { t: '\nПервое действие: ' }, { k: 'first' },
+      { t: '\n\nСодержание абзацев: 1) «Что меняем и почему» — объект, проблема с числом, что меняется в работе; 2) «По какому показателю судим» — метрика результата, текущее и целевое значение, срок, контрольная метрика; 3) «Какие данные начинаем собирать» — чего не хватало, как появится, с какого момента, кто отвечает (роль, не имя); 4) «Первое действие» — что делается на следующей неделе и кем (роль); 5) «Когда пересматриваем» — когда первая сверка и условие, при котором гипотеза отклоняется.\n\nОтветь строго пятью абзацами без вступления, обращения и подписи. Каждый абзац — одна строка: название раздела, двоеточие и сразу текст абзаца. Названия разделов: Что меняем и почему; По какому показателю судим; Какие данные начинаем собирать; Первое действие; Когда пересматриваем.' }
+    ]
+  };
+
+  // Сборка промпта: text — для копирования, parts — для подсветки.
+  function fillPrompt(segs, vals, mode) {
+    var text = '', parts = [];
+    for (var i = 0; i < segs.length; i++) {
+      var s = segs[i];
+      if (s.t !== undefined) { text += s.t; parts.push({ t: s.t }); continue; }
+      var v = vals[s.k];
+      var has = v !== undefined && v !== null && clean(v) !== '';
+      if (mode === 'tpl' || !has) { text += PH[s.k]; parts.push({ ph: PH[s.k] }); }
+      else { text += String(v); parts.push({ v: String(v) }); }
+    }
+    return { text: text, parts: parts };
+  }
+  function promptKeys(segs) { return segs.filter(function (s) { return s.k; }).map(function (s) { return s.k; }); }
+
+  // ── разбор ответов ─────────────────────────────────────────────────────
+  function normKey(s) {
+    return clean(s).toLowerCase().replace(/ё/g, 'е').replace(/[*_«»"“”:.\-–—]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  function stripLine(l) {
+    return clean(l).replace(/^[-*•>#:\d.)\s]+/, '').replace(/\*\*|__/g, '').replace(/^<|>$/g, '').trim();
+  }
+  // Строки «Ключ: значение»; ключ ищется по началу строки среди псевдонимов.
+  function parseKV(text, spec) {
+    var out = {}, found = 0, lines = String(text || '').split(/\r?\n/);
+    var cur = null, orphans = [];
+    for (var i = 0; i < lines.length; i++) {
+      var l = stripLine(lines[i]);
+      if (!l) { cur = null; continue; }
+      var m = l.match(/^([^:|]{2,60}):\s*(.*)$/);
+      var hit = null;
+      if (m) {
+        var k = normKey(m[1]);
+        for (var f = 0; f < spec.length && !hit; f++)
+          for (var a = 0; a < spec[f].aliases.length; a++)
+            if (k === spec[f].aliases[a] || k.indexOf(spec[f].aliases[a]) === 0) { hit = spec[f]; break; }
+      }
+      if (hit) {
+        if (out[hit.key] === undefined) found++;
+        var val = clean(m[2]).replace(/^[«"“]|[»"”]$/g, '');
+        if (/^<[^>]*>$/.test(val)) val = '';          // модель повторила шаблонное выражение
+        out[hit.key] = val;
+        cur = (hit.multi || val === '') ? hit.key : null;
+      } else if (cur && out[cur] !== undefined) {
+        var cont = l.replace(/^<[^>]*>\s*/, '');
+        if (cont) out[cur] = (out[cur] + '\n' + cont).trim();   // значение на следующей строке или абзац письма
+        if (!spec.filter(function (f) { return f.key === cur; })[0].multi) cur = null;
+      } else if (m) {
+        orphans.push(l);   // «Ключ: значение» с чужим ключом — возможно, модель переименовала поле
+      } else {
+        orphans.push(l);   // строка без ключа
+      }
+    }
+    // Модель опустила названия полей: оставшиеся строки раздаются незаполненным
+    // полям по порядку — формат ответа задан построчно, порядок в нём фиксирован.
+    if (found < spec.length && orphans.length && !spec[0].multi) {
+      var missing = spec.filter(function (f) { return out[f.key] === undefined; });
+      for (var q = 0; q < missing.length && q < orphans.length; q++) {
+        var ov = orphans[q].replace(/^[^:]{2,60}:\s*/, '');
+        if (!ov) continue;
+        out[missing[q].key] = ov; found++;
+      }
+    }
+    return { fields: out, found: found, total: spec.length };
+  }
+  function splitBar(v) {
+    var c = String(v || '').split('|').map(function (x) { return clean(x).replace(/^[<«"]|[>»"]$/g, ''); });
+    while (c.length && c[0] === '') c.shift();                 // строка markdown-таблицы начинается с «|»
+    while (c.length > 1 && c[c.length - 1] === '') c.pop();
+    return c;
+  }
+
+  var SPEC = {
+    s1: [
+      { key: 'problem', aliases: ['проблема'] },
+      { key: 'metric', aliases: ['показатель'] },
+      { key: 'source', aliases: ['источник'] },
+      { key: 'target', aliases: ['целевое значение', 'целевое', 'цель'] },
+      { key: 'action', aliases: ['что меняем', 'изменение', 'решение', 'действие'] }
+    ],
+    s2: [
+      { key: 'result', aliases: ['результат'] },
+      { key: 'd1', aliases: ['драйвер 1', 'драйвер1', 'драйвер один', 'драйвер а'] },
+      { key: 'd2', aliases: ['драйвер 2', 'драйвер2', 'драйвер два', 'драйвер б'] },
+      { key: 'control', aliases: ['контрольная', 'контроль'] }
+    ],
+    s5: [
+      { key: 'fact', aliases: ['факт'] },
+      { key: 'interp', aliases: ['интерпретация'] },
+      { key: 'hyp', aliases: ['гипотеза'] },
+      { key: 'refute', aliases: ['что опровергнет', 'опровержение', 'опровергнет', 'проверка'] }
+    ],
+    s6: [
+      { key: 'delta', aliases: ['изменение показателя', 'изменение', 'дельта'] },
+      { key: 'volume', aliases: ['объем', 'объём'] },
+      { key: 'price', aliases: ['стоимость единицы', 'стоимость', 'цена'] },
+      { key: 'keep', aliases: ['срок сохранения', 'срок'] }
+    ],
+    s8: [
+      { key: 'title', aliases: ['заголовок'] },
+      { key: 'formula', aliases: ['формула'] },
+      { key: 'result', aliases: ['результат'] },
+      { key: 'risk', aliases: ['риск'] },
+      { key: 'action', aliases: ['действие'] }
+    ],
+    s9: [
+      { key: 'p1', aliases: ['что меняем и почему', 'что меняем'], multi: true },
+      { key: 'p2', aliases: ['по какому показателю судим', 'по какому показателю', 'показатель'], multi: true },
+      { key: 'p3', aliases: ['какие данные начинаем собирать', 'какие данные', 'данные'], multi: true },
+      { key: 'p4', aliases: ['первое действие', 'действие'], multi: true },
+      { key: 'p5', aliases: ['когда пересматриваем', 'пересмотр', 'когда'], multi: true }
+    ]
+  };
+
+  function parseS1(text) { return parseKV(text, SPEC.s1); }
+  function parseS2(text) {
+    var r = parseKV(text, SPEC.s2), m = {};
+    Object.keys(r.fields).forEach(function (k) {
+      var c = splitBar(r.fields[k]);
+      m[k] = { name: c[0] || '', unit: c[1] || '', freq: c[2] || '', note: c.slice(3).join(' | ') };
+    });
+    return { metrics: m, found: r.found, total: r.total };
+  }
+  function parseS3(text) {
+    var rows = [], lines = String(text || '').split(/\r?\n/);
+    for (var i = 0; i < lines.length; i++) {
+      var l = stripLine(lines[i]);
+      if (l.indexOf('|') < 0) continue;
+      var c = splitBar(l).filter(function (x, j, arr) { return !(j === 0 && x === '') && !(j === arr.length - 1 && x === ''); });
+      if (c.length < 3) continue;
+      if (/^-{2,}/.test(c[0]) || /^метрика$/i.test(c[0])) continue;   // разделители и заголовок markdown
+      var st = normKey(c[1]);
+      var status = /нет/.test(st) ? 'нет' : /частич|нерегул|по запросу/.test(st) ? 'частично' : /есть|да|собир/.test(st) ? 'есть' : c[1];
+      rows.push({ metric: c[0], status: status, source: c[2] || '', how: c[3] || '', term: c[4] || '' });
+    }
+    return { rows: rows, found: rows.length };
+  }
+  function parseS5(text) { return parseKV(text, SPEC.s5); }
+  function parseS6(text) {
+    var r = parseKV(text, SPEC.s6), a = {};
+    Object.keys(r.fields).forEach(function (k) {
+      var c = splitBar(r.fields[k]);
+      var nums = c.slice(0, 3).map(firstNum);
+      // если модель сдвинула столбцы (без базового), берём два первых числа как пес./опт.
+      var rest = c.slice(3).join(' | ');
+      a[k] = { base: nums[0], pess: nums[1], opt: nums[2], kind: /допущ/i.test(rest) ? 'допущение' : /данн/i.test(rest) ? 'данные' : '', why: c.slice(4).join(' | ') || c[3] || '' };
+    });
+    return { ass: a, found: r.found, total: r.total };
+  }
+  function parseS8(text) { return parseKV(text, SPEC.s8); }
+  function parseS9(text) { return parseKV(text, SPEC.s9); }
+
+  // ── экспорт проекта ────────────────────────────────────────────────────
+  function projectMarkdown(st) {
+    var L = [];
+    function h(t) { L.push('', '## ' + t, ''); }
+    L.push('# Проект: ' + or(st.s8 && st.s8.title, or(st.s1 && st.s1.object, 'без названия')));
+    L.push('', 'Собрано в тренажёре сквозной практики. Каркас: проблема → метрика → данные → инструмент → анализ → вывод → эффект.');
+    h('1. Проблема');
+    L.push('- Объект изменений (' + or(st.s1.axis, '—') + '): ' + or(st.s1.object, '—'));
+    L.push('- Проблема: ' + or(st.s1.problem, '—'));
+    L.push('- Показатель: ' + or(st.s1.metric, '—') + '; источник: ' + or(st.s1.source, '—'));
+    L.push('- Целевое значение: ' + or(st.s1.target, '—'));
+    L.push('- Что меняем: ' + or(st.s1.action, '—'));
+    h('2. Метрики');
+    ['result', 'd1', 'd2', 'control'].forEach(function (k) {
+      var m = st.s2.metrics[k]; if (!m || !m.name) return;
+      L.push('- ' + ({ result: 'Результат', d1: 'Драйвер', d2: 'Драйвер', control: 'Контрольная' })[k] + ': ' + m.name + ' (' + or(m.unit, '—') + ', ' + or(m.freq, '—') + ') — ' + or(m.note, ''));
+    });
+    h('3. Данные');
+    L.push('| Метрика | Статус | Источник | Как получить | Срок |', '|---|---|---|---|---|');
+    (st.s3.rows || []).forEach(function (r) { L.push('| ' + [r.metric, r.status, r.source, r.how, r.term].map(function (x) { return or(x, '—'); }).join(' | ') + ' |'); });
+    h('4. Инструмент и анализ');
+    L.push('- Инструмент: ' + or(st.s4.tool, 'расчёт страницы тренажёра'));
+    L.push('- Результат анализа: ' + or(st.s4.text, '—'));
+    h('5. Вывод');
+    L.push('- Факт: ' + or(st.s5.fact, '—'));
+    L.push('- Интерпретация: ' + or(st.s5.interp, '—'));
+    L.push('- Гипотеза: ' + or(st.s5.hyp, '—'));
+    L.push('- Что опровергнет: ' + or(st.s5.refute, '—'));
+    h('6. Эффект для бизнеса');
+    L.push('- ' + or(st.s7.text, '—'));
+    if (st.s8.title) {
+      L.push('', '**Слайд «Эффект для бизнеса»**', '');
+      L.push('- Заголовок: ' + st.s8.title);
+      L.push('- Формула: ' + or(st.s8.formula, '—'));
+      L.push('- Результат: ' + or(st.s8.result, '—'));
+      L.push('- Риск: ' + or(st.s8.risk, '—'));
+      L.push('- Действие: ' + or(st.s8.action, '—'));
+    }
+    h('7. Письмо команде');
+    [['Что меняем и почему', 'p1'], ['По какому показателю судим', 'p2'], ['Какие данные начинаем собирать', 'p3'], ['Первое действие', 'p4'], ['Когда пересматриваем', 'p5']]
+      .forEach(function (x) { L.push('**' + x[0] + '.** ' + or(st.s9[x[1]], '—'), ''); });
+    return L.join('\n');
+  }
+
+  return {
+    num: num, fi: fi, fr: fr, fmtv: fmtv, money: money, clean: clean, or: or, firstNum: firstNum,
+    parseTable: parseTable, tableText: tableText, numericCols: numericCols, column: column, labels: labels, isMonthly: isMonthly,
+    pearson: pearson, linfit: linfit, strength: strength, niceStep: niceStep, mean: mean,
+    analysisPair: analysisPair, analysisTrend: analysisTrend, facts1: facts1,
+    flows: flows, totals: totals, sensitivity: sensitivity, effectText: effectText,
+    PH: PH, PROMPTS: PROMPTS, fillPrompt: fillPrompt, promptKeys: promptKeys,
+    parseS1: parseS1, parseS2: parseS2, parseS3: parseS3, parseS5: parseS5, parseS6: parseS6, parseS8: parseS8, parseS9: parseS9,
+    projectMarkdown: projectMarkdown
+  };
+});
+
+</script>
+<script>
+(function(){
+var C=window.ProjectCore, P={"savings": {"tab": "Накопительный счёт", "axis": "продукт", "object": "накопительный счёт для физических лиц", "observation": "закрытия счетов за два года выросли почти вдвое и растут быстрее, чем прежде; одновременно растёт число жалоб", "source": "продуктовая витрина: месячные итоги по регионам и каналам, свёрнутые по месяцам", "focus": "закрытые_счета", "other_metrics": "срок разбора обращения (дни); доля обращений с ответом за два дня; число обращений по счёту", "sources": "продуктовая витрина по месяцам, регионам и каналам (обновляется ежемесячно); система обращений: обращения с датой регистрации и датой ответа (обновляется ежедневно); причины закрытий структурированно не собираются", "action": "сократить срок разбора обращений по накопительным счетам с пяти рабочих дней до двух", "table": {"cols": ["месяц", "новые_счета", "закрытые_счета", "активные_счета", "средний_остаток_тыс_руб", "расходы_на_продвижение_тыс_руб", "ставка_проц", "жалобы"], "rows": [["2024-07", "5228", "1143", "32519", "203,8", "4283", "11,5", "171"], ["2024-08", "5862", "1323", "37058", "211", "4852", "12", "201"], ["2024-09", "6298", "1401", "41955", "206,6", "5213", "12,8", "195"], ["2024-10", "6866", "1534", "47287", "206,5", "5343", "13,1", "220"], ["2024-11", "6970", "1611", "52646", "209,4", "5407", "13,6", "228"], ["2024-12", "7161", "1636", "58171", "207,5", "5567", "13,6", "222"], ["2025-01", "6971", "1651", "63491", "215,1", "5223", "13,7", "231"], ["2025-02", "6801", "1819", "68473", "214,8", "4740", "13,5", "247"], ["2025-03", "6075", "1424", "73124", "211,1", "4030", "13,1", "203"], ["2025-04", "5889", "1485", "77528", "214,8", "4052", "12,6", "213"], ["2025-05", "5517", "1360", "81685", "215,3", "3761", "11,9", "197"], ["2025-06", "5790", "1507", "85968", "210,9", "4097", "11,3", "214"], ["2025-07", "5686", "1430", "90224", "216,8", "4432", "10,6", "215"], ["2025-08", "6080", "1548", "94756", "220,9", "5408", "10", "230"], ["2025-09", "6385", "1699", "99442", "216,1", "5674", "9,8", "232"], ["2025-10", "6871", "1711", "104602", "220,6", "6279", "9,4", "228"], ["2025-11", "7606", "1922", "110286", "218,6", "7206", "9,3", "261"], ["2025-12", "7491", "1999", "115778", "219,2", "6902", "9,5", "295"], ["2026-01", "7540", "2008", "121310", "221,2", "6765", "9,6", "268"], ["2026-02", "7624", "2030", "126904", "219,3", "6647", "10", "273"], ["2026-03", "7108", "2045", "131967", "225,6", "5607", "10,6", "295"], ["2026-04", "7197", "1949", "137215", "221,2", "5084", "11,4", "287"], ["2026-05", "7124", "1939", "142400", "226,4", "4818", "12", "252"], ["2026-06", "7100", "1968", "147532", "230", "4762", "12,5", "287"]]}, "analysis": {"mode": "pair", "x": "жалобы", "y": "закрытые_счета"}, "fin": {"kind": "cohort", "delta": 100, "delta_unit": "предотвращённых закрытий в месяц", "volume": 1, "volume_unit": "—", "price": 550, "price_unit": "руб. маржи на счёт в месяц (220 тыс. руб. × 3 п. п. ÷ 12)", "ramp": 3, "keep": 12, "capex": 600000, "opex": 50000, "horizon": 24, "rate": 0.15, "assumptions": [{"key": "delta", "name": "Предотвращённых закрытий в месяц", "base": 100, "pess": 35, "opt": 130}, {"key": "price", "name": "Маржа на счёт в месяц, руб.", "base": 550, "pess": 400, "opt": 650}, {"key": "keep", "name": "Срок сохранения счёта, мес.", "base": 12, "pess": 4, "opt": 18}, {"key": "capex", "name": "Единовременные затраты, руб.", "base": 600000, "pess": 900000, "opt": 450000}, {"key": "opex", "name": "Ежемесячные затраты, руб.", "base": 50000, "pess": 80000, "opt": 35000}]}, "fin_note": "Гипотеза курса: ускоренный разбор обращений предотвращает около трети связанных с ними закрытий — порядка 100 счетов в месяц; каждый удержанный счёт приносит маржу на остаток, пока остаётся открытым."}, "cards": {"tab": "Карточный бизнес", "axis": "процесс", "object": "процесс выдачи и доставки кредитных карт", "observation": "часть выпущенных карт не активируется в первые 30 дней; в регионах с долгой доставкой доля активации ниже", "source": "выгрузка процессинга по выпущенным картам, очищенная и свёрнутая по регионам", "focus": "доля_активации_30_дней_проц", "other_metrics": "срок доставки карты (дни); доля заявок с ошибками в адресе; доля карт, доставленных с первой попытки", "sources": "выгрузка процессинга по картам (обновляется ежедневно); транзакционная витрина (ежедневно); сроки доставки от подрядчика — регулярной выгрузки нет, только выборочная сверка", "action": "сократить срок доставки карты в регионах с медианой выше 15 дней на неделю", "table": {"cols": ["регион", "выпущено_карт", "медиана_дней_до_первой_покупки", "доля_активации_30_дней_проц"], "rows": [["Приволжский", "467", "14", "65,7"], ["Северо-западный", "439", "15", "65,1"], ["Сибирский", "391", "18", "58,8"], ["Центральный", "715", "17", "62,2"], ["Южный", "388", "15", "62,1"]]}, "analysis": {"mode": "pair", "x": "медиана_дней_до_первой_покупки", "y": "доля_активации_30_дней_проц"}, "fin": {"kind": "cohort", "delta": 0.04, "delta_unit": "прирост доли активации (81 % → 85 %)", "volume": 350, "volume_unit": "карт выпускается в месяц", "price": 258, "price_unit": "руб. дохода активной карты в месяц (3 100 руб. в год ÷ 12)", "ramp": 2, "keep": 24, "capex": 120000, "opex": 4000, "horizon": 24, "rate": 0.15, "assumptions": [{"key": "delta", "name": "Прирост доли активации", "base": 0.04, "pess": 0.015, "opt": 0.06}, {"key": "price", "name": "Доход активной карты в месяц, руб.", "base": 258, "pess": 180, "opt": 320}, {"key": "keep", "name": "Срок жизни активной карты, мес.", "base": 24, "pess": 12, "opt": 36}, {"key": "capex", "name": "Единовременные затраты, руб.", "base": 120000, "pess": 200000, "opt": 90000}, {"key": "opex", "name": "Ежемесячные затраты, руб.", "base": 4000, "pess": 8000, "opt": 3000}]}, "fin_note": "Гипотеза курса: сокращение срока доставки поднимает долю активации на четыре процентных пункта; при 350 выпусках в месяц это 14 дополнительных активных карт ежемесячно."}, "ops": {"tab": "Портфель операций", "axis": "бизнес-инициатива", "object": "объём операций портфеля платёжных сервисов", "observation": "во второй половине года объём операций оказался ниже того же периода прошлого года, хотя обычный сезонный рост сохраняется", "source": "дневной журнал операционной системы, свёрнутый по месяцам", "focus": "объём_операций_млн_руб", "other_metrics": "доступность сервиса (доля времени без сбоев); число активных клиентов; средний чек операции", "sources": "журнал операций (ежедневно); журнал инцидентов (ежедневно, ведётся вручную); реестр изменений тарифов (по факту изменения)", "action": "восстановить объём операций до уровня прошлого года: устранить причины просадки, найденные по журналу инцидентов и изменений тарифов", "table": {"cols": ["месяц", "объём_операций_млн_руб", "число_операций"], "rows": [["2024-01", "2777,7", "66553"], ["2024-02", "2843,3", "67446"], ["2024-03", "3259,8", "77363"], ["2024-04", "3382,8", "80434"], ["2024-05", "3302,8", "78277"], ["2024-06", "3548,6", "84637"], ["2024-07", "3716,6", "88309"], ["2024-08", "3424,7", "81554"], ["2024-09", "3404,1", "80789"], ["2024-10", "3564,4", "84892"], ["2024-11", "3363,7", "80388"], ["2024-12", "4070,4", "96915"], ["2025-01", "3017", "71790"], ["2025-02", "3057,1", "72831"], ["2025-03", "3610,7", "85785"], ["2025-04", "3781,9", "89715"], ["2025-05", "3560,2", "84351"], ["2025-06", "3975,9", "94323"], ["2025-07", "4118", "97996"], ["2025-08", "3669,4", "87074"], ["2025-09", "3983,6", "95061"], ["2025-10", "4240,9", "101040"], ["2025-11", "4016,3", "95869"], ["2025-12", "5011,7", "119657"], ["2026-01", "3300,4", "78796"], ["2026-02", "3293,8", "78721"], ["2026-03", "3894,3", "93140"], ["2026-04", "3848,2", "91534"], ["2026-05", "3427,2", "81503"], ["2026-06", "3995,4", "94613"], ["2026-07", "3857,9", "91596"], ["2026-08", "3299,2", "78881"], ["2026-09", "3427,6", "81453"], ["2026-10", "3700,8", "88335"], ["2026-11", "3762,1", "89516"], ["2026-12", "4838", "115270"]]}, "analysis": {"mode": "trend", "y": "объём_операций_млн_руб"}, "fin": {"kind": "level", "delta": 800000, "delta_unit": "руб. в день восстановленного объёма", "volume": 30, "volume_unit": "дней в месяце", "price": 0.005, "price_unit": "доля комиссии (0,5 % от объёма)", "ramp": 4, "keep": 18, "capex": 250000, "opex": 20000, "horizon": 24, "rate": 0.15, "assumptions": [{"key": "delta", "name": "Восстановленный объём, руб. в день", "base": 800000, "pess": 350000, "opt": 1000000}, {"key": "price", "name": "Средняя комиссия, доля", "base": 0.005, "pess": 0.0035, "opt": 0.006}, {"key": "keep", "name": "Срок сохранения эффекта, мес.", "base": 18, "pess": 6, "opt": 24}, {"key": "capex", "name": "Единовременные затраты, руб.", "base": 250000, "pess": 450000, "opt": 200000}, {"key": "opex", "name": "Ежемесячные затраты, руб.", "base": 20000, "pess": 40000, "opt": 15000}]}, "fin_note": "Гипотеза курса: прогноз с проверенной ошибкой даёт восстановление около 0,8 млн руб. в день; эффект действует как поток, пока объём держится на восстановленном уровне."}};
+var $=function(id){return document.getElementById(id)};
+var esc=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')};
+var cur='savings', st=null, pmode={};
+var AXES=['продукт','процесс','бизнес-инициатива'];
+var ROLE={result:'Результат',d1:'Драйвер 1',d2:'Драйвер 2',control:'Контрольная'};
+var ANAME={delta:'Изменение показателя',volume:'Объём',price:'Стоимость единицы',keep:'Срок сохранения',capex:'Единовременные затраты',opex:'Ежемесячные затраты'};
+var STEPS=['Объект и проблема','Метрики','Данные','Анализ','Вывод','Множители','Поток эффекта','Слайд','Письмо'];
+
+// ── состояние ────────────────────────────────────────────────────────────
+function blank(){return {step:1,
+  s1:{axis:'продукт',object:'',observation:'',action_in:'',source:'',focus:'',tableText:'',resp:'',problem:'',metric:'',source2:'',target:'',action:''},
+  s2:{other:'',resp:'',metrics:{}},
+  s3:{sources:'',resp:'',rows:[]},
+  s4:{mode:'pair',x:'',y:'',text:'',tool:''},
+  s5:{resp:'',fact:'',interp:'',hyp:'',refute:''},
+  s6:{delta:'',udelta:'',volume:'',uvolume:'',price:'',uprice:'',keep:'',kind:'cohort',sdelta:'',svolume:'',sprice:'',skeep:'',resp:'',ass:{}},
+  s7:{ramp:3,horizon:24,capex:0,opex:0,rate:15,capex_p:'',opex_p:'',text:''},
+  s8:{resp:'',title:'',formula:'',result:'',risk:'',action:''},
+  s9:{resp:'',p1:'',p2:'',p3:'',p4:'',p5:''}}}
+function fromPreset(id){
+  var s=blank(); if(id==='custom')return s;
+  var p=P[id];
+  s.s1.axis=p.axis;s.s1.object=p.object;s.s1.observation=p.observation;s.s1.action_in=p.action;s.s1.source=p.source;s.s1.focus=p.focus;
+  s.s1.tableText=C.tableText(p.table);
+  s.s2.other=p.other_metrics;s.s3.sources=p.sources;
+  s.s4.mode=p.analysis.mode;s.s4.x=p.analysis.x||'';s.s4.y=p.analysis.y;
+  s.s4.tool=p.analysis.mode==='pair'?'мини-инструмент корреляций на месячной выгрузке':'мини-инструмент трендов на месячной выгрузке';
+  var f=p.fin;
+  s.s6.delta=f.delta;s.s6.udelta=f.delta_unit;s.s6.volume=f.volume;s.s6.uvolume=f.volume_unit;s.s6.price=f.price;s.s6.uprice=f.price_unit;
+  s.s6.keep=f.keep;s.s6.kind=f.kind;s.s6.sdelta='гипотеза проекта (допущение)';s.s6.svolume='данные выгрузки';s.s6.sprice='допущение по тарифу';s.s6.skeep='допущение';
+  s.s7.ramp=f.ramp;s.s7.horizon=f.horizon;s.s7.capex=f.capex;s.s7.opex=f.opex;s.s7.rate=Math.round(f.rate*1000)/10;
+  var ap={};f.assumptions.forEach(function(a){ap[a.key]=a});
+  if(ap.capex)s.s7.capex_p=ap.capex.pess+' / '+ap.capex.opt;
+  if(ap.opex)s.s7.opex_p=ap.opex.pess+' / '+ap.opex.opt;
+  return s;
+}
+function key(){return 'a360_project_'+cur}
+function load(id){cur=id;var s=null;try{var raw=localStorage.getItem(key());if(raw)s=JSON.parse(raw)}catch(e){}
+  st=s||fromPreset(id);
+  // новые поля после обновления страницы
+  var b=fromPreset(id);['s1','s2','s3','s4','s5','s6','s7','s8','s9'].forEach(function(k){if(!st[k])st[k]=b[k];for(var f in b[k])if(st[k][f]===undefined)st[k][f]=b[k][f]});
+  if(!st.step)st.step=1;}
+function save(){try{localStorage.setItem(key(),JSON.stringify(st))}catch(e){}}
+function get(path){var p=path.split('.'),o=st;for(var i=0;i<p.length;i++){if(o==null)return '';o=o[p[i]]}return o==null?'':o}
+function set(path,v){var p=path.split('.'),o=st;for(var i=0;i<p.length-1;i++){if(!o[p[i]])o[p[i]]={};o=o[p[i]]}o[p[p.length-1]]=v}
+function table(){return C.parseTable(st.s1.tableText)}
+
+// ── готовность шагов ──────────────────────────────────────────────────────
+function done(n){
+  switch(n){
+    case 1:return !!(C.clean(st.s1.problem)&&C.clean(st.s1.action));
+    case 2:return !!(st.s2.metrics.result&&st.s2.metrics.result.name);
+    case 3:return (st.s3.rows||[]).length>0;
+    case 4:return !!C.clean(st.s4.text);
+    case 5:return !!C.clean(st.s5.hyp);
+    case 6:return Object.keys(st.s6.ass||{}).some(function(k){var a=st.s6.ass[k];return a&&a.pess!==null&&a.opt!==null&&!isNaN(a.pess)&&!isNaN(a.opt)});
+    case 7:return !!C.clean(st.s7.text)&&done(6);
+    case 8:return !!C.clean(st.s8.title);
+    case 9:return !!C.clean(st.s9.p1);
+  }return false;
+}
+
+// ── общие элементы: кейс, каркас, шаги ────────────────────────────────────
+function renderTabs(){
+  var t=$('tabs');t.innerHTML='';
+  var ids=Object.keys(P).concat(['custom']);
+  ids.forEach(function(id){var b=document.createElement('button');b.type='button';b.dataset.id=id;
+    b.textContent=id==='custom'?'Свой проект':P[id].tab;b.className=id===cur?'on':'';
+    b.onclick=function(){save();load(id);renderAll()};t.appendChild(b)});
+  $('caseNote').textContent=cur==='custom'
+    ?'Свой проект: заполните поля шага 1 и вставьте небольшую таблицу данных — из выгрузки, отчёта или вручную. Ключевые числа удобно взять из своей карты источников и заготовки «Повторения основ».'
+    :'Кейс курса: поля заполнены, таблица — учебная выгрузка папки практики, свёрнутая до '+P[cur].table.rows.length+' строк. '+P[cur].fin_note;
+}
+function frameText(i){
+  var m=st.s2.metrics;
+  switch(i){
+    case 0:return st.s1.problem;
+    case 1:return m.result&&m.result.name?('результат: '+m.result.name+(m.d1&&m.d1.name?'; драйверы: '+m.d1.name+(m.d2&&m.d2.name?', '+m.d2.name:''):'')):'';
+    case 2:return (st.s3.rows||[]).length?st.s3.rows.map(function(r){return r.metric+' — '+r.status}).join('; '):'';
+    case 3:return st.s4.tool;
+    case 4:return st.s4.text;
+    case 5:return st.s5.hyp?('гипотеза: '+st.s5.hyp):'';
+    case 6:return st.s8.result||st.s7.text;
+    case 7:return st.s9.p1;
+  }return '';
+}
+var FRAME=[['Проблема',1],['Метрика',2],['Данные',3],['Инструмент',4],['Анализ',4],['Вывод',5],['Эффект',7],['Письмо',9]];
+function renderFrame(){
+  var f=$('frame');f.innerHTML='';
+  FRAME.forEach(function(x,i){var d=document.createElement('div');var t=frameText(i);
+    d.className=(t?'ok':'')+(x[1]===st.step?' cur':'');
+    d.innerHTML='<div class="l">'+x[0]+'</div><div class="t">'+(t?esc(t):'шаг '+x[1])+'</div>';
+    d.onclick=function(){go(x[1])};f.appendChild(d)});
+}
+function renderStepper(){
+  var s=$('stepper');s.innerHTML='';
+  STEPS.forEach(function(name,i){var n=i+1,b=document.createElement('button');b.type='button';
+    b.className=(done(n)?'ok ':'')+(n===st.step?'cur':'');
+    b.innerHTML='<b>'+(done(n)?'✓ ':'')+'Шаг '+n+'</b>'+esc(name);b.onclick=function(){go(n)};s.appendChild(b)});
+  for(var n=1;n<=9;n++){var e=$('ss'+n);if(e){e.textContent=done(n)?'готово':'не пройден';e.className='sst'+(done(n)?' ok':'')}}
+}
+function go(n){st.step=n;save();
+  for(var i=1;i<=9;i++){var e=$('st'+i);e.className='step'+(i===n?' on':'')}
+  renderStep(n);renderFrame();renderStepper();
+  var top=$('stepper').getBoundingClientRect().top+window.pageYOffset-12;
+  if(Math.abs(window.pageYOffset-top)>40)window.scrollTo(0,top);
+}
+
+// ── поля ↔ состояние ─────────────────────────────────────────────────────
+function fillInputs(scope){
+  var els=(scope||document).querySelectorAll('[data-bind]');
+  Array.prototype.forEach.call(els,function(el){var v=get(el.dataset.bind);
+    if(el.tagName==='SELECT'){if(String(v)!==el.value)el.value=String(v)}else if(String(el.value)!==String(v))el.value=v});
+}
+function options(sel,list,val){sel.innerHTML=list.map(function(o){var v=typeof o==='string'?o:o[0],l=typeof o==='string'?o:o[1];
+  return '<option value="'+esc(v)+'"'+(String(v)===String(val)?' selected':'')+'>'+esc(l)+'</option>'}).join('')}
+document.addEventListener('input',function(e){var el=e.target;if(!el.dataset||!el.dataset.bind)return;
+  set(el.dataset.bind,el.value);save();
+  var n=+el.dataset.bind.charAt(1);
+  if(el.dataset.bind==='s6.'+'ass')return;
+  onChange(n,el.dataset.bind);
+});
+document.addEventListener('change',function(e){var el=e.target;if(!el.dataset||!el.dataset.bind||el.tagName!=='SELECT')return;
+  set(el.dataset.bind,el.value);save();onChange(+el.dataset.bind.charAt(1),el.dataset.bind)});
+function onChange(n,bind){
+  if(bind==='s1.tableText'||bind==='s1.focus'){renderTableView();renderV1()}
+  if(n===1){renderPrompt(1);renderFrame();renderStepper();renderChk1();if(bind==='s1.action_in'&&!C.clean(st.s1.action)){st.s1.action=st.s1.action_in;save();fillInputs($('st1'))}}
+  if(n===2){renderPrompt(2)}
+  if(n===3){renderPrompt(3)}
+  if(n===4){if(bind!=='s4.text'&&bind!=='s4.tool')computeAnalysis();renderFrame();renderStepper()}
+  if(n===5){renderV5();renderFrame();renderStepper()}
+  if(n===6){renderV6f();renderPrompt(6)}
+  if(n===7){renderS7()}
+  if(n===8){renderV8();renderFrame();renderStepper()}
+  if(n===9){renderV9();renderFrame();renderStepper()}
+  if(bind.indexOf('resp')<0&&n!==1&&n!==4)renderStepper();
+}
+
+// ── промпты ──────────────────────────────────────────────────────────────
+function metricsLines(){var m=st.s2.metrics;return ['result','d1','d2','control'].filter(function(k){return m[k]&&m[k].name})
+  .map(function(k){return ROLE[k].replace(/ \d$/,'')+': '+m[k].name+' ('+C.or(m[k].unit,'—')+', '+C.or(m[k].freq,'—')+')'}).join('\n')}
+function missingText(){return (st.s3.rows||[]).filter(function(r){return r.status!=='есть'}).map(function(r){return r.metric+' ('+r.status+': '+r.source+')'}).join('; ')||'нет'}
+function promptVals(n){
+  var t=table(),m=st.s2.metrics;
+  switch(n){
+    case 1:return {axis:st.s1.axis,object:st.s1.object,observation:st.s1.observation,action_in:st.s1.action_in,source:st.s1.source,table:t?C.tableText(t):'',focus:st.s1.focus,facts:facts1(t)};
+    case 2:return {problem:st.s1.problem,action:st.s1.action,columns:t?C.numericCols(t).join(', '):'',other:st.s2.other};
+    case 3:return {metrics:metricsLines(),sources:st.s3.sources,columns:t?C.numericCols(t).join(', '):''};
+    case 5:var an=currentAnalysis();return {problem:st.s1.problem,action:st.s1.action,analysis:st.s4.text,n:an?String(an.n):(t?String(t.rows.length):'')};
+    case 6:return {problem:st.s1.problem,hyp:st.s5.hyp,
+      fdelta:C.fmtv(C.num(st.s6.delta)),udelta:st.s6.udelta,sdelta:st.s6.sdelta,
+      fvolume:C.fmtv(C.num(st.s6.volume)),uvolume:st.s6.uvolume,svolume:st.s6.svolume,
+      fprice:C.fmtv(C.num(st.s6.price)),uprice:st.s6.uprice,sprice:st.s6.sprice,
+      fkeep:C.fmtv(C.num(st.s6.keep)),skeep:st.s6.skeep};
+    case 8:return {problem:st.s1.problem,hyp:st.s5.hyp,effect:st.s7.text};
+    case 9:return {problem:st.s1.problem,action:st.s1.action,result:m.result?m.result.name:'',target:st.s1.target,
+      control:m.control?m.control.name:'',missing:missingText(),hyp:st.s5.hyp,refute:st.s5.refute,
+      seffect:st.s8.result,risk:st.s8.risk,first:st.s8.action};
+  }return {};
+}
+function facts1(t){return C.facts1(t,st.s1.focus)}
+var ptext={};
+function renderPrompt(n){
+  var pv=$('pv'+n);if(!pv)return;
+  var segs=C.PROMPTS['s'+n],vals=promptVals(n),mode=pmode[n]||'fill';
+  var r=C.fillPrompt(segs,vals,mode);ptext[n]=r.text;
+  pv.innerHTML=r.parts.map(function(p){return p.t!==undefined?esc(p.t):p.ph!==undefined?'<span class="phx">'+esc(p.ph)+'</span>':'<span class="phv">'+esc(p.v)+'</span>'}).join('');
+  var keys=C.promptKeys(segs),n0=keys.filter(function(k){return C.clean(vals[k])!==''}).length;
+  $('ps'+n).textContent=mode==='tpl'?'Показан шаблон: жёлтые выражения в [скобках] заменяются вашими данными.'
+    :(n0===keys.length?'Все '+keys.length+' полей подставлены — промпт готов для ассистента.'
+      :'Подставлено '+n0+' из '+keys.length+' полей; незаполненные скопируются шаблонными выражениями в [скобках]'+(n0<keys.length&&n>1?' — вернитесь к предыдущим шагам':'')+'.');
+  var b=document.querySelector('[data-copy="'+n+'"]');if(b&&!b.classList.contains('done'))b.textContent=mode==='tpl'?'Копировать шаблон':'Копировать заполненный промпт';
+}
+function copyText(txt,btn,lbl){
+  function done(){btn.textContent='Скопировано';btn.classList.add('done');setTimeout(function(){btn.classList.remove('done');btn.textContent=lbl},1800)}
+  function fb(){var a=document.createElement('textarea');a.value=txt;a.style.position='fixed';a.style.opacity=0;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');done()}catch(_e){btn.textContent='Выделите вручную'}document.body.removeChild(a)}
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(txt).then(done,fb)}else{fb()}
+}
+
+// ── разбор ответов ───────────────────────────────────────────────────────
+function parse(n){
+  var txt=$('resp'+n).value,msg=$('pm'+n),r;
+  function ok(f,t){msg.textContent='Разобрано: '+f+' из '+t+(f<t?' — остальное впишите вручную':'');msg.className='msg '+(f?'ok':'warn');if(!f)msg.textContent='Не удалось разобрать: проверьте, что вставлен ответ целиком, или заполните поля вручную'}
+  switch(n){
+    case 1:r=C.parseS1(txt);var f=r.fields;if(f.problem!==undefined)st.s1.problem=f.problem;if(f.metric)st.s1.metric=f.metric;if(f.source)st.s1.source2=f.source;if(f.target)st.s1.target=f.target;if(f.action)st.s1.action=f.action;ok(r.found,r.total);fillInputs($('st1'));renderChk1();break;
+    case 2:r=C.parseS2(txt);if(r.found){st.s2.metrics=r.metrics}ok(r.found,r.total);renderMtab();renderV2();break;
+    case 3:r=C.parseS3(txt);if(r.found){st.s3.rows=r.rows}msg.textContent=r.found?'Разобрано строк: '+r.found:'Не удалось разобрать: нужны строки с полями через вертикальную черту';msg.className='msg '+(r.found?'ok':'warn');renderDtab();break;
+    case 5:r=C.parseS5(txt);['fact','interp','hyp','refute'].forEach(function(k){if(r.fields[k]!==undefined)st.s5[k]=r.fields[k]});ok(r.found,r.total);fillInputs($('st5'));renderV5();break;
+    case 6:r=C.parseS6(txt);if(r.found){var a=st.s6.ass||{};Object.keys(r.ass).forEach(function(k){a[k]=r.ass[k]});st.s6.ass=a}ok(r.found,r.total);renderAtab();break;
+    case 8:r=C.parseS8(txt);['title','formula','result','risk','action'].forEach(function(k){if(r.fields[k]!==undefined)st.s8[k]=r.fields[k]});ok(r.found,r.total);fillInputs($('st8'));renderV8();break;
+    case 9:r=C.parseS9(txt);['p1','p2','p3','p4','p5'].forEach(function(k){if(r.fields[k]!==undefined)st.s9[k]=r.fields[k]});ok(r.found,r.total);renderV9();break;
+  }
+  save();renderFrame();renderStepper();
+  if(n===1)renderPrompt(2);if(n===2)renderPrompt(3);if(n===5)renderPrompt(6);if(n===6)renderS7();if(n===8)renderPrompt(9);
+}
+
+// ── графики ──────────────────────────────────────────────────────────────
+function tx(x,y,t,fs,w,f,a,o){return '<text x="'+x+'" y="'+y+'" font-size="'+fs+'"'+(w?' font-weight="'+w+'"':'')+' fill="'+f+'"'+(a?' text-anchor="'+a+'"':'')+(o?' fill-opacity="'+o+'"':'')+'>'+esc(t)+'</text>'}
+function seriesChart(lab,y,name,fit){
+  var W=960,H=300,L=70,R=24,T=20,B=48,pw=W-L-R,ph=H-T-B,n=y.length,s=[];
+  var mx=Math.max.apply(null,y),mn=Math.min.apply(null,y);if(mx===mn){mx+=1;mn-=1}
+  var pad=(mx-mn)*0.1;var top=mx+pad,bot=Math.max(0,mn-pad);if(mn<0)bot=mn-pad;
+  var X=function(i){return L+(n>1?pw*i/(n-1):pw/2)},Y=function(v){return T+ph*(top-v)/(top-bot)};
+  s.push('<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" font-family="inherit">');
+  var step=C.niceStep((top-bot)/5);
+  for(var v=Math.ceil(bot/step)*step;v<=top;v+=step){s.push('<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v).toFixed(1)+'" y2="'+Y(v).toFixed(1)+'" stroke="#2E3641" stroke-opacity="0.1"/>');s.push(tx(L-8,Y(v)+4,C.fmtv(Math.round(v*100)/100),12,null,'#2E3641','end',0.7))}
+  if(n<=12){var bw=pw/n*0.6;y.forEach(function(v,i){var x=X(i)-bw/2;s.push('<rect x="'+x.toFixed(1)+'" y="'+Y(v).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(Y(bot)-Y(v)).toFixed(1)+'" rx="4" fill="#20BA72" fill-opacity="0.65"/>');s.push(tx(X(i),Y(v)-6,C.fmtv(v),12,'700','#2E3641','middle'))})}
+  else{var d='';y.forEach(function(v,i){d+=(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' '});s.push('<path d="'+d+'" fill="none" stroke="#159A5C" stroke-width="3"/>');
+    y.forEach(function(v,i){s.push('<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(v).toFixed(1)+'" r="3.2" fill="#159A5C"/>')})}
+  if(fit&&n>2){s.push('<line x1="'+X(0)+'" x2="'+X(n-1)+'" y1="'+Y(fit.a).toFixed(1)+'" y2="'+Y(fit.a+fit.b*(n-1)).toFixed(1)+'" stroke="#D2564A" stroke-width="2" stroke-dasharray="6 5"/>')}
+  var every=Math.max(1,Math.ceil(n/12));lab.forEach(function(l,i){if(i%every===0&&(n-1-i>=every/2||i===n-1)||i===n-1)s.push(tx(X(i),H-B+18,l,11.5,null,'#2E3641','middle',0.75))});
+  s.push(tx(L,H-8,name,12.5,'700','#2E3641'));
+  s.push('</svg>');return s.join('');
+}
+function scatterChart(an){
+  var W=960,H=340,L=70,R=24,T=20,B=52,pw=W-L-R,ph=H-T-B,s=[];
+  var xs=an.xs,ys=an.ys;var mxx=Math.max.apply(null,xs),mnx=Math.min.apply(null,xs),mxy=Math.max.apply(null,ys),mny=Math.min.apply(null,ys);
+  if(mxx===mnx){mxx+=1;mnx-=1}if(mxy===mny){mxy+=1;mny-=1}
+  var px=(mxx-mnx)*0.08,py=(mxy-mny)*0.12;mxx+=px;mnx-=px;mxy+=py;mny-=py;
+  var X=function(v){return L+pw*(v-mnx)/(mxx-mnx)},Y=function(v){return T+ph*(mxy-v)/(mxy-mny)};
+  s.push('<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" font-family="inherit">');
+  var sy=C.niceStep((mxy-mny)/5);for(var v=Math.ceil(mny/sy)*sy;v<=mxy;v+=sy){s.push('<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v).toFixed(1)+'" y2="'+Y(v).toFixed(1)+'" stroke="#2E3641" stroke-opacity="0.1"/>');s.push(tx(L-8,Y(v)+4,C.fmtv(Math.round(v*100)/100),12,null,'#2E3641','end',0.7))}
+  var sx=C.niceStep((mxx-mnx)/6);for(var u=Math.ceil(mnx/sx)*sx;u<=mxx;u+=sx){s.push(tx(X(u),H-B+18,C.fmtv(Math.round(u*100)/100),12,null,'#2E3641','middle',0.7))}
+  var f=an.fit;s.push('<line x1="'+X(mnx).toFixed(1)+'" x2="'+X(mxx).toFixed(1)+'" y1="'+Y(f.a+f.b*mnx).toFixed(1)+'" y2="'+Y(f.a+f.b*mxx).toFixed(1)+'" stroke="#D2564A" stroke-width="2" stroke-dasharray="6 5"/>');
+  xs.forEach(function(x,i){s.push('<circle cx="'+X(x).toFixed(1)+'" cy="'+Y(ys[i]).toFixed(1)+'" r="5" fill="#159A5C" fill-opacity="0.8"/>')});
+  s.push(tx(W-R,H-B+38,an.x,12.5,'700','#2E3641','end'));s.push(tx(L,14,an.y,12.5,'700','#2E3641'));
+  s.push(tx(W-R,T+16,'r = '+C.fr(an.r,2)+' · '+an.strength,14,'800',Math.abs(an.r)>=0.7?'#0f7a46':'#2E3641','end'));
+  s.push('</svg>');return s.join('');
+}
+function yoyChart(yoy){
+  if(!yoy.length)return '';
+  var W=960,H=170,L=70,R=24,T=16,B=40,pw=W-L-R,ph=H-T-B,n=yoy.length,s=[];
+  var mx=0;yoy.forEach(function(r){mx=Math.max(mx,Math.abs(r.d))});if(!mx)mx=0.1;mx*=1.15;
+  var X=function(i){return L+pw*(i+0.5)/n},Y=function(v){return T+ph*(mx-v)/(2*mx)};
+  s.push('<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" font-family="inherit">');
+  s.push('<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(0).toFixed(1)+'" y2="'+Y(0).toFixed(1)+'" stroke="#2E3641" stroke-opacity="0.45"/>');
+  var bw=pw/n*0.6;yoy.forEach(function(r,i){var y0=Y(Math.max(0,r.d)),h=Math.abs(Y(0)-Y(r.d));
+    s.push('<rect x="'+(X(i)-bw/2).toFixed(1)+'" y="'+y0.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="3" fill="'+(r.d<0?'#D2564A':'#20BA72')+'" fill-opacity="0.7"/>');
+    if(i%Math.max(1,Math.ceil(n/12))===0||i===n-1)s.push(tx(X(i),H-B+16,r.label,11,null,'#2E3641','middle',0.75))});
+  s.push(tx(L,H-6,'изменение к тому же месяцу прошлого года, %',12,'700','#2E3641'));
+  s.push(tx(L-8,Y(mx)+4,'+'+C.fr(mx*100,0)+' %',11,null,'#2E3641','end',0.7));s.push(tx(L-8,Y(-mx)+4,'−'+C.fr(mx*100,0)+' %',11,null,'#2E3641','end',0.7));
+  s.push('</svg>');return s.join('');
+}
+function flowChart(res){
+  var rows=res.rows,W=960,H=320,L=78,R=48,T=18,B=44,pw=W-L-R,ph=H-T-B;
+  var mx=0,mn=0;rows.forEach(function(r){mx=Math.max(mx,r.cum,r.income);mn=Math.min(mn,r.cum,-r.cost)});
+  if(mx===mn){mx=1;mn=-1}var pad=(mx-mn)*0.08;mx+=pad;mn-=pad;
+  var y=function(v){return T+ph*(mx-v)/(mx-mn)},x=function(t){return L+pw*t/res.horizon};
+  var bw=Math.max(3,pw/(res.horizon+1)*0.34),s=[];
+  s.push('<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" font-family="inherit">');
+  var step=C.niceStep((mx-mn)/5);
+  for(var v=Math.ceil(mn/step)*step;v<=mx;v+=step){s.push('<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(v).toFixed(1)+'" y2="'+y(v).toFixed(1)+'" stroke="#2E3641" stroke-opacity="'+(Math.abs(v)<1e-9?0.45:0.10)+'"/>');s.push(tx(L-8,y(v)+4,C.money(v).replace(' руб.',''),12,null,'#2E3641','end',0.7))}
+  rows.forEach(function(r){var cx=x(r.t);
+    if(r.income>0)s.push('<rect x="'+(cx-bw).toFixed(1)+'" y="'+y(r.income).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(y(0)-y(r.income)).toFixed(1)+'" fill="#20BA72" fill-opacity="0.55"/>');
+    if(r.cost>0)s.push('<rect x="'+cx.toFixed(1)+'" y="'+y(0).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(y(-r.cost)-y(0)).toFixed(1)+'" fill="#2E3641" fill-opacity="0.35"/>')});
+  var d='';rows.forEach(function(r,i){d+=(i?'L':'M')+x(r.t).toFixed(1)+' '+y(r.cum).toFixed(1)+' '});s.push('<path d="'+d+'" fill="none" stroke="#159A5C" stroke-width="3"/>');
+  var dd='';rows.forEach(function(r,i){dd+=(i?'L':'M')+x(r.t).toFixed(1)+' '+y(r.cum_disc).toFixed(1)+' '});s.push('<path d="'+dd+'" fill="none" stroke="#159A5C" stroke-width="2" stroke-dasharray="6 5" stroke-opacity="0.8"/>');
+  if(res.payback!==null){var px=x(res.payback);s.push('<line x1="'+px.toFixed(1)+'" x2="'+px.toFixed(1)+'" y1="'+T+'" y2="'+(T+ph)+'" stroke="#D2564A" stroke-width="1.5" stroke-dasharray="4 4"/>');s.push(tx(px+6,T+14,'окупаемость: месяц '+res.payback,13,'700','#D2564A'))}
+  var ms=res.horizon>24?6:3;for(var t=0;t<=res.horizon;t+=ms)s.push(tx(x(t),H-B+18,String(t),12,null,'#2E3641','middle',0.7));
+  s.push(tx(W-R+12,H-B+18,'мес.',12,null,'#2E3641','start',0.5));
+  var ly=H-8;s.push('<rect x="'+L+'" y="'+(ly-10)+'" width="12" height="10" fill="#20BA72" fill-opacity="0.55"/>'+tx(L+18,ly,'доход в месяц',12.5,null,'#2E3641',null,0.8));
+  s.push('<rect x="'+(L+130)+'" y="'+(ly-10)+'" width="12" height="10" fill="#2E3641" fill-opacity="0.35"/>'+tx(L+148,ly,'затраты',12.5,null,'#2E3641',null,0.8));
+  s.push('<line x1="'+(L+230)+'" x2="'+(L+256)+'" y1="'+(ly-5)+'" y2="'+(ly-5)+'" stroke="#159A5C" stroke-width="3"/>'+tx(L+262,ly,'накопленный поток',12.5,null,'#2E3641',null,0.8));
+  s.push('<line x1="'+(L+400)+'" x2="'+(L+426)+'" y1="'+(ly-5)+'" y2="'+(ly-5)+'" stroke="#159A5C" stroke-width="2" stroke-dasharray="6 5"/>'+tx(L+432,ly,'то же с дисконтированием (NPV на конце)',12.5,null,'#2E3641',null,0.8));
+  s.push('</svg>');return s.join('');
+}
+function tornadoChart(sens,base){
+  if(!sens.length)return '';
+  var W=960,rowH=34,L=300,R=190,T=26,H=T+rowH*sens.length+14,pw=W-L-R,s=[];
+  var mx=0;sens.forEach(function(r){mx=Math.max(mx,Math.abs(r.npv_pess-base),Math.abs(r.npv_opt-base))});if(mx===0)mx=1;
+  var x0=L+pw/2,sc=(pw/2-8)/mx;
+  s.push('<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" font-family="inherit">');
+  s.push(tx(x0,16,'NPV при базовых значениях: '+C.money(base),12.5,'700','#2E3641','middle'));
+  s.push('<line x1="'+x0+'" x2="'+x0+'" y1="'+T+'" y2="'+(H-10)+'" stroke="#2E3641" stroke-opacity="0.45"/>');
+  sens.forEach(function(r,i){var y=T+i*rowH+6,h=rowH-12,dp=r.npv_pess-base,dop=r.npv_opt-base;
+    s.push(tx(L-12,y+h/2+4,r.name,13.5,null,'#2E3641','end'));
+    var xp=x0+Math.min(0,dp)*sc,wp=Math.abs(dp)*sc;s.push('<rect x="'+xp.toFixed(1)+'" y="'+y+'" width="'+wp.toFixed(1)+'" height="'+h+'" rx="4" fill="'+(r.flips?'#D2564A':'#2E3641')+'" fill-opacity="'+(r.flips?0.8:0.35)+'"/>');
+    var xo=x0+Math.min(0,dop)*sc,wo=Math.abs(dop)*sc;s.push('<rect x="'+xo.toFixed(1)+'" y="'+y+'" width="'+wo.toFixed(1)+'" height="'+h+'" rx="4" fill="#20BA72" fill-opacity="0.6"/>');
+    var xr=Math.max(xo+wo,xp+wp,x0)+8;s.push(tx(xr,y+h/2+4,C.money(r.npv_pess).replace(' руб.','')+' → '+C.money(r.npv_opt).replace(' руб.',''),11.5,null,'#2E3641','start',0.75))});
+  s.push('</svg>');return s.join('');
+}
+function treeSvg(m){
+  var W=960,H=250,s=[];
+  var res=m.result&&m.result.name?m.result.name:'результат',d1=m.d1&&m.d1.name?m.d1.name:'драйвер 1',d2=m.d2&&m.d2.name?m.d2.name:'драйвер 2',ctl=m.control&&m.control.name?m.control.name:'';
+  function box(x,y,w,h,t,sub,fill,stroke,dash){var o='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="12" fill="'+fill+'" stroke="'+stroke+'" stroke-width="2"'+(dash?' stroke-dasharray="7 5"':'')+'/>';
+    var lines=wrap(t,Math.floor(w/8.2));lines.forEach(function(l,i){o+=tx(x+w/2,y+26+i*17-(lines.length-1)*8,l,14,'700','#2E3641','middle')});
+    if(sub)o+=tx(x+w/2,y+h-12,sub,11.5,null,'#2E3641','middle',0.65);return o}
+  function wrap(t,n){var w=String(t).split(' '),out=[],cur='';w.forEach(function(x){if((cur+' '+x).trim().length>n){out.push(cur.trim());cur=x}else cur+=' '+x});if(cur.trim())out.push(cur.trim());return out.slice(0,3)}
+  s.push('<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" font-family="inherit">');
+  s.push('<defs><marker id="arrP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#128a53"/></marker></defs>');
+  s.push(box(40,40,260,76,d1,'опережающая · '+(m.d1&&m.d1.freq?m.d1.freq:''),'#e3f2ea','#20BA72'));
+  s.push(box(40,150,260,76,d2,'опережающая · '+(m.d2&&m.d2.freq?m.d2.freq:''),'#e3f2ea','#20BA72'));
+  s.push(box(400,95,260,80,res,'запаздывающая · '+(m.result&&m.result.freq?m.result.freq:''),'#e4ecf9','#1b5fa8'));
+  s.push('<path d="M300 78 C 350 78, 350 135, 400 135" fill="none" stroke="#128a53" stroke-width="2.5" marker-end="url(#arrP)"/>');
+  s.push('<path d="M300 188 C 350 188, 350 135, 400 135" fill="none" stroke="#128a53" stroke-width="2.5" marker-end="url(#arrP)"/>');
+  s.push(tx(350,60,'предсказывает',11.5,null,'#128a53','middle'));
+  if(ctl)s.push(box(700,95,230,80,ctl,'контрольная: не должна ухудшиться','#fff','#b05c1c',true));
+  s.push('</svg>');return s.join('');
+}
+
+// ── шаг 1 ────────────────────────────────────────────────────────────────
+function renderTableView(){
+  var t=table(),box=$('tblHtml');
+  if(!t){box.innerHTML='<p class="hint">Таблица не распознана: первая строка — названия столбцов, разделитель — точка с запятой или табуляция.</p>';return}
+  var h='<table class="sm"><thead><tr>'+t.cols.map(function(c){return '<th>'+esc(c)+'</th>'}).join('')+'</tr></thead><tbody>';
+  t.rows.forEach(function(r){h+='<tr>'+r.map(function(c){return '<td>'+esc(c)+'</td>'}).join('')+'</tr>'});
+  box.innerHTML=h+'</tbody></table>';
+  var sel=document.querySelector('[data-bind="s1.focus"]'),cols=C.numericCols(t);
+  if(cols.indexOf(st.s1.focus)<0){st.s1.focus=cols[0]||'';save()}
+  options(sel,cols,st.s1.focus);
+}
+function renderV1(){
+  var t=table(),v=$('v1');
+  if(!t||!st.s1.focus){v.innerHTML='<p class="hint" style="margin:0">График показателя появится, когда есть таблица и выбран показатель.</p>';return}
+  var y=C.column(t,st.s1.focus),lab=C.labels(t),idx=[];for(var i=0;i<y.length;i++)idx.push(i);
+  v.innerHTML=seriesChart(lab,y,st.s1.focus,y.length>6?C.linfit(idx,y):null)+'<p class="cap">'+esc(st.s1.focus)+': '+
+    (C.isMonthly(t)?'по месяцам, пунктир — линия тренда':'по срезам таблицы')+'. Значения от '+C.fmtv(Math.min.apply(null,y))+' до '+C.fmtv(Math.max.apply(null,y))+'.</p>';
+}
+function renderChk1(){
+  var p=st.s1.problem||'',ok=[];
+  ok.push(/\d/.test(p)?'✓ число':'✗ число');ok.push(C.clean(st.s1.source2||st.s1.source)?'✓ источник':'✗ источник');
+  ok.push(C.clean(st.s1.target)?'✓ целевой уровень':'✗ целевой уровень');ok.push(C.clean(st.s1.action)?'✓ что меняем':'✗ что меняем');
+  $('chk1').textContent='Четыре условия проблемы: '+ok.join(' · ');
+}
+
+// ── шаг 2 ────────────────────────────────────────────────────────────────
+function renderMtab(){
+  var tb=$('mtab'),m=st.s2.metrics||{};tb.innerHTML='';
+  ['result','d1','d2','control'].forEach(function(k){var x=m[k]||{name:'',unit:'',freq:'',note:''};
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td><b>'+ROLE[k]+'</b></td>'+['name','unit','freq','note'].map(function(f){return '<td><input data-m="'+k+'" data-f="'+f+'" value="'+esc(x[f]||'')+'" style="width:'+(f==='name'?170:f==='note'?220:100)+'px"></td>'}).join('');
+    tb.appendChild(tr)});
+  Array.prototype.forEach.call(tb.querySelectorAll('input'),function(inp){inp.oninput=function(){
+    if(!st.s2.metrics[inp.dataset.m])st.s2.metrics[inp.dataset.m]={name:'',unit:'',freq:'',note:''};
+    st.s2.metrics[inp.dataset.m][inp.dataset.f]=inp.value;save();renderV2();renderFrame();renderStepper();renderPrompt(3)}});
+}
+function renderV2(){var m=st.s2.metrics||{};$('v2').innerHTML=(m.result&&m.result.name)?treeSvg(m)+'<p class="cap">Дерево проекта: драйверы предсказывают результат; контрольная метрика наблюдается рядом. Полное дерево с источниками собирается в тренажёре «Дерево метрик».</p>':'<p class="hint" style="margin:0">Дерево появится после разбора ответа или заполнения таблицы.</p>'}
+
+// ── шаг 3 ────────────────────────────────────────────────────────────────
+function renderDtab(){
+  var tb=$('dtab'),rows=st.s3.rows||[];tb.innerHTML='';
+  if(!rows.length){tb.innerHTML='<tr><td colspan="5" class="hint">План появится после разбора ответа.</td></tr>';$('dmiss').textContent='';return}
+  rows.forEach(function(r,i){var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+esc(r.metric)+'</td><td><span class="chip-st st-'+esc(r.status)+'">'+esc(r.status)+'</span></td><td>'+esc(r.source)+'</td><td>'+esc(r.how)+'</td><td>'+esc(r.term)+'</td>';tb.appendChild(tr)});
+  var miss=rows.filter(function(r){return r.status!=='есть'});
+  $('dmiss').textContent=miss.length?'Чего нет или есть частично: '+miss.map(function(r){return r.metric}).join(', ')+'. Это допущения проекта — они попадут в письмо команде как данные, которые начинаем собирать.':'Все метрики закрыты источниками.';
+}
+
+// ── шаг 4 ────────────────────────────────────────────────────────────────
+function currentAnalysis(){var t=table();if(!t)return null;
+  return st.s4.mode==='pair'?C.analysisPair(t,st.s4.x,st.s4.y):C.analysisTrend(t,st.s4.y)}
+function renderS4(){
+  var t=table(),cols=t?C.numericCols(t):[];
+  options(document.querySelector('[data-bind="s4.mode"]'),[['pair','Связь двух показателей'],['trend','Динамика одного показателя']],st.s4.mode);
+  if(cols.indexOf(st.s4.y)<0)st.s4.y=st.s1.metric&&cols.indexOf(st.s1.metric)>=0?st.s1.metric:(st.s1.focus||cols[0]||'');
+  if(cols.indexOf(st.s4.x)<0)st.s4.x=cols.filter(function(c){return c!==st.s4.y})[0]||'';
+  options(document.querySelector('[data-bind="s4.y"]'),cols,st.s4.y);options(document.querySelector('[data-bind="s4.x"]'),cols,st.s4.x);
+  $('xBox').style.display=st.s4.mode==='pair'?'':'none';
+  computeAnalysis(true);
+}
+function computeAnalysis(keepText){
+  var an=currentAnalysis(),v=$('v4');
+  $('xBox').style.display=st.s4.mode==='pair'?'':'none';
+  if(!an){v.innerHTML='<p class="hint" style="margin:0">Для расчёта нужна таблица шага 1 хотя бы из трёх строк с числами.</p>';return}
+  if(an.mode==='pair')v.innerHTML=scatterChart(an)+'<p class="cap">Каждая точка — строка таблицы; пунктир — линия регрессии. Коэффициент показывает согласованность изменений, а не причину.</p>';
+  else v.innerHTML=seriesChart(an.labels,an.ys,an.y,an.fit)+(an.yoy.length?yoyChart(an.yoy):'')+'<p class="cap">Линия — показатель по периодам, пунктир — тренд'+(an.yoy.length?'; столбики — отклонение от того же месяца прошлого года: так сезонность не принимается за спад или рост':'')+'.</p>';
+  if(!(keepText&&C.clean(st.s4.text))){st.s4.text=an.text;save();fillInputs($('st4'))}
+  renderFrame();renderStepper();
+}
+
+// ── шаг 5 ────────────────────────────────────────────────────────────────
+function renderV5(){var s=st.s5,v=$('v5');
+  if(!C.clean(s.fact)&&!C.clean(s.hyp)){v.innerHTML='<p class="hint" style="margin:0">Вывод появится после разбора ответа.</p>';return}
+  v.innerHTML='<dl class="rows"><dt>Факт</dt><dd class="fact">'+esc(s.fact)+'</dd><dt>Интерпретация</dt><dd class="interp">'+esc(s.interp)+'</dd><dt>Гипотеза</dt><dd class="hyp">'+esc(s.hyp)+'</dd><dt>Опровергнет</dt><dd class="refute">'+esc(s.refute)+'</dd></dl>'}
+function renderIn5(){$('in5').innerHTML='<b>Проблема:</b> '+esc(C.or(st.s1.problem,'— не заполнена (шаг 1)'))+'<br><b>Что меняем:</b> '+esc(C.or(st.s1.action,'— (шаг 1)'))+'<br><b>Результат анализа:</b> '+esc(C.or(st.s4.text,'— (шаг 4)'))}
+
+// ── шаг 6 ────────────────────────────────────────────────────────────────
+function renderV6f(){var d=C.num(st.s6.delta),v=C.num(st.s6.volume),p=C.num(st.s6.price);
+  var ok=!isNaN(d)&&!isNaN(v)&&!isNaN(p);
+  $('v6f').innerHTML='<b>Эффект в месяц</b> = '+C.fmtv(d)+' <span style="color:var(--ink3)">('+esc(C.or(st.s6.udelta,'изменение'))+')</span> × '+C.fmtv(v)+' <span style="color:var(--ink3)">('+esc(C.or(st.s6.uvolume,'объём'))+')</span> × '+C.fmtv(p)+' <span style="color:var(--ink3)">руб.</span> = <b>'+(ok?C.money(d*v*p):'—')+'</b>'+(st.s6.kind==='cohort'?' на каждую месячную когорту':' в месяц на полном уровне')}
+function renderAtab(){
+  var tb=$('atab'),a=st.s6.ass||{};tb.innerHTML='';
+  var base={delta:C.num(st.s6.delta),volume:C.num(st.s6.volume),price:C.num(st.s6.price),keep:C.num(st.s6.keep)};
+  ['delta','volume','price','keep'].forEach(function(k){var x=a[k]||{pess:null,opt:null,kind:'',why:''};
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td><b>'+ANAME[k]+'</b></td><td>'+C.fmtv(base[k])+'</td><td><input data-a="'+k+'" data-f="pess" value="'+(x.pess===null||x.pess===undefined?'':esc(C.fmtv(x.pess)))+'"></td><td><input data-a="'+k+'" data-f="opt" value="'+(x.opt===null||x.opt===undefined?'':esc(C.fmtv(x.opt)))+'"></td><td>'+esc(x.kind||'')+'</td><td style="white-space:normal;min-width:200px">'+esc(x.why||'')+'</td>';
+    tb.appendChild(tr)});
+  Array.prototype.forEach.call(tb.querySelectorAll('input'),function(inp){inp.oninput=function(){
+    if(!st.s6.ass)st.s6.ass={};if(!st.s6.ass[inp.dataset.a])st.s6.ass[inp.dataset.a]={pess:null,opt:null,kind:'',why:''};
+    st.s6.ass[inp.dataset.a][inp.dataset.f]=C.firstNum(inp.value);save();renderStepper();renderFrame();renderS7()}});
+}
+
+// ── шаг 7 ────────────────────────────────────────────────────────────────
+function params7(){return {kind:st.s6.kind||'cohort',delta:C.num(st.s6.delta)||0,volume:C.num(st.s6.volume)||0,price:C.num(st.s6.price)||0,
+  ramp:C.num(st.s7.ramp)||0,keep:C.num(st.s6.keep)||0,capex:C.num(st.s7.capex)||0,opex:C.num(st.s7.opex)||0,horizon:Math.max(1,Math.round(C.num(st.s7.horizon)||24)),rate:(C.num(st.s7.rate)||0)/100}}
+function pair(s){var m=String(s||'').split('/');return m.length===2?[C.firstNum(m[0]),C.firstNum(m[1])]:[null,null]}
+function assumptions7(){var out=[],a=st.s6.ass||{};
+  ['delta','volume','price','keep'].forEach(function(k){var x=a[k];if(x&&x.pess!==null&&x.opt!==null&&!isNaN(x.pess)&&!isNaN(x.opt))out.push({key:k,name:ANAME[k],pess:x.pess,opt:x.opt})});
+  var c=pair(st.s7.capex_p);if(c[0]!==null&&c[1]!==null)out.push({key:'capex',name:ANAME.capex,pess:c[0],opt:c[1]});
+  var o=pair(st.s7.opex_p);if(o[0]!==null&&o[1]!==null)out.push({key:'opex',name:ANAME.opex,pess:o[0],opt:o[1]});
+  return out}
+function renderS7(){
+  var p=params7(),res=C.totals(p),sens=C.sensitivity(p,assumptions7());
+  $('k-full').textContent=C.money(res.full_month)+' в мес.';$('k-full-s').textContent=p.kind==='cohort'?'одна месячная когорта на полном уровне':'на полном уровне';
+  $('k-y1').textContent=C.money(res.year1);$('k-y1-s').textContent='затраты за год: '+C.money(p.capex+12*p.opex);
+  $('k-pb').textContent=res.payback===null?'нет':res.payback+' мес.';$('k-pb-s').textContent=res.payback===null?'в горизонте '+res.horizon+' мес. не окупается':(res.payback_disc===null?'с дисконтированием — за горизонтом':'с дисконтированием — '+res.payback_disc+' мес.');
+  var kn=$('k-npv');kn.textContent=C.money(res.npv);kn.className='v'+(res.npv<0?' neg':'');$('k-npv-s').textContent='за '+res.horizon+' мес. при ставке '+C.fr(p.rate*100,1)+' %';
+  $('v7').innerHTML=flowChart(res);
+  var vd=$('verdict7');if(res.npv>=0){vd.style.color='';vd.textContent='Вывод при базовых значениях: проект окупается'+(res.payback!==null?' за '+res.payback+' мес.':'')+', NPV за горизонт положительный.'}
+  else{vd.style.color='var(--warn)';vd.textContent='Вывод при базовых значениях: NPV за горизонт отрицательный — проект не окупается в выбранном горизонте.'}
+  var tb=$('stab');tb.innerHTML='';
+  if(!sens.length)tb.innerHTML='<tr><td colspan="7" class="hint">Пессимистичные и оптимистичные значения задаются на шаге 6 (множители) и выше (затраты).</td></tr>';
+  sens.forEach(function(r){var tr=document.createElement('tr');tr.innerHTML='<td>'+r.name+'</td><td>'+C.fmtv(r.base)+'</td><td>'+C.fmtv(r.pess)+'</td><td>'+C.money(r.npv_pess)+'</td><td>'+C.fmtv(r.opt)+'</td><td>'+C.money(r.npv_opt)+'</td><td>'+(r.flips?'<span class="flip">меняется</span>':'<span class="keep">сохраняется</span>')+'</td>';tb.appendChild(tr)});
+  $('v7t').innerHTML=sens.length?tornadoChart(sens,res.npv)+'<p class="cap">Торнадо: длина полосы — насколько NPV уходит от базового при пессимистичном (слева, серый или красный) и оптимистичном (зелёный) значении допущения. Красная полоса — вывод меняется.</p>':'';
+  var crit=sens.filter(function(r){return r.flips});
+  $('sens7').textContent=!sens.length?'':crit.length?'Вывод меняется при пессимистичном значении: '+crit.map(function(r){return r.name.toLowerCase()+' ('+C.fmtv(r.pess)+')'}).join('; ')+'. Это допущение подтверждается данными в первую очередь — оно и станет строкой «Риск» слайда.':'Ни одно допущение по отдельности не меняет вывод. Самое влиятельное — '+sens[0].name.toLowerCase()+': разброс NPV '+C.money(sens[0].span).replace(' руб.','')+' руб.';
+  st.s7.text=C.effectText(p,{delta:st.s6.udelta,volume:st.s6.uvolume,price:st.s6.uprice},res,sens);save();
+  fillInputs($('st7'));renderPrompt(8);renderFrame();renderStepper();
+}
+
+// ── шаг 8 и 9 ────────────────────────────────────────────────────────────
+function renderIn8(){$('in8').innerHTML='<b>Проблема:</b> '+esc(C.or(st.s1.problem,'— (шаг 1)'))+'<br><b>Гипотеза:</b> '+esc(C.or(st.s5.hyp,'— (шаг 5)'))+'<br><b>Расчёт:</b> '+esc(C.or(st.s7.text,'— (шаг 7)'))}
+function renderV8(){var s=st.s8;
+  $('v8').innerHTML='<div class="h">'+esc(C.or(s.title,'Заголовок слайда'))+'</div>'+
+    [['Формула',s.formula],['Результат',s.result],['Риск',s.risk],['Действие',s.action]].map(function(x){return '<div class="r"><b>'+x[0]+'</b><span>'+esc(C.or(x[1],'—'))+'</span></div>'}).join('')}
+function renderIn9(){var v=promptVals(9);$('in9').innerHTML=[['Метрика результата',v.result],['Целевое значение',v.target],['Контрольная',v.control],['Данных нет',v.missing],['Гипотеза',v.hyp],['Эффект',v.seffect],['Риск',v.risk],['Первое действие',v.first]].map(function(x){return '<b>'+x[0]+':</b> '+esc(C.or(x[1],'—'))}).join('<br>')}
+function letterText(){var s=st.s9;return [['Что меняем и почему',s.p1],['По какому показателю судим',s.p2],['Какие данные начинаем собирать',s.p3],['Первое действие',s.p4],['Когда пересматриваем',s.p5]]}
+function renderV9(){var L=letterText(),v=$('v9');
+  if(!C.clean(st.s9.p1)){v.innerHTML='<p class="hint" style="margin:0">Письмо появится после разбора ответа.</p>';return}
+  v.innerHTML=L.map(function(x){return '<p><b>'+x[0]+'.</b> '+esc(C.or(x[1],'—')).replace(/\n/g,'<br>')+'</p>'}).join('')}
+
+// ── сборка шага ──────────────────────────────────────────────────────────
+function renderStep(n){
+  fillInputs($('st'+n));
+  switch(n){
+    case 1:options(document.querySelector('[data-bind="s1.axis"]'),AXES,st.s1.axis);renderTableView();renderV1();renderPrompt(1);renderChk1();break;
+    case 2:renderPrompt(2);renderMtab();renderV2();break;
+    case 3:renderPrompt(3);renderDtab();break;
+    case 4:renderS4();break;
+    case 5:renderIn5();renderPrompt(5);renderV5();break;
+    case 6:options(document.querySelector('[data-bind="s6.kind"]'),[['cohort','когорты: единицы эффекта накапливаются каждый месяц'],['level','уровень: постоянный поток после выхода на уровень']],st.s6.kind);renderV6f();renderPrompt(6);renderAtab();break;
+    case 7:renderS7();break;
+    case 8:renderIn8();renderPrompt(8);renderV8();break;
+    case 9:renderIn9();renderPrompt(9);renderV9();break;
+  }
+}
+function renderAll(){fillInputs(document);renderTabs();renderFrame();renderStepper();go(st.step||1)}
+
+// ── события ──────────────────────────────────────────────────────────────
+document.addEventListener('click',function(e){var t=e.target.closest('button');if(!t)return;
+  if(t.dataset.go){go(+t.dataset.go);return}
+  if(t.dataset.parse){parse(+t.dataset.parse);return}
+  if(t.dataset.sw){var n=+t.dataset.n;pmode[n]=t.dataset.sw;var head=t.parentNode;Array.prototype.forEach.call(head.children,function(c){c.className=c.dataset.sw===pmode[n]?'on':''});renderPrompt(n);return}
+  if(t.dataset.copy){e.stopImmediatePropagation();var k=+t.dataset.copy;copyText(ptext[k]||'',t,(pmode[k]||'fill')==='tpl'?'Копировать шаблон':'Копировать заполненный промпт');return}
+  if(t.id==='bCopyLetter'){copyText(letterText().map(function(x){return x[0]+'. '+C.or(x[1],'—')}).join('\n\n'),t,'Копировать письмо');return}
+  if(t.id==='bCopyMd'){copyText(C.projectMarkdown(st),t,'Копировать весь проект');return}
+  if(t.id==='bExport'){var md=C.projectMarkdown(st),a=document.createElement('a');
+    a.href='data:text/markdown;charset=utf-8,'+encodeURIComponent(md);a.download='проект_'+(cur==='custom'?'свой':cur)+'.md';document.body.appendChild(a);a.click();document.body.removeChild(a);
+    $('expMsg').textContent='Файл проекта сохранён. Если загрузка заблокирована — кнопка «Копировать весь проект».';return}
+  if(t.id==='bClear'){if(confirm('Стереть всё введённое в этом кейсе?')){try{localStorage.removeItem(key())}catch(_e){}load(cur);st.step=1;renderAll()}return}
+});
+load(cur);renderAll();
+})();
+</script>
+
+<script>
+// Кнопка «скопировать промпт»: сначала пробуем Clipboard API, при отказе —
+// старый execCommand. В LMS страница часто открыта в iframe без разрешения
+// на буфер обмена, и без запасного пути кнопка молча ничего не делает.
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.copy'); if(!b) return;
+  var t=b.parentNode.querySelector('pre').innerText;
+  function done(){b.textContent='Скопировано';b.classList.add('done');
+    setTimeout(function(){b.textContent='Копировать';b.classList.remove('done')},1800);}
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(done,fallback);
+  } else { fallback(); }
+  function fallback(){
+    var a=document.createElement('textarea');a.value=t;a.style.position='fixed';
+    a.style.opacity=0;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');done();}catch(_e){b.textContent='Выделите вручную';}
+    document.body.removeChild(a);
+  }
+});
+</script>
+</body></html>
