@@ -470,8 +470,13 @@ a.fn:hover{border:0;text-decoration:underline}
   function or(v, d) { var c = clean(v); return c ? c : d; }
   function num(v) {
     if (typeof v === 'number') return v;
-    var s = String(v == null ? '' : v).replace(/[\s  ]/g, '').replace(',', '.');
-    var m = s.match(/-?\d+(?:\.\d+)?/); return m ? parseFloat(m[0]) : NaN;
+    var s = String(v == null ? '' : v).replace(/[\s  ]/g, '').replace(',', '.').replace('−', '-');
+    var m = s.match(/-?\d+(?:\.\d+)?/); if (!m) return NaN;
+    // Поле результата принимает и запись из мини-инструмента: «7,95 млн руб.»
+    // читается как 7 950 000, «55 тыс. руб.» — как 55 000. Без этого «7,95 млн»
+    // превращалось в 7,95 руб. и уезжало в заключение.
+    var k = /млн|mln|m(?![a-zа-я])/i.test(s.slice(m.index + m[0].length)) ? 1e6 : /тыс|k(?![a-zа-я])/i.test(s.slice(m.index + m[0].length)) ? 1e3 : 1;
+    return parseFloat(m[0]) * k;
   }
 
   // ── конфигурация источников: скорость, цена, интегральная оценка ───────
